@@ -1,0 +1,9 @@
+require_paths:
+- "C:/Program Files/SketchUp/SketchUp 2021/Tools"
+- speckle_connector
+
+require:
+- sketchup-api-stubs
+
+reporters:
+- rubocop
