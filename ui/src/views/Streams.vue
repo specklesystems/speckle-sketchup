@@ -1,49 +1,44 @@
 <template>
-  <v-app>
-    <v-app-bar app flat>
-      <v-toolbar-title class="space-grotesk pl-0">
-        <v-icon class="mb-1 hidden-xs-only">mdi-folder</v-icon>
-        Streams
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-    </v-app-bar>
-    <streams-list />
+  <v-container>
+    <v-row>
+      <v-col v-if="$apollo.loading">
+        <v-row>
+          <v-col>
+            <v-skeleton-loader type="card"></v-skeleton-loader>
+          </v-col>
+        </v-row>
+      </v-col>
+    </v-row>
+    <v-card v-for="stream in streams" :key="stream.id">
+      <v-card-title>{{ stream.name }}</v-card-title>
+    </v-card>
 
-    <!-- testing sketchup bindings -->
-    <v-container>
-      <v-card>
-        <v-card-title>Testing Sketchup Bindings</v-card-title>
-        <v-card-text>
-          <div class="d-flex align-center">
-            Name: <v-text-field v-model="name" hint="Name" class="ml-3" />
-          </div>
-          <div class="d-flex align-center">
-            Pokes: <v-text-field v-model.number="num_pokes" class="ml-3" />
-          </div>
-          <v-btn @click="poke">Poke {{ name }}!</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-container>
-  </v-app>
+    <streams-list />
+  </v-container>
 </template>
 
 <script>
-/*global sketchup*/
+import streamsQuery from "../graphql/streams.gql";
 
 export default {
   name: "Streams",
   computed: {},
-  data() {
-    return {
-      name: "Dim",
-      num_pokes: 3,
-    };
-  },
-  methods: {
-    poke: function () {
-      sketchup.poke(this.name, this.num_pokes);
+  apollo: {
+    streams: {
+      prefetch: true,
+      query: streamsQuery,
+      fetchPolicy: "cache-and-network",
+      update(data) {
+        return data.streams.items;
+      },
     },
   },
+  data() {
+    return {
+      streams: [],
+    };
+  },
+  methods: {},
   components: {
     StreamsList: () => import("@/components/StreamsList"),
   },

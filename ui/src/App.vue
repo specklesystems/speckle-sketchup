@@ -1,6 +1,12 @@
 <template>
   <v-app>
     <v-main>
+      <v-app-bar app flat>
+        <v-toolbar-title class="space-grotesk pl-0">
+          {{ $route.name }}
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+      </v-app-bar>
       <v-navigation-drawer
         :app="!$vuetify.breakpoint.xsOnly"
         permanent
@@ -55,7 +61,7 @@
             <v-list-item-content>
               <v-list-item-title>Settings</v-list-item-title>
               <v-list-item-subtitle class="caption"
-                >Latest events.</v-list-item-subtitle
+                >App settings</v-list-item-subtitle
               >
             </v-list-item-content>
           </v-list-item>
@@ -92,7 +98,9 @@
         </template>
       </v-navigation-drawer>
 
-      <router-view />
+      <v-container fluid>
+        <router-view />
+      </v-container>
 
       <v-bottom-navigation
         fixed
