@@ -5,7 +5,7 @@
         <v-toolbar-title class="space-grotesk pl-0">
           {{ $route.name }}
         </v-toolbar-title>
-        <v-spacer></v-spacer>
+        <v-spacer />
       </v-app-bar>
       <v-navigation-drawer
         :app="!$vuetify.breakpoint.xsOnly"
@@ -48,9 +48,7 @@
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Streams</v-list-item-title>
-              <v-list-item-subtitle class="caption"
-                >All your streams.</v-list-item-subtitle
-              >
+              <v-list-item-subtitle class="caption">All your streams.</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -60,9 +58,7 @@
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Settings</v-list-item-title>
-              <v-list-item-subtitle class="caption"
-                >App settings</v-list-item-subtitle
-              >
+              <v-list-item-subtitle class="caption">App settings</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -102,11 +98,7 @@
         <router-view />
       </v-container>
 
-      <v-bottom-navigation
-        fixed
-        xxx-hide-on-scroll
-        class="hidden-sm-and-up elevation-20"
-      >
+      <v-bottom-navigation fixed xxx-hide-on-scroll class="hidden-sm-and-up elevation-20">
         <v-btn color="primary" text to="/" style="height: 100%">
           <span>Streams</span>
           <v-icon>mdi-folder</v-icon>
@@ -123,21 +115,18 @@
 
 <script>
 export default {
-  name: "App",
+  name: 'App',
   created() {
-    this.$store.dispatch("loadAccounts");
+    this.$store.dispatch('loadAccounts')
   },
   methods: {
     switchTheme() {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
-      localStorage.setItem(
-        "darkModeEnabled",
-        this.$vuetify.theme.dark ? "dark" : "light"
-      );
-    },
+      this.$vuetify.theme.dark = !this.$vuetify.theme.dark
+      localStorage.setItem('darkModeEnabled', this.$vuetify.theme.dark ? 'dark' : 'light')
+    }
   },
   data: () => ({
     //
-  }),
-};
+  })
+}
 </script>

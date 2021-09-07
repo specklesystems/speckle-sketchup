@@ -2,6 +2,7 @@
 
 require "sketchup"
 require "speckle_connector/dialog.rb"
+require "speckle_connector/debug.rb"
 
 module SpeckleSystems
   module SpeckleConnector

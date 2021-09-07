@@ -9,38 +9,35 @@
         </v-row>
       </v-col>
     </v-row>
-    <v-card v-for="stream in streams" :key="stream.id">
-      <v-card-title>{{ stream.name }}</v-card-title>
-    </v-card>
-
-    <streams-list />
+    <div v-for="stream in streams" :key="stream.id">
+      <stream-card :stream="stream" />
+    </div>
   </v-container>
 </template>
 
 <script>
-import streamsQuery from "../graphql/streams.gql";
+import streamsQuery from '../graphql/streams.gql'
 
 export default {
-  name: "Streams",
-  computed: {},
+  name: 'Streams',
   apollo: {
     streams: {
       prefetch: true,
       query: streamsQuery,
-      fetchPolicy: "cache-and-network",
+      fetchPolicy: 'cache-and-network',
       update(data) {
-        return data.streams.items;
-      },
-    },
+        return data.streams.items
+      }
+    }
   },
   data() {
     return {
-      streams: [],
-    };
+      streams: []
+    }
   },
   methods: {},
   components: {
-    StreamsList: () => import("@/components/StreamsList"),
-  },
-};
+    StreamCard: () => import('@/components/StreamCard')
+  }
+}
 </script>

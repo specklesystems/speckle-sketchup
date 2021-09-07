@@ -1,11 +1,11 @@
 <template>
   <v-container>
-    <v-card>hello there</v-card>
+    <v-card>hello there!</v-card>
   </v-container>
 </template>
 
 <script>
-export default {};
+export default {}
 </script>
 
 <style>

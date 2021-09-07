@@ -4,9 +4,11 @@ import Path from "path"
 import Sqlite from "sqlite3"
 
 
+const {platform, homedir} = require("os");
+
 
 export function getSpeckleFolder() {
-  let dir = Path.join(process.env.APPDATA, "Speckle") || Path.join(process.env.HOME, ".config", "Speckle")
+  let dir = platform().startsWith("win") ? Path.join(homedir(), "Speckle") : Path.join(homedir(), ".config", "Speckle")
 
   if (!Fs.existsSync(dir)) Fs.mkdirSync(dir)
 
