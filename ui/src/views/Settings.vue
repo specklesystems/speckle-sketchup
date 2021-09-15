@@ -33,6 +33,15 @@ global.clickFromSettings = function (args) {
 
 export default {
   name: 'Streams',
+  components: {
+    StreamsList: () => import('@/components/StreamsList')
+  },
+  data() {
+    return {
+      name: 'Dim',
+      num_pokes: 3
+    }
+  },
   computed: {},
   apollo: {
     user: {
@@ -43,19 +52,10 @@ export default {
     bus.$on('click-from-main', (args) => console.log('triggered from main', args))
     bus.$on('click-from-settings', (args) => console.log('triggered from settings', args))
   },
-  data() {
-    return {
-      name: 'Dim',
-      num_pokes: 3
-    }
-  },
   methods: {
     poke() {
       sketchup.poke(this.name, this.num_pokes)
     }
-  },
-  components: {
-    StreamsList: () => import('@/components/StreamsList')
   }
 }
 </script>

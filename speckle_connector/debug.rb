@@ -1,5 +1,5 @@
 module SpeckleSystems::SpeckleConnector
-  # from thomthom 
+  # from thomthom
   # https://github.com/thomthom/true-bend/blob/master/src/tt_truebend/debug.rb
 
   # @note Debug method to reload the plugin.

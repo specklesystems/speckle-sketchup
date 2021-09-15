@@ -1,6 +1,11 @@
 require "sketchup"
 
-module SpeckleSystems::SpeckleConnector::ConverterSketchup
+class SpeckleSystems::SpeckleConnector::ConverterSketchup
+  String @units
+
+  def initialize(units = "m")
+    @units = units
+  end
 
   def self.convert_to_native
     nil

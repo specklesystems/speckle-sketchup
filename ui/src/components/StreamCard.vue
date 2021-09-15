@@ -8,7 +8,7 @@
         </v-toolbar>
         <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
           <v-toolbar-title>
-            <v-chip small class="mr-1" v-if="stream.role">
+            <v-chip v-if="stream.role" small class="mr-1">
               <v-icon small left>mdi-account-key-outline</v-icon>
               {{ stream.role.split(':')[1] }}
             </v-chip>
@@ -16,7 +16,7 @@
               Updated
               <timeago :datetime="stream.updatedAt" class="ml-1"></timeago>
             </v-chip>
-            <v-chip small v-if="stream.branches">
+            <v-chip v-if="stream.branches" small>
               <v-icon small class="mr-2 float-left">mdi-source-branch</v-icon>
               {{ stream.branches.totalCount }}
             </v-chip>
@@ -25,7 +25,7 @@
       </v-col>
       <v-col md="auto" />
       <v-col align="end" justify="center">
-        <v-btn fab :loading="loading" @click="send" class="mr-4 elevation-1 btn-fix" hint="Send">
+        <v-btn fab :loading="loading" class="mr-4 elevation-1 btn-fix" hint="Send" @click="send">
           <v-img
             v-if="$vuetify.theme.dark"
             src="@/assets/SenderWhite.png"
@@ -41,10 +41,11 @@
 
 <script>
 /*global sketchup*/
+import gql from 'graphql-tag'
 import { bus } from '../main'
 
-global.convertedFromSketchup = function (args) {
-  bus.$emit('converted-from-sketchup', args)
+global.convertedFromSketchup = function (streamId, objects) {
+  bus.$emit('converted-from-sketchup', streamId, objects)
 }
 
 export default {
@@ -59,9 +60,13 @@ export default {
   data() {
     return { loading: false }
   },
+  computed: {},
   mounted() {
-    bus.$on('converted-from-sketchup', (args) => {
-      console.log('received objects from sketchup', args)
+    bus.$on('converted-from-sketchup', async (streamId, objects) => {
+      if (streamId != this.stream.id) return
+      console.log('received objects from sketchup', objects)
+      await this.createCommit(objects)
+      console.log('sent to stream: ' + this.stream.id)
     })
   },
   methods: {
@@ -70,13 +75,55 @@ export default {
     },
     async send() {
       this.loading = true
-      sketchup.send_selection()
-      console.log('send lol')
+      sketchup.send_selection(this.stream.id)
+      console.log('request for data sent to sketchup')
       await this.sleep(2000)
-      this.loading = false
+    },
+    async createCommit(objects) {
+      if (objects.length == 0) {
+        this.loading = false
+        return
+      }
+
+      try {
+        this.loading = true
+        let res = await this.$apollo.mutate({
+          mutation: gql`
+            mutation ObjectCreate($params: ObjectCreateInput!) {
+              objectCreate(objectInput: $params)
+            }
+          `,
+          variables: {
+            params: {
+              streamId: this.stream.id,
+              objects: [{ data: objects, speckle_type: 'Base' }]
+            }
+          }
+        })
+
+        await this.$apollo.mutate({
+          mutation: gql`
+            mutation CommitCreate($commit: CommitCreateInput!) {
+              commitCreate(commit: $commit)
+            }
+          `,
+          variables: {
+            commit: {
+              streamId: this.stream.id,
+              branchName: 'main',
+              objectId: res.data.objectCreate[0],
+              message: 'sent from sketchup',
+              sourceApplication: 'sketchup'
+            }
+          }
+        })
+        this.loading = false
+      } catch (err) {
+        this.loading = false
+        console.log(err)
+      }
     }
-  },
-  computed: {}
+  }
 }
 </script>
 

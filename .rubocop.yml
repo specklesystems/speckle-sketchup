@@ -23,12 +23,15 @@ Style/Copyright:
 
 Style/DocumentationMethod:
   Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
   
 Metrics/ClassLength:
   Enabled: false
 
-Metrics/AbcSize:
+Metrics/MethodLength:
   Enabled: false
 
-Metrics/MethodLength:
+Metrics/ParameterLists:
   Enabled: false

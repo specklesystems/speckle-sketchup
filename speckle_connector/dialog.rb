@@ -4,6 +4,9 @@ require "sketchup"
 require "speckle_connector/converter/to_speckle"
 
 module SpeckleSystems::SpeckleConnector
+  UNITS = { 0 => "in", 1 => "ft", 2 => "mm", 3 => "cm", 4 => "m", 5 => "yd" }.freeze
+  public_constant :UNITS
+
   def self.create_dialog
     options = {
       dialog_title: "Material",
@@ -27,9 +30,9 @@ module SpeckleSystems::SpeckleConnector
         on_poke(name, num_pokes)
         nil
       end
-      @dialog.add_action_callback("send_selection") do |action_context|
+      @dialog.add_action_callback("send_selection") do |action_context, stream_id|
         puts(action_context)
-        send_selection
+        send_selection(stream_id)
         nil
       end
       @dialog.set_html(html)
@@ -43,22 +46,13 @@ module SpeckleSystems::SpeckleConnector
     num_pokes.times do
       puts("Poke #{name}!")
     end
-    h = { "a" => 1, "s" => "string", "arr" => [1, 2, 3] }
-    @dialog.execute_script("clickFromSettings(#{h.to_json})")
-    @dialog.execute_script("clickFromMain(#{JSON.pretty_generate(h)})")
   end
 
-  def self.send_selection()
+  def self.send_selection(stream_id)
     model = Sketchup.active_model
-    converted = model.selection.each { |entity| ConverterSketchup.convert_to_speckle(entity) }
-    @dialog.execute_script("convertedFromSketchup(#{converted.to_json})")
-  end
-
-  def self.get_selection
-    model = Sketchup.active_model
-    instances = model.selection.each { |entity| puts(entity) }
-    h = { "a" => 1, "s" => "string", "arr" => [1, 2, 3] }
-    @dialog.execute_script("clickFromSettings(#{h.to_json})")
-    @dialog.execute_script("clickFromMain(#{JSON.pretty_generate(h)})")
+    converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
+    converted = model.selection.map { |entity| converter.convert_to_speckle(entity) }
+    puts("converted #{converted.count} objects for stream #{stream_id}")
+    @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
   end
 end
