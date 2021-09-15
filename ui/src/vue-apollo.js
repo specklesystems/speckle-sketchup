@@ -24,7 +24,7 @@ const defaultOptions = {
   // You need to pass a `wsEndpoint` for this to work
   websocketsOnly: false,
   // Is being rendered on the server?
-  ssr: false,
+  ssr: false
 
   // Override default apollo link
   // note: don't override httpLink here, specify httpLink options in the
@@ -45,11 +45,11 @@ const defaultOptions = {
 }
 
 // Call this in the Vue app file
-export function createProvider (options = {}) {
+export function createProvider(options = {}) {
   // Create apollo client
   const { apolloClient, wsClient } = createApolloClient({
     ...defaultOptions,
-    ...options,
+    ...options
   })
   apolloClient.wsClient = wsClient
 
@@ -62,22 +62,27 @@ export function createProvider (options = {}) {
     defaultOptions: {
       $query: {
         // fetchPolicy: 'cache-and-network',
-      },
+      }
     },
-    errorHandler (error) {
+    errorHandler(error) {
       // eslint-disable-next-line no-console
-      console.log('%cError', 'background: red; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;', error.message)
-    },
+      console.log(
+        '%cError',
+        'background: red; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;',
+        error.message
+      )
+    }
   })
 
   return apolloProvider
 }
 
 // Manually call this when user log in
-export async function onLogin (apolloClient, token) {
+export async function onLogin(apolloClient, token) {
   if (typeof localStorage !== 'undefined' && token) {
     localStorage.setItem(AUTH_TOKEN, token)
   }
+
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient)
   try {
     await apolloClient.resetStore()
@@ -88,10 +93,11 @@ export async function onLogin (apolloClient, token) {
 }
 
 // Manually call this when user log out
-export async function onLogout (apolloClient) {
+export async function onLogout(apolloClient) {
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(AUTH_TOKEN)
   }
+
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient)
   try {
     await apolloClient.resetStore()

@@ -1,14 +1,13 @@
+import Fs from 'fs'
+import Path from 'path'
+import Sqlite from 'sqlite3'
 
-import Fs from "fs"
-import Path from "path"
-import Sqlite from "sqlite3"
-
-
-const {platform, homedir} = require("os");
-
+const { platform, homedir } = require('os')
 
 export function getSpeckleFolder() {
-  let dir = platform().startsWith("win") ? Path.join(homedir(), "Speckle") : Path.join(homedir(), ".config", "Speckle")
+  let dir = platform().startsWith('win')
+    ? Path.join(homedir(), 'Speckle')
+    : Path.join(homedir(), '.config', 'Speckle')
 
   if (!Fs.existsSync(dir)) Fs.mkdirSync(dir)
 
@@ -16,17 +15,13 @@ export function getSpeckleFolder() {
 }
 
 function openSpeckleSettings() {
-  let dbLocation = Path.join(getSpeckleFolder(), "Accounts.db")
+  let dbLocation = Path.join(getSpeckleFolder(), 'Accounts.db')
 
-  let db = new Sqlite.Database(
-    dbLocation,
-    Sqlite.OPEN_READWRITE | Sqlite.OPEN_CREATE,
-    (err) => {
-      if (err) {
-        console.log(err.message)
-      }
+  let db = new Sqlite.Database(dbLocation, Sqlite.OPEN_READWRITE | Sqlite.OPEN_CREATE, (err) => {
+    if (err) {
+      console.log(err.message)
     }
-  )
+  })
 
   db.serialize(() =>
     db.run(`CREATE TABLE IF NOT EXISTS objects (
@@ -42,8 +37,8 @@ export default {
   state: {
     accounts: [],
     suuid: null,
-    challenge: "",
-    server: ""
+    challenge: '',
+    server: ''
   },
 
   getters: {
@@ -53,7 +48,7 @@ export default {
 
     getChallengeAndServer(state) {
       return { challenge: state.challenge, server: state.server }
-    },
+    }
   },
 
   mutations: {
@@ -62,21 +57,15 @@ export default {
     },
 
     SORT_ACCOUNTS(state) {
-      state.accounts.sort((x, y) =>
-        x.isDefault === y.isDefault ? 0 : x.isDefault ? -1 : 1
-      )
+      state.accounts.sort((x, y) => (x.isDefault === y.isDefault ? 0 : x.isDefault ? -1 : 1))
     },
 
     ADD_ACCOUNT(state, { account }) {
-      let duplicateAccountIndex = state.accounts.findIndex(
-        (a) => a.id === account.id
-      )
-      if (duplicateAccountIndex !== -1)
-        state.accounts.splice(duplicateAccountIndex, 1)
+      let duplicateAccountIndex = state.accounts.findIndex((a) => a.id === account.id)
+      if (duplicateAccountIndex !== -1) state.accounts.splice(duplicateAccountIndex, 1)
 
       state.accounts.push(account)
     },
-
 
     SET_DEFAULT_ACCOUNT(state, { account }) {
       state.accounts.forEach((acc) => {
@@ -88,13 +77,11 @@ export default {
     SET_CHALLENGE_SERVER(state, { challenge, server }) {
       state.challenge = challenge
       state.server = server
-    },
-
-
+    }
   },
   actions: {
     setChallengeAndServer(context, { challenge, server }) {
-      context.commit("SET_CHALLENGE_SERVER", {
+      context.commit('SET_CHALLENGE_SERVER', {
         challenge: challenge,
         server: server
       })
@@ -108,13 +95,12 @@ export default {
       let db = openSpeckleSettings()
 
       db.serialize(() => {
-        db.each("SELECT * FROM Objects ORDER BY hash ASC", function (_, row) {
-          context.commit("ADD_ACCOUNT", { account: JSON.parse(row.content) })
+        db.each('SELECT * FROM Objects ORDER BY hash ASC', function (_, row) {
+          context.commit('ADD_ACCOUNT', { account: JSON.parse(row.content) })
         })
       })
 
       db.close()
-    },
-
+    }
   }
 }

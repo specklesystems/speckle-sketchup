@@ -65,7 +65,7 @@
           <v-divider></v-divider>
         </v-list>
 
-        <template v-slot:append>
+        <template #append>
           <v-list dense>
             <v-list-item
               link
@@ -116,6 +116,9 @@
 <script>
 export default {
   name: 'App',
+  data: () => ({
+    //
+  }),
   created() {
     this.$store.dispatch('loadAccounts')
   },
@@ -124,9 +127,6 @@ export default {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('darkModeEnabled', this.$vuetify.theme.dark ? 'dark' : 'light')
     }
-  },
-  data: () => ({
-    //
-  })
+  }
 }
 </script>

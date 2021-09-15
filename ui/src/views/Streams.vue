@@ -30,14 +30,14 @@ export default {
       }
     }
   },
+  components: {
+    StreamCard: () => import('@/components/StreamCard')
+  },
   data() {
     return {
       streams: []
     }
   },
-  methods: {},
-  components: {
-    StreamCard: () => import('@/components/StreamCard')
-  }
+  methods: {}
 }
 </script>
