@@ -43,6 +43,8 @@
 /*global sketchup*/
 import gql from 'graphql-tag'
 import { bus } from '../main'
+import { BaseObjectSerializer } from '../utils/serialization'
+const zlib = require('zlib')
 
 global.convertedFromSketchup = function (streamId, objects) {
   bus.$emit('converted-from-sketchup', streamId, objects)
@@ -65,8 +67,8 @@ export default {
     bus.$on('converted-from-sketchup', async (streamId, objects) => {
       if (streamId != this.stream.id) return
       console.log('received objects from sketchup', objects)
+
       await this.createCommit(objects)
-      console.log('sent to stream: ' + this.stream.id)
     })
   },
   methods: {
@@ -85,22 +87,58 @@ export default {
         return
       }
 
+      let s = new BaseObjectSerializer()
+      let { hash, serialized } = s.writeJson({ data: objects, speckle_type: 'Base' })
+      console.log('hash:', hash, 'serialized:', serialized)
+      console.log('serializer:', s)
+      console.log('objects:', s.objects)
       try {
         this.loading = true
-        let res = await this.$apollo.mutate({
-          mutation: gql`
-            mutation ObjectCreate($params: ObjectCreateInput!) {
-              objectCreate(objectInput: $params)
-            }
-          `,
-          variables: {
-            params: {
-              streamId: this.stream.id,
-              objects: [{ data: objects, speckle_type: 'Base' }]
-            }
-          }
-        })
+        // let res = await this.$apollo.mutate({
+        //   mutation: gql`
+        //     mutation ObjectCreate($params: ObjectCreateInput!) {
+        //       objectCreate(objectInput: $params)
+        //     }
+        //   `,
+        //   variables: {
+        //     params: {
+        //       streamId: this.stream.id,
+        //       objects: Object.values(s.objects)
+        //     }
+        //   }
+        // })
 
+        // let formData = new FormData()
+        // formData.append(
+        //   'batch-1',
+        //   zlib.gzipSync(Buffer.from(JSON.stringify(Object.values(s.objects))))
+        // )
+        // let formData = s.batchObjects()
+
+        // let token = localStorage.getItem('SpeckleSketchup.AuthToken')
+        // let res = await fetch(`https://latest.speckle.dev/objects/${this.stream.id}`, {
+        //   method: 'POST',
+        //   headers: { Authorization: 'Bearer ' + token },
+        //   body: formData
+        // })
+        // console.log('res:', res)
+        // if (res.status !== 201) throw `Upload request failed: ${res}`
+        let batches = s.batchObjects()
+        for (let batch of batches) {
+          let res = await this.sendBatch(batch)
+          console.log(res)
+          if (res.status !== 201) throw `Upload request failed: ${res}`
+        }
+
+        let commit = {
+          streamId: this.stream.id,
+          branchName: 'main',
+          objectId: hash,
+          message: 'sent from sketchup',
+          sourceApplication: 'sketchup',
+          totalChildrenCount: s.objects[hash].totalChildrenCount
+        }
+        console.log('commit:', commit)
         await this.$apollo.mutate({
           mutation: gql`
             mutation CommitCreate($commit: CommitCreateInput!) {
@@ -108,20 +146,27 @@ export default {
             }
           `,
           variables: {
-            commit: {
-              streamId: this.stream.id,
-              branchName: 'main',
-              objectId: res.data.objectCreate[0],
-              message: 'sent from sketchup',
-              sourceApplication: 'sketchup'
-            }
+            commit: commit
           }
         })
+        console.log('sent to stream: ' + this.stream.id)
+
         this.loading = false
       } catch (err) {
         this.loading = false
         console.log(err)
       }
+    },
+    async sendBatch(batch) {
+      let formData = new FormData()
+      formData.append('batch-1', zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
+      let token = localStorage.getItem('SpeckleSketchup.AuthToken')
+      let res = await fetch(`https://latest.speckle.dev/objects/${this.stream.id}`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: formData
+      })
+      return res
     }
   }
 }
