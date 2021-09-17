@@ -7,9 +7,9 @@
     {
       "label": "Debug SketchUp 2021",
       "type": "shell",
-      "command": "open -a '/Applications/SketchUp 2021/SketchUp.app' --args -rdebug 'ide port=7000 wait'",
+      "command": "open -a '/Applications/SketchUp 2021/SketchUp.app' --args -rdebug 'ide port=7000'",
       "windows": {
-        "command": "&'C:/Program Files/SketchUp/SketchUp 2021/SketchUp.exe' -rdebug 'ide port=7000 wait'",
+        "command": "&'C:/Program Files/SketchUp/SketchUp 2021/SketchUp.exe' -rdebug 'ide port=7000'",
       },
       "problemMatcher": []
     }
