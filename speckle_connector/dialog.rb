@@ -26,12 +26,10 @@ module SpeckleSystems::SpeckleConnector
       html = File.read(File.join(basedir, "index.html"))
       @dialog ||= create_dialog
       @dialog.add_action_callback("poke") do |action_context, name, num_pokes|
-        puts(action_context)
         on_poke(name, num_pokes)
         nil
       end
       @dialog.add_action_callback("send_selection") do |action_context, stream_id|
-        puts(action_context)
         send_selection(stream_id)
         nil
       end
@@ -53,6 +51,7 @@ module SpeckleSystems::SpeckleConnector
     converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
     converted = model.selection.map { |entity| converter.convert_to_speckle(entity) }
     puts("converted #{converted.count} objects for stream #{stream_id}")
+    # puts(converted.to_json)
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
   end
 end
