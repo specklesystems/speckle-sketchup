@@ -12,3 +12,5 @@ group :development do
   gem "sketchup-api-stubs"
   gem "solargraph"
 end
+
+gem "sqlite3", "~> 1.4"

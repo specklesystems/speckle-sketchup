@@ -51,6 +51,7 @@ GEM
       thor (~> 1.0)
       tilt (~> 2.0)
       yard (~> 0.9, >= 0.9.24)
+    sqlite3 (1.4.2)
     thor (1.1.0)
     tilt (2.0.10)
     unicode-display_width (2.0.0)
@@ -64,6 +65,7 @@ DEPENDENCIES
   rubocop (~> 1.7)
   sketchup-api-stubs
   solargraph
+  sqlite3 (~> 1.4)
 
 BUNDLED WITH
    2.2.26
