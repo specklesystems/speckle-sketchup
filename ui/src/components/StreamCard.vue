@@ -88,7 +88,7 @@ export default {
       }
 
       let s = new BaseObjectSerializer()
-      let { hash, serialized } = s.writeJson({ data: objects, speckle_type: 'Base' })
+      let { hash, serialized } = s.writeJson({ '@data': objects, speckle_type: 'Base' })
       console.log('hash:', hash, 'serialized:', serialized)
       console.log('serializer:', s)
       console.log('objects:', s.objects)
@@ -116,7 +116,7 @@ export default {
         // let formData = s.batchObjects()
 
         // let token = localStorage.getItem('SpeckleSketchup.AuthToken')
-        // let res = await fetch(`https://latest.speckle.dev/objects/${this.stream.id}`, {
+        // let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         //   method: 'POST',
         //   headers: { Authorization: 'Bearer ' + token },
         //   body: formData
@@ -124,8 +124,8 @@ export default {
         // console.log('res:', res)
         // if (res.status !== 201) throw `Upload request failed: ${res}`
         let batches = s.batchObjects()
-        for (const batch of batches) {
-          let res = await this.sendBatch(batch)
+        for (const [i, batch] of batches) {
+          let res = await this.sendBatch(batch, i + 1)
           console.log(res)
           if (res.status !== 201) throw `Upload request failed: ${res}`
         }
@@ -157,9 +157,9 @@ export default {
         console.log(err)
       }
     },
-    async sendBatch(batch) {
+    async sendBatch(batch, num) {
       let formData = new FormData()
-      formData.append('batch-1', zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
+      formData.append(`batch-${num}`, zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
       let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         method: 'POST',

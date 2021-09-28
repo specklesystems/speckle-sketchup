@@ -166,13 +166,11 @@ import { bus } from './main'
 import userQuery from './graphql/user.gql'
 
 global.loadAccounts = function (accounts) {
-  console.log('IN LOAD ACCOUNTS', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
   global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
 }
 
 global.setSelectedAccount = function (account) {
-  console.log('IN SET SELECTED ACCT', account)
   localStorage.setItem('selectedAccount', JSON.stringify(account))
   localStorage.setItem('serverUrl', account['serverInfo']['url'])
   localStorage.setItem('SpeckleSketchup.AuthToken', account['token'])
