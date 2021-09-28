@@ -2,6 +2,7 @@ require "JSON"
 require "json"
 require "sketchup"
 require "speckle_connector/converter/to_speckle"
+require "speckle_connector/accounts"
 
 module SpeckleSystems::SpeckleConnector
   UNITS = { 0 => "in", 1 => "ft", 2 => "mm", 3 => "cm", 4 => "m", 5 => "yd" }.freeze
@@ -33,8 +34,12 @@ module SpeckleSystems::SpeckleConnector
         send_selection(stream_id)
         nil
       end
+      @dialog.add_action_callback('reload_accounts') do |action_context|
+        reload_accounts()
+      end
       @dialog.set_html(html)
       @dialog.show
+      reload_accounts()
 
       @dialog
     end
@@ -54,4 +59,9 @@ module SpeckleSystems::SpeckleConnector
     # puts(converted.to_json)
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
   end
+
+  def self.reload_accounts()
+    @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json})")
+  end
+
 end

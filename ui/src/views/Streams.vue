@@ -16,10 +16,24 @@
 </template>
 
 <script>
+import { bus } from '../main'
 import streamsQuery from '../graphql/streams.gql'
 
 export default {
   name: 'Streams',
+  components: {
+    StreamCard: () => import('@/components/StreamCard')
+  },
+  data() {
+    return {
+      streams: []
+    }
+  },
+  mounted() {
+    bus.$on('refresh-streams', () => {
+      this.$apollo.queries.streams.refetch()
+    })
+  },
   apollo: {
     streams: {
       prefetch: true,
@@ -28,14 +42,6 @@ export default {
       update(data) {
         return data.streams.items
       }
-    }
-  },
-  components: {
-    StreamCard: () => import('@/components/StreamCard')
-  },
-  data() {
-    return {
-      streams: []
     }
   },
   methods: {}

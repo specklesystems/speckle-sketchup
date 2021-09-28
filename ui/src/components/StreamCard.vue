@@ -124,7 +124,7 @@ export default {
         // console.log('res:', res)
         // if (res.status !== 201) throw `Upload request failed: ${res}`
         let batches = s.batchObjects()
-        for (let batch of batches) {
+        for (const batch of batches) {
           let res = await this.sendBatch(batch)
           console.log(res)
           if (res.status !== 201) throw `Upload request failed: ${res}`
@@ -161,7 +161,7 @@ export default {
       let formData = new FormData()
       formData.append('batch-1', zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
-      let res = await fetch(`https://latest.speckle.dev/objects/${this.stream.id}`, {
+      let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + token },
         body: formData

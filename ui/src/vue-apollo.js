@@ -12,7 +12,7 @@ const httpEndpoint = process.env.VUE_APP_DEFAULT_SERVER + '/graphql'
 // Config
 const defaultOptions = {
   // You can use `https` for secure connection (recommended in production)
-  httpEndpoint,
+  httpEndpoint: () => localStorage.getItem('serverUrl') + '/graphql',
   // You can use `wss` for secure connection (recommended in production)
   // Use `null` to disable subscriptions
   wsEndpoint: httpEndpoint.replace('http', 'ws'),
@@ -52,9 +52,6 @@ export function createProvider(options = {}) {
     ...options
   })
   apolloClient.wsClient = wsClient
-
-  //! TO BE REMOVED, JUST TO GET THIS WORKING FOR DEV
-  localStorage.setItem(AUTH_TOKEN, process.env.VUE_APP_DEV_TOKEN)
 
   // Create vue apollo provider
   const apolloProvider = new VueApollo({
