@@ -44,7 +44,6 @@
 import gql from 'graphql-tag'
 import { bus } from '../main'
 import { BaseObjectSerializer } from '../utils/serialization'
-const zlib = require('zlib')
 
 global.convertedFromSketchup = function (streamId, objects) {
   bus.$emit('converted-from-sketchup', streamId, objects)
@@ -89,40 +88,10 @@ export default {
 
       let s = new BaseObjectSerializer()
       let { hash, serialized } = s.writeJson({ '@data': objects, speckle_type: 'Base' })
-      console.log('hash:', hash, 'serialized:', serialized)
-      console.log('serializer:', s)
+
       console.log('objects:', s.objects)
       try {
         this.loading = true
-        // let res = await this.$apollo.mutate({
-        //   mutation: gql`
-        //     mutation ObjectCreate($params: ObjectCreateInput!) {
-        //       objectCreate(objectInput: $params)
-        //     }
-        //   `,
-        //   variables: {
-        //     params: {
-        //       streamId: this.stream.id,
-        //       objects: Object.values(s.objects)
-        //     }
-        //   }
-        // })
-
-        // let formData = new FormData()
-        // formData.append(
-        //   'batch-1',
-        //   zlib.gzipSync(Buffer.from(JSON.stringify(Object.values(s.objects))))
-        // )
-        // let formData = s.batchObjects()
-
-        // let token = localStorage.getItem('SpeckleSketchup.AuthToken')
-        // let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
-        //   method: 'POST',
-        //   headers: { Authorization: 'Bearer ' + token },
-        //   body: formData
-        // })
-        // console.log('res:', res)
-        // if (res.status !== 201) throw `Upload request failed: ${res}`
         let batches = s.batchObjects()
         for (const batch of batches) {
           let res = await this.sendBatch(batch)
@@ -159,7 +128,10 @@ export default {
     },
     async sendBatch(batch, num = 1) {
       let formData = new FormData()
-      formData.append(`batch-${num}`, zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
+      formData.append(
+        `batch-${num}`,
+        new Blob([JSON.stringify(batch)], { type: 'application/json' })
+      )
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
       let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         method: 'POST',
