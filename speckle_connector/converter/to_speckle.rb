@@ -45,15 +45,20 @@ module SpeckleSystems::SpeckleConnector
     end
 
     def component_definition_to_speckle(definition)
-      {
+      guid = definition.guid
+      if @component_defs.has_key?(guid)
+        return @component_defs[guid]
+      end
+      speckle_def = {
         speckle_type: "Objects.Other.BlockDefinition",
-        applicationId: definition.guid,
+        applicationId: guid,
         units: @units,
         name: definition.name,
         # i think the base point is always the origin?
         basePoint: speckle_point,
         "@geometry" => definition.entities.filter_map { |entity| convert_to_speckle(entity) if entity.typename != "Edge" }
       }
+      @component_defs[guid] = speckle_def
     end
 
     def component_instance_to_speckle(instance, is_group: false)
