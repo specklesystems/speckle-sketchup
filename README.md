@@ -70,6 +70,10 @@ $LOAD_PATH << 'C:\YOUR\PATH\TO\THE\sketchup_connector'
 require 'speckle_connector.rb'
 ```
 
+Drop this Ruby file into your SketchUp Plugins directory. You will likely find this at: 
+
+    C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 2021\SketchUp\Plugins 
+
 To reload the plugin while SketchUp is running, open up the Ruby console and run the following:
 
     SpeckleSystems::SpeckleConnector.reload
