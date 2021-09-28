@@ -20,7 +20,7 @@ export class BaseObjectSerializer {
     self.detachLineage = [true]
     let { hash, traversed } = this.traverseBase(base)
     this.objects[hash] = traversed
-    let serialized = JSON.stringify(traversed)
+    let serialized = traversed
     return { hash, serialized }
   }
 
@@ -176,14 +176,14 @@ export class BaseObjectSerializer {
     console.log('START batching objects')
     let objects = Object.values(this.objects)
     objects.forEach((obj) => {
-      let currObj = JSON.stringify(obj)
-      if (batchSize + currObj.length < maxSize) {
+      let objString = JSON.stringify(obj)
+      if (batchSize + objString.length < maxSize) {
         batch.push(obj)
-        batchSize += currObj.length
+        batchSize += objString.length
       } else {
         batches.push(batch)
-        batch = [currObj]
-        batchSize = currObj.length
+        batch = [obj]
+        batchSize = objString.length
       }
     })
     batches.push(batch)
