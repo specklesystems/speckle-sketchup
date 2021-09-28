@@ -157,9 +157,9 @@ export default {
         console.log(err)
       }
     },
-    async sendBatch(batch, num = 1) {
+    async sendBatch(batch) {
       let formData = new FormData()
-      formData.append(`batch-${num}`, zlib.gzipSync(Buffer.from(JSON.stringify(batch))))
+      formData.append('batch-1', new Blob([JSON.stringify(batch)], { type: 'application/json' }))
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
       let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         method: 'POST',
