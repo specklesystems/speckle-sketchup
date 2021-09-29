@@ -3,7 +3,7 @@
     <v-row>
       <v-col>
         <v-toolbar class="transparent elevation-0" dense>
-          <v-toolbar-title>{{ stream.name }}</v-toolbar-title>
+          <v-toolbar-title>{{ stream.name }} O HAI</v-toolbar-title>
           <v-spacer />
         </v-toolbar>
         <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
@@ -160,6 +160,10 @@ export default {
     async sendBatch(batch) {
       let formData = new FormData()
       formData.append('batch-1', new Blob([JSON.stringify(batch)], { type: 'application/json' }))
+      // formData.append(
+      //   'batch-1',
+      //   new Blob([zlib.gzipSync(Buffer.from(JSON.stringify(batch)))], { type: 'application/gzip' })
+      // )
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
       let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
         method: 'POST',
