@@ -10,7 +10,7 @@ module SpeckleSystems::SpeckleConnector
 
   def self.create_dialog
     options = {
-      dialog_title: "Material",
+      dialog_title: "SpeckleSketchUp",
       preferences_key: "example.htmldialog.materialinspector",
       style: UI::HtmlDialog::STYLE_DIALOG,
       url: "http://localhost:8081"

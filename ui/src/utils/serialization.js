@@ -1,4 +1,3 @@
-const zlib = require('zlib')
 const crypto = require('crypto')
 
 export class BaseObjectSerializer {
@@ -173,7 +172,6 @@ export class BaseObjectSerializer {
     let batches = []
     let batch = []
     let batchSize = 0
-    console.log('START batching objects')
     let objects = Object.values(this.objects)
     objects.forEach((obj) => {
       let objString = JSON.stringify(obj)
@@ -187,8 +185,6 @@ export class BaseObjectSerializer {
       }
     })
     batches.push(batch)
-
-    console.log('batches:', batches)
 
     return batches
   }
