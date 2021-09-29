@@ -3,7 +3,7 @@
     <v-row>
       <v-col>
         <v-toolbar class="transparent elevation-0" dense>
-          <v-toolbar-title>{{ stream.name }}</v-toolbar-title>
+          <v-toolbar-title>{{ stream.name }} O HAI</v-toolbar-title>
           <v-spacer />
         </v-toolbar>
         <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
@@ -126,7 +126,7 @@ export default {
         console.log(err)
       }
     },
-    async sendBatch(batch, num = 1) {
+    async sendBatch(batch) {
       let formData = new FormData()
       formData.append(
         `batch-${num}`,

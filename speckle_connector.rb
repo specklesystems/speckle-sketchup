@@ -21,7 +21,8 @@ module SpeckleSystems
 
       ex = SketchupExtension.new(
         "Hello Cube",
-        "C:/Users/izzy lyseggen/Documents/dev/next/sketchup_connector/speckle_connector/main"
+        "C:/Users/admin/Code/speckle-sketchup/speckle_connector/main"
+        # "C:/Users/izzy lyseggen/Documents/dev/next/sketchup_connector/speckle_connector/main"
       )
 
       ex.description = "Speckle Connector for SketchUp"

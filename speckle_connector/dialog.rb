@@ -12,7 +12,8 @@ module SpeckleSystems::SpeckleConnector
     options = {
       dialog_title: "SpeckleSketchUp",
       preferences_key: "example.htmldialog.materialinspector",
-      style: UI::HtmlDialog::STYLE_DIALOG
+      style: UI::HtmlDialog::STYLE_DIALOG,
+      url: "http://localhost:8081"
     }
     dialog = UI::HtmlDialog.new(options)
     dialog.center
@@ -23,8 +24,8 @@ module SpeckleSystems::SpeckleConnector
     if @dialog&.visible?
       @dialog.bring_to_front
     else
-      basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
-      html = File.read(File.join(basedir, "index.html"))
+      # basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
+      # html = File.read(File.join(basedir, "index.html"))
       @dialog ||= create_dialog
       @dialog.add_action_callback("poke") do |action_context, name, num_pokes|
         on_poke(name, num_pokes)
@@ -37,7 +38,8 @@ module SpeckleSystems::SpeckleConnector
       @dialog.add_action_callback('reload_accounts') do |action_context|
         reload_accounts()
       end
-      @dialog.set_html(html)
+      # @dialog.set_html(html)
+      @dialog.set_url("http://localhost:8081")
       @dialog.show
       reload_accounts()
 
