@@ -106,13 +106,17 @@ module SpeckleSystems::SpeckleConnector
       vertices = []
       faces = []
       colors = []
+      uvs = []
       pt_count = -1 # faces are 1 indexed
       component_def.entities.each do |entity|
         next unless entity.typename == "Face"
 
-        mesh = entity.mesh
+        mesh = entity.mesh(1)
         mesh.points.each do |pt|
           vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+        end
+        mesh.uvs(true).each do |pt|
+          uvs.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
         end
         mesh.polygons.each do |poly|
           faces.push(
@@ -140,16 +144,22 @@ module SpeckleSystems::SpeckleConnector
         bbox: bounds_to_speckle(component_def.bounds),
         "@(31250)vertices" => vertices,
         "@(62500)faces" => faces,
-        "@(62500)colors" => colors
+        "@(62500)colors" => colors,
+        "@(31250)textureCoordinates" => uvs
       }
     end
 
     def face_to_speckle(face)
       vertices = []
       faces = []
-      mesh = face.mesh
+      uvs = []
+
+      mesh = face.mesh(1)
       mesh.points.each do |pt|
         vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+      end
+      mesh.uvs(true).each do |pt|
+        uvs.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
       end
       mesh.polygons.each do |poly|
         faces.push(
@@ -169,7 +179,8 @@ module SpeckleSystems::SpeckleConnector
         renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material),
         bbox: bounds_to_speckle(face.bounds),
         "@(31250)vertices" => vertices,
-        "@(62500)faces" => faces
+        "@(62500)faces" => faces,
+        "@(31250)textureCoordinates" => uvs
       }
     end
 
