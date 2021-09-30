@@ -3,8 +3,7 @@
     <v-main>
       <v-app-bar app flat>
         <v-toolbar-title class="space-grotesk pl-0">
-          {{ $route.name }} HOT RELOAD HAI WHAT
-          asdfasfdasdf
+          {{ $route.name }}
         </v-toolbar-title>
         <v-spacer />
         <v-btn icon @click="requestRefresh">
@@ -148,7 +147,7 @@
 
       <v-bottom-navigation fixed xxx-hide-on-scroll class="hidden-sm-and-up elevation-20">
         <v-btn color="primary" text to="/" style="height: 100%">
-          <span>Streams HAI</span>
+          <span>Streams</span>
           <v-icon>mdi-folder</v-icon>
         </v-btn>
 
