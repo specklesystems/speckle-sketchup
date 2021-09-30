@@ -116,7 +116,7 @@ module SpeckleSystems::SpeckleConnector
           vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
         end
         mesh.uvs(true).each do |pt|
-          uvs.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+          uvs.push(length_to_speckle(pt[0]/pt[2]), length_to_speckle(pt[1]/pt[2]))
         end
         mesh.polygons.each do |poly|
           faces.push(
@@ -159,7 +159,7 @@ module SpeckleSystems::SpeckleConnector
         vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
       end
       mesh.uvs(true).each do |pt|
-        uvs.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+        uvs.push(length_to_speckle(pt[0]/pt[2]), length_to_speckle(pt[1]/pt[2]))
       end
       mesh.polygons.each do |poly|
         faces.push(
