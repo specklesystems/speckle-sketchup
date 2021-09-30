@@ -46,9 +46,8 @@ module SpeckleSystems::SpeckleConnector
 
     def component_definition_to_speckle(definition)
       guid = definition.guid
-      if @component_defs.has_key?(guid)
-        return @component_defs[guid]
-      end
+      return @component_defs[guid] if @component_defs.has_key?(guid)
+
       speckle_def = {
         speckle_type: "Objects.Other.BlockDefinition",
         applicationId: guid,
