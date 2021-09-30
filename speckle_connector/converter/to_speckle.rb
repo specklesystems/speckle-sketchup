@@ -55,7 +55,11 @@ module SpeckleSystems::SpeckleConnector
         name: definition.name,
         # i think the base point is always the origin?
         basePoint: speckle_point,
-        "@geometry" => definition.entities.filter_map { |entity| convert_to_speckle(entity) if entity.typename != "Edge" }
+        "@geometry" => if %w[Edge Face].include?(definition.entities[0].typename)
+                         [group_mesh_to_speckle(definition)]
+                       else
+                         definition.entities.map { |entity| convert_to_speckle(entity) }
+                       end
       }
       @component_defs[guid] = speckle_def
     end
@@ -98,38 +102,47 @@ module SpeckleSystems::SpeckleConnector
       ]
     end
 
-    # def mesh_to_speckle(component_def)
-    #   vertices = []
-    #   faces = []
-    #   pt_count = 0
-    #   component_def.entities.each do |entity|
-    #     next unless entity.typename == "Face"
+    def group_mesh_to_speckle(component_def)
+      vertices = []
+      faces = []
+      colors = []
+      pt_count = -1 # faces are 1 indexed
+      component_def.entities.each do |entity|
+        next unless entity.typename == "Face"
 
-    #     mesh = entity.mesh
-    #     mesh.points.each do |pt|
-    #       vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
-    #     end
-    #     mesh.polygons.each do |poly|
-    #       faces.push(
-    #         case poly.count
-    #         when 3 then 0   # tris
-    #         when 4 then 1   # polys
-    #         else
-    #           poly.count    # ngons
-    #         end
-    #       )
-    #       faces.push(*poly.map { |coord| coord.abs + pt_count })
-    #     end
-    #     pt_count += mesh.points.count
-    #   end
+        mesh = entity.mesh
+        mesh.points.each do |pt|
+          vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+        end
+        mesh.polygons.each do |poly|
+          faces.push(
+            case poly.count
+            when 3 then 0   # tris
+            when 4 then 1   # polys
+            else
+              poly.count    # ngons
+            end
+          )
+          faces.push(*poly.map { |coord| coord.abs + pt_count })
+        end
+        pt_count += mesh.points.count
+        if entity.material.nil?
+          colors.push(*[-2_894_893] * mesh.points.count)
+        else
+          rgba = entity.material.color.to_a
+          colors.push(*[[rgba[3] << 24 | rgba[0] << 16 | rgba[1] << 8 | rgba[2]].pack("l").unpack1("l")] * mesh.points.count)
+        end
+      end
 
-    #   {
-    #     speckle_type: "Objects.Geometry.Mesh",
-    #     units: @units,
-    #     "@vertices" =>  vertices,
-    #     faces: faces
-    #   }
-    # end
+      {
+        speckle_type: "Objects.Geometry.Mesh",
+        units: @units,
+        bbox: bounds_to_speckle(component_def.bounds),
+        "@(31250)vertices" => vertices,
+        "@(62500)faces" => faces,
+        "@(62500)colors" => colors
+      }
+    end
 
     def face_to_speckle(face)
       vertices = []
@@ -155,7 +168,7 @@ module SpeckleSystems::SpeckleConnector
         units: @units,
         renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material),
         bbox: bounds_to_speckle(face.bounds),
-        "@(31250)vertices" =>  vertices,
+        "@(31250)vertices" => vertices,
         "@(62500)faces" => faces
       }
     end
