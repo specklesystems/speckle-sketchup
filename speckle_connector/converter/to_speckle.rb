@@ -56,7 +56,7 @@ module SpeckleSystems::SpeckleConnector
         # i think the base point is always the origin?
         basePoint: speckle_point,
         "@geometry" => if %w[Edge Face].include?(definition.entities[0].typename)
-                         [group_mesh_to_speckle(definition)]
+                         group_mesh_to_speckle(definition)
                        else
                          definition.entities.map { |entity| convert_to_speckle(entity) }
                        end
@@ -72,6 +72,7 @@ module SpeckleSystems::SpeckleConnector
         applicationId: instance.guid,
         is_sketchup_group: is_group,
         units: @units,
+        bbox: bounds_to_speckle(instance.bounds),
         name: instance.name,
         renderMaterial: instance.material.nil? ? nil : material_to_speckle(instance.material),
         transform: transform_to_speckle(transform),
@@ -103,23 +104,45 @@ module SpeckleSystems::SpeckleConnector
     end
 
     def group_mesh_to_speckle(component_def)
-      vertices = []
-      faces = []
-      colors = []
-      uvs = []
-      pt_count = -1 # faces are 1 indexed
-      component_def.entities.each do |entity|
-        next unless entity.typename == "Face"
+      mat_groups = {}
 
-        mesh = entity.mesh(1)
+      component_def.entities.each do |face|
+        next unless face.typename == "Face"
+
+        # convert material
+        mat_id = face.material.entityID
+        unless mat_groups.key?(mat_id)
+          mat_groups[mat_id] = {
+            speckle_type: "Objects.Geometry.Mesh",
+            units: @units,
+            bbox: bounds_to_speckle(component_def.bounds),
+            "@(31250)vertices" => [],
+            "@(62500)faces" => [],
+            "@(31250)textureCoordinates" => [],
+            pt_count: -1, # faces are 1 indexed
+            renderMaterial: material_to_speckle(face.material)
+          }
+        end
+
+        # add points and texture coordinates
+        mesh = face.mesh(1)
         mesh.points.each do |pt|
-          vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+          mat_groups[mat_id]["@(31250)vertices"].push(
+            length_to_speckle(pt[0]),
+            length_to_speckle(pt[1]),
+            length_to_speckle(pt[2])
+          )
         end
         mesh.uvs(true).each do |pt|
-          uvs.push(length_to_speckle(pt[0]/pt[2]), length_to_speckle(pt[1]/pt[2]))
+          mat_groups[mat_id]["@(31250)textureCoordinates"].push(
+            length_to_speckle(pt[0] / pt[2]),
+            length_to_speckle(pt[1] / pt[2])
+          )
         end
+
+        # add faces
         mesh.polygons.each do |poly|
-          faces.push(
+          mat_groups[mat_id]["@(62500)faces"].push(
             case poly.count
             when 3 then 0   # tris
             when 4 then 1   # polys
@@ -127,26 +150,13 @@ module SpeckleSystems::SpeckleConnector
               poly.count    # ngons
             end
           )
-          faces.push(*poly.map { |coord| coord.abs + pt_count })
+          mat_groups[mat_id]["@(62500)faces"].push(*poly.map { |coord| coord.abs + mat_groups[mat_id][:pt_count] })
         end
-        pt_count += mesh.points.count
-        if entity.material.nil?
-          colors.push(*[-2_894_893] * mesh.points.count)
-        else
-          rgba = entity.material.color.to_a
-          colors.push(*[[rgba[3] << 24 | rgba[0] << 16 | rgba[1] << 8 | rgba[2]].pack("l").unpack1("l")] * mesh.points.count)
-        end
+        mat_groups[mat_id][:pt_count] += mesh.points.count
       end
 
-      {
-        speckle_type: "Objects.Geometry.Mesh",
-        units: @units,
-        bbox: bounds_to_speckle(component_def.bounds),
-        "@(31250)vertices" => vertices,
-        "@(62500)faces" => faces,
-        "@(62500)colors" => colors,
-        "@(31250)textureCoordinates" => uvs
-      }
+      mat_groups.values.map { |group| group.delete(:pt_count) }
+      mat_groups.values
     end
 
     def face_to_speckle(face)
@@ -159,7 +169,7 @@ module SpeckleSystems::SpeckleConnector
         vertices.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
       end
       mesh.uvs(true).each do |pt|
-        uvs.push(length_to_speckle(pt[0]/pt[2]), length_to_speckle(pt[1]/pt[2]))
+        uvs.push(length_to_speckle(pt[0] / pt[2]), length_to_speckle(pt[1] / pt[2]))
       end
       mesh.polygons.each do |poly|
         faces.push(
