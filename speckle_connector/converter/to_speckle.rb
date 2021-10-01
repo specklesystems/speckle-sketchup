@@ -110,7 +110,7 @@ module SpeckleSystems::SpeckleConnector
         next unless face.typename == "Face"
 
         # convert material
-        mat_id = face.material.entityID
+        mat_id = face.material.nil? ? 'none' : face.material.entityID
         unless mat_groups.key?(mat_id)
           mat_groups[mat_id] = {
             speckle_type: "Objects.Geometry.Mesh",
@@ -120,7 +120,7 @@ module SpeckleSystems::SpeckleConnector
             "@(62500)faces" => [],
             "@(31250)textureCoordinates" => [],
             pt_count: -1, # faces are 1 indexed
-            renderMaterial: material_to_speckle(face.material)
+            renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material)
           }
         end
 
