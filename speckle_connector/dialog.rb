@@ -1,7 +1,7 @@
 require "JSON"
 require "json"
 require "sketchup"
-require "speckle_connector/converter/to_speckle"
+require "speckle_connector/converter/converter_sketchup"
 require "speckle_connector/accounts"
 
 module SpeckleSystems::SpeckleConnector
@@ -24,24 +24,24 @@ module SpeckleSystems::SpeckleConnector
     if @dialog&.visible?
       @dialog.bring_to_front
     else
-      # basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
-      # html = File.read(File.join(basedir, "index.html"))
+      basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
+      html = File.read(File.join(basedir, "index.html"))
       @dialog ||= create_dialog
-      @dialog.add_action_callback("poke") do |action_context, name, num_pokes|
+      @dialog.add_action_callback("poke") do |_action_context, name, num_pokes|
         on_poke(name, num_pokes)
         nil
       end
-      @dialog.add_action_callback("send_selection") do |action_context, stream_id|
+      @dialog.add_action_callback("send_selection") do |_action_context, stream_id|
         send_selection(stream_id)
         nil
       end
-      @dialog.add_action_callback('reload_accounts') do |action_context|
-        reload_accounts()
+      @dialog.add_action_callback("reload_accounts") do |_action_context|
+        reload_accounts
       end
-      # @dialog.set_html(html)
-      @dialog.set_url("http://localhost:8081")
+      @dialog.set_html(html)
+      # @dialog.set_url("http://localhost:8081")
       @dialog.show
-      reload_accounts()
+      reload_accounts
 
       @dialog
     end
@@ -62,8 +62,7 @@ module SpeckleSystems::SpeckleConnector
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
   end
 
-  def self.reload_accounts()
+  def self.reload_accounts
     @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json})")
   end
-
 end
