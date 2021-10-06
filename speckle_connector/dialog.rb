@@ -13,7 +13,9 @@ module SpeckleSystems::SpeckleConnector
       dialog_title: "SpeckleSketchUp",
       preferences_key: "example.htmldialog.materialinspector",
       style: UI::HtmlDialog::STYLE_DIALOG,
-      url: "http://localhost:8081"
+      url: "http://localhost:8081",
+      min_width: 250,
+      min_height: 50
     }
     dialog = UI::HtmlDialog.new(options)
     dialog.center
@@ -24,8 +26,6 @@ module SpeckleSystems::SpeckleConnector
     if @dialog&.visible?
       @dialog.bring_to_front
     else
-      basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
-      html = File.read(File.join(basedir, "index.html"))
       @dialog ||= create_dialog
       @dialog.add_action_callback("send_selection") do |_action_context, stream_id|
         send_selection(stream_id)
