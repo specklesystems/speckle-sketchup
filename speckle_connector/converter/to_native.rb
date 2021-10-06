@@ -22,6 +22,6 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def length_to_native(length)
-    length.__send__(SKETCHUP_UNIT_STRINGS[@units])
+    length.__send__(SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[@units])
   end
 end

@@ -3,7 +3,7 @@ require "sketchup"
 # To Speckle conversions for the ConverterSketchup
 module SpeckleSystems::SpeckleConnector::ToSpeckle
   def length_to_speckle(length)
-    length.__send__("to_#{SKETCHUP_UNIT_STRINGS[@units]}")
+    length.__send__("to_#{SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[@units]}")
   end
 
   def edge_to_speckle(edge)
