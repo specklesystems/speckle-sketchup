@@ -8,14 +8,12 @@
           src="@/assets/logo.svg"
           style="display: inline-block"
         />
-        <v-toolbar-title class="space-grotesk pl-0">
-          {{ $route.name }}
-        </v-toolbar-title>
+        <v-toolbar-title class="space-grotesk">Speckle Sketchup</v-toolbar-title>
         <v-spacer />
-        <v-btn v-tooltip="'Refresh accounts and streams'" icon @click="requestRefresh">
+        <v-btn icon @click="requestRefresh">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
-        <v-menu v-if="loggedIn" bottom min-width="200px" rounded offset-y open-on-hover>
+        <v-menu v-if="loggedIn" bottom min-width="200px" rounded offset-y>
           <template #activator="{ on, attrs }">
             <v-btn icon x-large v-on="on">
               <v-avatar
@@ -48,14 +46,23 @@
             </v-card-text>
             <v-card-text v-if="accounts">
               <v-divider class="my-3"></v-divider>
+
               <div v-for="account in accounts" :key="account.id">
-                <b>{{ account.userInfo.name }}</b>
-                <div class="caption">
-                  {{ account.userInfo.company }}
-                </div>
+                <v-btn
+                  v-if="account.userInfo.id != user.id"
+                  rounded
+                  large
+                  class="my-1 elevation-0"
+                  @click="switchAccount(account)"
+                >
+                  <span style="white-space: normal">
+                    <b>{{ account.userInfo.email }}</b>
+                    <div class="caption">
+                      {{ account.serverInfo.url }}
+                    </div>
+                  </span>
+                </v-btn>
               </div>
-              <v-divider class="my-3"></v-divider>
-              <v-btn depressed rounded text>Disconnect</v-btn>
             </v-card-text>
           </v-card>
         </v-menu>
@@ -124,6 +131,9 @@ export default {
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('darkModeEnabled', this.$vuetify.theme.dark ? 'dark' : 'light')
+    },
+    switchAccount(account) {
+      global.setSelectedAccount(account)
     },
     requestRefresh() {
       sketchup.reload_accounts()
