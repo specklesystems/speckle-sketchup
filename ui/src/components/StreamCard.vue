@@ -8,24 +8,41 @@
             <v-spacer />
           </v-toolbar>
           <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
+            <div class="text-caption">
+              Updated
+              <timeago :datetime="stream.updatedAt" />
+            </div>
             <v-toolbar-title>
               <v-chip v-if="stream.role" small class="mr-1">
                 <v-icon small left>mdi-account-key-outline</v-icon>
                 {{ stream.role.split(':')[1] }}
               </v-chip>
-              <v-chip small class="mr-1">
-                Updated
-                <timeago :datetime="stream.updatedAt" class="ml-1"></timeago>
-              </v-chip>
-              <v-chip v-if="stream.branches" small>
-                <v-icon small class="mr-2 float-left">mdi-source-branch</v-icon>
-                {{ stream.branches.totalCount }}
-              </v-chip>
+
+              <v-menu offset-y>
+                <template #activator="{ on, attrs }">
+                  <v-chip v-if="stream.branches" small v-bind="attrs" v-on="on">
+                    <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
+                    {{ branchName }}
+                  </v-chip>
+                </template>
+                <v-list>
+                  <v-list-item
+                    v-for="(branch, index) in stream.branches.items"
+                    :key="index"
+                    link
+                    @click="switchBranch(branch.name)"
+                  >
+                    <v-list-item-title class="text-caption">
+                      {{ branch.name }} ({{ branch.commits.totalCount }})
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </v-toolbar-title>
           </v-card-text>
         </v-col>
         <v-col v-if="hover" align="end" justify="center">
-          <v-btn v-tooltip="'Open in browser'" icon class="mr-4 btn-fix" @click="openInWeb">
+          <v-btn icon class="mr-4 btn-fix" @click="openInWeb">
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
           <v-btn
@@ -89,9 +106,14 @@ export default {
     }
   },
   data() {
-    return { loadingSend: false, loadingReceive: false }
+    return { loadingSend: false, loadingReceive: false, branchName: 'main' }
   },
-  computed: {},
+  computed: {
+    selectedBranch() {
+      if (this.$apollo.loading) return
+      return this.stream.branches.items.find((branch) => branch.name == this.selectedBranch)
+    }
+  },
   mounted() {
     bus.$on('converted-from-sketchup', async (streamId, objects) => {
       if (streamId != this.stream.id) return
@@ -107,6 +129,10 @@ export default {
     openInWeb() {
       window.open(`${localStorage.getItem('serverUrl')}/streams/${this.stream.id}`)
     },
+    switchBranch(branchName) {
+      this.branchName = branchName
+    },
+    async receive() {},
     async send() {
       this.loadingSend = true
       sketchup.send_selection(this.stream.id)
@@ -122,25 +148,22 @@ export default {
       let s = new BaseObjectSerializer()
       let { hash, serialized } = s.writeJson({ '@data': objects, speckle_type: 'Base' })
 
-      console.log('objects:', s.objects)
       try {
         this.loadingSend = true
         let batches = s.batchObjects()
         for (const batch of batches) {
           let res = await this.sendBatch(batch)
-          console.log(res)
           if (res.status !== 201) throw `Upload request failed: ${res}`
         }
 
         let commit = {
           streamId: this.stream.id,
-          branchName: 'main',
+          branchName: this.branchName,
           objectId: hash,
           message: 'sent from sketchup',
           sourceApplication: 'sketchup',
           totalChildrenCount: s.objects[hash].totalChildrenCount
         }
-        console.log('commit:', commit)
         await this.$apollo.mutate({
           mutation: gql`
             mutation CommitCreate($commit: CommitCreateInput!) {
@@ -151,7 +174,7 @@ export default {
             commit: commit
           }
         })
-        console.log('sent to stream: ' + this.stream.id)
+        console.log('sent to stream: ' + this.stream.id, commit)
 
         this.loadingSend = false
       } catch (err) {
