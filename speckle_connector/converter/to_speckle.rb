@@ -30,10 +30,10 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       # i think the base point is always the origin?
       basePoint: speckle_point,
       "@geometry" => if %w[Edge Face].include?(definition.entities[0].typename)
-                        group_mesh_to_speckle(definition)
-                      else
-                        definition.entities.map { |entity| convert_to_speckle(entity) }
-                      end
+                       group_mesh_to_speckle(definition)
+                     else
+                       definition.entities.map { |entity| convert_to_speckle(entity) }
+                     end
     }
     @component_defs[guid] = speckle_def
   end

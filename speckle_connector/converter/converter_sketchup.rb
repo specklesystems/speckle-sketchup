@@ -3,12 +3,11 @@ require "speckle_connector/converter/to_speckle"
 require "speckle_connector/converter/to_native"
 
 module SpeckleSystems::SpeckleConnector
+  SKETCHUP_UNIT_STRINGS = { "m" => "m", "mm" => "mm", "ft" => "feet", "in" => "inch", "yd" => "yard" }.freeze
+  public_constant :SKETCHUP_UNIT_STRINGS
   class ConverterSketchup
     include ToNative
     include ToSpeckle
-    
-    SKETCHUP_UNIT_STRINGS = { "m" => "m", "mm" => "mm", "ft" => "feet", "in" => "inch", "yd" => "yard" }.freeze
-    public_constant :SKETCHUP_UNIT_STRINGS
 
     attr_accessor :units, :component_defs
 
@@ -29,8 +28,8 @@ module SpeckleSystems::SpeckleConnector
     end
 
     def convert_to_native(obj)
-      case obj.typename
-      when "Edge" then edge_to_native(obj)
+      case obj["speckle_type"]
+      when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj)
       when "Face" then face_to_native(obj)
       else nil
       end

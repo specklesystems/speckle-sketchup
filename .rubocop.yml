@@ -30,6 +30,9 @@ Metrics/AbcSize:
 Metrics/ClassLength:
   Enabled: false
 
+Metrics/ModuleLength:
+  Enabled: false
+
 Metrics/MethodLength:
   Enabled: false
 

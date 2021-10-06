@@ -27,29 +27,23 @@ module SpeckleSystems::SpeckleConnector
       basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
       html = File.read(File.join(basedir, "index.html"))
       @dialog ||= create_dialog
-      @dialog.add_action_callback("poke") do |_action_context, name, num_pokes|
-        on_poke(name, num_pokes)
-        nil
-      end
       @dialog.add_action_callback("send_selection") do |_action_context, stream_id|
         send_selection(stream_id)
+        nil
+      end
+      @dialog.add_action_callback("receive") do |_action_context, base, stream_id|
+        receive(base, stream_id)
         nil
       end
       @dialog.add_action_callback("reload_accounts") do |_action_context|
         reload_accounts
       end
-      @dialog.set_html(html)
-      # @dialog.set_url("http://localhost:8081")
+      # @dialog.set_html(html)
+      @dialog.set_url("http://localhost:8081")
       @dialog.show
       reload_accounts
 
       @dialog
-    end
-  end
-
-  def self.on_poke(name, num_pokes)
-    num_pokes.times do
-      puts("Poke #{name}!")
     end
   end
 
@@ -60,6 +54,10 @@ module SpeckleSystems::SpeckleConnector
     puts("converted #{converted.count} objects for stream #{stream_id}")
     # puts(converted.to_json)
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
+  end
+
+  def self.receive(base, stream_id)
+    base
   end
 
   def self.reload_accounts
