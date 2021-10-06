@@ -32,6 +32,23 @@ query Streams($cursor: String) {
       }
       branches {
         totalCount
+        items {
+          id
+          name
+          commits(limit: 10) {
+            totalCount
+            items {
+              id
+              createdAt
+              message
+              authorId
+              branchName
+              authorName
+              authorAvatar
+              referencedObject
+            } 
+          }
+        }
       }
     }
   }
