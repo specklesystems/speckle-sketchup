@@ -31,8 +31,8 @@ module SpeckleSystems::SpeckleConnector
         send_selection(stream_id)
         nil
       end
-      @dialog.add_action_callback("receive") do |_action_context, base, stream_id|
-        receive(base, stream_id)
+      @dialog.add_action_callback("receive_objects") do |_action_context, base, stream_id|
+        receive_objects(base, stream_id)
         nil
       end
       @dialog.add_action_callback("reload_accounts") do |_action_context|
@@ -56,8 +56,9 @@ module SpeckleSystems::SpeckleConnector
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
   end
 
-  def self.receive(base, stream_id)
-    base
+  def self.receive_objects(base, stream_id)
+    puts("received objects from stream #{stream_id}")
+    @dialog.execute_script("finishedReceiveInSketchup('#{stream_id}')")
   end
 
   def self.reload_accounts

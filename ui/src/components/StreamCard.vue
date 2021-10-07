@@ -25,7 +25,7 @@
                     {{ branchName }}
                   </v-chip>
                 </template>
-                <v-list>
+                <v-list dense>
                   <v-list-item
                     v-for="(branch, index) in stream.branches.items"
                     :key="index"
@@ -82,6 +82,13 @@
           </v-btn>
         </v-col>
       </v-row>
+      <v-progress-linear
+        v-if="(loadingSend || loadingReceive) && loadingStage"
+        height="14"
+        indeterminate
+      >
+        <div class="text-caption">{{ loadingStage }}</div>
+      </v-progress-linear>
     </v-card>
   </v-hover>
 </template>
@@ -90,10 +97,15 @@
 /*global sketchup*/
 import gql from 'graphql-tag'
 import { bus } from '../main'
+import ObjectLoader from '@speckle/objectloader'
 import { BaseObjectSerializer } from '../utils/serialization'
 
 global.convertedFromSketchup = function (streamId, objects) {
-  bus.$emit('converted-from-sketchup', streamId, objects)
+  bus.$emit(`sketchup-objects-${streamId}`, objects)
+}
+
+global.finishedReceiveInSketchup = function (streamId) {
+  bus.$emit(`sketchup-received-${streamId}`)
 }
 
 export default {
@@ -106,20 +118,24 @@ export default {
     }
   },
   data() {
-    return { loadingSend: false, loadingReceive: false, branchName: 'main' }
+    return { loadingSend: false, loadingReceive: false, loadingStage: null, branchName: 'main' }
   },
   computed: {
     selectedBranch() {
       if (this.$apollo.loading) return
-      return this.stream.branches.items.find((branch) => branch.name == this.selectedBranch)
+      return this.stream.branches.items.find((branch) => branch.name == this.branchName)
     }
   },
   mounted() {
-    bus.$on('converted-from-sketchup', async (streamId, objects) => {
-      if (streamId != this.stream.id) return
+    bus.$on(`sketchup-objects-${this.stream.id}`, async (objects) => {
       console.log('received objects from sketchup', objects)
 
       await this.createCommit(objects)
+    })
+    bus.$on(`sketchup-received-${this.stream.id}`, () => {
+      console.log('finished receiving in sketchup', this.stream.id)
+      this.loadingReceive = false
+      this.loadingStage = null
     })
   },
   methods: {
@@ -132,8 +148,33 @@ export default {
     switchBranch(branchName) {
       this.branchName = branchName
     },
-    async receive() {},
+    async receive() {
+      this.loadingStage = 'requesting'
+      this.loadingReceive = true
+      const refId = this.selectedBranch.commits.items[0]?.referencedObject
+      if (!refId) {
+        this.loadingReceive = false
+        this.loadingStage = null
+        return
+      }
+
+      const loader = new ObjectLoader({
+        serverUrl: localStorage.getItem('serverUrl'),
+        token: localStorage.getItem('SpeckleSketchup.AuthToken'),
+        streamId: this.stream.id,
+        objectId: refId
+      })
+
+      let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
+      console.log(rootObj)
+      sketchup.receive_objects(rootObj, this.stream.id)
+      this.loadingStage = 'converting'
+    },
+    updateLoadingStage({ stage }) {
+      this.loadingStage = stage
+    },
     async send() {
+      this.loadingStage = 'converting'
       this.loadingSend = true
       sketchup.send_selection(this.stream.id)
       console.log('request for data sent to sketchup')
@@ -142,13 +183,16 @@ export default {
     async createCommit(objects) {
       if (objects.length == 0) {
         this.loadingSend = false
+        this.loadingStage = null
         return
       }
 
+      this.loadingStage = 'serializing'
       let s = new BaseObjectSerializer()
       let { hash, serialized } = s.writeJson({ '@data': objects, speckle_type: 'Base' })
 
       try {
+        this.loadingStage = 'uploading'
         this.loadingSend = true
         let batches = s.batchObjects()
         for (const batch of batches) {
@@ -177,8 +221,10 @@ export default {
         console.log('sent to stream: ' + this.stream.id, commit)
 
         this.loadingSend = false
+        this.loadingStage = null
       } catch (err) {
         this.loadingSend = false
+        this.loadingStage = null
         console.log(err)
       }
     },
