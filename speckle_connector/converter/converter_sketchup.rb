@@ -26,13 +26,5 @@ module SpeckleSystems::SpeckleConnector
       else nil
       end
     end
-
-    def convert_to_native(obj)
-      case obj["speckle_type"]
-      when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj)
-      when "Face" then face_to_native(obj)
-      else nil
-      end
-    end
   end
 end

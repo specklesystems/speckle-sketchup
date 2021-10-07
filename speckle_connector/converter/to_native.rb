@@ -2,6 +2,49 @@ require "sketchup"
 
 # To Native conversions for the ConverterSketchup
 module SpeckleSystems::SpeckleConnector::ToNative
+  def traverse_commit_object(obj)
+    case obj
+    # traverse base object
+    when can_convert_to_native(obj) then convert_to_native(obj)
+    when obj.is_a?(Hash) && obj.key?("speckle_type")
+      props = obj.keys.filter_map { |key| key if key.start_with?("@") }
+      %w[displayMesh displayValue data].each { |prop| props.push(prop) if obj.key?(prop) }
+      props.each { |prop| traverse_commit_object(obj[prop]) }
+
+    # traverse hash values
+    when obj.is_a?(Hash)
+      obj.values.each { |item| traverse_commit_object(item) }
+
+    # traverse items in array
+    when obj.is_a?(Array)
+      obj.each { |item| traverse_commit_object(item) }
+    else
+      nil
+    end
+  end
+
+  def can_convert_to_native(obj)
+    return false unless obj.is_a?(Hash) && obj.key?("speckle_type")
+
+    [
+      "Objects.Geometry.Line",
+      "Objects.Geometry.Polyline",
+      "Objects.Geometry.Mesh",
+      "Objects.Other.BlockInstance",
+      "Objects.Other.BlockDefinition",
+      "Objects.Other.RenderMaterial"
+    ].include?(obj["speckle_type"])
+  end
+
+  def convert_to_native(obj)
+    case obj["speckle_type"]
+    when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj)
+    when "Face" then face_to_native(obj)
+    else
+      nil
+    end
+  end
+
   def length_to_native(length, units: @units)
     length.__send__(SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
   end
@@ -34,6 +77,10 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def component_definition_to_native
+    nil
+  end
+
+  def mesh_to_native
     nil
   end
 
