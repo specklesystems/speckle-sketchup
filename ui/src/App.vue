@@ -10,12 +10,15 @@
         />
         <v-toolbar-title class="space-grotesk">Speckle Sketchup</v-toolbar-title>
         <v-spacer />
-        <v-btn icon @click="requestRefresh">
+        <v-btn icon small class="mx-1" @click="switchTheme">
+          <v-icon>mdi-theme-light-dark</v-icon>
+        </v-btn>
+        <v-btn icon small class="mx-1" @click="requestRefresh">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
         <v-menu v-if="loggedIn" bottom min-width="200px" rounded offset-y>
           <template #activator="{ on, attrs }">
-            <v-btn icon x-large v-on="on">
+            <v-btn class="ml-1" icon x-large v-on="on">
               <v-avatar
                 v-if="user"
                 class="ma-1"
