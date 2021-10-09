@@ -38,3 +38,9 @@ Metrics/MethodLength:
 
 Metrics/ParameterLists:
   Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
