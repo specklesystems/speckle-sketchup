@@ -58,6 +58,9 @@ module SpeckleSystems::SpeckleConnector
 
   def self.receive_objects(base, stream_id)
     puts("received objects from stream #{stream_id}")
+    model = Sketchup.active_model
+    converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
+    converter.traverse_commit_object(base)
     @dialog.execute_script("finishedReceiveInSketchup('#{stream_id}')")
   end
 

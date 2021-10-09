@@ -3,21 +3,16 @@ require "sketchup"
 # To Native conversions for the ConverterSketchup
 module SpeckleSystems::SpeckleConnector::ToNative
   def traverse_commit_object(obj)
-    case obj
-    # traverse base object
-    when can_convert_to_native(obj) then convert_to_native(obj)
-    when obj.is_a?(Hash) && obj.key?("speckle_type")
+    if can_convert_to_native(obj)
+      convert_to_native(obj, Sketchup.active_model.entities)
+    elsif obj.is_a?(Hash) && obj.key?("speckle_type")
       props = obj.keys.filter_map { |key| key if key.start_with?("@") }
       %w[displayMesh displayValue data].each { |prop| props.push(prop) if obj.key?(prop) }
       props.each { |prop| traverse_commit_object(obj[prop]) }
-
-    # traverse hash values
-    when obj.is_a?(Hash)
-      obj.values.each { |item| traverse_commit_object(item) }
-
-    # traverse items in array
-    when obj.is_a?(Array)
-      obj.each { |item| traverse_commit_object(item) }
+    elsif obj.is_a?(Hash)
+      obj.each_value { |value| traverse_commit_object(value) }
+    elsif obj.is_a?(Array)
+      obj.each { |value| traverse_commit_object(value) }
     else
       nil
     end
@@ -36,56 +31,91 @@ module SpeckleSystems::SpeckleConnector::ToNative
     ].include?(obj["speckle_type"])
   end
 
-  def convert_to_native(obj)
-    case obj["speckle_type"]
-    when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj)
-    when "Face" then face_to_native(obj)
-    else
-      nil
-    end
+  def convert_to_native(obj, entities = SketchUp.active_model.entities)
+    # begin
+      case obj["speckle_type"]
+      when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj, entities)
+      when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
+      when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
+      when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
+      else
+        nil
+      end
+    # rescue => ex
+    #   puts(ex)
+    #   nil
+    # end
   end
 
-  def length_to_native(length, units: @units)
+  def length_to_native(length, units = @units)
     length.__send__(SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
   end
 
-  def edge_to_native(line)
+  def edge_to_native(line, entities)
     return unless line.key?("value")
 
     values = line["value"]
-    points =
-      values.each_slice(3).to_a.map do |pt|
-        Geom::Point3d.new(
-          length_to_native(pt[0], line["units"]),
-          length_to_native(pt[1], line["units"]),
-          length_to_native(pt[2], line["units"])
-        )
-      end
-    Sketchup.active_model.active_entities.add_edges(*points)
+    points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
+    entities.add_edges(*points)
   end
 
   def face_to_native
     nil
   end
 
-  def point_to_native(point)
-    Geom::Point3d.new(
-      length_to_native(point["x"], point["units"]),
-      length_to_native(point["y"], point["units"]),
-      length_to_native(point["z"], point["units"])
-    )
+  def point_to_native(x, y, z, units)
+    Geom::Point3d.new(length_to_native(x, units), length_to_native(y, units), length_to_native(z, units))
   end
 
-  def component_definition_to_native
-    nil
+  def component_definition_to_native(block_def)
+    definition = Sketchup.active_model.definitions[block_def["name"]]
+    return definition if definition&.guid == block_def["applicationId"]
+
+    definition&.entities&.clear!
+    definition ||= Sketchup.active_model.definitions.add(block_def["name"])
+    block_def["geometry"].each { |obj| convert_to_native(obj, definition.entities) }
+    definition
   end
 
-  def mesh_to_native
-    nil
+  def mesh_to_native(mesh, entities)
+    native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
+    points = [] # to preserve indices - duplicate points won't be added in `point_to_native`
+    mesh["vertices"].each_slice(3) do |pt|
+      points.push(point_to_native(pt[0], pt[1], pt[2], mesh["units"]))
+      native_mesh.add_point(points[-1])
+    end
+    faces = mesh["faces"]
+    while faces.count > 0
+      size = faces.shift
+      num_pts =
+        case size
+        when 0 then 3
+        when 1 then 4
+        else size
+        end
+      indices = faces.shift(num_pts)
+      native_mesh.add_polygon(points[indices[0]], points[indices[1]], points[indices[2]])
+    end
+    p(entities.add_faces_from_mesh(native_mesh, 4, material_to_native(mesh["renderMaterial"])))
+
+    native_mesh
   end
 
-  def component_instance_to_native
-    nil
+  def component_instance_to_native(block, entities)
+    is_group = group_to_native(block) if block.key?("is_group") && block["is_group"]
+
+    definition = component_definition_to_native(block["blockDefinition"])
+
+    transform = transform_to_native(block["transform"])
+    instance =
+      if is_group
+        entities.add_group(definition.entities.to_a)
+      else
+        entities.add_instance(definition, transform)
+      end
+    instance.transform = transform if is_group
+    instance.material = material_to_native(block["renderMaterial"])
+    instance
   end
 
   def transform_to_native(t_arr, units: @units)
@@ -103,6 +133,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def material_to_native(render_mat)
+    return if render_mat.nil?
+
     # return material with same name if it exists
     name = render_mat["name"] || render_mat["id"]
     material = Sketchup.active_model.materials[name]
