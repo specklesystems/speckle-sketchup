@@ -108,6 +108,10 @@ global.finishedReceiveInSketchup = function (streamId) {
   bus.$emit(`sketchup-received-${streamId}`)
 }
 
+global.sketchupOperationFailed = function (streamId) {
+  bus.$emit(`sketchup-fail-${streamId}`)
+}
+
 export default {
   props: {
     stream: {
@@ -135,6 +139,11 @@ export default {
     bus.$on(`sketchup-received-${this.stream.id}`, () => {
       console.log('finished receiving in sketchup', this.stream.id)
       this.loadingReceive = false
+      this.loadingStage = null
+    })
+    bus.$on(`sketchup-fail-${this.stream.id}`, () => {
+      console.log('sketchup operation failed', this.stream.id)
+      this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
     })
   },

@@ -54,6 +54,9 @@ module SpeckleSystems::SpeckleConnector
     puts("converted #{converted.count} objects for stream #{stream_id}")
     # puts(converted.to_json)
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
+  rescue StandardError => e
+    puts(e)
+    @dialog.execute_script("sketchupOperationFailed('#{stream_id}')")
   end
 
   def self.receive_objects(base, stream_id)
@@ -62,6 +65,9 @@ module SpeckleSystems::SpeckleConnector
     converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
     converter.traverse_commit_object(base)
     @dialog.execute_script("finishedReceiveInSketchup('#{stream_id}')")
+  rescue StandardError => e
+    puts(e)
+    @dialog.execute_script("sketchupOperationFailed('#{stream_id}')")
   end
 
   def self.reload_accounts
