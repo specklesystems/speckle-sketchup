@@ -32,19 +32,18 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def convert_to_native(obj, entities = SketchUp.active_model.entities)
-    # begin
-      case obj["speckle_type"]
-      when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj, entities)
-      when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
-      when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
-      when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
-      else
-        nil
-      end
-    # rescue => ex
-    #   puts(ex)
-    #   nil
-    # end
+    case obj["speckle_type"]
+    when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj, entities)
+    when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
+    when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
+    when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
+    else
+      nil
+    end
+  # rescue StandardError => e
+  #   puts("Failed to convert #{obj["speckle_type"]} (id: #{obj["id"]})")
+  #   puts(e)
+  #   nil
   end
 
   def length_to_native(length, units = @units)
@@ -104,20 +103,22 @@ module SpeckleSystems::SpeckleConnector::ToNative
     is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
 
     definition = component_definition_to_native(block["blockDefinition"])
+    # return unless definition.entities.count.positive?
 
-    transform = transform_to_native(block["transform"])
+    transform = transform_to_native(block["transform"], block["units"])
     instance =
       if is_group
         entities.add_group(definition.entities.to_a)
       else
         entities.add_instance(definition, transform)
       end
+    puts("Failed to create instance for speckle object #{block["id"]}") if instance.nil?
     instance.transformation = transform if is_group
     instance.material = material_to_native(block["renderMaterial"])
     instance
   end
 
-  def transform_to_native(t_arr, units: @units)
+  def transform_to_native(t_arr, units = @units)
     Geom::Transformation.new(
       [
       t_arr[0], t_arr[4], t_arr[8],  t_arr[12],
