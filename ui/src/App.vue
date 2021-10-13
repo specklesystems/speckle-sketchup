@@ -10,6 +10,18 @@
         />
         <v-toolbar-title class="space-grotesk">Speckle Sketchup</v-toolbar-title>
         <v-spacer />
+        <v-text-field
+          v-model="streamSearchQuery"
+          prepend-inner-icon="mdi-magnify"
+          label="Search streams"
+          hide-details
+          clearable
+          rounded
+          filled
+          dense
+          flat
+          solo
+        ></v-text-field>
         <v-btn icon small class="mx-1" @click="switchTheme">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
@@ -72,7 +84,7 @@
       </v-app-bar>
 
       <v-container fluid>
-        <router-view />
+        <router-view :stream-search-query="streamSearchQuery" />
       </v-container>
     </v-main>
   </v-app>
@@ -105,8 +117,8 @@ export default {
       default: 42
     }
   },
-  data: function () {
-    return {}
+  data() {
+    return { streamSearchQuery: null }
   },
   computed: {
     loggedIn() {

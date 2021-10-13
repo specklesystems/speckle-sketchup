@@ -2,7 +2,12 @@
   <v-hover v-slot="{ hover }">
     <v-card color="" class="mt-5 mb-5" style="transition: all 0.2s ease-in-out">
       <v-row>
-        <v-col>
+        <v-col v-if="$apollo.loading">
+          <v-row>
+            <v-col><v-skeleton-loader type="article" /></v-col>
+          </v-row>
+        </v-col>
+        <v-col v-else>
           <v-toolbar class="transparent elevation-0" dense>
             <v-toolbar-title>{{ stream.name }}</v-toolbar-title>
             <v-spacer />
@@ -41,7 +46,7 @@
             </v-toolbar-title>
           </v-card-text>
         </v-col>
-        <v-col v-if="hover" align="end" justify="center">
+        <v-col v-if="hover && !$apollo.loading" align="end" justify="center">
           <v-btn icon class="mr-4 btn-fix" @click="openInWeb">
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
@@ -97,6 +102,7 @@
 /*global sketchup*/
 import gql from 'graphql-tag'
 import { bus } from '../main'
+import streamQuery from '../graphql/stream.gql'
 import ObjectLoader from '@speckle/objectloader'
 import { BaseObjectSerializer } from '../utils/serialization'
 
@@ -113,16 +119,43 @@ global.sketchupOperationFailed = function (streamId) {
 }
 
 export default {
+  name: 'StreamCard',
   props: {
-    stream: {
-      type: Object,
-      default: function () {
-        return {}
-      }
+    streamId: {
+      type: String,
+      default: null
     }
   },
   data() {
     return { loadingSend: false, loadingReceive: false, loadingStage: null, branchName: 'main' }
+  },
+  apollo: {
+    stream: {
+      prefetch: true,
+      query: streamQuery,
+      variables() {
+        return {
+          id: this.streamId
+        }
+      }
+    },
+    $subscribe: {
+      commitCreated: {
+        query: gql`
+          subscription ($streamId: String!) {
+            commitCreated(streamId: $streamId)
+          }
+        `,
+        variables() {
+          return {
+            streamId: this.streamId
+          }
+        },
+        result(commitInfo) {
+          this.$apollo.queries.stream.refetch()
+        }
+      }
+    }
   },
   computed: {
     selectedBranch() {
@@ -131,18 +164,18 @@ export default {
     }
   },
   mounted() {
-    bus.$on(`sketchup-objects-${this.stream.id}`, async (objects) => {
+    bus.$on(`sketchup-objects-${this.streamId}`, async (objects) => {
       console.log('received objects from sketchup', objects)
 
       await this.createCommit(objects)
     })
-    bus.$on(`sketchup-received-${this.stream.id}`, () => {
-      console.log('finished receiving in sketchup', this.stream.id)
+    bus.$on(`sketchup-received-${this.streamId}`, () => {
+      console.log('finished receiving in sketchup', this.streamId)
       this.loadingReceive = false
       this.loadingStage = null
     })
-    bus.$on(`sketchup-fail-${this.stream.id}`, () => {
-      console.log('sketchup operation failed', this.stream.id)
+    bus.$on(`sketchup-fail-${this.streamId}`, () => {
+      console.log('sketchup operation failed', this.streamId)
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
     })
@@ -152,7 +185,7 @@ export default {
       return new Promise((resolve) => setTimeout(resolve, ms))
     },
     openInWeb() {
-      window.open(`${localStorage.getItem('serverUrl')}/streams/${this.stream.id}`)
+      window.open(`${localStorage.getItem('serverUrl')}/streams/${this.streamId}`)
     },
     switchBranch(branchName) {
       this.branchName = branchName
@@ -170,13 +203,13 @@ export default {
       const loader = new ObjectLoader({
         serverUrl: localStorage.getItem('serverUrl'),
         token: localStorage.getItem('SpeckleSketchup.AuthToken'),
-        streamId: this.stream.id,
+        streamId: this.streamId,
         objectId: refId
       })
 
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
       console.log(rootObj)
-      sketchup.receive_objects(rootObj, this.stream.id)
+      sketchup.receive_objects(rootObj, this.streamId)
       this.loadingStage = 'converting'
     },
     updateLoadingStage({ stage }) {
@@ -185,7 +218,7 @@ export default {
     async send() {
       this.loadingStage = 'converting'
       this.loadingSend = true
-      sketchup.send_selection(this.stream.id)
+      sketchup.send_selection(this.streamId)
       console.log('request for data sent to sketchup')
       await this.sleep(2000)
     },
@@ -210,7 +243,7 @@ export default {
         }
 
         let commit = {
-          streamId: this.stream.id,
+          streamId: this.streamId,
           branchName: this.branchName,
           objectId: hash,
           message: 'sent from sketchup',
@@ -227,7 +260,7 @@ export default {
             commit: commit
           }
         })
-        console.log('sent to stream: ' + this.stream.id, commit)
+        console.log('sent to stream: ' + this.streamId, commit)
 
         this.loadingSend = false
         this.loadingStage = null
@@ -241,7 +274,7 @@ export default {
       let formData = new FormData()
       formData.append(`batch-1`, new Blob([JSON.stringify(batch)], { type: 'application/json' }))
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
-      let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.stream.id}`, {
+      let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.streamId}`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + token },
         body: formData
