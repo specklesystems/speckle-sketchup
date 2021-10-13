@@ -5,8 +5,7 @@ import { createApolloClient, restartWebsockets } from 'vue-cli-plugin-apollo/gra
 // Install the vue plugin
 Vue.use(VueApollo)
 
-const APP_NAME = process.env.VUE_APP_SPECKLE_NAME
-const AUTH_TOKEN = `${APP_NAME}.AuthToken`
+const AUTH_TOKEN = `SpeckleSketchup.AuthToken`
 
 if (process.env.NODE_ENV === 'development') {
   localStorage.setItem(AUTH_TOKEN, process.env.VUE_APP_DEV_TOKEN)
