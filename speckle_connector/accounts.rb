@@ -1,12 +1,12 @@
 require "JSON"
 
 begin
-  require "sqlite3"
+  require("sqlite3")
 rescue LoadError
   # ty msp-greg! https://github.com/MSP-Greg/SUMisc/releases/tag/sqlite3-mingw-1
-  Gem::install(File.join(File.dirname(File.expand_path(__FILE__)), "utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem"))
-  else
-    require "sqlite3"
+  Gem.install(File.join(File.dirname(File.expand_path(__FILE__)), "utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem"))
+else
+  require("sqlite3")
 end
 
 module SpeckleSystems::SpeckleConnector
@@ -22,6 +22,14 @@ module SpeckleSystems::SpeckleConnector
       rows = db.execute("SELECT * FROM objects")
       db.close
       rows.map { |row| JSON.parse(row[1]) }
+    end
+
+    def self.get_suuid
+      dir = _get_speckle_dir
+      suuid_path = File.join(dir, "suuid")
+      return unless File.exist?(suuid_path)
+
+      File.read(suuid_path)
     end
 
     def self._get_speckle_dir

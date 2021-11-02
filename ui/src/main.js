@@ -10,6 +10,15 @@ Vue.config.productionTip = false
 import VueTimeago from 'vue-timeago'
 Vue.use(VueTimeago, { locale: 'en' })
 
+import VueMatomo from 'vue-matomo'
+
+Vue.use(VueMatomo, {
+  host: 'https://speckle.matomo.cloud',
+  siteId: 2,
+  userId: localStorage.getItem('suuid')
+})
+
+
 export const bus = new Vue()
 
 // sketchup bindings

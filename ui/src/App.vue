@@ -95,8 +95,9 @@
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
 
-global.loadAccounts = function (accounts) {
+global.loadAccounts = function (accounts, suuid) {
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
+  localStorage.setItem('suuid', suuid)
   global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
 }
 
@@ -141,19 +142,28 @@ export default {
     bus.$on('selected-account-reloaded', () => {
       this.refresh()
     })
+
+    this.initAccounts()
   },
   methods: {
+    initAccounts() {
+      sketchup.reload_accounts()
+    },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('darkModeEnabled', this.$vuetify.theme.dark ? 'dark' : 'light')
     },
     switchAccount(account) {
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/account/switch`)
+      this.$matomo && this.$matomo.trackPageView(`account/switch`)
       global.setSelectedAccount(account)
     },
     requestRefresh() {
       sketchup.reload_accounts()
     },
     refresh() {
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/list`)
+      this.$matomo && this.$matomo.trackPageView(`stream/list`)
       this.$apollo.queries.user.refetch()
       bus.$emit('refresh-streams')
     }

@@ -41,7 +41,6 @@ module SpeckleSystems::SpeckleConnector
       # @dialog.set_html(html)
       @dialog.set_url("http://localhost:8081")
       @dialog.show
-      reload_accounts
 
       @dialog
     end
@@ -71,6 +70,6 @@ module SpeckleSystems::SpeckleConnector
   end
 
   def self.reload_accounts
-    @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json})")
+    @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json}, #{Accounts.get_suuid.to_json})")
   end
 end

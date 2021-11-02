@@ -175,6 +175,8 @@ export default {
       this.loadingStage = null
     })
     bus.$on(`sketchup-fail-${this.streamId}`, () => {
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/fail`)
+      this.$matomo && this.$matomo.trackPageView(`stream/fail`)
       console.log('sketchup operation failed', this.streamId)
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
@@ -186,6 +188,8 @@ export default {
     },
     openInWeb() {
       window.open(`${localStorage.getItem('serverUrl')}/streams/${this.streamId}`)
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/open-in-web`)
+      this.$matomo && this.$matomo.trackPageView(`stream/open-in-web`)
     },
     switchBranch(branchName) {
       this.branchName = branchName
@@ -193,6 +197,8 @@ export default {
     async receive() {
       this.loadingStage = 'requesting'
       this.loadingReceive = true
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/receive`)
+      this.$matomo && this.$matomo.trackPageView(`receive`)
       const refId = this.selectedBranch.commits.items[0]?.referencedObject
       if (!refId) {
         this.loadingReceive = false
@@ -218,6 +224,8 @@ export default {
     async send() {
       this.loadingStage = 'converting'
       this.loadingSend = true
+      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/send`)
+      this.$matomo && this.$matomo.trackPageView(`send`)
       sketchup.send_selection(this.streamId)
       console.log('request for data sent to sketchup')
       await this.sleep(2000)
