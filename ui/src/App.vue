@@ -143,15 +143,13 @@ export default {
       this.refresh()
     })
 
-    this.initAccounts()
+    this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
+    sketchup.reload_accounts()
   },
   methods: {
-    initAccounts() {
-      sketchup.reload_accounts()
-    },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
-      localStorage.setItem('darkModeEnabled', this.$vuetify.theme.dark ? 'dark' : 'light')
+      localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
     },
     switchAccount(account) {
       this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/account/switch`)
