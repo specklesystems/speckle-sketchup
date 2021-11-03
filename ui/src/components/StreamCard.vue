@@ -154,6 +154,45 @@ export default {
         result(commitInfo) {
           this.$apollo.queries.stream.refetch()
         }
+      },
+      branchCreated: {
+        query: gql`
+          subscription ($streamId: String!) {
+            branchCreated(streamId: $streamId)
+          }
+        `,
+        variables() {
+          return { streamId: this.streamId }
+        },
+        result() {
+          this.$apollo.queries.stream.refetch()
+        }
+      },
+      branchDeleted: {
+        query: gql`
+          subscription ($streamId: String!) {
+            branchDeleted(streamId: $streamId)
+          }
+        `,
+        variables() {
+          return { streamId: this.streamId }
+        },
+        result() {
+          this.$apollo.queries.stream.refetch()
+        }
+      },
+      branchUpdated: {
+        query: gql`
+          subscription ($streamId: String!) {
+            branchUpdated(streamId: $streamId)
+          }
+        `,
+        variables() {
+          return { streamId: this.streamId }
+        },
+        result() {
+          this.$apollo.queries.stream.refetch()
+        }
       }
     }
   },
