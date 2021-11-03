@@ -38,6 +38,10 @@ module SpeckleSystems::SpeckleConnector
       @dialog.add_action_callback("reload_accounts") do |_action_context|
         reload_accounts
       end
+
+      @dialog.add_action_callback("init_local_accounts") do |_action_context|
+        init_local_accounts
+      end
       # @dialog.set_html(html)
       @dialog.set_url("http://localhost:8081")
       @dialog.show
@@ -69,7 +73,11 @@ module SpeckleSystems::SpeckleConnector
     @dialog.execute_script("sketchupOperationFailed('#{stream_id}')")
   end
 
-  def self.reload_accounts
+  def self.init_local_accounts
     @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json}, #{Accounts.get_suuid.to_json})")
+  end
+
+  def self.reload_accounts
+    @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json})")
   end
 end

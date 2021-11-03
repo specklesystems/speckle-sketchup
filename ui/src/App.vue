@@ -94,11 +94,18 @@
 /*global sketchup*/
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
+import { onLogin } from './vue-apollo'
 
 global.loadAccounts = function (accounts, suuid) {
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
-  localStorage.setItem('suuid', suuid)
-  global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+  if (suuid) {
+    localStorage.setItem('suuid', suuid)
+    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+  } else {
+    global.setSelectedAccount(
+      accounts.find((acct) => acct['userInfo']['id'] == localStorage.getItem('uuid'))
+    )
+  }
 }
 
 global.setSelectedAccount = function (account) {
@@ -139,12 +146,16 @@ export default {
     }
   },
   mounted() {
-    bus.$on('selected-account-reloaded', () => {
+    bus.$on('selected-account-reloaded', async () => {
+      await onLogin(
+        this.$apollo.provider.defaultClient,
+        localStorage.getItem('SpeckleSketchup.AuthToken')
+      )
       this.refresh()
     })
 
     this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
-    sketchup.reload_accounts()
+    sketchup.init_local_accounts()
   },
   methods: {
     switchTheme() {
