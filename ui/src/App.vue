@@ -8,7 +8,7 @@
           src="@/assets/logo.svg"
           style="display: inline-block"
         />
-        <v-toolbar-title class="space-grotesk">Speckle Sketchup</v-toolbar-title>
+        <v-toolbar-title class="space-grotesk">Speckle</v-toolbar-title>
         <v-spacer />
         <v-text-field
           v-model="streamSearchQuery"

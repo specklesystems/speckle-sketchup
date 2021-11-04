@@ -25,7 +25,7 @@
 
               <v-menu offset-y>
                 <template #activator="{ on, attrs }">
-                  <v-chip v-if="stream.branches" small v-bind="attrs" v-on="on">
+                  <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
                     <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
                     {{ branchName }}
                   </v-chip>
@@ -43,48 +43,95 @@
                   </v-list-item>
                 </v-list>
               </v-menu>
+
+              <v-menu offset-y>
+                <template #activator="{ on, attrs }">
+                  <v-chip v-if="stream.commits" small v-bind="attrs" v-on="on">
+                    <v-icon small class="mr-1 float-left">mdi-source-commit</v-icon>
+                    {{ selectedBranch.commits.items.length ? commitId : 'no commits' }}
+                  </v-chip>
+                </template>
+                <v-list dense>
+                  <v-list-item
+                    v-for="(commit, index) in selectedBranch.commits.items"
+                    :key="index"
+                    link
+                    @click="switchCommit(commit.id)"
+                  >
+                    <v-list-item-title class="text-caption">
+                      {{ commit.id }}: {{ commit.message }}
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </v-toolbar-title>
           </v-card-text>
         </v-col>
         <v-col v-if="hover && !$apollo.loading" align="end" justify="center">
-          <v-btn icon class="mr-4 btn-fix" @click="openInWeb">
-            <v-icon>mdi-open-in-new</v-icon>
-          </v-btn>
-          <v-btn
-            fab
-            :loading="loadingSend"
-            class="mr-4 elevation-1 btn-fix"
-            hint="Send"
-            @click="send"
-          >
-            <v-img
-              v-if="$vuetify.theme.dark"
-              src="@/assets/SenderWhite.png"
-              max-width="40"
-              style="display: inline-block"
-            />
-            <v-img v-else src="@/assets/Sender.png" max-width="40" style="display: inline-block" />
-          </v-btn>
-          <v-btn
-            fab
-            :loading="loadingReceive"
-            class="mr-4 elevation-1 btn-fix"
-            hint="Receive"
-            @click="receive"
-          >
-            <v-img
-              v-if="$vuetify.theme.dark"
-              src="@/assets/ReceiverWhite.png"
-              max-width="40"
-              style="display: inline-block"
-            />
-            <v-img
-              v-else
-              src="@/assets/Receiver.png"
-              max-width="40"
-              style="display: inline-block"
-            />
-          </v-btn>
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-btn icon class="mr-4 btn-fix" v-bind="attrs" v-on="on" @click="openInWeb">
+                <v-icon>mdi-open-in-new</v-icon>
+              </v-btn>
+            </template>
+            <span>Open in web</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-btn
+                fab
+                :loading="loadingSend"
+                class="mr-4 elevation-1 btn-fix"
+                hint="Send"
+                v-bind="attrs"
+                v-on="on"
+                @click="send"
+              >
+                <v-img
+                  v-if="$vuetify.theme.dark"
+                  src="@/assets/SenderWhite.png"
+                  max-width="40"
+                  style="display: inline-block"
+                />
+                <v-img
+                  v-else
+                  src="@/assets/Sender.png"
+                  max-width="40"
+                  style="display: inline-block"
+                />
+              </v-btn>
+            </template>
+            <span>Send</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-btn
+                fab
+                :loading="loadingReceive"
+                class="mr-4 elevation-1 btn-fix"
+                hint="Receive"
+                v-bind="attrs"
+                v-on="on"
+                @click="receive"
+              >
+                <v-img
+                  v-if="$vuetify.theme.dark"
+                  src="@/assets/ReceiverWhite.png"
+                  max-width="40"
+                  style="display: inline-block"
+                />
+                <v-img
+                  v-else
+                  src="@/assets/Receiver.png"
+                  max-width="40"
+                  style="display: inline-block"
+                />
+              </v-btn>
+            </template>
+            <span>Receive</span>
+          </v-tooltip>
         </v-col>
       </v-row>
       <v-progress-linear
@@ -127,7 +174,13 @@ export default {
     }
   },
   data() {
-    return { loadingSend: false, loadingReceive: false, loadingStage: null, branchName: 'main' }
+    return {
+      loadingSend: false,
+      loadingReceive: false,
+      loadingStage: null,
+      branchName: 'main',
+      commitId: 'latest'
+    }
   },
   apollo: {
     stream: {
@@ -151,7 +204,7 @@ export default {
             streamId: this.streamId
           }
         },
-        result(commitInfo) {
+        result() {
           this.$apollo.queries.stream.refetch()
         }
       },
@@ -200,6 +253,11 @@ export default {
     selectedBranch() {
       if (this.$apollo.loading) return
       return this.stream.branches.items.find((branch) => branch.name == this.branchName)
+    },
+    selectedCommit() {
+      if (this.$apollo.loading) return
+      if (this.commitId == 'latest') return this.selectedBranch.commits.items[0]
+      return this.selectedBranch.commits.items.find((commit) => commit.id == this.commitId)
     }
   },
   mounted() {
@@ -232,13 +290,17 @@ export default {
     },
     switchBranch(branchName) {
       this.branchName = branchName
+      this.commitId = 'latest'
+    },
+    switchCommit(commitId) {
+      this.commitId = commitId
     },
     async receive() {
       this.loadingStage = 'requesting'
       this.loadingReceive = true
       this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/receive`)
       this.$matomo && this.$matomo.trackPageView(`receive`)
-      const refId = this.selectedBranch.commits.items[0]?.referencedObject
+      const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
         this.loadingStage = null
