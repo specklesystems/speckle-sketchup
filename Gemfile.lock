@@ -12,12 +12,14 @@ GEM
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     minitest (5.14.4)
-    nokogiri (1.12.3-x64-mingw32)
+    nokogiri (1.12.5-x64-mingw32)
+      racc (~> 1.4)
+    nokogiri (1.12.5-x86_64-linux)
       racc (~> 1.4)
     parallel (1.20.1)
     parser (3.0.2.0)
       ast (~> 2.4.1)
-    racc (1.5.2)
+    racc (1.6.0)
     rainbow (3.0.0)
     regexp_parser (2.1.1)
     reverse_markdown (2.0.0)
@@ -59,6 +61,7 @@ GEM
 
 PLATFORMS
   x64-mingw32
+  x86_64-linux
 
 DEPENDENCIES
   minitest
