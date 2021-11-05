@@ -23,7 +23,6 @@ jobs:
           name: Build UI
           command:
             |
-            ls
             cd ui\
             rm package-lock.json
             npm install
