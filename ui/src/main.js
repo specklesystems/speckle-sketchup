@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import App from './App.vue'
-import './registerServiceWorker'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import { createProvider } from './vue-apollo'
@@ -18,13 +17,7 @@ Vue.use(VueMatomo, {
   userId: localStorage.getItem('suuid')
 })
 
-
 export const bus = new Vue()
-
-// sketchup bindings
-global.clickFromMain = function (args) {
-  bus.$emit('click-from-main', args)
-}
 
 new Vue({
   router,

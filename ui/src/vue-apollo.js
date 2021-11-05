@@ -20,11 +20,10 @@ const authLink = setContext((_, { headers }) => {
   return {
     headers: {
       ...headers,
-      Authorization: token ? `Bearer ${token}` : ""
+      Authorization: token ? `Bearer ${token}` : ''
     }
   }
 })
-
 
 // Config
 const defaultOptions = {
@@ -93,7 +92,6 @@ export function createProvider(options = {}) {
 
   apolloClient.wsClient = wsClient
 
-
   // Create vue apollo provider
   const apolloProvider = new VueApollo({
     defaultClient: apolloClient,
@@ -116,14 +114,8 @@ export function createProvider(options = {}) {
 }
 
 // Manually call this when user log in
-export async function onLogin(apolloClient, token) {
+export async function onLogin(apolloClient) {
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient)
-  try {
-    await apolloClient.resetStore()
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log('%cError on cache reset (login)', 'color: orange;', e.message)
-  }
 }
 
 // Manually call this when user log out
@@ -133,10 +125,4 @@ export async function onLogout(apolloClient) {
   }
 
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient)
-  try {
-    await apolloClient.resetStore()
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log('%cError on cache reset (logout)', 'color: orange;', e.message)
-  }
 }
