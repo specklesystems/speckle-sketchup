@@ -4,6 +4,9 @@ require "extensions"
 
 module SpeckleSystems
   module SpeckleConnector
+    # Version - patched by CI
+    CONNECTOR_VERSION = "0.0.0"
+
     file = __FILE__.dup
     # Account for Ruby encoding bug under Windows.
     file.force_encoding("UTF-8") if file.respond_to?(:force_encoding)
@@ -25,7 +28,7 @@ module SpeckleSystems
 
       ex.description = "Speckle Connector for SketchUp"
 
-      ex.version     = "0.0.1"
+      ex.version     = CONNECTOR_VERSION
 
       ex.copyright   = "AEC Systems Ltd."
 
