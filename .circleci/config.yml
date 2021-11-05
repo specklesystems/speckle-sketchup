@@ -22,6 +22,7 @@ jobs:
       - run:
           name: Build UI
           command:
+            |
             ls
             cd ui\
             rm package-lock.json
