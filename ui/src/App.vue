@@ -8,8 +8,6 @@
           src="@/assets/logo.svg"
           style="display: inline-block"
         />
-        <v-toolbar-title class="space-grotesk">Speckle</v-toolbar-title>
-        <v-spacer />
         <v-text-field
           v-model="streamSearchQuery"
           prepend-inner-icon="mdi-magnify"
@@ -22,6 +20,7 @@
           flat
           solo
         ></v-text-field>
+        <v-spacer />
         <v-btn icon small class="mx-1" @click="switchTheme">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
@@ -138,20 +137,18 @@ export default {
   },
   apollo: {
     user: {
-      prefetch: true,
-      query: userQuery,
-      update(data) {
-        return data.user
-      }
+      query: userQuery
     }
   },
   mounted() {
     bus.$on('selected-account-reloaded', async () => {
-      await onLogin(
-        this.$apollo.provider.defaultClient,
-        localStorage.getItem('SpeckleSketchup.AuthToken')
-      )
+      await onLogin(this.$apollo.provider.defaultClient)
       this.refresh()
+    })
+    bus.$on('streams-loaded', () => {
+      // on first load, the user query seems to be firing before the apollo client is ready.
+      // this refetches the user in this scenario
+      if (!this.user) this.$apollo.queries.user.refetch()
     })
 
     this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
