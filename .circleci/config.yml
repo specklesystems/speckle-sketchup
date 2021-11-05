@@ -85,13 +85,17 @@ workflows:
   build:
     jobs:
       - get-ci-tools:
-
+          filters:
+            tags:
+              only: /.*/
 
       - build-connector:
           slug: sketchup
           requires:
             - get-ci-tools
-
+          filters:
+            tags:
+              only: /.*/
   deploy:
     jobs:
       - get-ci-tools:
