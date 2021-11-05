@@ -22,7 +22,8 @@ jobs:
       - run:
           name: Build UI
           command:
-            cd project/ui
+            ls
+            cd ui\
             rm package-lock.json
             npm install
             npm run build
