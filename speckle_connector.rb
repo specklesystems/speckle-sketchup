@@ -16,6 +16,9 @@ module SpeckleSystems
     # Path to the support folder.
     PATH = File.join(PATH_ROOT, folder_name).freeze
 
+    # Run from localhost or from build files
+    DEV_MODE = false
+
     unless file_loaded?(__FILE__)
 
       ex = SketchupExtension.new("Speckle SketchUp", File.join(PATH, "main"))

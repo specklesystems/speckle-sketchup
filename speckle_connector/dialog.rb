@@ -13,7 +13,6 @@ module SpeckleSystems::SpeckleConnector
       dialog_title: "SpeckleSketchUp",
       preferences_key: "example.htmldialog.materialinspector",
       style: UI::HtmlDialog::STYLE_DIALOG,
-      url: "http://localhost:8081",
       min_width: 250,
       min_height: 50
     }
@@ -41,9 +40,17 @@ module SpeckleSystems::SpeckleConnector
 
       @dialog.add_action_callback("init_local_accounts") do |_action_context|
         init_local_accounts
+
       end
-      # @dialog.set_html(html)
-      @dialog.set_url("http://localhost:8081")
+      puts DEV_MODE
+      if DEV_MODE
+        @dialog.set_url("http://localhost:8081")
+      else
+        basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
+        html = File.read(File.join(basedir, "index.html"))
+        @dialog.set_html(html)
+      end
+
       @dialog.show
 
       @dialog
