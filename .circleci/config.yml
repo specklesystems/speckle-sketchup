@@ -22,6 +22,7 @@ jobs:
       - run:
           name: Build UI
           command:
+            |
             ls
             cd ui\
             rm package-lock.json
@@ -85,20 +86,16 @@ workflows:
     jobs:
       - get-ci-tools:
           filters:
-            branches:
-              only:
-                - main
-                - /ci\/.*/
+            tags:
+              only: /.*/
 
       - build-connector:
           slug: sketchup
           requires:
             - get-ci-tools
           filters:
-            branches:
-              only:
-                - main
-                - /ci\/.*/
+            tags:
+              only: /.*/
   deploy:
     jobs:
       - get-ci-tools:
