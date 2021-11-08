@@ -7,6 +7,25 @@ orbs:
   aws-s3: circleci/aws-s3@2.0.0
 
 jobs:
+  build-ui:
+    docker:
+      - image: 'circleci/node:14'
+    steps:
+      - checkout
+      - run:
+          command: 'rm package-lock.json'
+          working_directory: 'ui'
+      - run:
+          command: 'npm install'
+          working_directory: 'ui'
+      - run:
+          command: 'npm run build'
+          working_directory: 'ui'
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - speckle_connector/html
+
   build-connector: # Reusable job for basic connectors
     executor:
       name: win/default # comes with python 3.7.3
@@ -19,14 +38,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: ./
-      - run:
-          name: Build UI
-          command:
-            |
-            cd ui\
-            rm package-lock.json
-            npm install
-            npm run build
       - run:
           name: Patch
           shell: powershell.exe
@@ -81,9 +92,14 @@ jobs:
           to: s3://speckle-releases/installers/
 
 workflows:
-  build:
+  build-and-deploy:
     jobs:
       - get-ci-tools:
+          filters:
+            tags:
+              only: /.*/
+
+      - build-ui:
           filters:
             tags:
               only: /.*/
@@ -92,29 +108,15 @@ workflows:
           slug: sketchup
           requires:
             - get-ci-tools
+            - build-ui
           filters:
             tags:
               only: /.*/
-  deploy:
-    jobs:
-      - get-ci-tools:
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/ # For testing only! /ci\/.*/
-      - build-connector:
-          slug: sketchup
-          requires:
-            - get-ci-tools
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/ # For testing only! /ci\/.*/
+
       - deploy:
           requires:
             - get-ci-tools
+            - build-ui
             - build-connector
           filters:
             tags:
