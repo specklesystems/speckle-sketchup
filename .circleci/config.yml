@@ -27,6 +27,10 @@ jobs:
             rm package-lock.json
             npm install
             npm run build
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - speckle_connector/html
       - run:
           name: Patch
           shell: powershell.exe
