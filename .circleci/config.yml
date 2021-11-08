@@ -108,6 +108,7 @@ workflows:
           slug: sketchup
           requires:
             - get-ci-tools
+            - build-ui
           filters:
             tags:
               only: /.*/
