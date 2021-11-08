@@ -92,7 +92,7 @@ jobs:
           to: s3://speckle-releases/installers/
 
 workflows:
-  build:
+  build-and-deploy:
     jobs:
       - get-ci-tools:
           filters:
@@ -108,34 +108,9 @@ workflows:
           slug: sketchup
           requires:
             - get-ci-tools
-            - build-ui
           filters:
             tags:
               only: /.*/
-
-  deploy:
-    jobs:
-      - get-ci-tools:
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/ # For testing only! /ci\/.*/
-
-      - build-ui:
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-
-      - build-connector:
-          slug: sketchup
-          requires:
-            - get-ci-tools
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/ # For testing only! /ci\/.*/
 
       - deploy:
           requires:
