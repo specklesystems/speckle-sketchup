@@ -13,6 +13,9 @@ jobs:
     steps:
       - checkout
       - run:
+          command: 'rm package-lock.json'
+          working_directory: 'ui'
+      - run:
           command: 'npm install'
           working_directory: 'ui'
       - run:
