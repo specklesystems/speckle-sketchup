@@ -37,7 +37,11 @@
                     link
                     @click="switchBranch(branch.name)"
                   >
-                    <v-list-item-title class="text-caption">
+                    <v-list-item-title class="text-caption font-weight-regular">
+                      <v-icon v-if="branch.name == branchName" small class="mr-1 float-left">
+                        mdi-check
+                      </v-icon>
+                      <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>
                       {{ branch.name }} ({{ branch.commits.totalCount }})
                     </v-list-item-title>
                   </v-list-item>
@@ -58,8 +62,20 @@
                     link
                     @click="switchCommit(commit.id)"
                   >
-                    <v-list-item-title class="text-caption">
-                      {{ commit.id }}: {{ commit.message }}
+                    <v-list-item-title class="text-caption font-weight-regular">
+                      <v-icon
+                        v-if="(commitId == 'latest' && index == 0) || commit.id == commitId"
+                        small
+                        class="mr-1 float-left"
+                      >
+                        mdi-check
+                      </v-icon>
+                      <v-icon v-else small class="mr-1 float-left">mdi-source-commit</v-icon>
+                      {{ commit.id }} |
+                      <span class="font-weight-regular">{{ commit.message }} |</span>
+                      <span class="font-weight-light ml-1">
+                        <timeago :datetime="commit.createdAt" />
+                      </span>
                     </v-list-item-title>
                   </v-list-item>
                 </v-list>
