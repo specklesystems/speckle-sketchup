@@ -21,6 +21,8 @@ module SpeckleSystems
 
     # Run from localhost or from build files
     DEV_MODE = false
+    puts("Loading Speckle Connector v#{CONNECTOR_VERSION} from #{DEV_MODE ? 'dev' : 'build'}")
+
 
     unless file_loaded?(__FILE__)
 

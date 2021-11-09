@@ -42,13 +42,13 @@ module SpeckleSystems::SpeckleConnector
         init_local_accounts
 
       end
-      puts DEV_MODE
       if DEV_MODE
+        puts('Launching Speckle Connector from http://localhost:8081')
         @dialog.set_url("http://localhost:8081")
       else
-        basedir = File.join(File.dirname(File.expand_path(__FILE__)), "html")
-        html = File.read(File.join(basedir, "index.html"))
-        @dialog.set_html(html)
+        html_file = File.join(File.dirname(File.expand_path(__FILE__)), "html", "index.html")
+        puts("Launching Speckle Connector from #{html_file}")
+        @dialog.set_file(html_file)
       end
 
       @dialog.show
