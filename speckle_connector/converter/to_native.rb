@@ -6,8 +6,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     if can_convert_to_native(obj)
       convert_to_native(obj, Sketchup.active_model.entities)
     elsif obj.is_a?(Hash) && obj.key?("speckle_type")
-      props = obj.keys.filter_map { |key| key if key.start_with?("@") }
-      %w[displayMesh displayValue data].each { |prop| props.push(prop) if obj.key?(prop) }
+      props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
       props.each { |prop| traverse_commit_object(obj[prop]) }
     elsif obj.is_a?(Hash)
       obj.each_value { |value| traverse_commit_object(value) }
@@ -40,10 +39,10 @@ module SpeckleSystems::SpeckleConnector::ToNative
     else
       nil
     end
-  # rescue StandardError => e
-  #   puts("Failed to convert #{obj["speckle_type"]} (id: #{obj["id"]})")
-  #   puts(e)
-  #   nil
+    # rescue StandardError => e
+    #   puts("Failed to convert #{obj["speckle_type"]} (id: #{obj["id"]})")
+    #   puts(e)
+    #   nil
   end
 
   def length_to_native(length, units = @units)
@@ -73,6 +72,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
     definition&.entities&.clear!
     definition ||= Sketchup.active_model.definitions.add(block_def["name"])
     block_def["geometry"].each { |obj| convert_to_native(obj, definition.entities) }
+    puts("definition finished: #{block_def["name"]} (#{block_def["id"]})")
+    puts("    entity count: #{definition.entities.count}")
     definition
   end
 
@@ -113,6 +114,10 @@ module SpeckleSystems::SpeckleConnector::ToNative
         entities.add_instance(definition, transform)
       end
     puts("Failed to create instance for speckle object #{block["id"]}") if instance.nil?
+    if instance.nil?
+      p(definition.name)
+      p(definition.entities.to_a)
+    end
     instance.transformation = transform if is_group
     instance.material = material_to_native(block["renderMaterial"])
     instance
@@ -121,13 +126,22 @@ module SpeckleSystems::SpeckleConnector::ToNative
   def transform_to_native(t_arr, units = @units)
     Geom::Transformation.new(
       [
-      t_arr[0], t_arr[4], t_arr[8],  t_arr[12],
-      t_arr[1], t_arr[5], t_arr[9],  t_arr[13],
-      t_arr[2], t_arr[6], t_arr[10], t_arr[14],
-      length_to_native(t_arr[3], units),
-      length_to_native(t_arr[7], units),
-      length_to_native(t_arr[11], units),
-      t_arr[15]
+        t_arr[0],
+        t_arr[4],
+        t_arr[8],
+        t_arr[12],
+        t_arr[1],
+        t_arr[5],
+        t_arr[9],
+        t_arr[13],
+        t_arr[2],
+        t_arr[6],
+        t_arr[10],
+        t_arr[14],
+        length_to_native(t_arr[3], units),
+        length_to_native(t_arr[7], units),
+        length_to_native(t_arr[11], units),
+        t_arr[15]
       ]
     )
   end
