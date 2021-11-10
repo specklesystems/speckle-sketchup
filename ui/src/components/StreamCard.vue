@@ -323,22 +323,6 @@ export default {
         return
       }
 
-      await this.$apollo.mutate({
-        mutation: gql`
-          mutation commitReceive($input: CommitReceivedInput!) {
-            commitReceive(input: $input)
-          }
-        `,
-        variables: {
-          input: {
-            sourceApplication: 'SketchUp',
-            streamId: this.streamId,
-            commitId: this.selectedCommit.id,
-            message: 'received from SketchUp'
-          }
-        }
-      })
-
       const loader = new ObjectLoader({
         serverUrl: localStorage.getItem('serverUrl'),
         token: localStorage.getItem('SpeckleSketchup.AuthToken'),
@@ -348,7 +332,24 @@ export default {
 
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
       console.log(rootObj)
+
       sketchup.receive_objects(rootObj, this.streamId)
+
+      await this.$apollo.mutate({
+        mutation: gql`
+          mutation commitReceive($input: CommitReceivedInput!) {
+            commitReceive(input: $input)
+          }
+        `,
+        variables: {
+          input: {
+            sourceApplication: 'sketchup',
+            streamId: this.streamId,
+            commitId: this.selectedCommit.id
+          }
+        }
+      })
+
       this.loadingStage = 'converting'
     },
     updateLoadingStage({ stage }) {
