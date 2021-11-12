@@ -72,14 +72,14 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
           poly.map { |coord| points[coord.abs - 1] }
         end
       polys.each do |poly|
-        faces = [
+        mat_groups[mat_id]["@(62500)faces"].push(
           case poly.count
           when 3 then 0   # tris
           when 4 then 1   # polys
           else
             poly.count # ngons
           end
-        ]
+        )
         poly.each do |pt|
           index = mat_groups[mat_id][:pt_log][pt.to_s]
           unless index
@@ -90,22 +90,33 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
             )
             index = mat_groups[mat_id][:pt_log][pt.to_s] = mat_groups[mat_id][:pt_log].count
           end
-          faces.push(index)
+          mat_groups[mat_id]["@(62500)faces"].push(index)
         end
-        mat_groups[mat_id]["@(62500)faces"].push(*faces)
       end
     end
     mat_groups.values.map { |group| group.delete(:pt_log) }
     mat_groups.values
   end
-  
+
   def transform_to_speckle(transform)
     t_arr = transform.to_a
     [
-      t_arr[0], t_arr[4], t_arr[8],  length_to_speckle(t_arr[12]),
-      t_arr[1], t_arr[5], t_arr[9],  length_to_speckle(t_arr[13]),
-      t_arr[2], t_arr[6], t_arr[10], length_to_speckle(t_arr[14]),
-      t_arr[3], t_arr[7], t_arr[11], t_arr[15]
+      t_arr[0],
+      t_arr[4],
+      t_arr[8],
+      length_to_speckle(t_arr[12]),
+      t_arr[1],
+      t_arr[5],
+      t_arr[9],
+      length_to_speckle(t_arr[13]),
+      t_arr[2],
+      t_arr[6],
+      t_arr[10],
+      length_to_speckle(t_arr[14]),
+      t_arr[3],
+      t_arr[7],
+      t_arr[11],
+      t_arr[15]
     ]
   end
 

@@ -82,8 +82,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def mesh_to_native(mesh, entities)
-    native_mesh = Geom::PolygonMesh.new
-    points = [] # to preserve indices - duplicate points won't be added in `point_to_native`
+    native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
+    points = []
     mesh["vertices"].each_slice(3) do |pt|
       points.push(point_to_native(pt[0], pt[1], pt[2], mesh["units"]))
     end
