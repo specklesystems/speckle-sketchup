@@ -50,11 +50,15 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def edge_to_native(line, entities)
-    return unless line.key?("value")
-
-    values = line["value"]
-    points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
-    entities.add_edges(*points)
+    if line.key?("value")
+      values = line["value"]
+      points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
+      entities.add_edges(*points)
+    else
+      start_pt = point_to_native(line["start"]["x"], line["start"]["y"], line["start"]["z"], line["units"])
+      end_pt = point_to_native(line["end"]["x"], line["end"]["y"], line["end"]["z"], line["units"])
+      entities.add_edges(start_pt, end_pt)
+    end
   end
 
   def face_to_native
