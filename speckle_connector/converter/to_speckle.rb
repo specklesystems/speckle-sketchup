@@ -64,28 +64,59 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       # convert material
       mat_id = face.material.nil? ? "none" : face.material.entityID
       mat_groups[mat_id] = initialise_group_mesh(face, component_def.bounds) unless mat_groups.key?(mat_id)
-
-      # add points and texture coordinates
       mesh = face.mesh(1)
-      mat_groups[mat_id]["@(31250)vertices"].push(*points_to_array(mesh))
       mat_groups[mat_id]["@(31250)textureCoordinates"].push(*uvs_to_array(mesh))
-
-      # add faces
-      mat_groups[mat_id]["@(62500)faces"].push(*faces_to_array(mesh, mat_groups[mat_id][:pt_count]))
-      mat_groups[mat_id][:pt_count] += mesh.points.count
+      points = mesh.points
+      polys =
+        mesh.polygons.map do |poly|
+          poly.map { |coord| points[coord.abs - 1] }
+        end
+      polys.each do |poly|
+        mat_groups[mat_id]["@(62500)faces"].push(
+          case poly.count
+          when 3 then 0   # tris
+          when 4 then 1   # polys
+          else
+            poly.count # ngons
+          end
+        )
+        poly.each do |pt|
+          index = mat_groups[mat_id][:pt_log][pt.to_s]
+          unless index
+            mat_groups[mat_id]["@(31250)vertices"].push(
+              length_to_speckle(pt[0]),
+              length_to_speckle(pt[1]),
+              length_to_speckle(pt[2])
+            )
+            index = mat_groups[mat_id][:pt_log][pt.to_s] = mat_groups[mat_id][:pt_log].count
+          end
+          mat_groups[mat_id]["@(62500)faces"].push(index)
+        end
+      end
     end
-
-    mat_groups.values.map { |group| group.delete(:pt_count) }
+    mat_groups.values.map { |group| group.delete(:pt_log) }
     mat_groups.values
   end
 
   def transform_to_speckle(transform)
     t_arr = transform.to_a
     [
-      t_arr[0], t_arr[4], t_arr[8],  length_to_speckle(t_arr[12]),
-      t_arr[1], t_arr[5], t_arr[9],  length_to_speckle(t_arr[13]),
-      t_arr[2], t_arr[6], t_arr[10], length_to_speckle(t_arr[14]),
-      t_arr[3], t_arr[7], t_arr[11], t_arr[15]
+      t_arr[0],
+      t_arr[4],
+      t_arr[8],
+      length_to_speckle(t_arr[12]),
+      t_arr[1],
+      t_arr[5],
+      t_arr[9],
+      length_to_speckle(t_arr[13]),
+      t_arr[2],
+      t_arr[6],
+      t_arr[10],
+      length_to_speckle(t_arr[14]),
+      t_arr[3],
+      t_arr[7],
+      t_arr[11],
+      t_arr[15]
     ]
   end
 
@@ -97,7 +128,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       "@(31250)vertices" => [],
       "@(62500)faces" => [],
       "@(31250)textureCoordinates" => [],
-      pt_count: -1, # faces are 1 indexed
+      pt_log: {},
       renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material)
     }
   end

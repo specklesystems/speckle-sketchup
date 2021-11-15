@@ -50,11 +50,15 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def edge_to_native(line, entities)
-    return unless line.key?("value")
-
-    values = line["value"]
-    points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
-    entities.add_edges(*points)
+    if line.key?("value")
+      values = line["value"]
+      points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
+      entities.add_edges(*points)
+    else
+      start_pt = point_to_native(line["start"]["x"], line["start"]["y"], line["start"]["z"], line["units"])
+      end_pt = point_to_native(line["end"]["x"], line["end"]["y"], line["end"]["z"], line["units"])
+      entities.add_edges(start_pt, end_pt)
+    end
   end
 
   def face_to_native
@@ -78,20 +82,15 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def mesh_to_native(mesh, entities)
-    native_mesh = Geom::PolygonMesh.new
-    points = [] # to preserve indices - duplicate points won't be added in `point_to_native`
+    native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
+    points = []
     mesh["vertices"].each_slice(3) do |pt|
       points.push(point_to_native(pt[0], pt[1], pt[2], mesh["units"]))
     end
     faces = mesh["faces"]
     while faces.count.positive?
-      size = faces.shift
-      num_pts =
-        case size
-        when 0 then 3
-        when 1 then 4
-        else size
-        end
+      num_pts = faces.shift
+      num_pts += 3 if num_pts < 3 # 0 -> 3, 1 -> 4 to preserve backwards compatibility
       indices = faces.shift(num_pts)
       native_mesh.add_polygon(indices.map { |index| points[index] })
     end
