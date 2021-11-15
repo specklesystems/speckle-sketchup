@@ -89,13 +89,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
     end
     faces = mesh["faces"]
     while faces.count.positive?
-      size = faces.shift
-      num_pts =
-        case size
-        when 0 then 3
-        when 1 then 4
-        else size
-        end
+      num_pts = faces.shift
+      num_pts += 3 if num_pts < 3 # 0 -> 3, 1 -> 4 to preserve backwards compatibility
       indices = faces.shift(num_pts)
       native_mesh.add_polygon(indices.map { |index| points[index] })
     end
