@@ -53,6 +53,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     if line.key?("value")
       values = line["value"]
       points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
+      points.push(points[0]) if line["closed"]
       entities.add_edges(*points)
     else
       start_pt = point_to_native(line["start"]["x"], line["start"]["y"], line["start"]["z"], line["units"])
