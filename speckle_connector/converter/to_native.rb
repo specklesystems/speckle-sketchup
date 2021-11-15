@@ -74,7 +74,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
 
   def component_definition_to_native(block_def)
     definition = Sketchup.active_model.definitions[block_def["name"]]
-    return definition if definition&.guid == block_def["applicationId"]
+    return definition if definition && definition.guid == block_def["applicationId"]
 
     definition&.entities&.clear!
     definition ||= Sketchup.active_model.definitions.add(block_def["name"])
