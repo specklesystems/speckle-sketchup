@@ -24,6 +24,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
       "Objects.Geometry.Line",
       "Objects.Geometry.Polyline",
       "Objects.Geometry.Mesh",
+      "Objects.Geometry.Brep",
       "Objects.Other.BlockInstance",
       "Objects.Other.BlockDefinition",
       "Objects.Other.RenderMaterial"
@@ -36,6 +37,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
     when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
     when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
+    when Objects.Geometry.Brep then mesh_to_native(obj["displayMesh"], entities)
     else
       nil
     end
