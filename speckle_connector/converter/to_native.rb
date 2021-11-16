@@ -6,6 +6,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     if can_convert_to_native(obj)
       convert_to_native(obj, Sketchup.active_model.entities)
     elsif obj.is_a?(Hash) && obj.key?("speckle_type")
+      puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]}")
       props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
       props.each { |prop| traverse_commit_object(obj[prop]) }
     elsif obj.is_a?(Hash)
@@ -37,7 +38,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
     when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
     when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
-    when Objects.Geometry.Brep then mesh_to_native(obj["displayMesh"], entities)
+    when "Objects.Geometry.Brep" then mesh_to_native(obj["displayMesh"], entities)
     else
       nil
     end
@@ -72,18 +73,6 @@ module SpeckleSystems::SpeckleConnector::ToNative
     Geom::Point3d.new(length_to_native(x, units), length_to_native(y, units), length_to_native(z, units))
   end
 
-  def component_definition_to_native(block_def)
-    definition = Sketchup.active_model.definitions[block_def["name"]]
-    return definition if definition && definition.guid == block_def["applicationId"]
-
-    definition&.entities&.clear!
-    definition ||= Sketchup.active_model.definitions.add(block_def["name"])
-    block_def["geometry"].each { |obj| convert_to_native(obj, definition.entities) }
-    puts("definition finished: #{block_def["name"]} (#{block_def["id"]})")
-    puts("    entity count: #{definition.entities.count}")
-    definition
-  end
-
   def mesh_to_native(mesh, entities)
     native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
     points = []
@@ -93,7 +82,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
     faces = mesh["faces"]
     while faces.count.positive?
       num_pts = faces.shift
-      num_pts += 3 if num_pts < 3 # 0 -> 3, 1 -> 4 to preserve backwards compatibility
+      # 0 -> 3, 1 -> 4 to preserve backwards compatibility
+      num_pts += 3 if num_pts < 3
       indices = faces.shift(num_pts)
       native_mesh.add_polygon(indices.map { |index| points[index] })
     end
@@ -102,11 +92,25 @@ module SpeckleSystems::SpeckleConnector::ToNative
     native_mesh
   end
 
+  def component_definition_to_native(block_def)
+    definition = Sketchup.active_model.definitions[block_def["name"]]
+    return definition if definition && (definition.name == block_def["name"] || definition.guid == block_def["applicationId"])
+
+    definition&.entities&.clear!
+    definition ||= Sketchup.active_model.definitions.add(block_def["name"])
+    block_def["geometry"].each { |obj| convert_to_native(obj, definition.entities) }
+    puts("definition finished: #{block_def["name"]} (#{block_def["id"]})")
+    puts("    entity count: #{definition.entities.count}")
+    definition
+  end
+
   def component_instance_to_native(block, entities)
-    is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
+    # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
+    # something about this conversion is freaking out if nested block geo is a group
+    # so this is set to false always until I can figure this out
+    is_group = false
 
     definition = component_definition_to_native(block["blockDefinition"])
-    # return unless definition.entities.count.positive?
 
     transform = transform_to_native(block["transform"], block["units"])
     instance =
@@ -115,11 +119,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
       else
         entities.add_instance(definition, transform)
       end
-    puts("Failed to create instance for speckle object #{block["id"]}") if instance.nil?
-    if instance.nil?
-      p(definition.name)
-      p(definition.entities.to_a)
-    end
+    puts("Failed to create instance for speckle block instance #{block["id"]}") if instance.nil?
     instance.transformation = transform if is_group
     instance.material = material_to_native(block["renderMaterial"])
     instance
