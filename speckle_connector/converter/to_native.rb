@@ -24,6 +24,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
       "Objects.Geometry.Line",
       "Objects.Geometry.Polyline",
       "Objects.Geometry.Mesh",
+      "Objects.Geometry.Brep",
       "Objects.Other.BlockInstance",
       "Objects.Other.BlockDefinition",
       "Objects.Other.RenderMaterial"
@@ -36,6 +37,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
     when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
     when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
+    when Objects.Geometry.Brep then mesh_to_native(obj["displayMesh"], entities)
     else
       nil
     end
@@ -53,6 +55,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     if line.key?("value")
       values = line["value"]
       points = values.each_slice(3).to_a.map { |pt| point_to_native(pt[0], pt[1], pt[2], line["units"]) }
+      points.push(points[0]) if line["closed"]
       entities.add_edges(*points)
     else
       start_pt = point_to_native(line["start"]["x"], line["start"]["y"], line["start"]["z"], line["units"])
@@ -71,7 +74,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
 
   def component_definition_to_native(block_def)
     definition = Sketchup.active_model.definitions[block_def["name"]]
-    return definition if definition&.guid == block_def["applicationId"]
+    return definition if definition && definition.guid == block_def["applicationId"]
 
     definition&.entities&.clear!
     definition ||= Sketchup.active_model.definitions.add(block_def["name"])
