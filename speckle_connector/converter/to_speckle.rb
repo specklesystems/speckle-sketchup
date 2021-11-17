@@ -40,7 +40,6 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
 
   def component_instance_to_speckle(instance, is_group: false)
     transform = instance.transformation
-    origin = transform.origin
     {
       speckle_type: "Objects.Other.BlockInstance",
       applicationId: instance.guid,
@@ -50,7 +49,6 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       name: instance.name,
       renderMaterial: instance.material.nil? ? nil : material_to_speckle(instance.material),
       transform: transform_to_speckle(transform),
-      insertionPoint: speckle_point(origin[0], origin[1], origin[2]),
       "@blockDefinition" => component_definition_to_speckle(instance.definition)
     }
   end
