@@ -33,22 +33,20 @@ module SpeckleSystems::SpeckleConnector
     end
 
     def self._get_speckle_dir
-      platform = RUBY_PLATFORM.downcase
-
       speckle_dir =
-        if platform =~ (/mingw/) || platform =~ (/win/)
-          # win
-          File.join(Dir.home, "AppData/Roaming/Speckle")
-        elsif platform =~ /linux/
-          # linux
-          File.expand_path("~/.local/share/Speckle")
+        case Sketchup.platform
+        when :platform_win then File.join(Dir.home, "AppData/Roaming/Speckle")
+        when :platform_osx then File.join(Dir.home, ".config", "Speckle")
         else
-          # mac
-          File.expand_path("~/.config/Speckle")
+          nil
         end
+
       return speckle_dir if Dir.exist?(speckle_dir)
 
-      raise(IOError, "No Speckle Directory exists. Please read the guide to get Speckle set up on your machine: \nhttps://speckle.guide/user/manager.html")
+      raise(
+        IOError,
+        "No Speckle Directory exists. Please read the guide to get Speckle set up on your machine: \nhttps://speckle.guide/user/manager.html"
+      )
     end
   end
 end
