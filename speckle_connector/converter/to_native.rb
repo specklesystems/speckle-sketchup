@@ -111,8 +111,10 @@ module SpeckleSystems::SpeckleConnector::ToNative
     is_group = false
 
     definition = component_definition_to_native(block["blockDefinition"])
-
-    transform = transform_to_native(block["transform"], block["units"])
+    transform = transform_to_native(
+      block["transform"].is_a?(Hash) ? block["transform"]["value"] : block["transform"],
+      block["units"]
+    )
     instance =
       if is_group
         entities.add_group(definition.entities.to_a)

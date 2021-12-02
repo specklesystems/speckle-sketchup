@@ -79,24 +79,28 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
 
   def transform_to_speckle(transform)
     t_arr = transform.to_a
-    [
-      t_arr[0],
-      t_arr[4],
-      t_arr[8],
-      length_to_speckle(t_arr[12]),
-      t_arr[1],
-      t_arr[5],
-      t_arr[9],
-      length_to_speckle(t_arr[13]),
-      t_arr[2],
-      t_arr[6],
-      t_arr[10],
-      length_to_speckle(t_arr[14]),
-      t_arr[3],
-      t_arr[7],
-      t_arr[11],
-      t_arr[15]
-    ]
+    {
+      speckle_type: "Objects.Other.Transform",
+      units: @units,
+      value: [
+        t_arr[0],
+        t_arr[4],
+        t_arr[8],
+        length_to_speckle(t_arr[12]),
+        t_arr[1],
+        t_arr[5],
+        t_arr[9],
+        length_to_speckle(t_arr[13]),
+        t_arr[2],
+        t_arr[6],
+        t_arr[10],
+        length_to_speckle(t_arr[14]),
+        t_arr[3],
+        t_arr[7],
+        t_arr[11],
+        t_arr[15]
+      ]
+    }
   end
 
   def initialise_group_mesh(face, bounds)
