@@ -15,14 +15,12 @@
           <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
             <div class="text-caption">
               Updated
-              <timeago :datetime="stream.updatedAt" />
+              <timeago class="mr-1" :datetime="stream.updatedAt" />
+              |
+              <v-icon class="ml-1" small>mdi-account-key-outline</v-icon>
+              {{ stream.role.split(':')[1] }}
             </div>
             <v-toolbar-title>
-              <v-chip v-if="stream.role" small class="mr-1">
-                <v-icon small left>mdi-account-key-outline</v-icon>
-                {{ stream.role.split(':')[1] }}
-              </v-chip>
-
               <v-menu offset-y>
                 <template #activator="{ on, attrs }">
                   <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
@@ -150,6 +148,17 @@
           </v-tooltip>
         </v-col>
       </v-row>
+      <v-card-text v-if="hover && !$apollo.loading" class="mt-0 pt-0">
+        <v-text-field
+          v-model="commitMessage"
+          class="small-text-field"
+          hide-details
+          dense
+          flat
+          label="Commit Message"
+          placeholder="Write your commit message here"
+        ></v-text-field>
+      </v-card-text>
       <v-progress-linear
         v-if="(loadingSend || loadingReceive) && loadingStage"
         height="14"
@@ -195,7 +204,8 @@ export default {
       loadingReceive: false,
       loadingStage: null,
       branchName: 'main',
-      commitId: 'latest'
+      commitId: 'latest',
+      commitMessage: null
     }
   },
   apollo: {
@@ -388,7 +398,7 @@ export default {
           streamId: this.streamId,
           branchName: this.branchName,
           objectId: hash,
-          message: 'sent from sketchup',
+          message: this.commitMessage ?? 'sent from sketchup',
           sourceApplication: 'sketchup',
           totalChildrenCount: s.objects[hash].totalChildrenCount
         }
@@ -427,7 +437,14 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.v-text-field >>> input {
+  font-size: 0.9em;
+}
+.v-text-field >>> label {
+  font-size: 0.9em;
+}
+
 .btn-fix:focus::before {
   opacity: 0 !important;
 }
