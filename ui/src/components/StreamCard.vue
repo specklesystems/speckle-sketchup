@@ -148,24 +148,28 @@
           </v-tooltip>
         </v-col>
       </v-row>
-      <v-card-text v-if="hover && !$apollo.loading" class="mt-0 pt-0">
-        <v-text-field
-          v-model="commitMessage"
-          class="small-text-field"
-          hide-details
-          dense
-          flat
-          label="Commit Message"
-          placeholder="Write your commit message here"
-        ></v-text-field>
-      </v-card-text>
-      <v-progress-linear
-        v-if="(loadingSend || loadingReceive) && loadingStage"
-        height="14"
-        indeterminate
-      >
-        <div class="text-caption">{{ loadingStage }}</div>
-      </v-progress-linear>
+      <transition name="expand">
+        <v-card-text v-if="hover && !$apollo.loading" class="mt-0 pt-0">
+          <transition name="fade">
+            <v-text-field
+              v-model="commitMessage"
+              class="small-text-field"
+              hide-details
+              dense
+              flat
+              label="Commit Message"
+              placeholder="Write your commit message here"
+            ></v-text-field>
+          </transition>
+        </v-card-text>
+        <v-progress-linear
+          v-if="(loadingSend || loadingReceive) && loadingStage"
+          height="14"
+          indeterminate
+        >
+          <div class="text-caption">{{ loadingStage }}</div>
+        </v-progress-linear>
+      </transition>
     </v-card>
   </v-hover>
 </template>
@@ -438,6 +442,27 @@ export default {
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease-in;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s ease;
+  max-height: 1200px;
+  overflow: hidden;
+}
+.expand-enter,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
 .v-text-field >>> input {
   font-size: 0.9em;
 }
