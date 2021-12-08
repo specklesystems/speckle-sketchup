@@ -451,9 +451,13 @@ export default {
   opacity: 0;
 }
 
-.expand-enter-active,
-.expand-leave-active {
+.expand-enter-active {
   transition: all 0.2s ease;
+  max-height: 1200px;
+  overflow: hidden;
+}
+.expand-leave-active {
+  transition: all 0.3s ease;
   max-height: 1200px;
   overflow: hidden;
 }
