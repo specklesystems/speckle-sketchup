@@ -292,19 +292,19 @@ export default {
   },
   mounted() {
     bus.$on(`sketchup-objects-${this.streamId}`, async (objects) => {
-      console.log('received objects from sketchup', objects)
+      console.log('>>> SpeckleSketchUp: Received objects from sketchup')
 
       await this.createCommit(objects)
     })
     bus.$on(`sketchup-received-${this.streamId}`, () => {
-      console.log('finished receiving in sketchup', this.streamId)
+      console.log('>>> SpeckleSketchUp: Finished receiving in sketchup', this.streamId)
       this.loadingReceive = false
       this.loadingStage = null
     })
     bus.$on(`sketchup-fail-${this.streamId}`, () => {
       this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/fail`)
       this.$matomo && this.$matomo.trackPageView(`stream/fail`)
-      console.log('sketchup operation failed', this.streamId)
+      console.log('>>> SpeckleSketchUp: operation failed', this.streamId)
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
     })
@@ -375,7 +375,7 @@ export default {
       this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/send`)
       this.$matomo && this.$matomo.trackPageView(`send`)
       sketchup.send_selection(this.streamId)
-      console.log('request for data sent to sketchup')
+      console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
     },
     async createCommit(objects) {
@@ -393,9 +393,14 @@ export default {
         this.loadingStage = 'uploading'
         this.loadingSend = true
         let batches = s.batchObjects()
+        const totBatches = batches.length
+        console.log(`>>> SpeckleSketchUp: ${totBatches} batches ready for sending`)
+        let batchesSent = 0
         for (const batch of batches) {
           let res = await this.sendBatch(batch)
           if (res.status !== 201) throw `Upload request failed: ${res}`
+          batchesSent++
+          this.loadingStage = `uploading: ${Math.round((batchesSent / totBatches) * 100)}%`
         }
 
         let commit = {
@@ -416,7 +421,7 @@ export default {
             commit: commit
           }
         })
-        console.log('sent to stream: ' + this.streamId, commit)
+        console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
 
         this.loadingSend = false
         this.loadingStage = null
