@@ -77,15 +77,15 @@ This should have also have set up the package installer `gem` and interactive ru
     gem -v
     irb -v
 
-Let's also install our first gem `bundle` which is a package manager that will help us with development.
+Let's also install our first gem `bundler` which is a package manager that will help us with development.
 
-    gem install bundle
+    gem install bundler
 
 ### Editor Setup
 
 Clone this repo and run:
 
-    bundle install
+    bundler install
 
 This will install all the necessary packages for the connector.
 
