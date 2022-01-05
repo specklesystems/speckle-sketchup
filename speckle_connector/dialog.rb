@@ -81,10 +81,12 @@ module SpeckleSystems::SpeckleConnector
   end
 
   def self.init_local_accounts
+    puts("Initialisation of Speckle accounts requested by plugin")
     @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json}, #{Accounts.get_suuid.to_json})")
   end
 
   def self.reload_accounts
+    puts("Reload of Speckle accounts requested by plugin")
     @dialog.execute_script("loadAccounts(#{Accounts.load_accounts.to_json})")
   end
 end

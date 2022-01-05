@@ -96,6 +96,7 @@ import userQuery from './graphql/user.gql'
 import { onLogin } from './vue-apollo'
 
 global.loadAccounts = function (accounts, suuid) {
+  console.log('>>> SpeckleSketchup: Loading accounts', accounts, `suuid: ${suuid}`)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
   if (suuid) {
     localStorage.setItem('suuid', suuid)
