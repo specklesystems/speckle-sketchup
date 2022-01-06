@@ -5,7 +5,6 @@ begin
 rescue LoadError
   # ty msp-greg! https://github.com/MSP-Greg/SUMisc/releases/tag/sqlite3-mingw-1
   Gem.install(File.join(File.dirname(File.expand_path(__FILE__)), "utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem"))
-else
   require("sqlite3")
 end
 
