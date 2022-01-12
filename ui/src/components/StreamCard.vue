@@ -148,8 +148,8 @@
           </v-tooltip>
         </v-col>
       </v-row>
-      <transition name="expand">
-        <v-card-text v-if="hover && !$apollo.loading" class="mt-0 pt-0">
+      <transition-group name="expand">
+        <v-card-text v-if="hover && !$apollo.loading" key="commit-message-field" class="mt-0 pt-0">
           <transition name="fade">
             <v-text-field
               v-model="commitMessage"
@@ -164,12 +164,13 @@
         </v-card-text>
         <v-progress-linear
           v-if="(loadingSend || loadingReceive) && loadingStage"
+          key="progress-bar"
           height="14"
           indeterminate
         >
           <div class="text-caption">{{ loadingStage }}</div>
         </v-progress-linear>
-      </transition>
+      </transition-group>
     </v-card>
   </v-hover>
 </template>
@@ -398,7 +399,7 @@ export default {
         let batchesSent = 0
         for (const batch of batches) {
           let res = await this.sendBatch(batch)
-          if (res.status !== 201) throw `Upload request failed: ${res}`
+          if (res.status !== 201) throw `Upload request failed: ${res.status}`
           batchesSent++
           this.loadingStage = `uploading: ${Math.round((batchesSent / totBatches) * 100)}%`
         }
@@ -433,7 +434,7 @@ export default {
     },
     async sendBatch(batch) {
       let formData = new FormData()
-      formData.append(`batch-1`, new Blob([JSON.stringify(batch)], { type: 'application/json' }))
+      formData.append(`batch-1`, new Blob([batch], { type: 'application/json' }))
       let token = localStorage.getItem('SpeckleSketchup.AuthToken')
       let res = await fetch(`${localStorage.getItem('serverUrl')}/objects/${this.streamId}`, {
         method: 'POST',

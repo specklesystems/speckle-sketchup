@@ -170,21 +170,21 @@ export class BaseObjectSerializer {
   batchObjects(maxBatchSizeMb = 1) {
     const maxSize = maxBatchSizeMb * 1000 * 1000
     let batches = []
-    let batch = []
+    let batch = '['
     let batchSize = 0
     let objects = Object.values(this.objects)
     objects.forEach((obj) => {
       let objString = JSON.stringify(obj)
       if (batchSize + objString.length < maxSize) {
-        batch.push(obj)
+        batch += objString + ','
         batchSize += objString.length
       } else {
-        batches.push(batch)
-        batch = [obj]
+        batches.push(batch.slice(0, -1) + ']')
+        batch = '[' + objString + ','
         batchSize = objString.length
       }
     })
-    batches.push(batch)
+    batches.push(batch.slice(0, -1) + ']')
 
     return batches
   }
