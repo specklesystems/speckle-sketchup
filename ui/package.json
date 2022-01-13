@@ -9,7 +9,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@speckle/objectloader": "^2.1.1",
+    "@speckle/objectloader": "^2.3.0",
     "aws-sdk": "^2.981.0",
     "core-js": "^3.6.5",
     "debounce": "^1.2.1",
