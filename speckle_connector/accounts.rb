@@ -34,7 +34,8 @@ module SpeckleSystems::SpeckleConnector
     def self._get_speckle_dir
       speckle_dir =
         case Sketchup.platform
-        when :platform_win then File.join(Dir.home, "AppData/Roaming/Speckle")
+        # sometimes Dir.home on windows points somewhere else bc I guess it's picking up a higher level user?
+        when :platform_win then File.join(Dir.pwd[%r{^((?:[^/]*/){3})}], "AppData/Roaming/Speckle")
         when :platform_osx then File.join(Dir.home, ".config", "Speckle")
         else
           nil
