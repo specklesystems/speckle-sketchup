@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <div>
     <v-row>
       <v-col v-if="$apollo.loading && !streams">
         <v-row>
@@ -10,7 +10,7 @@
       </v-col>
     </v-row>
     <div v-if="!streamsFound" class="text-subtitle-1 text-center mt-8">No streams found... 👀</div>
-    <div v-if="streams">
+    <div v-if="streams" class="mt-5">
       <div v-for="stream in streams.items" :key="stream.id">
         <stream-card :stream-id="stream.id" />
       </div>
@@ -26,7 +26,7 @@
         </v-btn>
       </div>
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script>

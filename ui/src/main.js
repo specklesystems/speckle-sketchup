@@ -4,10 +4,15 @@ import router from './router'
 import vuetify from './plugins/vuetify'
 import { createProvider } from './vue-apollo'
 
+Vue.prototype.$eventHub = new Vue()
+
 Vue.config.productionTip = false
 
 import VueTimeago from 'vue-timeago'
 Vue.use(VueTimeago, { locale: 'en' })
+
+import VueTooltip from 'v-tooltip'
+Vue.use(VueTooltip)
 
 import VueMatomo from 'vue-matomo'
 

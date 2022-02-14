@@ -1,178 +1,140 @@
 <template>
-  <v-hover v-slot="{ hover }">
-    <v-card color="" class="mt-5 mb-5" style="transition: all 0.2s ease-in-out">
-      <v-row>
-        <v-col v-if="$apollo.loading">
-          <v-row>
-            <v-col><v-skeleton-loader type="article" /></v-col>
-          </v-row>
-        </v-col>
-        <v-col v-else>
-          <v-toolbar class="transparent elevation-0" dense>
-            <v-toolbar-title>{{ stream.name }}</v-toolbar-title>
-            <v-spacer />
-          </v-toolbar>
-          <v-card-text class="transparent elevation-0 mt-0 pt-0" dense>
-            <div class="text-caption">
-              Updated
-              <timeago class="mr-1" :datetime="stream.updatedAt" />
-              |
-              <v-icon class="ml-1" small>mdi-account-key-outline</v-icon>
-              {{ stream.role.split(':')[1] }}
-            </div>
-            <v-toolbar-title>
-              <v-menu offset-y>
-                <template #activator="{ on, attrs }">
-                  <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
-                    <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
-                    {{ branchName }}
-                  </v-chip>
-                </template>
-                <v-list dense>
-                  <v-list-item
-                    v-for="(branch, index) in stream.branches.items"
-                    :key="index"
-                    link
-                    @click="switchBranch(branch.name)"
-                  >
-                    <v-list-item-title class="text-caption font-weight-regular">
-                      <v-icon v-if="branch.name == branchName" small class="mr-1 float-left">
-                        mdi-check
-                      </v-icon>
-                      <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>
-                      {{ branch.name }} ({{ branch.commits.totalCount }})
-                    </v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-
-              <v-menu offset-y>
-                <template #activator="{ on, attrs }">
-                  <v-chip v-if="stream.commits" small v-bind="attrs" v-on="on">
-                    <v-icon small class="mr-1 float-left">mdi-source-commit</v-icon>
-                    {{ selectedBranch.commits.items.length ? commitId : 'no commits' }}
-                  </v-chip>
-                </template>
-                <v-list dense>
-                  <v-list-item
-                    v-for="(commit, index) in selectedBranch.commits.items"
-                    :key="index"
-                    link
-                    @click="switchCommit(commit.id)"
-                  >
-                    <v-list-item-title class="text-caption font-weight-regular">
-                      <v-icon
-                        v-if="(commitId == 'latest' && index == 0) || commit.id == commitId"
-                        small
-                        class="mr-1 float-left"
-                      >
-                        mdi-check
-                      </v-icon>
-                      <v-icon v-else small class="mr-1 float-left">mdi-source-commit</v-icon>
-                      {{ commit.id }} |
-                      <span class="font-weight-regular">{{ commit.message }} |</span>
-                      <span class="font-weight-light ml-1">
-                        <timeago :datetime="commit.createdAt" />
-                      </span>
-                    </v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </v-toolbar-title>
-          </v-card-text>
-        </v-col>
-        <v-col v-if="hover && !$apollo.loading" align="end" justify="center">
-          <v-tooltip bottom>
-            <template #activator="{ on, attrs }">
-              <v-btn icon class="mr-4 btn-fix" v-bind="attrs" v-on="on" @click="openInWeb">
-                <v-icon>mdi-open-in-new</v-icon>
-              </v-btn>
-            </template>
-            <span>Open in web</span>
-          </v-tooltip>
-
-          <v-tooltip bottom>
-            <template #activator="{ on, attrs }">
-              <v-btn
-                fab
-                :loading="loadingSend"
-                class="mr-4 elevation-1 btn-fix"
-                hint="Send"
-                v-bind="attrs"
-                v-on="on"
-                @click="send"
+  <v-card
+    v-if="stream"
+    :class="`mb-3 rounded-lg grey ${$vuetify.theme.dark ? 'darken-4' : 'lighten-4'}`"
+    @mouseenter="hover = true"
+    @mouseleave="hover = false"
+  >
+    <v-toolbar flat height="70">
+      <v-toolbar-title class="ml-0">
+        <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
+        <!-- <v-btn v-tooltip="'Pin this stream - it will be saved to this file.'" icon x-small>
+          <v-icon x-small>mdi-pin</v-icon>
+        </v-btn> -->
+        {{ stream.name }}
+      </v-toolbar-title>
+      <v-spacer />
+      <v-slide-x-transition>
+        <div v-show="hover" style="white-space: nowrap">
+          <v-btn v-tooltip="'View online'" icon small class="mr-3" @click="openInWeb">
+            <v-icon small>mdi-open-in-new</v-icon>
+          </v-btn>
+          <v-btn
+            v-tooltip="'Send'"
+            icon
+            class="mr-3 elevation-2"
+            :loading="loadingSend"
+            @click="send"
+          >
+            <!-- <v-icon>mdi-upload</v-icon> -->
+            <v-img v-if="$vuetify.theme.dark" src="@/assets/SenderWhite.png" max-width="30" />
+            <v-img v-else src="@/assets/Sender.png" max-width="30" />
+          </v-btn>
+          <v-btn
+            v-tooltip="'Receive'"
+            icon
+            class="elevation-2"
+            :loading="loadingReceive"
+            @click="receive"
+          >
+            <!-- <v-icon>mdi-download</v-icon> -->
+            <v-img v-if="$vuetify.theme.dark" src="@/assets/ReceiverWhite.png" max-width="30" />
+            <v-img v-else src="@/assets/Receiver.png" max-width="30" />
+          </v-btn>
+        </div>
+      </v-slide-x-transition>
+    </v-toolbar>
+    <v-card-text class="caption pt-1 text-truncate" style="white-space: nowrap">
+      Updated
+      <timeago class="mr-1" :datetime="stream.updatedAt" />
+      |
+      <v-icon class="ml-1" small>mdi-account-key-outline</v-icon>
+      {{ stream.role.split(':')[1] }}
+    </v-card-text>
+    <v-card-text class="d-flex align-center pb-5 mb-5 -mt-2" style="height: 50px">
+      <v-menu offset-y>
+        <template #activator="{ on, attrs }">
+          <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
+            <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
+            {{ branchName }}
+          </v-chip>
+        </template>
+        <v-list dense>
+          <v-list-item
+            v-for="(branch, index) in stream.branches.items"
+            :key="index"
+            link
+            @click="switchBranch(branch.name)"
+          >
+            <v-list-item-title class="text-caption font-weight-regular">
+              <v-icon v-if="branch.name == branchName" small class="mr-1 float-left">
+                mdi-check
+              </v-icon>
+              <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>
+              {{ branch.name }} ({{ branch.commits.totalCount }})
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <v-menu offset-y>
+        <template #activator="{ on, attrs }">
+          <v-chip v-if="stream.commits" small v-bind="attrs" v-on="on">
+            <v-icon small class="mr-1 float-left">mdi-source-commit</v-icon>
+            {{ selectedBranch.commits.items.length ? commitId : 'no commits' }}
+          </v-chip>
+        </template>
+        <v-list dense>
+          <v-list-item
+            v-for="(commit, index) in selectedBranch.commits.items"
+            :key="index"
+            link
+            @click="switchCommit(commit.id)"
+          >
+            <v-list-item-title class="text-caption font-weight-regular">
+              <v-icon
+                v-if="(commitId == 'latest' && index == 0) || commit.id == commitId"
+                small
+                class="mr-1 float-left"
               >
-                <v-img
-                  v-if="$vuetify.theme.dark"
-                  src="@/assets/SenderWhite.png"
-                  max-width="40"
-                  style="display: inline-block"
-                />
-                <v-img
-                  v-else
-                  src="@/assets/Sender.png"
-                  max-width="40"
-                  style="display: inline-block"
-                />
-              </v-btn>
-            </template>
-            <span>Send</span>
-          </v-tooltip>
-
-          <v-tooltip bottom>
-            <template #activator="{ on, attrs }">
-              <v-btn
-                fab
-                :loading="loadingReceive"
-                class="mr-4 elevation-1 btn-fix"
-                hint="Receive"
-                v-bind="attrs"
-                v-on="on"
-                @click="receive"
-              >
-                <v-img
-                  v-if="$vuetify.theme.dark"
-                  src="@/assets/ReceiverWhite.png"
-                  max-width="40"
-                  style="display: inline-block"
-                />
-                <v-img
-                  v-else
-                  src="@/assets/Receiver.png"
-                  max-width="40"
-                  style="display: inline-block"
-                />
-              </v-btn>
-            </template>
-            <span>Receive</span>
-          </v-tooltip>
-        </v-col>
-      </v-row>
-      <transition-group name="expand">
-        <v-card-text v-if="hover && !$apollo.loading" key="commit-message-field" class="mt-0 pt-0">
-          <transition name="fade">
+                mdi-check
+              </v-icon>
+              <v-icon v-else small class="mr-1 float-left">mdi-source-commit</v-icon>
+              {{ commit.id }} |
+              <span class="font-weight-regular">{{ commit.message }} |</span>
+              <span class="font-weight-light ml-1">
+                <timeago :datetime="commit.createdAt" />
+              </span>
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <div class="flex-grow-1 px-4">
+        <v-slide-y-transition>
+          <div v-show="hover">
             <v-text-field
               v-model="commitMessage"
-              class="small-text-field"
+              xxxclass="small-text-field"
               hide-details
               dense
               flat
-              label="Commit Message"
               placeholder="Write your commit message here"
             ></v-text-field>
-          </transition>
-        </v-card-text>
-        <v-progress-linear
-          v-if="(loadingSend || loadingReceive) && loadingStage"
-          key="progress-bar"
-          height="14"
-          indeterminate
-        >
-          <div class="text-caption">{{ loadingStage }}</div>
-        </v-progress-linear>
-      </transition-group>
-    </v-card>
-  </v-hover>
+          </div>
+        </v-slide-y-transition>
+      </div>
+    </v-card-text>
+    <v-progress-linear
+      v-if="(loadingSend || loadingReceive) && loadingStage"
+      key="progress-bar"
+      height="14"
+      indeterminate
+    >
+      <div class="text-caption">{{ loadingStage }}</div>
+    </v-progress-linear>
+  </v-card>
+  <v-card v-else class="my-2">
+    <v-skeleton-loader type="article" />
+  </v-card>
 </template>
 
 <script>
@@ -205,6 +167,7 @@ export default {
   },
   data() {
     return {
+      hover: false,
       loadingSend: false,
       loadingReceive: false,
       loadingStage: null,
@@ -383,6 +346,9 @@ export default {
       if (objects.length == 0) {
         this.loadingSend = false
         this.loadingStage = null
+        this.$eventHub.$emit('notification', {
+          text: 'No objects selected. Nothing was sent.'
+        })
         return
       }
 
@@ -423,7 +389,9 @@ export default {
           }
         })
         console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
-
+        this.$eventHub.$emit('notification', {
+          text: 'Model selection sent!'
+        })
         this.loadingSend = false
         this.loadingStage = null
       } catch (err) {

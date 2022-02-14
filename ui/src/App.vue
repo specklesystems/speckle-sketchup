@@ -85,6 +85,7 @@
       <v-container fluid>
         <router-view :stream-search-query="streamSearchQuery" />
       </v-container>
+      <global-toast />
     </v-main>
   </v-app>
 </template>
@@ -118,7 +119,9 @@ global.setSelectedAccount = function (account) {
 
 export default {
   name: 'App',
-  components: {},
+  components: {
+    GlobalToast: () => import('@/components/GlobalToast')
+  },
   props: {
     size: {
       type: Number,
