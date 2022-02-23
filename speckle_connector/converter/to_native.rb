@@ -6,6 +6,8 @@ module SpeckleSystems::SpeckleConnector::ToNative
     if can_convert_to_native(obj)
       convert_to_native(obj, Sketchup.active_model.entities)
     elsif obj.is_a?(Hash) && obj.key?("speckle_type")
+      return if is_ignored_speckle_type(obj)
+
       puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]}")
       props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
       props.each { |prop| traverse_commit_object(obj[prop]) }
@@ -32,7 +34,12 @@ module SpeckleSystems::SpeckleConnector::ToNative
     ].include?(obj["speckle_type"])
   end
 
+  def is_ignored_speckle_type(obj)
+    ["Objects.BuiltElements.Revit.Parameter"].include?(obj["speckle_type"])
+  end
+
   def convert_to_native(obj, entities = SketchUp.active_model.entities)
+    puts(">>> Converting #{obj["speckle_type"]}: #{obj["id"]}")
     case obj["speckle_type"]
     when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj, entities)
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
