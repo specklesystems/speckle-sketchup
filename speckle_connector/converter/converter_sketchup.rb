@@ -3,7 +3,7 @@ require "speckle_connector/converter/to_speckle"
 require "speckle_connector/converter/to_native"
 
 module SpeckleSystems::SpeckleConnector
-  SKETCHUP_UNIT_STRINGS = { "m" => "m", "mm" => "mm", "ft" => "feet", "in" => "inch", "yd" => "yard" }.freeze
+  SKETCHUP_UNIT_STRINGS = { "m" => "m", "mm" => "mm", "ft" => "feet", "in" => "inch", "yd" => "yard", "cm" => "cm" }.freeze
   public_constant :SKETCHUP_UNIT_STRINGS
   class ConverterSketchup
     include ToNative
