@@ -51,7 +51,7 @@ module SpeckleSystems::SpeckleConnector
       end
 
       if DEV_MODE
-        puts('Launching Speckle Connector from http://localhost:8081')
+        puts("Launching Speckle Connector from http://localhost:8081")
         @dialog.set_url("http://localhost:8081")
       else
         html_file = File.join(File.dirname(File.expand_path(__FILE__)), "html", "index.html")
@@ -92,10 +92,20 @@ module SpeckleSystems::SpeckleConnector
   end
 
   def self.one_click_send
-    create_dialog(show: false) if @dialog.nil?
+    acct = Accounts.default_account
+    return if acct.nil?
 
-    converted = convert_to_speckle
-    puts("converted #{converted.count} objects for quick send")
+    create_dialog
+
+    saved_streams = Sketchup.active_model.attribute_dictionary("speckle", true)["streams"] or []
+    if saved_streams.empty?
+      create_stream_and_send
+    else
+      send_selection(saved_streams[0])
+    end
+    rescue StandardError => e
+      puts(e)
+      @dialog.execute_script("sketchupOperationFailed('#{stream_id}')")
   end
 
   def self.load_saved_streams
@@ -130,5 +140,31 @@ module SpeckleSystems::SpeckleConnector
     speckle_dict["streams"] = saved
 
     load_saved_streams
+  end
+
+  def self.create_stream_and_send
+    acct = Accounts.default_account
+    return if acct.nil?
+
+    path = Sketchup.active_model.path
+    stream_name = path ? File.basename(path, ".*") : "Untitled SketchUp Model"
+    query = "mutation streamCreate($stream: StreamCreateInput!) {streamCreate(stream: $stream)}"
+    vars = { stream: { name: stream_name, description: "Stream created from SketchUp" } }
+
+    request = Sketchup::Http::Request.new("#{acct["serverInfo"]["url"]}/graphql", Sketchup::Http::POST)
+    request.headers = { "Authorization" => "Bearer #{acct["token"]}", "Content-Type" => "application/json" }
+    request.body = { query: query, variables: vars }.to_json
+
+    request.start do |_req, res|
+      res_data = JSON.parse(res.body)["data"]
+      raise(StandardError) unless res_data
+
+      stream_id = res_data["streamCreate"]
+      save_stream(stream_id)
+      send_selection(stream_id)
+    end
+  rescue StandardError => e
+    puts(e)
+    puts("Could not create a new stream")
   end
 end

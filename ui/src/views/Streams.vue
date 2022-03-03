@@ -40,7 +40,6 @@ import gql from 'graphql-tag'
 import { bus } from '../main'
 
 global.setSavedStreams = function (streamIds) {
-  console.log('set streams: ', streamIds)
   localStorage.setItem('savedStreams', JSON.stringify(streamIds))
   bus.$emit('set-saved-streams', streamIds)
 }
@@ -62,14 +61,13 @@ export default {
   },
   computed: {
     streamsFound() {
-      return this.streams && this.streams?.items?.length != 0
+      return (this.streams && this.streams?.items?.length != 0) || this.savedStreams?.length !== 0
     },
     isSavedStream(streamId) {
       return this.savedStreams?.includes(streamId)
     },
     allStreamsList() {
       if (this.$apollo.loading) return
-      console.log(this.streams, this.savedStreams)
       return this.streams?.items.filter((stream) => !this.savedStreams?.includes(stream.id))
     }
   },
@@ -80,7 +78,6 @@ export default {
 
     bus.$on('set-saved-streams', (streamIds) => {
       this.savedStreams = streamIds
-      console.log('in set streams on', this.savedStreams)
     })
 
     sketchup.load_saved_streams()

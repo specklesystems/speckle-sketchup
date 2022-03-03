@@ -410,6 +410,7 @@ export default {
         this.$eventHub.$emit('notification', {
           text: 'Model selection sent!'
         })
+        this.$apollo.queries.stream.refetch()
         this.loadingSend = false
         this.loadingStage = null
       } catch (err) {

@@ -20,7 +20,7 @@ module SpeckleSystems
     PATH = File.join(PATH_ROOT, folder_name).freeze
 
     # Run from localhost or from build files
-    DEV_MODE = false
+    DEV_MODE = true
     puts("Loading Speckle Connector v#{CONNECTOR_VERSION} from #{DEV_MODE ? 'dev' : 'build'}")
 
 
