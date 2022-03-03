@@ -170,6 +170,7 @@ export default {
     },
     requestRefresh() {
       sketchup.reload_accounts()
+      this.refresh()
     },
     refresh() {
       this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/list`)

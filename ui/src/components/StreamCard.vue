@@ -6,11 +6,17 @@
     @mouseleave="hover = false"
   >
     <v-toolbar flat height="70">
-      <v-toolbar-title class="ml-0">
+      <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
-        <!-- <v-btn v-tooltip="'Pin this stream - it will be saved to this file.'" icon x-small>
-          <v-icon x-small>mdi-pin</v-icon>
-        </v-btn> -->
+        <v-btn
+          v-tooltip="'Pin this stream - it will be saved to this file.'"
+          icon
+          x-small
+          @click="toggleSavedStream"
+        >
+          <v-icon v-if="saved" x-small>mdi-pin</v-icon>
+          <v-icon v-else x-small>mdi-pin-outline</v-icon>
+        </v-btn>
         {{ stream.name }}
       </v-toolbar-title>
       <v-spacer />
@@ -163,6 +169,10 @@ export default {
     streamId: {
       type: String,
       default: null
+    },
+    saved: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -288,6 +298,14 @@ export default {
     },
     switchCommit(commitId) {
       this.commitId = commitId
+    },
+    toggleSavedStream() {
+      console.log('in toggle saved stream for ', this.streamId)
+      if (this.saved) {
+        sketchup.remove_stream(this.streamId)
+      } else {
+        sketchup.save_stream(this.streamId)
+      }
     },
     async receive() {
       this.loadingStage = 'requesting'

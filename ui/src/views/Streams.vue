@@ -10,8 +10,13 @@
       </v-col>
     </v-row>
     <div v-if="!streamsFound" class="text-subtitle-1 text-center mt-8">No streams found... 👀</div>
-    <div v-if="streams" class="mt-5">
-      <div v-for="stream in streams.items" :key="stream.id">
+    <div v-if="savedStreams" class="mt-5">
+      <div v-for="streamId in savedStreams" :key="streamId">
+        <stream-card :stream-id="streamId" :saved="true" />
+      </div>
+    </div>
+    <div v-if="allStreamsList" class="mt-5">
+      <div v-for="stream in allStreamsList" :key="stream.id">
         <stream-card :stream-id="stream.id" />
       </div>
       <div class="actions text-center">
@@ -30,8 +35,15 @@
 </template>
 
 <script>
+/*global sketchup*/
 import gql from 'graphql-tag'
 import { bus } from '../main'
+
+global.setSavedStreams = function (streamIds) {
+  console.log('set streams: ', streamIds)
+  localStorage.setItem('savedStreams', JSON.stringify(streamIds))
+  bus.$emit('set-saved-streams', streamIds)
+}
 
 const streamLimit = 5
 export default {
@@ -44,18 +56,34 @@ export default {
   },
   data() {
     return {
-      showMoreEnabled: true
+      showMoreEnabled: true,
+      savedStreams: []
     }
   },
   computed: {
     streamsFound() {
       return this.streams && this.streams?.items?.length != 0
+    },
+    isSavedStream(streamId) {
+      return this.savedStreams?.includes(streamId)
+    },
+    allStreamsList() {
+      if (this.$apollo.loading) return
+      console.log(this.streams, this.savedStreams)
+      return this.streams?.items.filter((stream) => !this.savedStreams?.includes(stream.id))
     }
   },
   mounted() {
     bus.$on('refresh-streams', () => {
       this.$apollo.queries.streams.refetch()
     })
+
+    bus.$on('set-saved-streams', (streamIds) => {
+      this.savedStreams = streamIds
+      console.log('in set streams on', this.savedStreams)
+    })
+
+    sketchup.load_saved_streams()
   },
   apollo: {
     streams: {
@@ -84,6 +112,28 @@ export default {
         bus.$emit('streams-loaded')
         this.showMoreEnabled = data.streams?.items.length < data.streams.totalCount
         return data.streams
+      }
+    },
+    $subscribe: {
+      userStreamAdded: {
+        query: gql`
+          subscription {
+            userStreamAdded
+          }
+        `,
+        result() {
+          this.$apollo.queries.stream.refetch()
+        }
+      },
+      userStreamRemoved: {
+        query: gql`
+          subscription {
+            userStreamRemoved
+          }
+        `,
+        result() {
+          this.$apollo.queries.stream.refetch()
+        }
       }
     }
   },
