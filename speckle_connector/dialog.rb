@@ -115,10 +115,8 @@ module SpeckleSystems::SpeckleConnector
   end
 
   def self.save_stream(stream_id)
-    puts("saving stream: ", stream_id)
     speckle_dict = Sketchup.active_model.attribute_dictionary("speckle", true)
     saved = speckle_dict["streams"] || []
-    puts("currently saved: ", saved)
     saved = saved.empty? ? [stream_id] : saved.unshift(stream_id)
     speckle_dict["streams"] = saved
 
@@ -126,7 +124,6 @@ module SpeckleSystems::SpeckleConnector
   end
 
   def self.remove_stream(stream_id)
-    puts("removing stream: ", stream_id)
     speckle_dict = Sketchup.active_model.attribute_dictionary("speckle", true)
     saved = speckle_dict["streams"] || []
     saved -= [stream_id]
