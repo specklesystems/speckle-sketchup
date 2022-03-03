@@ -23,6 +23,11 @@ module SpeckleSystems::SpeckleConnector
       rows.map { |row| JSON.parse(row[1]) }
     end
 
+    def self.default_account
+      accts = load_accounts
+      accts.select { |acc| acc["isDefault"] }[0] || accts[0]
+    end
+
     def self.get_suuid
       dir = _get_speckle_dir
       suuid_path = File.join(dir, "suuid")
