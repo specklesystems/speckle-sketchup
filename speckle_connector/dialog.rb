@@ -7,6 +7,20 @@ require "speckle_connector/accounts"
 module SpeckleSystems::SpeckleConnector
   UNITS = { 0 => "in", 1 => "ft", 2 => "mm", 3 => "cm", 4 => "m", 5 => "yd" }.freeze
   public_constant :UNITS
+  @to_send = {}
+  @connected = false
+
+  def self.queue_send(stream_id, converted)
+    @to_send = { stream_id: stream_id, converted: converted }
+    send_from_queue(stream_id) if @connected
+  end
+
+  def self.send_from_queue(stream_id)
+    return unless @to_send[:stream_id] == stream_id
+
+    @dialog.execute_script("convertedFromSketchup('#{@to_send[:stream_id]}',#{@to_send[:converted].to_json})")
+    @to_send = {}
+  end
 
   def self.init_dialog
     options = {
@@ -49,6 +63,15 @@ module SpeckleSystems::SpeckleConnector
       @dialog.add_action_callback("remove_stream") do |_action_context, stream_id|
         remove_stream(stream_id)
       end
+      @dialog.add_action_callback("notify_connected") do |_action_context, stream_id|
+        notify_connected(stream_id)
+      end
+
+      # set connected to false when dialog is closed
+      @dialog.set_can_close do
+        @connected = false
+        !@connected
+      end
 
       if DEV_MODE
         puts("Launching Speckle Connector from http://localhost:8081")
@@ -62,6 +85,11 @@ module SpeckleSystems::SpeckleConnector
       @dialog.show if show
     end
     @dialog
+  end
+
+  def self.notify_connected(stream_id)
+    @connected = true
+    send_from_queue(stream_id)
   end
 
   def self.convert_to_speckle
@@ -93,19 +121,22 @@ module SpeckleSystems::SpeckleConnector
 
   def self.one_click_send
     acct = Accounts.default_account
-    return if acct.nil?
+    return puts("No local account found. Please refer to speckle.guide for more information.") if acct.nil?
 
     create_dialog
-
-    saved_streams = Sketchup.active_model.attribute_dictionary("speckle", true)["streams"] or []
-    if saved_streams.empty?
-      create_stream_and_send
+    if first_saved_stream.nil?
+      create_stream
     else
-      send_selection(saved_streams[0])
+      queue_send(first_saved_stream, convert_to_speckle)
     end
-    rescue StandardError => e
-      puts(e)
-      @dialog.execute_script("sketchupOperationFailed('#{stream_id}')")
+  rescue StandardError => e
+    puts(e)
+    @dialog.execute_script("sketchupOperationFailed('#{@to_send[:stream_id]}')")
+  end
+
+  def self.first_saved_stream
+    saved_streams = Sketchup.active_model.attribute_dictionary("speckle", true)["streams"] or []
+    saved_streams.nil? || saved_streams.empty? ? nil : saved_streams[0]
   end
 
   def self.load_saved_streams
@@ -142,7 +173,7 @@ module SpeckleSystems::SpeckleConnector
     load_saved_streams
   end
 
-  def self.create_stream_and_send
+  def self.create_stream
     acct = Accounts.default_account
     return if acct.nil?
 
@@ -161,8 +192,10 @@ module SpeckleSystems::SpeckleConnector
 
       stream_id = res_data["streamCreate"]
       save_stream(stream_id)
-      send_selection(stream_id)
+      queue_send(stream_id, convert_to_speckle)
+      # send_selection(stream_id)
     end
+    load_saved_streams
   rescue StandardError => e
     puts(e)
     puts("Could not create a new stream")

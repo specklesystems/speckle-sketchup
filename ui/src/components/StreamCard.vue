@@ -282,6 +282,8 @@ export default {
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
     })
+
+    if (this.saved) sketchup.notify_connected(this.streamId)
   },
   methods: {
     sleep(ms) {
