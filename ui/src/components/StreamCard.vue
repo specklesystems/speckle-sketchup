@@ -398,7 +398,7 @@ export default {
           sourceApplication: 'sketchup',
           totalChildrenCount: s.objects[hash].totalChildrenCount
         }
-        await this.$apollo.mutate({
+        var res = await this.$apollo.mutate({
           mutation: gql`
             mutation CommitCreate($commit: CommitCreateInput!) {
               commitCreate(commit: $commit)
@@ -410,7 +410,13 @@ export default {
         })
         console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
         this.$eventHub.$emit('notification', {
-          text: 'Model selection sent!'
+          text: 'Model selection sent!',
+          action: {
+            name: 'View in Web',
+            url: `${localStorage.getItem('serverUrl')}/streams/${this.streamId}/commits/${
+              res.data.commitCreate
+            }`
+          }
         })
         this.$apollo.queries.stream.refetch()
         this.loadingSend = false

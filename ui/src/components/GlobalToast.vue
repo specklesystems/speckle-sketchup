@@ -2,7 +2,7 @@
   <v-snackbar v-model="snack" app bottom color="primary">
     {{ text }}
     <template #action="{}">
-      <v-btn v-if="actionName" :to="to" @click.append="snack = false">
+      <v-btn v-if="actionName" small outlined @click="openUrl(url)" @click:append="snack = false">
         {{ actionName }}
       </v-btn>
       <v-btn small icon @click="snack = false">
@@ -18,7 +18,7 @@ export default {
       snack: false,
       text: null,
       actionName: null,
-      to: null
+      url: null
     }
   },
   watch: {
@@ -26,17 +26,24 @@ export default {
       if (!newVal) {
         this.text = null
         this.actionName = null
-        this.to = null
+        this.url = null
       }
     }
   },
   mounted() {
     this.$eventHub.$on('notification', (args) => {
+      console.log('in toast notification', args)
       this.snack = true
       this.text = args.text
       this.actionName = args.action ? args.action.name : null
-      this.to = args.action ? args.action.to : null
+      this.url = args.action ? args.action.url : null
+      console.log('results of notif', this.actionName, this.url)
     })
+  },
+  methods: {
+    openUrl(link) {
+      window.open(link)
+    }
   }
 }
 </script>
