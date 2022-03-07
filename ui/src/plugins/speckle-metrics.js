@@ -13,7 +13,7 @@ const SpeckleMetrics = {
     Vue.prototype.$mixpanel.register({ hostApp: 'SketchUp', type: 'action' })
 
     Vue.prototype.$refreshMixpanelIds = function () {
-      Vue.prototype.$mixpanelId =
+      let distinctId =
         '@' +
         crypto
           .createHash('md5')
@@ -23,7 +23,7 @@ const SpeckleMetrics = {
           .digest('hex')
           .toUpperCase()
 
-      Vue.prototype.$mixpanelServerId = crypto
+      let serverId = crypto
         .createHash('md5')
         .update(localStorage.getItem('serverUrl').toLowerCase())
         .digest('hex')
@@ -31,9 +31,9 @@ const SpeckleMetrics = {
 
       Vue.prototype.$mixpanel.register({
         // eslint-disable-next-line camelcase
-        distinct_id: Vue.prototype.$mixpanelId,
+        distinct_id: distinctId,
         // eslint-disable-next-line camelcase
-        server_id: Vue.prototype.$mixpanelServerId
+        server_id: serverId
       })
     }
   }
