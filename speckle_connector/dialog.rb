@@ -19,6 +19,7 @@ module SpeckleSystems::SpeckleConnector
     return unless @to_send[:stream_id] == stream_id
 
     @dialog.execute_script("convertedFromSketchup('#{@to_send[:stream_id]}',#{@to_send[:converted].to_json})")
+    @dialog.execute_script("oneClickSend('#{@to_send[:stream_id]}')")
     @to_send = {}
   end
 
@@ -92,14 +93,13 @@ module SpeckleSystems::SpeckleConnector
     send_from_queue(stream_id)
   end
 
-  def self.convert_to_speckle
-    model = Sketchup.active_model
-    converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
-    model.selection.map { |entity| converter.convert_to_speckle(entity) }
+  def self.convert_to_speckle(to_convert)
+    converter = ConverterSketchup.new(UNITS[Sketchup.active_model.options["UnitsOptions"]["LengthUnit"]])
+    to_convert.map { |entity| converter.convert_to_speckle(entity) }
   end
 
   def self.send_selection(stream_id)
-    converted = convert_to_speckle
+    converted = convert_to_speckle(Sketchup.active_model.selection)
     puts("converted #{converted.count} objects for stream #{stream_id}")
     # puts(converted.to_json)
     @dialog.execute_script("convertedFromSketchup('#{stream_id}',#{converted.to_json})")
@@ -124,10 +124,11 @@ module SpeckleSystems::SpeckleConnector
     return puts("No local account found. Please refer to speckle.guide for more information.") if acct.nil?
 
     create_dialog
+    to_convert = Sketchup.active_model.selection.count > 0 ? Sketchup.active_model.selection : Sketchup.active_model.entities
     if first_saved_stream.nil?
-      create_stream
+      create_stream(to_convert)
     else
-      queue_send(first_saved_stream, convert_to_speckle)
+      queue_send(first_saved_stream, convert_to_speckle(to_convert))
     end
   rescue StandardError => e
     puts(e)
@@ -173,7 +174,7 @@ module SpeckleSystems::SpeckleConnector
     load_saved_streams
   end
 
-  def self.create_stream
+  def self.create_stream(to_convert)
     acct = Accounts.default_account
     return if acct.nil?
 
@@ -192,7 +193,7 @@ module SpeckleSystems::SpeckleConnector
 
       stream_id = res_data["streamCreate"]
       save_stream(stream_id)
-      queue_send(stream_id, convert_to_speckle)
+      queue_send(stream_id, convert_to_speckle(to_convert))
       # send_selection(stream_id)
     end
     load_saved_streams
