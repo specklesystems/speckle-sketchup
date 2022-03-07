@@ -79,8 +79,9 @@ export default {
     bus.$on('set-saved-streams', (streamIds) => {
       this.savedStreams = streamIds
     })
-
     sketchup.load_saved_streams()
+    console.log('LAUNCHED')
+    this.$mixpanel.track('DUIAction', { name: 'Launched' })
   },
   apollo: {
     streams: {

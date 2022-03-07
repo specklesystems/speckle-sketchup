@@ -14,13 +14,8 @@ Vue.use(VueTimeago, { locale: 'en' })
 import VueTooltip from 'v-tooltip'
 Vue.use(VueTooltip)
 
-import VueMatomo from 'vue-matomo'
-
-Vue.use(VueMatomo, {
-  host: 'https://speckle.matomo.cloud',
-  siteId: 2,
-  userId: localStorage.getItem('suuid')
-})
+import SpeckleMetrics from './plugins/speckle-metrics'
+Vue.use(SpeckleMetrics, { token: 'acd87c5a50b56df91a795e999812a3a4' })
 
 export const bus = new Vue()
 

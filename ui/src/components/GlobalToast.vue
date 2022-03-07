@@ -32,16 +32,15 @@ export default {
   },
   mounted() {
     this.$eventHub.$on('notification', (args) => {
-      console.log('in toast notification', args)
       this.snack = true
       this.text = args.text
       this.actionName = args.action ? args.action.name : null
       this.url = args.action ? args.action.url : null
-      console.log('results of notif', this.actionName, this.url)
     })
   },
   methods: {
     openUrl(link) {
+      this.$mixpanel.track('DUIAction', { name: 'Open In Web' })
       window.open(link)
     }
   }
