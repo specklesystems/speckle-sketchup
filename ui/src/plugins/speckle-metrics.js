@@ -10,7 +10,7 @@ const SpeckleMetrics = {
 
     Vue.prototype.$mixpanel = mixpanel
     Vue.prototype.$mixpanel.init(token, config)
-    Vue.prototype.$mixpanel.register({ hostApp: 'SketchUp', type: 'action' })
+    Vue.prototype.$mixpanel.register({ hostApp: 'sketchup', type: 'action' })
 
     Vue.prototype.$refreshMixpanelIds = function () {
       let distinctId =
