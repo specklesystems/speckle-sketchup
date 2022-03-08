@@ -6,11 +6,17 @@
     @mouseleave="hover = false"
   >
     <v-toolbar flat height="70">
-      <v-toolbar-title class="ml-0">
+      <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
-        <!-- <v-btn v-tooltip="'Pin this stream - it will be saved to this file.'" icon x-small>
-          <v-icon x-small>mdi-pin</v-icon>
-        </v-btn> -->
+        <v-btn
+          v-tooltip="'Pin this stream - it will be saved to this file.'"
+          icon
+          x-small
+          @click="toggleSavedStream"
+        >
+          <v-icon v-if="saved" x-small>mdi-pin</v-icon>
+          <v-icon v-else x-small>mdi-pin-outline</v-icon>
+        </v-btn>
         {{ stream.name }}
       </v-toolbar-title>
       <v-spacer />
@@ -157,12 +163,20 @@ global.sketchupOperationFailed = function (streamId) {
   bus.$emit(`sketchup-fail-${streamId}`)
 }
 
+global.oneClickSend = function (streamId) {
+  bus.$emit(`one-click-send-${streamId}`)
+}
+
 export default {
   name: 'StreamCard',
   props: {
     streamId: {
       type: String,
       default: null
+    },
+    saved: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -266,12 +280,16 @@ export default {
       this.loadingStage = null
     })
     bus.$on(`sketchup-fail-${this.streamId}`, () => {
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/fail`)
-      this.$matomo && this.$matomo.trackPageView(`stream/fail`)
+      this.$mixpanel.track('Connector Action', { name: 'Stream Fail' })
       console.log('>>> SpeckleSketchUp: operation failed', this.streamId)
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
     })
+    bus.$on(`one-click-send-${this.streamId}`, () => {
+      this.$mixpanel.track('Send', { oneClick: true })
+    })
+
+    if (this.saved) sketchup.notify_connected(this.streamId)
   },
   methods: {
     sleep(ms) {
@@ -279,21 +297,30 @@ export default {
     },
     openInWeb() {
       window.open(`${localStorage.getItem('serverUrl')}/streams/${this.streamId}`)
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/open-in-web`)
-      this.$matomo && this.$matomo.trackPageView(`stream/open-in-web`)
+      this.$mixpanel.track('Connector Action', { name: 'Open In Web' })
     },
     switchBranch(branchName) {
+      this.$mixpanel.track('Connector Action', { name: 'Branch Switch' })
       this.branchName = branchName
       this.commitId = 'latest'
     },
     switchCommit(commitId) {
+      this.$mixpanel.track('Connector Action', { name: 'Commit Switch' })
       this.commitId = commitId
+    },
+    toggleSavedStream() {
+      if (this.saved) {
+        sketchup.remove_stream(this.streamId)
+        this.$mixpanel.track('Connector Action', { name: 'Stream Remove' })
+      } else {
+        sketchup.save_stream(this.streamId)
+        this.$mixpanel.track('Connector Action', { name: 'Stream Save' })
+      }
     },
     async receive() {
       this.loadingStage = 'requesting'
       this.loadingReceive = true
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/receive`)
-      this.$matomo && this.$matomo.trackPageView(`receive`)
+      this.$mixpanel.track('Receive')
       const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
@@ -336,8 +363,7 @@ export default {
     async send() {
       this.loadingStage = 'converting'
       this.loadingSend = true
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/send`)
-      this.$matomo && this.$matomo.trackPageView(`send`)
+      this.$mixpanel.track('Send', { oneClick: false })
       sketchup.send_selection(this.streamId)
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
@@ -378,7 +404,7 @@ export default {
           sourceApplication: 'sketchup',
           totalChildrenCount: s.objects[hash].totalChildrenCount
         }
-        await this.$apollo.mutate({
+        var res = await this.$apollo.mutate({
           mutation: gql`
             mutation CommitCreate($commit: CommitCreateInput!) {
               commitCreate(commit: $commit)
@@ -390,8 +416,15 @@ export default {
         })
         console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
         this.$eventHub.$emit('notification', {
-          text: 'Model selection sent!'
+          text: 'Model selection sent!',
+          action: {
+            name: 'View in Web',
+            url: `${localStorage.getItem('serverUrl')}/streams/${this.streamId}/commits/${
+              res.data.commitCreate
+            }`
+          }
         })
+        this.$apollo.queries.stream.refetch()
         this.loadingSend = false
         this.loadingStage = null
       } catch (err) {

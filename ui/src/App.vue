@@ -147,6 +147,7 @@ export default {
   mounted() {
     bus.$on('selected-account-reloaded', async () => {
       await onLogin(this.$apollo.provider.defaultClient)
+      this.$refreshMixpanelIds()
       this.refresh()
     })
     bus.$on('streams-loaded', () => {
@@ -162,18 +163,19 @@ export default {
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
     },
     switchAccount(account) {
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/account/switch`)
-      this.$matomo && this.$matomo.trackPageView(`account/switch`)
+      this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
     },
     requestRefresh() {
       sketchup.reload_accounts()
+      sketchup.load_saved_streams()
+      this.refresh()
     },
     refresh() {
-      this.$matomo && this.$matomo.setCustomUrl(`http://connectors/SketchUp/stream/list`)
-      this.$matomo && this.$matomo.trackPageView(`stream/list`)
+      this.$mixpanel.track('Connector Action', { name: 'Refresh' })
       this.$apollo.queries.user.refetch()
       bus.$emit('refresh-streams')
     }
