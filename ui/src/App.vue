@@ -163,18 +163,19 @@ export default {
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
-      this.$mixpanel.track('DUIAction', { name: 'Toggle Theme' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
     },
     switchAccount(account) {
-      this.$mixpanel.track('DUIAction', { name: 'Account Select' })
+      this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
     },
     requestRefresh() {
       sketchup.reload_accounts()
+      sketchup.load_saved_streams()
       this.refresh()
     },
     refresh() {
-      this.$mixpanel.track('DUIAction', { name: 'Refresh' })
+      this.$mixpanel.track('Connector Action', { name: 'Refresh' })
       this.$apollo.queries.user.refetch()
       bus.$emit('refresh-streams')
     }

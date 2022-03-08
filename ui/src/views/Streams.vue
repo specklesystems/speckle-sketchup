@@ -81,7 +81,7 @@ export default {
     })
     sketchup.load_saved_streams()
     console.log('LAUNCHED')
-    this.$mixpanel.track('DUIAction', { name: 'Launched' })
+    this.$mixpanel.track('Connector Action', { name: 'Launched' })
   },
   apollo: {
     streams: {

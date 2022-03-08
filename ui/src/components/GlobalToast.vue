@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     openUrl(link) {
-      this.$mixpanel.track('DUIAction', { name: 'Open In Web' })
+      this.$mixpanel.track('Connector Action', { name: 'Open In Web' })
       window.open(link)
     }
   }

@@ -280,7 +280,7 @@ export default {
       this.loadingStage = null
     })
     bus.$on(`sketchup-fail-${this.streamId}`, () => {
-      this.$mixpanel.track('DUIAction', { name: 'Stream Fail' })
+      this.$mixpanel.track('Connector Action', { name: 'Stream Fail' })
       console.log('>>> SpeckleSketchUp: operation failed', this.streamId)
       this.loadingReceive = this.loadingSend = false
       this.loadingStage = null
@@ -297,24 +297,24 @@ export default {
     },
     openInWeb() {
       window.open(`${localStorage.getItem('serverUrl')}/streams/${this.streamId}`)
-      this.$mixpanel.track('DUIAction', { name: 'Open In Web' })
+      this.$mixpanel.track('Connector Action', { name: 'Open In Web' })
     },
     switchBranch(branchName) {
-      this.$mixpanel.track('DUIAction', { name: 'Branch Switch' })
+      this.$mixpanel.track('Connector Action', { name: 'Branch Switch' })
       this.branchName = branchName
       this.commitId = 'latest'
     },
     switchCommit(commitId) {
-      this.$mixpanel.track('DUIAction', { name: 'Commit Switch' })
+      this.$mixpanel.track('Connector Action', { name: 'Commit Switch' })
       this.commitId = commitId
     },
     toggleSavedStream() {
       if (this.saved) {
         sketchup.remove_stream(this.streamId)
-        this.$mixpanel.track('DUIAction', { name: 'Stream Remove' })
+        this.$mixpanel.track('Connector Action', { name: 'Stream Remove' })
       } else {
         sketchup.save_stream(this.streamId)
-        this.$mixpanel.track('DUIAction', { name: 'Stream Save' })
+        this.$mixpanel.track('Connector Action', { name: 'Stream Save' })
       }
     },
     async receive() {
@@ -363,7 +363,7 @@ export default {
     async send() {
       this.loadingStage = 'converting'
       this.loadingSend = true
-      this.$mixpanel.track('Send')
+      this.$mixpanel.track('Send', { oneClick: false })
       sketchup.send_selection(this.streamId)
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
