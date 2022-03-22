@@ -286,7 +286,7 @@ export default {
       this.loadingStage = null
     })
     bus.$on(`one-click-send-${this.streamId}`, () => {
-      this.$mixpanel.track('Send', { oneClick: true })
+      this.$mixpanel.track('Send', { method: 'OneClick' })
     })
 
     if (this.saved) sketchup.notify_connected(this.streamId)
@@ -363,7 +363,7 @@ export default {
     async send() {
       this.loadingStage = 'converting'
       this.loadingSend = true
-      this.$mixpanel.track('Send', { oneClick: false })
+      this.$mixpanel.track('Send')
       sketchup.send_selection(this.streamId)
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
