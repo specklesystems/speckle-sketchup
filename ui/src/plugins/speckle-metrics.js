@@ -1,4 +1,4 @@
-var mixpanel = require('mixpanel-browser')
+let mixpanel = require('mixpanel-browser')
 import crypto from 'crypto'
 
 const SpeckleMetrics = {

@@ -6,7 +6,9 @@
     "serve": "vue-cli-service serve --port 8081",
     "build": "vue-cli-service build",
     "watch-build": "vue-cli-service build --watch --mode production",
-    "lint": "vue-cli-service lint"
+    "lint": "eslint . --ext .js,.ts,.vue",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write ."
   },
   "dependencies": {
     "@speckle/objectloader": "^2.3.0",

@@ -4,7 +4,7 @@
       <v-col v-if="$apollo.loading && !streams">
         <v-row>
           <v-col>
-            <v-skeleton-loader type="card-heading, list-item-three-line"></v-skeleton-loader>
+            <v-skeleton-loader type="card-heading, list-item-three-line" />
           </v-col>
         </v-row>
       </v-col>

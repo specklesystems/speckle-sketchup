@@ -19,7 +19,7 @@
           dense
           flat
           solo
-        ></v-text-field>
+        />
         <v-spacer />
         <v-btn icon small class="mx-1" @click="switchTheme">
           <v-icon>mdi-theme-light-dark</v-icon>
@@ -59,7 +59,7 @@
               </div>
             </v-card-text>
             <v-card-text v-if="accounts">
-              <v-divider class="my-3"></v-divider>
+              <v-divider class="my-3" />
 
               <div v-for="account in accounts" :key="account.id">
                 <v-btn

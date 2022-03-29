@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  publicPath: "./",
+  publicPath: './',
   outputDir: path.resolve(__dirname, '../speckle_connector', 'html'),
   transpileDependencies: ['vuetify', '@speckle/objectloader']
 }

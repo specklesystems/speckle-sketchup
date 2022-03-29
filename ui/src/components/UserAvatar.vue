@@ -14,7 +14,7 @@
           <v-img v-else :src="`https://robohash.org/` + id + `.png?size=40x40`" />
         </v-avatar>
         <v-avatar v-else class="ma-1" :size="size" v-bind="attrs" v-on="on">
-          <v-img contain src="/logo.svg"></v-img>
+          <v-img contain src="/logo.svg" />
         </v-avatar>
       </template>
       <v-card v-if="userById" style="width: 200px" :to="isSelf ? '/profile' : '/profile/' + id">
