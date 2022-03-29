@@ -124,7 +124,7 @@
               dense
               flat
               placeholder="Write your commit message here"
-            ></v-text-field>
+            />
           </div>
         </v-slide-y-transition>
       </div>
@@ -135,7 +135,9 @@
       height="14"
       indeterminate
     >
-      <div class="text-caption">{{ loadingStage }}</div>
+      <div class="text-caption">
+        {{ loadingStage }}
+      </div>
     </v-progress-linear>
   </v-card>
   <v-card v-else class="my-2">
@@ -404,7 +406,7 @@ export default {
           sourceApplication: 'sketchup',
           totalChildrenCount: s.objects[hash].totalChildrenCount
         }
-        var res = await this.$apollo.mutate({
+        let res = await this.$apollo.mutate({
           mutation: gql`
             mutation CommitCreate($commit: CommitCreateInput!) {
               commitCreate(commit: $commit)

@@ -46,7 +46,7 @@ query Streams($cursor: String) {
               authorName
               authorAvatar
               referencedObject
-            } 
+            }
           }
         }
       }

@@ -43,7 +43,7 @@ query Stream($id: String!) {
             authorName
             authorAvatar
             referencedObject
-          } 
+          }
         }
       }
     }
