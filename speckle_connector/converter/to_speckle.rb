@@ -56,28 +56,31 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
   def group_mesh_to_speckle(component_def)
     mat_groups = {}
     nested_blocks = []
+    lines = []
 
     component_def.entities.each do |entity|
       nested_blocks.push(component_instance_to_speckle(entity)) if entity.typename == "ComponentInstance"
-      next unless entity.typename == "Face"
+      next unless %w[Edge Face].include?(entity.typename)
 
-      face = entity
-      # convert material
-      mat_id = face.material.nil? ? "none" : face.material.entityID
-      mat_groups[mat_id] = initialise_group_mesh(face, component_def.bounds) unless mat_groups.key?(mat_id)
+      if entity.typename == "Edge"
+        lines.push(edge_to_speckle(entity))
+      else
+        face = entity
+        # convert material
+        mat_id = face.material.nil? ? "none" : face.material.entityID
+        mat_groups[mat_id] = initialise_group_mesh(face, component_def.bounds) unless mat_groups.key?(mat_id)
 
-      # add points and texture coordinates
-      mesh = face.mesh(1)
-      mat_groups[mat_id]["@(31250)vertices"].push(*points_to_array(mesh))
-      mat_groups[mat_id]["@(31250)textureCoordinates"].push(*uvs_to_array(mesh))
+        # add points and texture coordinates
+        mat_groups[mat_id]["@(31250)vertices"].push(*vertices_to_array(face.vertices))
 
-      # add faces
-      mat_groups[mat_id]["@(62500)faces"].push(*faces_to_array(mesh, mat_groups[mat_id][:pt_count]))
-      mat_groups[mat_id][:pt_count] += mesh.points.count
+        # add faces
+        mat_groups[mat_id]["@(62500)faces"].push(*face_indices_to_array(face, mat_groups[mat_id][:pt_count]))
+        mat_groups[mat_id][:pt_count] += face.vertices.count
+      end
     end
 
     mat_groups.values.map { |group| group.delete(:pt_count) }
-    mat_groups.values + nested_blocks
+    mat_groups.values + lines + nested_blocks
   end
 
   def transform_to_speckle(transform)
@@ -114,7 +117,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       "@(31250)vertices" => [],
       "@(62500)faces" => [],
       "@(31250)textureCoordinates" => [],
-      pt_count: -1,
+      pt_count: 0,
       renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material)
     }
   end
@@ -123,13 +126,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
     faces = []
     mesh.polygons.each do |poly|
       faces.push(
-        case poly.count
-        when 3 then 0   # tris
-        when 4 then 1   # polys
-        else
-          poly.count # ngons
-        end,
-        *poly.map { |coord| coord.abs + offset }
+        poly.count, *poly.map { |coord| coord.abs + offset }
       )
     end
     faces
@@ -145,6 +142,21 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       )
     end
     pts_array
+  end
+
+  def vertices_to_array(vertices)
+    pts_array = []
+    vertices.each do |v|
+      pt = v.position
+      pts_array.push(length_to_speckle(pt[0]), length_to_speckle(pt[1]), length_to_speckle(pt[2]))
+    end
+    pts_array
+  end
+
+  def face_indices_to_array(face, offset)
+    face_array = [face.vertices.count]
+    face_array.push(*face.vertices.count.times.map { |index| index + offset })
+    face_array
   end
 
   def uvs_to_array(mesh)
@@ -165,9 +177,9 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       units: @units,
       renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material),
       bbox: bounds_to_speckle(face.bounds),
-      "@(31250)vertices" => points_to_array(mesh),
-      "@(62500)faces" => faces_to_array(mesh, -1),
-      "@(31250)textureCoordinates" => uvs_to_array(mesh)
+      "@(31250)vertices" => vertices_to_array(face.vertices),
+      "@(62500)faces" => face_indices_to_array(face, 0)
+      # "@(31250)textureCoordinates" => uvs_to_array(mesh)
     }
   end
 
