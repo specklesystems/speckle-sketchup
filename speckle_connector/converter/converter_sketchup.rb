@@ -9,11 +9,13 @@ module SpeckleSystems::SpeckleConnector
     include ToNative
     include ToSpeckle
 
-    attr_accessor :units, :component_defs
+    attr_accessor :units, :component_defs, :registry, :entity_observer
 
     def initialize(units = "m")
       @units = units
       @component_defs = {}
+      # @registry = Sketchup.active_model.attribute_dictionary("speckle_id_registry", true)
+      # @entity_observer = SpeckleEntityObserver.new
     end
 
     def convert_to_speckle(obj)

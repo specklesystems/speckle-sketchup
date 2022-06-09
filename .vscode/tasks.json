@@ -12,6 +12,15 @@
         "command": "&'C:/Program Files/SketchUp/SketchUp 2021/SketchUp.exe' -rdebug 'ide port=7000'",
       },
       "problemMatcher": []
-    }
+    },
+    {
+      "label": "Debug SketchUp 2022",
+      "type": "shell",
+      "command": "open -a '/Applications/SketchUp 2022/SketchUp.app' --args -rdebug 'ide port=7000'",
+      "windows": {
+        "command": "&'C:/Program Files/SketchUp/SketchUp 2022/SketchUp.exe' -rdebug 'ide port=7000'",
+      },
+      "problemMatcher": []
+    },
   ]
 }
