@@ -46,7 +46,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       is_sketchup_group: is_group,
       units: @units,
       bbox: bounds_to_speckle(instance.bounds),
-      name: instance.name,
+      name: instance.name == "" ? nil : instance.name,
       renderMaterial: instance.material.nil? ? nil : material_to_speckle(instance.material),
       transform: transform_to_speckle(transform),
       "@blockDefinition" => component_definition_to_speckle(instance.definition)
