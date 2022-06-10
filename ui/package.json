@@ -13,9 +13,10 @@
   "dependencies": {
     "@speckle/objectloader": "^2.6.0",
     "aws-sdk": "^2.981.0",
-    "core-js": "^3.6.5",
+    "core-js": "^3.22.8",
     "debounce": "^1.2.1",
     "mixpanel-browser": "^2.45.0",
+    "regenerator-runtime": "^0.13.9",
     "register-service-worker": "^1.7.1",
     "sqlite3": "^5.0.2",
     "v-tooltip": "^2.1.3",
