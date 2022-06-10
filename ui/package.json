@@ -11,7 +11,7 @@
     "prettier:fix": "prettier --write ."
   },
   "dependencies": {
-    "@speckle/objectloader": "^2.3.0",
+    "@speckle/objectloader": "^2.6.0",
     "aws-sdk": "^2.981.0",
     "core-js": "^3.6.5",
     "debounce": "^1.2.1",
