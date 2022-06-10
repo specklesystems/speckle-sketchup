@@ -9,18 +9,18 @@ orbs:
 jobs:
   build-ui:
     docker:
-      - image: 'circleci/node:14'
+      - image: "circleci/node:16"
     steps:
       - checkout
       - run:
-          command: 'rm package-lock.json'
-          working_directory: 'ui'
+          command: "rm package-lock.json"
+          working_directory: "ui"
       - run:
-          command: 'npm install'
-          working_directory: 'ui'
+          command: "npm install"
+          working_directory: "ui"
       - run:
-          command: 'npm run build'
-          working_directory: 'ui'
+          command: "npm run build"
+          working_directory: "ui"
       - persist_to_workspace:
           root: ./
           paths:
@@ -62,7 +62,7 @@ jobs:
     docker:
       - image: cimg/base:2021.01
     steps:
-      - run: 
+      - run:
           name: Clone
           command: git clone https://$GITHUB_TOKEN@github.com/specklesystems/speckle-sharp-ci-tools.git speckle-sharp-ci-tools
       - persist_to_workspace:
