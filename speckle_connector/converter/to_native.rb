@@ -8,9 +8,14 @@ module SpeckleSystems::SpeckleConnector::ToNative
     elsif obj.is_a?(Hash) && obj.key?("speckle_type")
       return if is_ignored_speckle_type(obj)
 
-      puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]}")
-      props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
-      props.each { |prop| traverse_commit_object(obj[prop]) }
+      if obj["displayValue"].nil?
+        puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]}. Continuing traversal.")
+        props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
+        props.each { |prop| traverse_commit_object(obj[prop]) }
+      else
+        puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]} with displayValue.")
+        convert_to_native(obj)
+      end
     elsif obj.is_a?(Hash)
       obj.each_value { |value| traverse_commit_object(value) }
     elsif obj.is_a?(Array)
@@ -39,32 +44,14 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def convert_to_native(obj, entities = Sketchup.active_model.entities)
-    puts(">>> Converting #{obj["speckle_type"]}: #{obj["id"]}")
+    return display_value_to_native_component(obj, entities) unless obj["displayValue"].nil?
 
     case obj["speckle_type"]
-    when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then if entities == Sketchup.active_model.entities
-                                                                     edge_to_native_component(obj, entities)
-                                                                   else
-                                                                     edge_to_native(obj, entities)
-                                                                   end
+    when "Objects.Geometry.Line", "Objects.Geometry.Polyline" then edge_to_native(obj, entities)
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
     when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
-    when "Objects.Geometry.Mesh" then if entities == Sketchup.active_model.entities
-                                        mesh_to_native_component(obj, entities)
-                                      else
-                                        mesh_to_native(obj, entities)
-                                      end
-    when "Objects.Geometry.Brep" then if entities == Sketchup.active_model.entities
-                                        mesh_to_native_component(obj["displayMesh"], entities)
-                                      else
-                                        mesh_to_native(obj["displayMesh"], entities)
-                                      end
-    when obj.key?["displayValue"]
-      parent_id = obj["applicationId"] || obj["id"]
-      obj["displayValue"].each do |o|
-        o["applicationId"] = "#{parent_id}::#{o["id"]}" if o["applicationId"].nil?
-        convert_to_native(o, entities)
-      end
+    when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
+    when "Objects.Geometry.Brep" then mesh_to_native(obj["displayValue"], entities)
     else
       nil
     end
@@ -73,20 +60,6 @@ module SpeckleSystems::SpeckleConnector::ToNative
       puts(e)
       nil
   end
-
-  # def register_receive(entity, id)
-  #   # entity.add_observer(@entity_observer)
-  #   # entity.set_attribute("speckle", "applicationId", id)
-  #   @registry[id] = entity.persistent_id
-  # end
-
-  # def get_received_entity(app_id)
-  #   return if @registry[app_id].nil?
-  # end
-
-  # def received?(id)
-  #   !@registry[id].nil?
-  # end
 
   def length_to_native(length, units = @units)
     length.__send__(SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
@@ -106,7 +79,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
   end
 
   def edge_to_native_component(line, entities)
-    line_id = line["applicationId"] || line["id"]
+    line_id = line["applicationId"].to_s.empty? ? line["id"] : line["applicationId"]
     definition = component_definition_to_native([line], "def::#{line_id}")
     find_and_erase_existing_instance(definition, line_id)
     instance = entities.add_instance(definition, Geom::Transformation.new)
@@ -124,6 +97,14 @@ module SpeckleSystems::SpeckleConnector::ToNative
 
   # converts a mesh to a native mesh and adds the faces to the given entities collection
   def mesh_to_native(mesh, entities)
+    if mesh["facesWithEdges"].nil?
+      _speckle_mesh_to_native_mesh(mesh, entities)
+    else
+      _hidden_edges_mesh_to_native_mesh(mesh, entities)
+    end
+  end
+
+  def _speckle_mesh_to_native_mesh(mesh, entities)
     native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
     points = []
     mesh["vertices"].each_slice(3) do |pt|
@@ -142,14 +123,36 @@ module SpeckleSystems::SpeckleConnector::ToNative
     native_mesh
   end
 
-  # creates a component definition and instance from a mesh
-  def mesh_to_native_component(mesh, entities)
-    mesh_id = mesh["applicationId"] || mesh["id"]
-    definition = component_definition_to_native([mesh], "def::#{mesh_id}")
-    find_and_erase_existing_instance(definition, mesh_id)
-    instance = entities.add_instance(definition, Geom::Transformation.new)
-    instance.name = mesh_id
-    instance.material = material_to_native(mesh["renderMaterial"])
+  def _hidden_edges_mesh_to_native_mesh(mesh, entities)
+    native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
+    points = []
+    mesh["vertices"].each_slice(3) do |pt|
+      points.push(point_to_native(pt[0], pt[1], pt[2], mesh["units"]))
+    end
+    faces = mesh["facesWithEdges"]
+    while faces.count.positive?
+      num_pts = faces.shift
+      # 0 -> 3, 1 -> 4 to preserve backwards compatibility
+      num_pts += 3 if num_pts < 3
+      indices = faces.shift(num_pts)
+      edge_indices = indices.map(&:abs) << indices[0].abs
+      edge_points = edge_indices.map { |index| points[index - 1] }
+      edges = entities.add_edges(edge_points)
+      edges.each_with_index { |edge, index| edge.soft = edge.smooth = indices[index].negative? }
+      native_mesh.add_polygon(edge_points[0..-2])
+    end
+
+    entities.add_faces_from_mesh(native_mesh, 0, material_to_native(mesh["renderMaterial"]))
+  end
+
+  # creates a component definition and instance from a speckle object with a display value
+  def display_value_to_native_component(obj, entities)
+    obj_id = obj["applicationId"].to_s.empty? ? obj["id"] : obj["applicationId"]
+    definition = component_definition_to_native(obj["displayValue"], "def::#{obj_id}")
+    find_and_erase_existing_instance(definition, obj_id)
+    transform = obj["transform"].nil? ? Geom::Transformation.new : transform_to_native(obj["transform"])
+    instance = entities.add_instance(definition, transform)
+    instance.name = obj_id
     instance
   end
 
@@ -184,17 +187,18 @@ module SpeckleSystems::SpeckleConnector::ToNative
       block["blockDefinition"]["applicationId"]
     )
     name = block["name"].nil? || block["name"].empty? ? block["id"] : block["name"]
-    find_and_erase_existing_instance(definition, name, block["applicationId"])
     transform = transform_to_native(
       block["transform"].is_a?(Hash) ? block["transform"]["value"] : block["transform"],
       block["units"]
     )
     instance =
-      if is_group
-        entities.add_group(definition.entities.to_a)
-      else
-        entities.add_instance(definition, transform)
-      end
+    if is_group
+      entities.add_group(definition.entities.to_a)
+    else
+      entities.add_instance(definition, transform)
+    end
+    # erase existing instances after creation and before rename because you can't have definitions without instances
+    find_and_erase_existing_instance(definition, name, block["applicationId"])
     puts("Failed to create instance for speckle block instance #{block["id"]}") if instance.nil?
     instance.transformation = transform if is_group
     instance.material = material_to_native(block["renderMaterial"])
