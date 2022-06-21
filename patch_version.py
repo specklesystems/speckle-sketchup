@@ -25,7 +25,8 @@ def patch_installer(tag):
 
     with open(iss_file, "r") as file:
         lines = file.readlines()
-        lines.insert(11, f'#define AppVersion "{tag}"\n')
+        lines.insert(11, f'#define AppVersion "{tag.split("-")[0]}"\n')
+        lines.insert(12, f'#define AppInfoVersion "{tag}"\n')
 
         with open(iss_file, "w") as file:
             file.writelines(lines)
