@@ -39,7 +39,7 @@ def main():
         return
 
     tag = sys.argv[1]
-    if not re.match(r"[0-9]+(\.[0-9]+)*$", tag):
+    if not re.match(r"([0-9]+)\.([0-9]+)\.([0-9]+)", tag):
         raise ValueError(f"Invalid tag provided: {tag}")
 
     print(f"Patching version: {tag}")
