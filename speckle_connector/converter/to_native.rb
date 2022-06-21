@@ -95,13 +95,13 @@ module SpeckleSystems::SpeckleConnector::ToNative
     Geom::Point3d.new(length_to_native(x, units), length_to_native(y, units), length_to_native(z, units))
   end
 
+  def point_to_native_array(x ,y ,z ,units)
+    [length_to_native(x, units), length_to_native(y, units), length_to_native(z, units)]
+  end
+
   # converts a mesh to a native mesh and adds the faces to the given entities collection
   def mesh_to_native(mesh, entities)
-    if mesh["facesWithEdges"].nil?
-      _speckle_mesh_to_native_mesh(mesh, entities)
-    else
-      _hidden_edges_mesh_to_native_mesh(mesh, entities)
-    end
+    _speckle_mesh_to_native_mesh(mesh, entities)
   end
 
   def _speckle_mesh_to_native_mesh(mesh, entities)
@@ -119,7 +119,6 @@ module SpeckleSystems::SpeckleConnector::ToNative
       native_mesh.add_polygon(indices.map { |index| points[index] })
     end
     entities.add_faces_from_mesh(native_mesh, 4, material_to_native(mesh["renderMaterial"]))
-
     native_mesh
   end
 
@@ -129,20 +128,33 @@ module SpeckleSystems::SpeckleConnector::ToNative
     mesh["vertices"].each_slice(3) do |pt|
       points.push(point_to_native(pt[0], pt[1], pt[2], mesh["units"]))
     end
-    faces = mesh["facesWithEdges"]
+    edge_flags = mesh["faceEdgeFlags"]
+    faces = mesh["faces"]
+    loops = []
+    flags = []
     while faces.count.positive?
       num_pts = faces.shift
       # 0 -> 3, 1 -> 4 to preserve backwards compatibility
       num_pts += 3 if num_pts < 3
       indices = faces.shift(num_pts)
-      edge_indices = indices.map(&:abs) << indices[0].abs
-      edge_points = edge_indices.map { |index| points[index - 1] }
-      edges = entities.add_edges(edge_points)
-      edges.each_with_index { |edge, index| edge.soft = edge.smooth = indices[index].negative? }
-      native_mesh.add_polygon(edge_points[0..-2])
+      current_edge_flags = edge_flags.shift(num_pts)
+      outer_loop = indices.map { |index| points[index] }
+      if current_edge_flags.include?(true)
+        loops << outer_loop
+        flags << current_edge_flags
+      else
+        native_mesh.add_polygon(outer_loop)
+      end
+    end
+    entities.add_faces_from_mesh(native_mesh, 0, material_to_native(mesh["renderMaterial"]))
+
+    loops.each do |l|
+      loop_flags = flags.shift
+      face = entities.add_face(l)
+      face.edges.each_with_index { |edge, index| edge.soft = edge.smooth = loop_flags[index] }
     end
 
-    entities.add_faces_from_mesh(native_mesh, 0, material_to_native(mesh["renderMaterial"]))
+    native_mesh
   end
 
   # creates a component definition and instance from a speckle object with a display value
@@ -165,7 +177,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     definition ||= Sketchup.active_model.definitions.add(name)
     geometry.each { |obj| convert_to_native(obj, definition.entities) }
     puts("definition finished: #{name} (#{application_id})")
-    puts("    entity count: #{definition.entities.count}")
+    # puts("    entity count: #{definition.entities.count}")
     definition
   end
 
@@ -192,11 +204,11 @@ module SpeckleSystems::SpeckleConnector::ToNative
       block["units"]
     )
     instance =
-    if is_group
-      entities.add_group(definition.entities.to_a)
-    else
-      entities.add_instance(definition, transform)
-    end
+      if is_group
+        entities.add_group(definition.entities.to_a)
+      else
+        entities.add_instance(definition, transform)
+      end
     # erase existing instances after creation and before rename because you can't have definitions without instances
     find_and_erase_existing_instance(definition, name, block["applicationId"])
     puts("Failed to create instance for speckle block instance #{block["id"]}") if instance.nil?

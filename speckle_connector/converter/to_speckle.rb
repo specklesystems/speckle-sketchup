@@ -74,11 +74,11 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
         mesh = face.mesh
         mat_groups[mat_id]["@(31250)vertices"].push(*mesh_points_to_array(mesh))
         mat_groups[mat_id]["@(62500)faces"].push(*mesh_faces_to_array(mesh, mat_groups[mat_id][:pt_count] - 1))
-        mat_groups[mat_id]["@(62500)facesWithEdges"].push(*mesh_faces_with_edges_to_array(mesh, mat_groups[mat_id][:pt_count]))
+        mat_groups[mat_id]["@(31250)faceEdgeFlags"].push(*mesh_edge_flags_to_array(mesh))
       else
         mat_groups[mat_id]["@(31250)vertices"].push(*face_vertices_to_array(face))
         mat_groups[mat_id]["@(62500)faces"].push(*face_indices_to_array(face, mat_groups[mat_id][:pt_count]))
-        mat_groups[mat_id]["@(62500)facesWithEdges"].push(*face_indices_with_edges_to_array(face, mat_groups[mat_id][:pt_count] + 1))
+        mat_groups[mat_id]["@(31250)faceEdgeFlags"].push(*face_edge_flags_to_array(face))
       end
       mat_groups[mat_id][:pt_count] += face.vertices.count
 
@@ -121,7 +121,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       bbox: bounds_to_speckle(bounds),
       "@(31250)vertices" => [],
       "@(62500)faces" => [],
-      "@(62500)facesWithEdges" => [],
+      "@(31250)faceEdgeFlags" => [],
       "@(31250)textureCoordinates" => [],
       pt_count: 0,
       renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material)
@@ -131,7 +131,6 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
   # get an array of face indices from a sketchup polygon mesh
   def mesh_faces_to_array(mesh, offset = 0)
     faces = []
-    puts(faces)
     mesh.polygons.each do |poly|
       faces.push(
         poly.count, *poly.map { |index| index.abs + offset }
@@ -143,7 +142,6 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
   # get an array of face indices from a sketchup polygon mesh INCLUDING negative indices for hidden meshes
   def mesh_faces_with_edges_to_array(mesh, offset)
     faces = []
-    puts(faces)
     mesh.polygons.each do |poly|
       faces.push(
         poly.count, *poly.map { |index| index.positive? ? index + offset : index - offset }
@@ -165,6 +163,16 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
     pts_array
   end
 
+  def mesh_edge_flags_to_array(mesh)
+    edge_flags = []
+    mesh.polygons.each do |poly|
+      edge_flags.push(
+        *poly.map(&:negative?)
+      )
+    end
+    edge_flags
+  end
+
   # get a flat array of face indices from a sketchup face
   def face_indices_to_array(face, offset)
     face_array = [face.vertices.count]
@@ -174,10 +182,14 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
 
   # get a flat array of face indices from a sketchup face
   def face_indices_with_edges_to_array(face, offset = 1)
-    smooth_edges = face.outer_loop.edges.map(&:smooth?)
+    soft_edges = face.outer_loop.edges.map(&:soft?)
     face_array = [face.vertices.count]
-    face_array.push(*face.vertices.count.times.map { |index| smooth_edges[index] ? -(index + offset) : index + offset })
+    face_array.push(*face.vertices.count.times.map { |index| soft_edges[index] ? -(index + offset) : index + offset })
     face_array
+  end
+
+  def face_edge_flags_to_array(face)
+    face.outer_loop.edges.map(&:soft?)
   end
 
   # get a flat array of vertices from a list of sketchup vertices
@@ -211,7 +223,7 @@ module SpeckleSystems::SpeckleConnector::ToSpeckle
       bbox: bounds_to_speckle(face.bounds),
       "@(31250)vertices" => mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh),
       "@(62500)faces" => mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-      "@(62500)facesWithEdges" => mesh.nil? ? face_indices_with_edges_to_array(face, 1) : mesh_faces_with_edges_to_array(mesh, 0),
+      "@(31250)faceEdgeFlags" => mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
     }
   end
 
