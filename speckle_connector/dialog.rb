@@ -112,7 +112,8 @@ module SpeckleSystems::SpeckleConnector
     puts("received objects from stream #{stream_id}")
     model = Sketchup.active_model
     converter = ConverterSketchup.new(UNITS[model.options["UnitsOptions"]["LengthUnit"]])
-    converter.traverse_commit_object(base)
+    #we pass along the stream id to create a component using the stream_id for the name.
+    converter.traverse_commit_object(base, stream_id)
     @dialog.execute_script("finishedReceiveInSketchup('#{stream_id}')")
   rescue StandardError => e
     puts(e)

@@ -2,24 +2,78 @@ require "sketchup"
 
 # To Native conversions for the ConverterSketchup
 module SpeckleSystems::SpeckleConnector::ToNative
-  def traverse_commit_object(obj)
+
+  #Starting point for the conversion from speckle to native
+  #Note: The following is a design decision to put the recieved objects into a root component. 
+  #This allows for a cleaner import and allows for updates to an existing import. 
+  def traverse_commit_object(base, stream_id)
+    #find the stream definition if it already exists
+    stream_name = "stream #{stream_id}"
+    definitions = Sketchup.active_model.definitions
+    definition = definitions[stream_name]
+
+    #if the stream definition does exist, clear the definition
+    if definition && definition.name == stream_name
+      definition&.entities&.clear!
+    else
+      definition ||= definitions.add(stream_name)
+    end
+
+    #if their are no instances of the stream definition, add one to the scene at the origin point.
+    if !definition.instances || definition.instances.count == 0
+      entities = Sketchup.active_model.entities
+      transformation = Geom::Transformation.new([0,0,0])
+      componentinstance = entities.add_instance(definition, transformation)
+    end
+
+    #start the traversal of the speckle object graph to native sketchup
+    traverse_commit_object_into_entities(base, definition.entities)
+  end
+
+  #Resursive method for the tranversal, validation, and conversion of speckle objects to native.
+  #NOTE: this method requires an entities collection and does not assume the active_model.
+  #This modification is necessary for better recursive traversal of the object graph. 
+  #ie. groups within groups within groups... 
+  def traverse_commit_object_into_entities(obj, entities)
+
     if can_convert_to_native(obj)
-      convert_to_native(obj, Sketchup.active_model.entities)
+      convert_to_native(obj, entities)
     elsif obj.is_a?(Hash) && obj.key?("speckle_type")
       return if is_ignored_speckle_type(obj)
 
-      if obj["displayValue"].nil?
-        puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]}. Continuing traversal.")
-        props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
-        props.each { |prop| traverse_commit_object(obj[prop]) }
-      else
-        puts(">>> Found #{obj["speckle_type"]}: #{obj["id"]} with displayValue.")
-        convert_to_native(obj)
+      #if the obj is a built element, create a group to put the geometry inside of.
+      #ToDo: not sure if there is a case where an empty group would be created.
+      if (obj.key?("speckle_type") && obj.key?("displayValue") && obj["speckle_type"].start_with?("Objects.BuiltElements"))
+        element_group = entities.add_group
+        element_name = obj["speckle_type"]
+        element_name.gsub!("Objects.BuiltElements.", "")
+        element_name = "#{element_name}_#{obj["elementId"]}"
+        element_group.name = element_name
+        entities = element_group.entities
+        #puts(">>> Creating Element #{element_name}")
       end
+
+      #traverse all the keys/properties of the obj
+      props = obj.keys.filter_map { |key| key unless key.start_with?("_") }
+      props.each { |prop| 
+
+        #this is a little hacky but it checks if the object is defining a category. 
+        #if so, it creates a group to house the elements. Organizing the scene graph like this
+        #seems alot more clean and useful to the end-user.
+        if prop.start_with?('@') && prop != "@displayValue"
+          category_group = entities.add_group
+          category_name = prop[1..-1]
+          category_group.name = category_name
+          #puts(">>> Creating Category: #{category_name}")
+          traverse_commit_object_into_entities(obj[prop], category_group.entities) 
+        else
+          traverse_commit_object_into_entities(obj[prop], entities) 
+        end
+      }
     elsif obj.is_a?(Hash)
-      obj.each_value { |value| traverse_commit_object(value) }
+      obj.each_value { |value| traverse_commit_object_into_entities(value, entities) }
     elsif obj.is_a?(Array)
-      obj.each { |value| traverse_commit_object(value) }
+      obj.each { |value| traverse_commit_object_into_entities(value, entities) }
     else
       nil
     end
@@ -51,7 +105,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     when "Objects.Other.BlockInstance" then component_instance_to_native(obj, entities)
     when "Objects.Other.BlockDefinition" then component_definition_to_native(obj)
     when "Objects.Geometry.Mesh" then mesh_to_native(obj, entities)
-    when "Objects.Geometry.Brep" then mesh_to_native(obj["displayValue"], entities)
+    when "Objects.Geometry.Brep" then mesh_to_native(obj["displayMesh"], entities)
     else
       nil
     end
@@ -87,6 +141,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     instance
   end
 
+  #NOTE: this is currently not used
   def face_to_native
     nil
   end
@@ -122,6 +177,7 @@ module SpeckleSystems::SpeckleConnector::ToNative
     native_mesh
   end
 
+  #NOTE: this is currently not used.
   def _hidden_edges_mesh_to_native_mesh(mesh, entities)
     native_mesh = Geom::PolygonMesh.new(mesh["vertices"].count / 3)
     points = []
@@ -188,31 +244,27 @@ module SpeckleSystems::SpeckleConnector::ToNative
 
   # creates a component instance from a block
   def component_instance_to_native(block, entities)
-    # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
-    # something about this conversion is freaking out if nested block geo is a group
-    # so this is set to false always until I can figure this out
-    is_group = false
-
-    definition = component_definition_to_native(
-      block["blockDefinition"]["geometry"],
-      block["blockDefinition"]["name"],
-      block["blockDefinition"]["applicationId"]
-    )
+    # I know the previous version said this causes problems but I didn't have any problems using is_group.
+    is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
     name = block["name"].nil? || block["name"].empty? ? block["id"] : block["name"]
     transform = transform_to_native(
       block["transform"].is_a?(Hash) ? block["transform"]["value"] : block["transform"],
       block["units"]
     )
-    instance =
-      if is_group
-        entities.add_group(definition.entities.to_a)
-      else
-        entities.add_instance(definition, transform)
-      end
-    # erase existing instances after creation and before rename because you can't have definitions without instances
-    find_and_erase_existing_instance(definition, name, block["applicationId"])
-    puts("Failed to create instance for speckle block instance #{block["id"]}") if instance.nil?
-    instance.transformation = transform if is_group
+
+    block_def = block["blockDefinition"]
+
+    if is_group
+      instance = entities.add_group
+      instance.transformation = transform
+      instance.name = block_def["name"]
+      block_def["geometry"].each { |obj| convert_to_native(obj, instance.entities) }
+    else
+      definition = component_definition_to_native(block_def["geometry"], block_def["name"], block_def["applicationId"])
+      instance = entities.add_instance(definition, transform)
+    end
+
+    #puts("Failed to create instance for speckle block instance #{block["id"]}") if instance.nil?
     instance.material = material_to_native(block["renderMaterial"])
     instance.name = name
     instance
