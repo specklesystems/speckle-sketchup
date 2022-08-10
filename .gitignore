@@ -24,6 +24,9 @@ speckle_connector/html
 /test/version_tmp/
 /tmp/
 
+# IDE
+.idea
+
 # Used by dotenv library to load environment variables.
 .env
 
