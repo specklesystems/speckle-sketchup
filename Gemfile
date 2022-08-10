@@ -2,15 +2,16 @@
 
 source "https://rubygems.org"
 
-# gem "rake", "~> 13.0"
-
-gem "rubocop", "~> 1.7"
-
-
 group :development do
   gem "minitest"
+  gem 'pry' # ruby console and debugger
   gem "sketchup-api-stubs"
+  gem 'rake' # ruby make
+  gem 'rubycritic', '~> 4.3', '>= 4.3.3', require: false
   gem "solargraph"
+  gem "rubocop"
+  gem 'skippy', '~> 0.4.1.a' # Aid with common SketchUp extension tasks.
+  gem "sqlite3", "~> 1.4"
 end
 
-gem "sqlite3", "~> 1.4"
+
