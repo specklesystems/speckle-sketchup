@@ -11,7 +11,4 @@ group :development do
   gem "solargraph"
   gem "rubocop"
   gem 'skippy', '~> 0.4.1.a' # Aid with common SketchUp extension tasks.
-  gem "sqlite3", "~> 1.4"
 end
-
-
