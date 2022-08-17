@@ -20,9 +20,15 @@ home_folder = File.expand_path('~')
 
 # Add Speckle folder - uncomment the one you need
 speckle_path = File.join(home_folder, 'Documents', 'Git', 'Speckle', 'speckle-sketchup')
+release_path = File.join(speckle_path, 'package')
 
 # rubocop:disable Style/GlobalVars
-$LOAD_PATH << speckle_path
+# Load release version if release files exist
+if Dir.exist?(release_path) && (not Dir.empty?(release_path))
+  $LOAD_PATH << release_path
+else
+  $LOAD_PATH << speckle_path
+end
 # rubocop:enable Style/GlobalVars
 
 files = %w[speckle_connector]
