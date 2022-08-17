@@ -119,18 +119,20 @@ module SpeckleSystems::SpeckleConnector::ToNative
       native_mesh.add_polygon(indices.map { |index| points[index] })
     end
     entities.add_faces_from_mesh(native_mesh, 4, material_to_native(mesh["renderMaterial"]))
-    remove_coplanar_faces(entities)
+    merge_coplanar_faces(entities)
     native_mesh
   end
 
-  # Removes coplanar entities from active_model.
+  # Removes coplanar entities from the given entities.
   # @param entities [Sketchup::Entities] entities to remove edges between that make entities coplanar.
-  def remove_coplanar_faces(entities)
+  # @note Merging coplanar faces idea originated from [CleanUp](https://github.com/thomthom/cleanup) plugin
+  # which is developed by [Thomas Thomassen](https://github.com/thomthom).
+  def merge_coplanar_faces(entities)
     edges = []
     faces = entities.collect { |entity| entity if entity.is_a? Sketchup::Face }.compact
     faces.each { |face| face.edges.each { |edge| edges << edge } }
     edges.compact!
-    edges.each { |edge| detect_edges_have_coplanar_faces(edge, false ) }
+    edges.each { |edge| remove_edge_have_coplanar_faces(edge, false ) }
   end
 
   # Detect edges that have faces as coplanar.
