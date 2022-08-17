@@ -135,12 +135,19 @@ module SpeckleSystems::SpeckleConnector::ToNative
     edges.each { |edge| remove_edge_have_coplanar_faces(edge, false ) }
   end
 
-  # Detect edges that have faces as coplanar.
+  # Detect edges to remove by checking following controls respectively;
+  #  - Upcoming Sketchup entity is Sketchup::Edge or not.
+  #  - Whether edge has 2 face or not.
+  #  - Whether faces are duplicated or not.
+  #  - Whether edges safe to merge or not.
+  #  - Whether faces have same material or not.
+  #  - Whether UV texture map is aligned between faces or not.
+  #  - Finally, if faces are coplanar by correcting these checks, then removes edge from Sketchup.active_model.
   # @param edge [Sketchup::Edge] edge to check.
-  # @param ignore_materials [TrueClass, FalseClass] whether ignore materials or not.
+  # @param ignore_materials [Boolean] whether ignore materials or not.
   # Returns true if the given edge separating two coplanar faces.
   # Return false otherwise.
-  def detect_edges_have_coplanar_faces(edge, ignore_materials)
+  def remove_edge_have_coplanar_faces(edge, ignore_materials)
     return false unless edge.valid? && edge.is_a?(Sketchup::Edge)
     return false unless edge.faces.size == 2
 
