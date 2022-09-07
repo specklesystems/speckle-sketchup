@@ -9,7 +9,6 @@ query {
     verified
     profiles
     role
-    suuid
     streams {
       totalCount
     }

@@ -28,14 +28,6 @@ module SpeckleSystems::SpeckleConnector
       accts.select { |acc| acc["isDefault"] }[0] || accts[0]
     end
 
-    def self.get_suuid
-      dir = _get_speckle_dir
-      suuid_path = File.join(dir, "suuid")
-      return unless File.exist?(suuid_path)
-
-      File.read(suuid_path)
-    end
-
     def self._get_speckle_dir
       speckle_dir =
         case Sketchup.platform

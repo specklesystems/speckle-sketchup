@@ -96,16 +96,14 @@ import { bus } from './main'
 import userQuery from './graphql/user.gql'
 import { onLogin } from './vue-apollo'
 
-global.loadAccounts = function (accounts, suuid) {
-  console.log('>>> SpeckleSketchup: Loading accounts', accounts, `suuid: ${suuid}`)
+global.loadAccounts = function (accounts) {
+  console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
-  if (suuid) {
-    localStorage.setItem('suuid', suuid)
-    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+  let uuid = localStorage.getItem('uuid')
+  if (uuid) {
+    global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] == uuid))
   } else {
-    global.setSelectedAccount(
-      accounts.find((acct) => acct['userInfo']['id'] == localStorage.getItem('uuid'))
-    )
+    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
   }
 }
 
