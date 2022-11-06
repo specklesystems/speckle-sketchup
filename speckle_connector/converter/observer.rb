@@ -1,21 +1,25 @@
-module SpeckleSystems::SpeckleConnector
-  class SpeckleEntityObserver < Sketchup::EntityObserver
-    attr_accessor :registry
+# frozen_string_literal: true
 
-    def initialize
-      super()
-      @registry = Sketchup.active_model.attribute_dictionary("speckle_id_registry", true)
-    end
+module SpeckleSystems
+  module SpeckleConnector
+    class SpeckleEntityObserver < Sketchup::EntityObserver
+      attr_accessor :registry
 
-    def onEraseEntity(entity)
-      app_id = entity.get_attribute("speckle", "applicationId")
-      return if app_id.nil?
+      def initialize
+        super()
+        @registry = Sketchup.active_model.attribute_dictionary('speckle_id_registry', true)
+      end
 
-      p(app_id)
+      def onEraseEntity(entity)
+        app_id = entity.get_attribute('speckle', 'applicationId')
+        return if app_id.nil?
 
-      @registry.delete_key(app_id)
+        p(app_id)
 
-      p(@registry)
+        @registry.delete_key(app_id)
+
+        p(@registry)
+      end
     end
   end
 end
