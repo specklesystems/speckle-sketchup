@@ -89,43 +89,73 @@ Clone this repo and run:
 
 This will install all the necessary packages for the connector.
 
-Next, install the Sketchup Ruby Debugger. You can find installation instructions [here](https://github.com/SketchUp/sketchup-ruby-debugger/blob/main/README.md). This will involve downloading the `dll` and copying it into the SketchUp installation directory:
+Next, install the Sketchup Ruby Debugger. You can find installation instructions 
+[here](https://github.com/SketchUp/sketchup-ruby-debugger/blob/main/README.md). 
+This will involve downloading the `dll` and copying it into the SketchUp installation 
+directory:
 
-    C:\Program Files\SketchUp\SketchUp 2021\
+    C:\Program Files\SketchUp\SketchUp 20XX\
 
 You can now open up the repo in VS Code.
 
 Make sure you've installed the Ruby extension for VS Code.
 
-### Loading the Plugin
+### Concept to load plugins into SketchUp environment
 
-To tell SketchUp to load the plugin from wherever you happen to be developing, you'll need to create a ruby file with the following contents:
+To tell SketchUp to load the plugin from wherever you happen to be developing,
+you'll need to create a ruby file with the following contents:
 
 ```ruby
 $LOAD_PATH << 'C:\YOUR\PATH\TO\THE\sketchup_connector'
 require 'speckle_connector.rb'
 ```
 
-Drop this Ruby file into your SketchUp Plugins directory. You will likely find this at: 
+### Loading the Speckle Connector Plugin
 
-    C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 2021\SketchUp\Plugins 
+1. Find already prepared `speckle_connector_loader.rb` file on the `_tools`
+folder.
+2. Copy this Ruby file into your SketchUp Plugins directory. You will likely find this at:
+    `C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 20XX\SketchUp\Plugins`
+3. Update below line on the copied file with your local git file.
+   ```ruby
+    speckle_path = File.join(home_folder, 'Git', 'Speckle', 'speckle-sketchup')
+   ```
+   By this way SketchUp will directly read your local repository. Do not forget, 
+   this file also loads additional tools on the `_tools` folder. 
+   Those are will be only available on dev mode.
 
-To reload the plugin while SketchUp is running, open up the Ruby console and run the following:
+Due to the fact that Ruby is interpreted language, so you can reload your file(s) when
+you changed them. There are different kinds of ways to reload them.
 
+1. To reload the whole plugin files while SketchUp is running, open up the Ruby console
+and run the following:
+    ```ruby
     SpeckleSystems::SpeckleConnector.reload
+    ```
+2. To reload only specific files, use `jf ruby toolbar` plugin that already available
+on SketchUp toolbar.
 
-To run the `ui`, create a `.env` based on `.env-example` and paste in your Speckle token. Then:
+### User Interface
+
+If it is your first time you cloned the project and willing to see Speckle UI, you
+should make sure that you compiled the `vue.js` project in the `ui` folder.
+
+To run the `ui`, create a `.env` based on `.env-example` and paste in your 
+Speckle token. Then:
 
     cd ui
     npm run serve
 
 ### Debugging 
 
-To run SketchUp in debug mode, you will run the task specified in `tasks.json`. Before you do this, make sure your integrated shell for tasks is using powershell. You can specify this by adding the following option to your workspace's `settings.json`
+To run SketchUp in debug mode, you will run the task specified in `tasks.json`.
+Before you do this, make sure your integrated shell for tasks is using powershell. 
+You can specify this by adding the following option to your workspace's `settings.json`
 
     "terminal.integrated.automationShell.windows": "powershell.exe",
 
-To start the task, use the keyboard shortcut `ctrl` + `shift` + `p` to open up the Command Palette. Search for `Tasks: Run Task` and select it:
+To start the task, use the keyboard shortcut `ctrl` + `shift` + `p` to open up 
+the Command Palette. Search for `Tasks: Run Task` and select it:
 
 ![command palette](https://user-images.githubusercontent.com/7717434/135051668-35fee34e-5270-4b83-9c7b-dabb872370ee.png)
 
@@ -133,9 +163,30 @@ Then choose the `Debug Sketchup 2021` task to run it:
 
 ![debug sketchup task](https://user-images.githubusercontent.com/7717434/135051777-4c350a62-45fb-400e-9b24-4fbb02331b83.png)
 
-Once Sketchup has launched, start the `Listen for rdebug-ide` debug configuration. Once the debugger has connected, you'll be able to debug the connector normally.
+Once Sketchup has launched, start the `Listen for rdebug-ide` debug configuration. 
+Once the debugger has connected, you'll be able to debug the connector normally.
 
 Make sure you run the `ui` before starting the SketchUp Connector
 
     cd ui
     npm run serve
+
+### Code Quality
+
+Tracking your code quality before merging any code to `main` branch might not seem at the
+first time crucial, but when repo became huge, you might have many spaghetti code and technical
+depth. It is always better to keep your work tough from the beginning. For this reason some
+workflows have already setup on CI, those workflows must be passed before considering to
+merge.
+
+To track your code quality locally,
+
+1. Make sure that you do not have any RuboCop issue, run below
+   ```ruby
+   bundle exec rake 
+   ```
+   
+2. To check overall state of repository by RubyCritic, run below
+   ```ruby
+   rake rubycritic 
+   ```

@@ -1,49 +1,120 @@
+require:
+  - rubocop-sketchup
+  - rubocop-minitest
+  - rubocop-rake
+
 AllCops:
-  TargetRubyVersion: 2.7
-  EnabledByDefault: true
-  AutoCorrect: true
+  TargetRubyVersion: 2.5
+  DisabledByDefault: false
+  NewCops: enable
+  DisplayCopNames: true
+  ExtraDetails: true
   SuggestExtensions: false
+  Exclude:
+    - '_tools/jf_RubyPanel.rb'
+    - '_tools/jf_RubyPanel/**/*.rb'
+    - '_tools/su_attributes.rb'
+    - '_tools/su_attributes/**/*.rb'
+    - 'ui/**/*'
+    - 'vendor/bundle/**/*'
 
-Style/StringLiterals:
+Layout:
   Enabled: true
-  EnforcedStyle: double_quotes
 
-Style/StringLiteralsInInterpolation:
+Layout/IndentationStyle:
+  EnforcedStyle: spaces
+  IndentationWidth: 2
+
+# If DisabledByDefault is set to true then we need to enable the SketchUp
+# related departments:
+
+SketchupDeprecations:
   Enabled: true
-  EnforcedStyle: double_quotes
 
-Layout/LineLength:
-  Max: 120
+SketchupPerformance:
+  Enabled: true
 
-Lint/ConstantResolution:
+SketchupRequirements:
+  Enabled: true
+
+SketchupSuggestions:
+  Enabled: true
+
+SketchupBugs:
+  Enabled: true
+
+SketchupRequirements/FileStructure:
   Enabled: false
 
-Style/Copyright:
-  Enabled: false
-
-Style/DocumentationMethod:
+SketchupSuggestions/ModelEntities:
   Enabled: false
 
 Metrics/AbcSize:
-  Enabled: false
+  Max: 30
 
 Metrics/BlockLength:
-  Enabled: false
-  
-Metrics/ClassLength:
-  Enabled: false
-
-Metrics/ModuleLength:
-  Enabled: false
+  # Exclude spec tests
+  Exclude:
+    - "**/*_spec.rb"
 
 Metrics/MethodLength:
+  Max: 20
+
+Metrics/ClassLength:
+  Max: 200
+
+Layout/EndOfLine:
+  Enabled: false
+  EnforcedStyle: lf
+
+Minitest/MultipleAssertions:
+  Max: 5
+
+Naming/MethodParameterName:
+  AllowedNames: [x, y, z]
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+
+# SketchUp 2017 uses Ruby 2.2 where safe navigation is not available
+Style/SafeNavigation:
   Enabled: false
 
-Metrics/ParameterLists:
+Style/AndOr:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
+Style/Documentation:
+  Exclude:
+    - "*tests/**/*_spec.rb"
+    - "*tests/**/*_test.rb"
+
+Style/Not:
   Enabled: false
 
-Metrics/PerceivedComplexity:
+Style/NumericLiterals:
+  Enabled: false
+
+Style/NumericPredicate:
+  EnforcedStyle: comparison
+
+Style/Proc:
+  Enabled: false
+
+Style/RedundantReturn:
+  Enabled: false
+
+# SketchUp 2017 uses Ruby 2.2 where safe navigation is not available
+Style/SlicingWithRange:
+  Enabled: false
+
+# SketchUp 2017 uses Ruby 2.2 where transform_values is not available
+Style/HashTransformValues:
+  Enabled: false
+
+# SketchUp 2017 uses Ruby 2.2 where transform_keys is not available
+Style/HashTransformKeys:
+  Enabled: false
+
+# SketchUp 2017 uses Ruby 2.2 where block needs to be wrapped in begin/end if ensure can be used
+Style/RedundantBegin:
   Enabled: false
