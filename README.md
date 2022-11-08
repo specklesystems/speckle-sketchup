@@ -130,7 +130,7 @@ you changed them. There are different kinds of ways to reload them.
 1. To reload the whole plugin files while SketchUp is running, open up the Ruby console
 and run the following:
     ```ruby
-    SpeckleSystems::SpeckleConnector.reload
+    SpeckleConnector.reload
     ```
 2. To reload only specific files, use `jf ruby toolbar` plugin that already available
 on SketchUp toolbar.

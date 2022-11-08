@@ -17,6 +17,14 @@ AllCops:
     - '_tools/su_attributes/**/*.rb'
     - 'ui/**/*'
     - 'vendor/bundle/**/*'
+  SketchUp:
+    SourcePath: .
+    TargetSketchUpVersion: 2017
+    Exclude: # Exclude common folders.
+      - 'tests/**/*'
+      - 'benchmarks/**/*'
+      - '_tools/**/*'
+      - 'Rakefile'
 
 Layout:
   Enabled: true

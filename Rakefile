@@ -4,7 +4,7 @@ require 'rake/testtask'
 require 'rubocop/rake_task'
 require 'rubycritic/rake_task'
 
-module SpeckleSystems
+module SpeckleConnector
   # Custom utility functions for rake tasks
   module RakeUtils
     module_function
@@ -27,7 +27,7 @@ RuboCop::RakeTask.new(:default)
 # Add task to only verify ruby files that are different than in the `main` branch
 desc('Run rubocop on changed files')
 RuboCop::RakeTask.new(:rubocop_changed) do |t|
-  t.patterns = FileList.new(SpeckleSystems::RakeUtils.changed_rb_files)
+  t.patterns = FileList.new(SpeckleConnector::RakeUtils.changed_rb_files)
 end
 
 # Glob pattern to match source files. Defaults to FileList['.'].
