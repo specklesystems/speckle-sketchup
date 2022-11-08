@@ -10,7 +10,7 @@
 settings.json
 
 # vue app build dist folder
-speckle_connector/html
+speckle_connector/vue_ui
   
 *.gem
 *.rbc
