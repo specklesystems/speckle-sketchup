@@ -22,15 +22,12 @@ module SpeckleConnector
     end
 
     def convert_to_speckle(obj)
-      case obj.is_a?
-      when Sketchup::Edge then edge_to_speckle(obj)
-      when Sketchup::Face then face_to_speckle(obj)
-      when Sketchup::Group then component_instance_to_speckle(obj, is_group: true)
-      when Sketchup::ComponentDefinition then component_definition_to_speckle(obj)
-      when Sketchup::ComponentInstance then component_instance_to_speckle(obj)
-      else
-        raise ArgumentError 'Object type is not supported!'
-      end
+      return edge_to_speckle(obj) if obj.is_a?(Sketchup::Edge)
+      return face_to_speckle(obj) if obj.is_a?(Sketchup::Face)
+      return component_instance_to_speckle(obj, is_group: true) if obj.is_a?(Sketchup::Group)
+      return component_definition_to_speckle(obj) if obj.is_a?(Sketchup::ComponentDefinition)
+
+      component_instance_to_speckle(obj) if obj.is_a?(Sketchup::ComponentInstance)
     end
   end
 end
