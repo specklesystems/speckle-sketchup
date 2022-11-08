@@ -2,6 +2,7 @@
 
 module SpeckleConnector
   module States
+    # Initial state of the application.
     class InitialState
       # @return [UserState] the user specific part of the states
       attr_reader :user_state

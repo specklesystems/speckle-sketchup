@@ -6,6 +6,8 @@ require_relative '../ui/vue_view'
 
 module SpeckleConnector
   module Commands
+    # Command to initialize Speckle UI and register it to ui_controller.
+    # This is the command where we show UI to user.
     class InitializeSpeckle < Command
       def dialog_title
         "Speckle #{CONNECTOR_VERSION}"

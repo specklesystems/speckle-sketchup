@@ -2,7 +2,6 @@
 
 require 'sketchup'
 require 'pathname'
-require 'speckle_connector/dialog'
 require 'speckle_connector/debug'
 require_relative 'src/ui/sketchup_ui'
 require_relative 'src/ui/ui_controller'

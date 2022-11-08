@@ -13,7 +13,7 @@ module SpeckleConnector
 
       # @param commands [Hash{Symbol=>Object}] commands that are sent from the HTMLDialog
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
-      def initialize(commands:, dialog_id:, dialog_title:, htm_file:, **specs)
+      def initialize(commands:, dialog_id:, htm_file:, **specs)
         @commands = commands
         @id = dialog_id
         @htm_file = htm_file

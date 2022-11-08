@@ -4,6 +4,7 @@ require_relative 'command'
 
 module SpeckleConnector
   module Commands
+    # Command to update state of the application.
     class ActionCommand < Command
       # @param app [App::SpeckleConnectorApp] the app object to run command on
       # @param action [#update_state] the action that knows how to change the state of the speckle app

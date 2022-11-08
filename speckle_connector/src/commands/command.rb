@@ -27,7 +27,7 @@ module SpeckleConnector
 
       private
 
-      def _run(*parameters)
+      def _run(*_parameters)
         raise NotImplementedError, 'Implement in subclass'
       end
     end

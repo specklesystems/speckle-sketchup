@@ -2,10 +2,11 @@
 
 require_relative 'command'
 require_relative '../convertors/units'
-require_relative '../../converter/converter_sketchup'
+require_relative '../convertors/converter_sketchup'
 
 module SpeckleConnector
   module Commands
+    # Command to send selection to Speckle Server.
     class SendSelection < Command
       def _run(data)
         stream_id = data['stream_id']

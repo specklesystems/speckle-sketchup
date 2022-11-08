@@ -28,7 +28,9 @@ $LOAD_PATH << File.join(speckle_path, '_tools')
 
 # Defining this path will help to tool to browse related source file directly when
 # developer attempted to reload/load file.
+# rubocop:disable Style/GlobalVars
 $JF_RUBYTOOLBAR = speckle_path
+# rubocop:enable Style/GlobalVars
 
 files = %w[speckle_connector jf_RubyPanel su_attributes]
 

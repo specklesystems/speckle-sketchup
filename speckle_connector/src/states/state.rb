@@ -2,6 +2,7 @@
 
 module SpeckleConnector
   module States
+    # State of the application.
     class State < InitialState
       # @return [SpeckleState] the states of the Speckle
       attr_reader :speckle_state

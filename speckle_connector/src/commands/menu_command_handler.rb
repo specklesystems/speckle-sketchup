@@ -2,6 +2,7 @@
 
 module SpeckleConnector
   module Commands
+    # Helper class to register, handle menu and toolbar commands.
     class MenuCommandHandler
       # @param command [#run] command that can be run
       # @param menu_text [String] name of the command that will be displayed on the menu
