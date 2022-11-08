@@ -8,8 +8,10 @@
 # If you need to test in several versions of SketchUp, create symlinks to this file
 # ( AppData\Roaming\SketchUp\SketchUp <version>\SketchUp\Plugins )
 # Create a link to Plugins folder with this command
-#
+
+# rubocop:disable Layout/LineLength
 # New-Item -ItemType SymbolicLink -Path '~\AppData\Roaming\SketchUp\SketchUp 2022\SketchUp\Plugins\speckle_connector_loader.rb' -Target ~\Git\Speckle\speckle-sketchup\_tools\speckle_connector_loader.rb
+# rubocop:enable Layout/LineLength
 
 SKETCHUP_CONSOLE.show # if you want to show Ruby console on startup
 # base location of your repos - will be merged with specific repos in next step
@@ -24,8 +26,11 @@ speckle_path = File.join(home_folder, 'Git', 'Speckle', 'speckle-sketchup')
 $LOAD_PATH << speckle_path
 $LOAD_PATH << File.join(speckle_path, '_tools')
 
-# Defining this path will help to tool to browse related source file directly when developer attempted to reload/load file.
+# Defining this path will help to tool to browse related source file directly when
+# developer attempted to reload/load file.
+# rubocop:disable Style/GlobalVars
 $JF_RUBYTOOLBAR = speckle_path
+# rubocop:enable Style/GlobalVars
 
 files = %w[speckle_connector jf_RubyPanel su_attributes]
 

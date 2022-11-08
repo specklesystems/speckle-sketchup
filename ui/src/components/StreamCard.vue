@@ -366,7 +366,7 @@ export default {
       this.loadingStage = 'converting'
       this.loadingSend = true
       this.$mixpanel.track('Send')
-      sketchup.send_selection(this.streamId)
+      sketchup.exec({name:"send_selection" , data: {stream_id: this.streamId}})
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
     },

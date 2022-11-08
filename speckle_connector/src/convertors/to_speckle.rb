@@ -1,13 +1,22 @@
 # frozen_string_literal: true
 
 require 'sketchup'
+require_relative 'units'
+
+# rubocop:disable Metrics/MethodLength
+# rubocop:disable Metrics/PerceivedComplexity
+# rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/ModuleLength
 
 # To Speckle conversions for the ConverterSketchup
-module SpeckleSystems
-  module SpeckleConnector
+module SpeckleConnector
+  # Convertors to convert geometry one end to another between Speckle server and Sketchup.
+  module Convertors
+    # Convert geometries to speckle geometry.
     module ToSpeckle
       def length_to_speckle(length)
-        length.__send__("to_#{SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[@units]}")
+        length.__send__("to_#{SKETCHUP_UNIT_STRINGS[@units]}")
       end
 
       # convert an edge to a speckle line
@@ -23,7 +32,7 @@ module SpeckleSystems
         }
       end
 
-      # covnert a component definition to a speckle block definition
+      # Convert a component definition to a speckle block definition
       def component_definition_to_speckle(definition)
         guid = definition.guid
         return @component_defs[guid] if @component_defs.key?(guid)
@@ -35,7 +44,7 @@ module SpeckleSystems
           name: definition.name,
           # i think the base point is always the origin?
           basePoint: speckle_point,
-          '@geometry' => if %w[Edge Face].include?(definition.entities[0].typename)
+          '@geometry' => if definition.entities[0].is_a?(Sketchup::Edge) | definition.entities[0].is_a?(Sketchup::Face)
                            group_mesh_to_speckle(definition)
                          else
                            definition.entities.map { |entity| convert_to_speckle(entity) }
@@ -44,7 +53,7 @@ module SpeckleSystems
         @component_defs[guid] = speckle_def
       end
 
-      # convert a component instane to a speckle block instance
+      # convert a component instance to a speckle block instance
       def component_instance_to_speckle(instance, is_group: false)
         transform = instance.transformation
         {
@@ -66,8 +75,8 @@ module SpeckleSystems
         lines = []
 
         component_def.entities.each do |entity|
-          nested_blocks.push(component_instance_to_speckle(entity)) if entity.typename == 'ComponentInstance'
-          next unless %w[Face].include?(entity.typename)
+          nested_blocks.push(component_instance_to_speckle(entity)) if entity.is_a?(Sketchup::ComponentInstance)
+          next unless entity.is_a?(Sketchup::Face)
 
           face = entity
           # convert material
@@ -97,22 +106,10 @@ module SpeckleSystems
           speckle_type: 'Objects.Other.Transform',
           units: @units,
           value: [
-            t_arr[0],
-            t_arr[4],
-            t_arr[8],
-            length_to_speckle(t_arr[12]),
-            t_arr[1],
-            t_arr[5],
-            t_arr[9],
-            length_to_speckle(t_arr[13]),
-            t_arr[2],
-            t_arr[6],
-            t_arr[10],
-            length_to_speckle(t_arr[14]),
-            t_arr[3],
-            t_arr[7],
-            t_arr[11],
-            t_arr[15]
+            t_arr[0], t_arr[4], t_arr[8], length_to_speckle(t_arr[12]),
+            t_arr[1], t_arr[5], t_arr[9], length_to_speckle(t_arr[13]),
+            t_arr[2], t_arr[6], t_arr[10], length_to_speckle(t_arr[14]),
+            t_arr[3], t_arr[7], t_arr[11], t_arr[15]
           ]
         }
       end
@@ -188,8 +185,8 @@ module SpeckleSystems
         soft_edges = face.outer_loop.edges.map(&:soft?)
         face_array = [face.vertices.count]
         face_array.push(*face.vertices.count.times.map do |index|
-                          soft_edges[index] ? -(index + offset) : index + offset
-                        end)
+          soft_edges[index] ? -(index + offset) : index + offset
+        end)
         face_array
       end
 
@@ -305,3 +302,9 @@ module SpeckleSystems
     end
   end
 end
+
+# rubocop:enable Metrics/MethodLength
+# rubocop:enable Metrics/PerceivedComplexity
+# rubocop:enable Metrics/CyclomaticComplexity
+# rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/ModuleLength

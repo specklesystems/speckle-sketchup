@@ -2,15 +2,23 @@
 
 require 'sketchup'
 
+# rubocop:disable Metrics/MethodLength
+# rubocop:disable Metrics/PerceivedComplexity
+# rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/ModuleLength
+# rubocop:disable SketchupSuggestions/AddGroup
+
 # To Native conversions for the ConverterSketchup
-module SpeckleSystems
-  module SpeckleConnector
+module SpeckleConnector
+  module Convertors
+    # Converts speckle geometries to native SketchUp entities.
     module ToNative
       def traverse_commit_object(obj)
         if can_convert_to_native(obj)
           convert_to_native(obj, Sketchup.active_model.entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
-          return if is_ignored_speckle_type(obj)
+          return if ignored_speckle_type?(obj)
 
           if obj['displayValue'].nil?
             puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
@@ -41,7 +49,7 @@ module SpeckleSystems
         ].include?(obj['speckle_type'])
       end
 
-      def is_ignored_speckle_type(obj)
+      def ignored_speckle_type?(obj)
         ['Objects.BuiltElements.Revit.Parameter'].include?(obj['speckle_type'])
       end
 
@@ -51,7 +59,7 @@ module SpeckleSystems
         case obj['speckle_type']
         when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then edge_to_native(obj, entities)
         when 'Objects.Other.BlockInstance' then component_instance_to_native(obj, entities)
-        when 'Objects.Other.BlockDefinition' then component_definition_to_native(obj)
+        when 'Objects.Other.BlockDefinition' then component_definition_to_native(obj, entities)
         when 'Objects.Geometry.Mesh' then mesh_to_native(obj, entities)
         when 'Objects.Geometry.Brep' then mesh_to_native(obj['displayValue'], entities)
         end
@@ -62,7 +70,7 @@ module SpeckleSystems
       end
 
       def length_to_native(length, units = @units)
-        length.__send__(SpeckleSystems::SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
+        length.__send__(SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
       end
 
       def edge_to_native(line, entities)
@@ -151,41 +159,40 @@ module SpeckleSystems
         return false unless edge.valid? && edge.is_a?(Sketchup::Edge)
         return false unless edge.faces.size == 2
 
-        face1, face2 = edge.faces
+        face_1, face_2 = edge.faces
 
-        return false if face_duplicate?(face1, face2)
+        return false if face_duplicate?(face_1, face_2)
         # Check for troublesome faces which might lead to missing geometry if merged.
         return false unless edge_safe_to_merge?(edge)
 
         # Check materials match.
         unless ignore_materials
-          if face1.material == face2.material && face1.back_material == face2.back_material
-            # Verify UV mapping match.
-            return false if (!face1.material.nil? || face1.material.texture.nil?) && !continuous_uv?(face1, face2, edge)
-          else
+          return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
+          # Verify UV mapping match.
+          if (!face_1.material.nil? || face_1.material.texture.nil?) && !continuous_uv?(face_1, face_2, edge)
             return false
           end
         end
         # Check faces are coplanar or not.
-        return false unless faces_coplanar?(face1, face2)
+        return false unless faces_coplanar?(face_1, face_2)
 
         edge.erase!
         true
       end
 
       # Determines if two faces are overlapped.
-      def face_duplicate?(face1, face2, overlapping = false)
-        return false if face1 == face2
+      def face_duplicate?(face_1, face_2, overlapping: false)
+        return false if face_1 == face_2
 
-        v1 = face1.outer_loop.vertices
-        v2 = face2.outer_loop.vertices
-        return true if (v1 - v2).empty? && (v2 - v1).empty?
+        v_1 = face_1.outer_loop.vertices
+        v_2 = face_2.outer_loop.vertices
+        return true if (v_1 - v_2).empty? && (v_2 - v_1).empty?
 
-        if overlapping && (v2 - v1).empty?
-          edges = (face2.outer_loop.edges - face1.outer_loop.edges)
+        if overlapping && (v_2 - v_1).empty?
+          edges = (face_2.outer_loop.edges - face_1.outer_loop.edges)
           unless edges.empty?
             point = edges[0].start.position.offset(edges[0].line[1], 0.01)
-            return true if face1.classify_point(point) <= 4
+            return true if face_1.classify_point(point) <= 4
           end
         end
         false
@@ -199,23 +206,23 @@ module SpeckleSystems
 
       # Returns true if the two faces connected by the edge has continuous UV mapping.
       # UV's are normalized to 0.0..1.0 before comparison.
-      def continuous_uv?(face1, face2, edge)
+      def continuous_uv?(face_1, face_2, edge)
         tw = Sketchup.create_texture_writer
-        uvh1 = face1.get_UVHelper(true, true, tw)
-        uvh2 = face2.get_UVHelper(true, true, tw)
-        p1 = edge.start.position
-        p2 = edge.end.position
-        uv_equal?(uvh1.get_front_UVQ(p1), uvh2.get_front_UVQ(p1)) &&
-          uv_equal?(uvh1.get_front_UVQ(p2), uvh2.get_front_UVQ(p2)) &&
-          uv_equal?(uvh1.get_back_UVQ(p1), uvh2.get_back_UVQ(p1)) &&
-          uv_equal?(uvh1.get_back_UVQ(p2), uvh2.get_back_UVQ(p2))
+        uvh_1 = face_1.get_UVHelper(true, true, tw)
+        uvh_2 = face_2.get_UVHelper(true, true, tw)
+        p_1 = edge.start.position
+        p_2 = edge.end.position
+        uv_equal?(uvh_1.get_front_UVQ(p_1), uvh_2.get_front_UVQ(p_1)) &&
+          uv_equal?(uvh_1.get_front_UVQ(p_2), uvh_2.get_front_UVQ(p_2)) &&
+          uv_equal?(uvh_1.get_back_UVQ(p_1), uvh_2.get_back_UVQ(p_1)) &&
+          uv_equal?(uvh_1.get_back_UVQ(p_2), uvh_2.get_back_UVQ(p_2))
       end
 
       # Normalize UV's to 0.0..1.0 and compare them.
-      def uv_equal?(uvq1, uvq2)
-        uv1 = uvq1.to_a.map { |n| n % 1 }
-        uv2 = uvq2.to_a.map { |n| n % 1 }
-        uv1 == uv2
+      def uv_equal?(uvq_1, uvq_2)
+        uv_1 = uvq_1.to_a.map { |n| n % 1 }
+        uv_2 = uvq_2.to_a.map { |n| n % 1 }
+        uv_1 == uv_2
       end
 
       # Validates that the given face can be merged with other faces without causing
@@ -232,8 +239,8 @@ module SpeckleSystems
       end
 
       # Determines if two faces are coplanar.
-      def faces_coplanar?(face1, face2)
-        vertices = face1.vertices + face2.vertices
+      def faces_coplanar?(face_1, face_2)
+        vertices = face_1.vertices + face_2.vertices
         plane = Geom.fit_plane_to_points(vertices)
         vertices.all? { |v| v.position.on_plane?(plane) }
       end
@@ -297,7 +304,8 @@ module SpeckleSystems
         definition
       end
 
-      # takes a component definition and finds and erases the first instance with the matching name (and optionally the applicationId)
+      # takes a component definition and finds and erases the first instance with the matching name
+      # (and optionally the applicationId)
       def find_and_erase_existing_instance(definition, name, app_id = '')
         definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
       end
@@ -375,3 +383,10 @@ module SpeckleSystems
     end
   end
 end
+
+# rubocop:enable Metrics/MethodLength
+# rubocop:enable Metrics/PerceivedComplexity
+# rubocop:enable Metrics/CyclomaticComplexity
+# rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/ModuleLength
+# rubocop:enable SketchupSuggestions/AddGroup
