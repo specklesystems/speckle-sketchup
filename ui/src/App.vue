@@ -155,7 +155,7 @@ export default {
     })
 
     this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
-    sketchup.init_local_accounts()
+    sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
     switchTheme() {
@@ -169,7 +169,7 @@ export default {
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})
-      sketchup.load_saved_streams()
+      sketchup.exec({name: "load_saved_streams", data: {}})
       this.refresh()
     },
     refresh() {

@@ -10,8 +10,9 @@ module SpeckleConnector
       # @return [UserState] the user specific part of the states
       attr_reader :user_state
 
-      def initialize(user_state, speckle_state)
+      def initialize(user_state, speckle_state, is_connected)
         @speckle_state = speckle_state
+        @is_connected = is_connected
         super(user_state)
       end
 

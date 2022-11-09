@@ -7,8 +7,12 @@ module SpeckleConnector
       # @return [UserState] the user specific part of the states
       attr_reader :user_state
 
+      # @return [Boolean] application is connector to server or not
+      attr_reader :is_connected
+
       def initialize(user_state)
         @user_state = user_state
+        @is_connected = false
         freeze
       end
     end

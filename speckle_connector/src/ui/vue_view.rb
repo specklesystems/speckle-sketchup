@@ -7,6 +7,10 @@ require_relative '../commands/dialog_ready'
 require_relative '../commands/send_selection'
 require_relative '../commands/receive_objects'
 require_relative '../commands/reload_accounts'
+require_relative '../commands/init_local_accounts'
+require_relative '../commands/save_stream'
+require_relative '../commands/remove_stream'
+require_relative '../commands/notify_connected'
 
 module SpeckleConnector
   module Ui
@@ -42,7 +46,12 @@ module SpeckleConnector
           dialog_ready: Commands::DialogReady.new(@app, 'dialog_ready'),
           send_selection: Commands::SendSelection.new(@app, 'convertedFromSketchup'),
           receive_objects: Commands::ReceiveObjects.new(@app, 'finishedReceiveInSketchup'),
-          reload_accounts: Commands::ReloadAccounts.new(@app, 'reloadAccounts')
+          reload_accounts: Commands::ReloadAccounts.new(@app, 'reloadAccounts'),
+          init_local_accounts: Commands::InitLocalAccounts.new(@app, 'initLocalAccounts'),
+          load_saved_streams: Commands::LoadSavedStreams.new(@app, 'loadSavedStreams'),
+          save_stream: Commands::SaveStream.new(@app, 'saveStream'),
+          remove_stream: Commands::RemoveStream.new(@app, 'removeStream'),
+          notify_connected: Commands::NotifyConnected.new(@app, 'notifyConnected')
         }.freeze
       end
     end

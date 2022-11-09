@@ -291,7 +291,7 @@ export default {
       this.$mixpanel.track('Send', { method: 'OneClick' })
     })
 
-    if (this.saved) sketchup.notify_connected(this.streamId)
+    if (this.saved) sketchup.exec({name: "notify_connected", data: {stream_id: this.streamId}})
   },
   methods: {
     sleep(ms) {
@@ -312,10 +312,10 @@ export default {
     },
     toggleSavedStream() {
       if (this.saved) {
-        sketchup.remove_stream(this.streamId)
+        sketchup.exec({name: "remove_stream", data: {stream_id: this.streamId}})
         this.$mixpanel.track('Connector Action', { name: 'Stream Remove' })
       } else {
-        sketchup.save_stream(this.streamId)
+        sketchup.exec({name: "save_stream", data: {stream_id: this.streamId}})
         this.$mixpanel.track('Connector Action', { name: 'Stream Save' })
       }
     },
@@ -341,7 +341,6 @@ export default {
       console.log(rootObj)
 
       sketchup.exec({name:"receive_objects" , data: {base: rootObj, stream_id: this.streamId}})
-      // sketchup.exec(rootObj, this.streamId)
 
       await this.$apollo.mutate({
         mutation: gql`

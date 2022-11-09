@@ -6,8 +6,11 @@ module SpeckleConnector
     class SpeckleState
       attr_reader :accounts
 
-      def initialize(accounts)
+      attr_reader :to_send
+
+      def initialize(accounts, to_send)
         @accounts = accounts
+        @to_send = to_send
       end
     end
   end
