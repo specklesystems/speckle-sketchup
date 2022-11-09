@@ -38,7 +38,8 @@ module SpeckleConnector
       def commands
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app, 'dialog_ready'),
-          send_selection: Commands::SendSelection.new(@app, 'convertedFromSketchup')
+          send_selection: Commands::SendSelection.new(@app, 'convertedFromSketchup'),
+          receive_objects: Commands::ReceiveObjects.new(@app, 'finishedReceiveInSketchup'),
         }.freeze
       end
     end

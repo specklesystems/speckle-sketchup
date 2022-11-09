@@ -340,7 +340,8 @@ export default {
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
       console.log(rootObj)
 
-      sketchup.receive_objects(rootObj, this.streamId)
+      sketchup.exec({name:"receive_objects" , data: {base: rootObj, stream_id: this.streamId}})
+      // sketchup.exec(rootObj, this.streamId)
 
       await this.$apollo.mutate({
         mutation: gql`

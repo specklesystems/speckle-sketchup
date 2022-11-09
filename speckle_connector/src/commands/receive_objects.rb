@@ -6,16 +6,16 @@ require_relative '../convertors/converter_sketchup'
 
 module SpeckleConnector
   module Commands
-    # Command to send selection to Speckle Server.
-    class SendSelection < Command
+    # Command to receive objects from Speckle Server.
+    class ReceiveObjects < Command
       def _run(data)
         stream_id = data['stream_id']
+        base = data['base']
         su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
         unit = Converters::SKETCHUP_UNITS[su_unit]
         converter = Converters::ConverterSketchup.new(unit)
-        converted = Sketchup.active_model.selection.map { |entity| converter.convert_to_speckle(entity) }
-        puts("converted #{converted.count} objects for stream #{stream_id}")
-        view.dialog.execute_script("#{command_name}('#{stream_id}',#{converted.to_json})")
+        converter.traverse_commit_object(base)
+        view.dialog.execute_script("#{command_name}('#{stream_id}')")
       end
     end
   end

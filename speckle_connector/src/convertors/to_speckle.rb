@@ -12,7 +12,7 @@ require_relative 'units'
 # To Speckle conversions for the ConverterSketchup
 module SpeckleConnector
   # Convertors to convert geometry one end to another between Speckle server and Sketchup.
-  module Convertors
+  module Converters
     # Convert geometries to speckle geometry.
     module ToSpeckle
       def length_to_speckle(length)

@@ -5,7 +5,7 @@ require_relative 'to_speckle'
 require_relative 'to_native'
 
 module SpeckleConnector
-  module Convertors
+  module Converters
     # Helper class to convert geometries between server and Sketchup.
     class ConverterSketchup
       include ToNative

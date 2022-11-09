@@ -11,7 +11,7 @@ require 'sketchup'
 
 # To Native conversions for the ConverterSketchup
 module SpeckleConnector
-  module Convertors
+  module Converters
     # Converts speckle geometries to native SketchUp entities.
     module ToNative
       def traverse_commit_object(obj)
@@ -70,7 +70,7 @@ module SpeckleConnector
       end
 
       def length_to_native(length, units = @units)
-        length.__send__(SpeckleConnector::SKETCHUP_UNIT_STRINGS[units])
+        length.__send__(Converters::SKETCHUP_UNIT_STRINGS[units])
       end
 
       def edge_to_native(line, entities)
