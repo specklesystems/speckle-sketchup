@@ -168,7 +168,7 @@ export default {
       global.setSelectedAccount(account)
     },
     requestRefresh() {
-      sketchup.reload_accounts()
+      sketchup.exec({name: 'reload_accounts', data: {}})
       sketchup.load_saved_streams()
       this.refresh()
     },

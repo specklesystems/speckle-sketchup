@@ -3,13 +3,13 @@
 require 'JSON'
 require_relative '../constants/path_constants'
 
-# begin
-#   require('sqlite3')
-# rescue LoadError
-#   # ty msp-greg! https://github.com/MSP-Greg/SUMisc/releases/tag/sqlite3-mingw-1
-#   Gem.install(File.join(File.dirname(File.expand_path(__FILE__)), 'utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem'))
-#   require('sqlite3')
-# end
+begin
+  require('sqlite3')
+rescue LoadError
+  # ty msp-greg! https://github.com/MSP-Greg/SUMisc/releases/tag/sqlite3-mingw-1
+  Gem.install(File.join(File.dirname(File.expand_path(__FILE__)), '../../utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem'))
+  require('sqlite3')
+end
 
 module SpeckleConnector
   # Accounts to communicate with models on user's account.
