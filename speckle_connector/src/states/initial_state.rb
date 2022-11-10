@@ -15,6 +15,10 @@ module SpeckleConnector
         @is_connected = false
         freeze
       end
+
+      def speckle_state?
+        false
+      end
     end
   end
 end

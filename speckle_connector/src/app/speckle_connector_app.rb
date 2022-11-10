@@ -7,7 +7,7 @@ module SpeckleConnector
       # @return [Commands::MenuCommandHandler] the commands registered in the extension menu in Sketchup
       attr_reader :menu_commands
 
-      # @return [App::State] the current states of the app
+      # @return [States::State] the current states of the app
       attr_reader :state
 
       # @return [Ui::UiController] controller for ui views

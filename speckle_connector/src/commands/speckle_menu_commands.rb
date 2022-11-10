@@ -50,6 +50,7 @@ module SpeckleConnector
         cmd.status_bar_text = 'Send to Speckle'
         cmd.small_icon = '../../img/Sender.png'
         cmd.large_icon = '../../img/Sender.png'
+        cmd.set_validation_proc { MenuCommandHandler.speckle_started(app) }
         cmd
       end
     end

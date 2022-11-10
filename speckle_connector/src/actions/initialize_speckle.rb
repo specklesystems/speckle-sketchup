@@ -7,6 +7,7 @@ require_relative '../accounts/accounts'
 
 module SpeckleConnector
   module Actions
+    # Initialization of the real state of the speckle.
     class InitializeSpeckle < Action
       def self.update_state(state)
         # FIXME: below is how supposed to be
