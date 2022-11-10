@@ -26,7 +26,7 @@ module SpeckleConnector
       # Update user interfaces with new speckle states object
       def update_ui(state)
         user_interfaces.each_value do |ui|
-          ui.update_ui(state)
+          ui.update_view(state)
         end
       end
     end

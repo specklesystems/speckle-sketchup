@@ -3,7 +3,7 @@
 require_relative 'menu_command_handler'
 require_relative 'action_command'
 require_relative 'initialize_speckle'
-require_relative '../actions/send_to_speckle'
+require_relative '../actions/one_click_send'
 
 module SpeckleConnector
   module Commands
@@ -33,7 +33,7 @@ module SpeckleConnector
 
       def self.initialize_speckle_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          InitializeSpeckle.new(app, 'initializeSpeckle'), 'Initialize Speckle'
+          InitializeSpeckle.new(app), 'Initialize Speckle'
         )
         cmd.tooltip = 'Launch Connector'
         cmd.status_bar_text = 'Opens the Speckle Connector window'
@@ -44,7 +44,7 @@ module SpeckleConnector
 
       def self.send_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          ActionCommand.new(app, Actions::SendToSpeckle, 'sendToSpeckle'), 'Send to Speckle'
+          ActionCommand.new(app, Actions::OneClickSend), 'Send to Speckle'
         )
         cmd.tooltip = 'Send to Speckle'
         cmd.status_bar_text = 'Send to Speckle'

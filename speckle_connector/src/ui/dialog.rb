@@ -92,6 +92,7 @@ module SpeckleConnector
       def exec_callback(data)
         commands = CommandParser.parse_commands(data)
         commands.each do |cmd|
+          puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}, data: #{cmd.data}"
           @ready = true if cmd.name == DIALOG_READY
           @commands[cmd.name].run(cmd.data)

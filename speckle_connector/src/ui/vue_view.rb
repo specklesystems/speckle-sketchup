@@ -3,14 +3,18 @@
 require_relative 'view'
 require_relative '../ui/dialog'
 require_relative '../constants/path_constants'
-require_relative '../commands/dialog_ready'
+
 require_relative '../commands/send_selection'
 require_relative '../commands/receive_objects'
-require_relative '../commands/reload_accounts'
-require_relative '../commands/init_local_accounts'
+require_relative '../commands/action_command'
+require_relative '../commands/dialog_ready'
 require_relative '../commands/save_stream'
 require_relative '../commands/remove_stream'
 require_relative '../commands/notify_connected'
+
+require_relative '../actions/reload_accounts'
+require_relative '../actions/load_saved_streams'
+require_relative '../actions/init_local_accounts'
 
 module SpeckleConnector
   module Ui
@@ -39,19 +43,24 @@ module SpeckleConnector
         @dialog ||= SpeckleConnector::Ui::Dialog.new(commands: commands, **@dialog_specs)
       end
 
+      def update_view(_state)
+        # TODO: If you want to send data to dialog additionally, consume this method.
+        #  App object triggers this method by ui_controller
+      end
+
       private
 
       def commands
         @commands ||= {
-          dialog_ready: Commands::DialogReady.new(@app, 'dialog_ready'),
-          send_selection: Commands::SendSelection.new(@app, 'convertedFromSketchup'),
-          receive_objects: Commands::ReceiveObjects.new(@app, 'finishedReceiveInSketchup'),
-          reload_accounts: Commands::ReloadAccounts.new(@app, 'reloadAccounts'),
-          init_local_accounts: Commands::InitLocalAccounts.new(@app, 'initLocalAccounts'),
-          load_saved_streams: Commands::LoadSavedStreams.new(@app, 'loadSavedStreams'),
-          save_stream: Commands::SaveStream.new(@app, 'saveStream'),
-          remove_stream: Commands::RemoveStream.new(@app, 'removeStream'),
-          notify_connected: Commands::NotifyConnected.new(@app, 'notifyConnected')
+          dialog_ready: Commands::DialogReady.new(@app),
+          send_selection: Commands::SendSelection.new(@app),
+          receive_objects: Commands::ReceiveObjects.new(@app),
+          reload_accounts: Commands::ActionCommand.new(@app, Actions::ReloadAccounts),
+          init_local_accounts: Commands::ActionCommand.new(@app, Actions::InitLocalAccounts),
+          load_saved_streams: Commands::ActionCommand.new(@app, Actions::LoadSavedStreams),
+          save_stream: Commands::SaveStream.new(@app),
+          remove_stream: Commands::RemoveStream.new(@app),
+          notify_connected: Commands::NotifyConnected.new(@app)
         }.freeze
       end
     end
