@@ -7,17 +7,13 @@ module SpeckleConnector
       # @return [App::SpeckleConnectorApp] the main app object
       attr_reader :app
 
-      # @return [String] name of the command
-      attr_reader :command_name
-
       # @return [Ui::View] view object holds dialog and it's state
       attr_reader :view
 
       # @@param app [App::SpeckleConnectorApp] the main app object
-      def initialize(app, command_name)
+      def initialize(app)
         @app = app
         @view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
-        @command_name = command_name
       end
 
       def run(*parameters)

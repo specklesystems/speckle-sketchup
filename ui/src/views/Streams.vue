@@ -79,7 +79,7 @@ export default {
     bus.$on('set-saved-streams', (streamIds) => {
       this.savedStreams = streamIds
     })
-    sketchup.load_saved_streams()
+    sketchup.exec({name: "load_saved_streams", data: {}})
     console.log('LAUNCHED')
     this.$mixpanel.track('Connector Action', { name: 'Launched' })
   },
