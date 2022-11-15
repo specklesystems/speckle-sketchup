@@ -3,7 +3,7 @@
 require 'JSON'
 require_relative '../constants/path_constants'
 # TODO: Below how it supposed to be
-# require_relative '../ext/sqlite3'
+require_relative '../ext/sqlite3/sqlite3_27.so'
 
 module SpeckleConnector
   # Accounts to communicate with models on user's account.
