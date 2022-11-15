@@ -1,6 +1,6 @@
 #include "RubyUtils.h"
 
-// test
+
 // Ruby interfaces for strings.
 
 VALUE GetRubyInterface(const char* s) {

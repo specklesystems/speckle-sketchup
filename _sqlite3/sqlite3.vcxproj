@@ -67,14 +67,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <!--<VCProjectVersion>16.0</VCProjectVersion>--> <!-- Need to check -->
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <!-- Need to check -->
     <ProjectGuid>{147de3dd-7319-4c90-8757-6391722e9dbb}</ProjectGuid>
     <RootNamespace>sqlite3</RootNamespace>
     <Keyword>MFCDLLProj</Keyword>
     <ProjectName>sqlite3</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" /> <!-- Need to check -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- Need to check -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (2.2)|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -172,10 +174,10 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>-RubyStartup "$(SolutionDir)Ruby\$(PlatformTarget)\$(Configuration).rb"</LocalDebuggerCommandArguments>
   </PropertyGroup>
-
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />  <!-- Need to check -->
-
-   <ImportGroup Label="ExtensionSettings"> <!-- Need to check all below-->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <!-- Need to check -->
+  <ImportGroup Label="ExtensionSettings">
+    <!-- Need to check all below-->
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (2.2)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -189,10 +191,8 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (2.2)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
   <PropertyGroup Label="UserMacros" />
-
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (2.2)|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (2.2)|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.so</TargetExt>
   </PropertyGroup>
@@ -431,11 +431,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
-
   <ItemGroup>
     <None Include="RubyExtension.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\rbsqlite3.cpp" />
     <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\RubyUtils\RubyUtils.cpp" />
   </ItemGroup>

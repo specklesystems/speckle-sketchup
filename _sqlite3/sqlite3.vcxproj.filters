@@ -37,5 +37,6 @@
       <Filter>Ruby Utils\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\sqlite3.c" />
+    <ClCompile Include="src\rbsqlite3.cpp" />
   </ItemGroup>
 </Project>
