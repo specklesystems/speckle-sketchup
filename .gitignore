@@ -11,6 +11,7 @@ settings.json
 
 # vue app build dist folder
 speckle_connector/vue_ui
+speckle_connector/html
   
 *.gem
 *.rbc
