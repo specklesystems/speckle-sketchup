@@ -1,0 +1,5 @@
+_Init_sqlite3
+_Init_sqlite3_20
+_Init_sqlite3_22
+_Init_sqlite3_25
+_Init_sqlite3_27
