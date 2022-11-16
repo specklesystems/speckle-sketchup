@@ -17,6 +17,9 @@
     <Filter Include="Ruby Utils\Source Files">
       <UniqueIdentifier>{3781bb9e-b80e-4ed6-8f7c-9ed09b90b2b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SQLiteCpp">
+      <UniqueIdentifier>{500749ed-4359-4e99-80d6-09c338169fef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="RubyExtension.def">
@@ -30,13 +33,74 @@
     <ClInclude Include="src\RubyUtils\RubyUtils.h">
       <Filter>Ruby Utils\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\sqlite3.h" />
+    <ClInclude Include="src\SQLiteCpp\Assertion.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Backup.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Column.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Database.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Exception.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\ExecuteMany.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Savepoint.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\SQLiteCpp.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Statement.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Transaction.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\Utils.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\VariadicBind.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SQLiteCpp\sqlite3.h">
+      <Filter>SQLiteCpp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\RubyUtils\RubyUtils.cpp">
       <Filter>Ruby Utils\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\rbsqlite3.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Transaction.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Statement.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Savepoint.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Exception.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Database.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Column.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\Backup.cpp">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SQLiteCpp\sqlite3.c">
+      <Filter>SQLiteCpp</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

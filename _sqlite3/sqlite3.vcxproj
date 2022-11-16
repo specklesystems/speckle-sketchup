@@ -398,7 +398,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (2.7)|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\include\ruby\2.7\win32_x64;$(SolutionDir)ThirdParty\include\ruby\2.7\win32_x64\x64-mswin64_100;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src\SQLiteCpp;$(SolutionDir)ThirdParty\include\ruby\2.7\win32_x64;$(SolutionDir)ThirdParty\include\ruby\2.7\win32_x64\x64-mswin64_100;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
@@ -435,14 +435,33 @@
     <None Include="RubyExtension.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\SQLiteCpp\Backup.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Column.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Database.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Exception.cpp" />
     <ClCompile Include="src\rbsqlite3.cpp" />
-    <ClCompile Include="src\sqlite3.c" />
+    <ClCompile Include="src\SQLiteCpp\Savepoint.cpp" />
+    <ClCompile Include="src\SQLiteCpp\sqlite3.c" />
     <ClCompile Include="src\RubyUtils\RubyUtils.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Statement.cpp" />
+    <ClCompile Include="src\SQLiteCpp\Transaction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RubyUtils\RubyLib.h" />
     <ClInclude Include="src\RubyUtils\RubyUtils.h" />
-    <ClInclude Include="src\sqlite3.h" />
+    <ClInclude Include="src\SQLiteCpp\sqlite3.h" />
+    <ClInclude Include="src\SQLiteCpp\Assertion.h" />
+    <ClInclude Include="src\SQLiteCpp\Backup.h" />
+    <ClInclude Include="src\SQLiteCpp\Column.h" />
+    <ClInclude Include="src\SQLiteCpp\Database.h" />
+    <ClInclude Include="src\SQLiteCpp\Exception.h" />
+    <ClInclude Include="src\SQLiteCpp\ExecuteMany.h" />
+    <ClInclude Include="src\SQLiteCpp\Savepoint.h" />
+    <ClInclude Include="src\SQLiteCpp\SQLiteCpp.h" />
+    <ClInclude Include="src\SQLiteCpp\Statement.h" />
+    <ClInclude Include="src\SQLiteCpp\Transaction.h" />
+    <ClInclude Include="src\SQLiteCpp\Utils.h" />
+    <ClInclude Include="src\SQLiteCpp\VariadicBind.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
