@@ -1,0 +1,8 @@
+LIBRARY
+
+EXPORTS
+    Init_sqlite3
+    Init_sqlite3_20
+    Init_sqlite3_22
+    Init_sqlite3_25
+    Init_sqlite3_27

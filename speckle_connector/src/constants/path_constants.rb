@@ -17,4 +17,5 @@ module SpeckleConnector
                          else
                            raise 'Speckle could not determine your Appdata path'
                          end
+  SPECKLE_ACCOUNTS_DB_PATH = File.join(SPECKLE_APPDATA_PATH, 'Accounts.db')
 end

@@ -17,6 +17,7 @@ module SpeckleConnector
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
+      # rubocop:disable Metrics/MethodLength
       def update_state(state)
         puts 'send to speckle'
         acct = Accounts.default_account
@@ -41,6 +42,7 @@ module SpeckleConnector
         state = evaluate_request(request, state, to_convert)
         Actions::LoadSavedStreams.update_state(state, {})
       end
+      # rubocop:enable Metrics/MethodLength
 
       private
 

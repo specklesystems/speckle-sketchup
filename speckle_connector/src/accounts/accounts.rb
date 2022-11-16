@@ -2,27 +2,14 @@
 
 require 'JSON'
 require_relative '../constants/path_constants'
-# TODO: Below how it supposed to be
-# require_relative '../ext/sqlite3'
 
 module SpeckleConnector
   # Accounts to communicate with models on user's account.
   module Accounts
     def self.load_accounts
-      begin
-        require('sqlite3')
-      rescue LoadError
-        # ty msp-greg! https://github.com/MSP-Greg/SUMisc/releases/tag/sqlite3-mingw-1
-        # rubocop:disable SketchupRequirements/GemInstall
-        # rubocop:disable Layout/LineLength
-        Gem.install(File.join(File.dirname(File.expand_path(__FILE__)), '../../utils/sqlite3-1.4.2.mspgreg-x64-mingw32.gem'))
-        require('sqlite3')
-        # rubocop:enable SketchupRequirements/GemInstall
-        # rubocop:enable Layout/LineLength
-      end
+      require_relative '../ext/sqlite3'
 
-      dir = SPECKLE_APPDATA_PATH
-      db_path = File.join(dir, 'Accounts.db')
+      db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
         raise(
           IOError,
