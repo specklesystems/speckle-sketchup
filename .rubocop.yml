@@ -15,8 +15,10 @@ AllCops:
     - '_tools/jf_RubyPanel/**/*.rb'
     - '_tools/su_attributes.rb'
     - '_tools/su_attributes/**/*.rb'
+    - '_tools/su_attributes/**/*.rb'
+    - '_sqlite3/**/*.rb'
     - 'ui/**/*'
-    - 'speckle_connector/src/ext/**/*'
+    - 'speckle_connector/src/ext/**/*.rb'
     - 'vendor/bundle/**/*'
   SketchUp:
     SourcePath: .
