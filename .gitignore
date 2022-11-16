@@ -15,7 +15,15 @@ speckle_connector/html
 
 # _sqlite3
 /_sqlite3/.vs
-  
+/_sqlite3/Release (2.7)
+/_sqlite3/Release (2.5)
+/_sqlite3/Release (2.2)
+/_sqlite3/Release (2.0)
+/_sqlite3/Debug (2.7)
+/_sqlite3/Debug (2.5)
+/_sqlite3/Debug (2.2)
+/_sqlite3/Debug (2.0)
+
 *.gem
 *.rbc
 /.config
