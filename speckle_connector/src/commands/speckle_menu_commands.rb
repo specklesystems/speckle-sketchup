@@ -26,9 +26,9 @@ module SpeckleConnector
         commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
         commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
 
-        commands[CMD_SEND_TO_SPECKLE] = send_command(app)
-        commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
-        commands.add_to_toolbar!(CMD_SEND_TO_SPECKLE, speckle_toolbar)
+        # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
+        # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
+        # commands.add_to_toolbar!(CMD_SEND_TO_SPECKLE, speckle_toolbar)
       end
 
       def self.initialize_speckle_command(app)
