@@ -11,9 +11,7 @@ module SpeckleConnector
     class SaveStream < Command
       def _run(data)
         stream_id = data['stream_id']
-        action = Actions::SaveStream.new(stream_id)
-        app.update_state!(action)
-        app.update_state!(Actions::LoadSavedStreams)
+        app.update_state!(Actions::SaveStream.new(stream_id))
       end
     end
   end
