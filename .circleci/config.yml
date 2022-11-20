@@ -21,7 +21,7 @@ jobs:
       - persist_to_workspace:
           root: ./
           paths:
-            - speckle_connector/html
+            - speckle_connector/vue_ui
 
   build-connector: # Reusable job for basic connectors
     executor:
