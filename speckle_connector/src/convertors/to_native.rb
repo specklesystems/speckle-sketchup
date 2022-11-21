@@ -1,19 +1,11 @@
 # frozen_string_literal: true
 
-require 'sketchup'
+require_relative 'converter'
 
-# rubocop:disable Metrics/MethodLength
-# rubocop:disable Metrics/PerceivedComplexity
-# rubocop:disable Metrics/CyclomaticComplexity
-# rubocop:disable Metrics/AbcSize
-# rubocop:disable Metrics/ModuleLength
-# rubocop:disable SketchupSuggestions/AddGroup
-
-# To Native conversions for the ConverterSketchup
 module SpeckleConnector
   module Converters
-    # Converts speckle geometries to native SketchUp entities.
-    module ToNative
+    # Converts sketchup entities to speckle objects.
+    class ToNative < Converter
       def traverse_commit_object(obj)
         if can_convert_to_native(obj)
           convert_to_native(obj, Sketchup.active_model.entities)
@@ -383,10 +375,3 @@ module SpeckleConnector
     end
   end
 end
-
-# rubocop:enable Metrics/MethodLength
-# rubocop:enable Metrics/PerceivedComplexity
-# rubocop:enable Metrics/CyclomaticComplexity
-# rubocop:enable Metrics/AbcSize
-# rubocop:enable Metrics/ModuleLength
-# rubocop:enable SketchupSuggestions/AddGroup

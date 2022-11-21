@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative '../accounts/accounts'
 require_relative '../actions/save_stream'
 require_relative '../actions/queue_send'
-require_relative '../convertors/converter_sketchup'
+require_relative '../convertors/converter'
 
 module SpeckleConnector
   module Actions
@@ -48,7 +48,7 @@ module SpeckleConnector
       private
 
       def evaluate_request(sketchup_model, request, state, to_convert)
-        converter = Converters::ConverterSketchup.new(sketchup_model)
+        converter = Converters::Converter.new(sketchup_model)
 
         request.start do |_req, res|
           res_data = JSON.parse(res.body)['data']

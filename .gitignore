@@ -13,6 +13,9 @@ settings.json
 speckle_connector/vue_ui
 speckle_connector/html
 
+# speckle-sharp-ci-tools
+/speckle-sharp-ci-tools
+
 # _sqlite3
 /_sqlite3/.vs
 /_sqlite3/Release (2.7)

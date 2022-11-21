@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative '../accounts/accounts'
 require_relative '../convertors/units'
-require_relative '../convertors/converter_sketchup'
+require_relative '../convertors/converter'
 
 module SpeckleConnector
   module Actions

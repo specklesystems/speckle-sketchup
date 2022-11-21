@@ -4,6 +4,7 @@ require_relative 'action'
 require_relative '../accounts/accounts'
 require_relative '../actions/create_stream'
 require_relative '../actions/queue_send'
+require_relative '../convertors/to_speckle'
 
 module SpeckleConnector
   module Actions
@@ -36,8 +37,8 @@ module SpeckleConnector
       end
 
       def self.convert_to_speckle(sketchup_model, to_convert)
-        converter = Converters::ConverterSketchup.new(sketchup_model)
-        to_convert.map { |entity| converter.convert_to_speckle(entity) }
+        converter = Converters::ToSpeckle.new(sketchup_model)
+        to_convert.map { |entity| converter.convert(entity) }
       end
     end
   end

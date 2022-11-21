@@ -1,35 +1,27 @@
 # frozen_string_literal: true
 
-require 'sketchup'
-require_relative 'units'
+require_relative 'converter'
+require_relative '../speckle_objects/geometry/line'
 
-# rubocop:disable Metrics/MethodLength
-# rubocop:disable Metrics/PerceivedComplexity
-# rubocop:disable Metrics/CyclomaticComplexity
-# rubocop:disable Metrics/AbcSize
-# rubocop:disable Metrics/ModuleLength
-
-# To Speckle conversions for the ConverterSketchup
 module SpeckleConnector
-  # Convertors to convert geometry one end to another between Speckle server and Sketchup.
   module Converters
-    # Convert geometries to speckle geometry.
-    module ToSpeckle
-      def length_to_speckle(length)
-        length.__send__("to_#{SKETCHUP_UNIT_STRINGS[@units]}")
+    # Converts sketchup entities to speckle objects.
+    class ToSpeckle < Converter
+      def convert_selection
+        sketchup_model.selection.map { |entity| convert(entity) }
       end
 
-      # convert an edge to a speckle line
-      def edge_to_speckle(edge)
-        {
-          speckle_type: 'Objects.Geometry.Line',
-          applicationId: edge.persistent_id.to_s,
-          units: @units,
-          start: vertex_to_speckle(edge.start),
-          end: vertex_to_speckle(edge.end),
-          domain: speckle_interval(0, Float(edge.length)),
-          bbox: bounds_to_speckle(edge.bounds)
-        }
+      def convert(obj)
+        return SpeckleObjects::Geometry::Line.new(edge, @units).to_h if obj.is_a?(Sketchup::Edge)
+        return face_to_speckle(obj) if obj.is_a?(Sketchup::Face)
+        return group_to_speckle(obj) if obj.is_a?(Sketchup::Group)
+        return component_definition_to_speckle(obj) if obj.is_a?(Sketchup::ComponentDefinition)
+
+        component_instance_to_speckle(obj) if obj.is_a?(Sketchup::ComponentInstance)
+      end
+
+      def length_to_speckle(length)
+        length.__send__("to_#{SKETCHUP_UNIT_STRINGS[@units]}")
       end
 
       # Convert a component definition to a speckle block definition
@@ -53,13 +45,29 @@ module SpeckleConnector
         @component_defs[guid] = speckle_def
       end
 
-      # convert a component instance to a speckle block instance
-      def component_instance_to_speckle(instance, is_group: false)
+      # convert a group to a speckle block instance
+      def group_to_speckle(instance)
         transform = instance.transformation
         {
           speckle_type: 'Objects.Other.BlockInstance',
           applicationId: instance.guid,
-          is_sketchup_group: is_group,
+          is_sketchup_group: true,
+          units: @units,
+          bbox: bounds_to_speckle(instance.bounds),
+          name: instance.name == '' ? nil : instance.name,
+          renderMaterial: instance.material.nil? ? nil : material_to_speckle(instance.material),
+          transform: transform_to_speckle(transform),
+          '@blockDefinition' => component_definition_to_speckle(instance.definition)
+        }
+      end
+
+      # convert a component instance to a speckle block instance
+      def component_instance_to_speckle(instance)
+        transform = instance.transformation
+        {
+          speckle_type: 'Objects.Other.BlockInstance',
+          applicationId: instance.guid,
+          is_sketchup_group: false,
           units: @units,
           bbox: bounds_to_speckle(instance.bounds),
           name: instance.name == '' ? nil : instance.name,
@@ -302,9 +310,3 @@ module SpeckleConnector
     end
   end
 end
-
-# rubocop:enable Metrics/MethodLength
-# rubocop:enable Metrics/PerceivedComplexity
-# rubocop:enable Metrics/CyclomaticComplexity
-# rubocop:enable Metrics/AbcSize
-# rubocop:enable Metrics/ModuleLength

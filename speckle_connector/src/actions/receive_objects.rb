@@ -2,7 +2,7 @@
 
 require_relative 'action'
 require_relative '../convertors/units'
-require_relative '../convertors/converter_sketchup'
+require_relative '../convertors/to_native'
 
 module SpeckleConnector
   module Actions
@@ -17,7 +17,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        converter = Converters::ConverterSketchup.new(state.sketchup_state.sketchup_model)
+        converter = Converters::ToNative.new(state.sketchup_state.sketchup_model)
         converter.traverse_commit_object(@base)
         state.with_add_queue('finishedReceiveInSketchup', @stream_id, [])
       end
