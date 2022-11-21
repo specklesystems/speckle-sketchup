@@ -17,6 +17,7 @@ module SpeckleConnector
         # accounts = Accounts.load_accounts.to_json
         accounts = {}
         speckle_state = States::SpeckleState.new(accounts, {}, {})
+        # This should be the only point that `Sketchup_active_model` passed to application state.
         sketchup_state = States::SketchupState.new(Sketchup.active_model)
         States::State.new(state.user_state, speckle_state, sketchup_state, false)
       end

@@ -17,9 +17,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
-        unit = Converters::SKETCHUP_UNITS[su_unit]
-        converter = Converters::ConverterSketchup.new(unit)
+        converter = Converters::ConverterSketchup.new(state.sketchup_state.sketchup_model)
         converter.traverse_commit_object(@base)
         state.with_add_queue('finishedReceiveInSketchup', @stream_id, [])
       end

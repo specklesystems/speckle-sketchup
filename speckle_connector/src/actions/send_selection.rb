@@ -16,10 +16,11 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
+        sketchup_model = state.sketchup_state.sketchup_model
+        su_unit = sketchup_model.options['UnitsOptions']['LengthUnit']
         unit = Converters::SKETCHUP_UNITS[su_unit]
-        converter = Converters::ConverterSketchup.new(unit)
-        converted = Sketchup.active_model.selection.map { |entity| converter.convert_to_speckle(entity) }
+        converter = Converters::ConverterSketchup.new(sketchup_model)
+        converted = sketchup_model.selection.map { |entity| converter.convert_to_speckle(entity) }
 
         puts("converted #{converted.count} objects for stream #{@stream_id}")
         state.with_add_queue('convertedFromSketchup', @stream_id, [converted.to_json])

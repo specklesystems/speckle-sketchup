@@ -18,7 +18,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        speckle_dict = Sketchup.active_model.attribute_dictionary('speckle', true)
+        speckle_dict = state.sketchup_state.sketchup_model.attribute_dictionary('speckle', true)
         saved = speckle_dict['streams'] || []
         saved -= [@stream_id]
         speckle_dict['streams'] = saved

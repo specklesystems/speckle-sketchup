@@ -25,7 +25,8 @@ module SpeckleConnector
           puts 'No local account found. Please refer to speckle.guide for more information.'
           return state
         end
-        path = Sketchup.active_model.path
+        sketchup_model = state.sketchup_state.sketchup_model
+        path = sketchup_model.path
         if @stream_name.nil?
           @stream_name = path ? File.basename(path, '.*') : 'Untitled SketchUp Model'
         end
@@ -34,22 +35,20 @@ module SpeckleConnector
         request = Sketchup::Http::Request.new("#{acct['serverInfo']['url']}/graphql", Sketchup::Http::POST)
         request.headers = { 'Authorization' => "Bearer #{acct['token']}", 'Content-Type' => 'application/json' }
         request.body = { query: query, variables: vars }.to_json
-        to_convert = if Sketchup.active_model.selection.count > 0
-                       Sketchup.active_model.selection
+        to_convert = if sketchup_model.selection.count > 0
+                       sketchup_model.selection
                      else
-                       Sketchup.active_model.entities
+                       sketchup_model.entities
                      end
-        state = evaluate_request(request, state, to_convert)
+        state = evaluate_request(sketchup_model, request, state, to_convert)
         Actions::LoadSavedStreams.update_state(state, {})
       end
       # rubocop:enable Metrics/MethodLength
 
       private
 
-      def evaluate_request(request, state, to_convert)
-        su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
-        unit = Converters::SKETCHUP_UNITS[su_unit]
-        converter = Converters::ConverterSketchup.new(unit)
+      def evaluate_request(sketchup_model, request, state, to_convert)
+        converter = Converters::ConverterSketchup.new(sketchup_model)
 
         request.start do |_req, res|
           res_data = JSON.parse(res.body)['data']

@@ -7,7 +7,7 @@ module SpeckleConnector
     # Sketchup model state holds information about sketchup related objects like model, layers, materials etc.
     class SketchupState
       include Immutable::ImmutableUtils
-      
+
       # @return [Sketchup::Model] active model on the sketchup
       attr_reader :sketchup_model
 
