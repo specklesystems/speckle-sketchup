@@ -3,6 +3,7 @@
 require_relative 'action'
 require_relative '../states/state'
 require_relative '../states/speckle_state'
+require_relative '../states/sketchup_state'
 require_relative '../accounts/accounts'
 
 module SpeckleConnector
@@ -16,7 +17,8 @@ module SpeckleConnector
         # accounts = Accounts.load_accounts.to_json
         accounts = {}
         speckle_state = States::SpeckleState.new(accounts, {}, {})
-        States::State.new(state.user_state, speckle_state, false)
+        sketchup_state = States::SketchupState.new(Sketchup.active_model)
+        States::State.new(state.user_state, speckle_state, sketchup_state, false)
       end
     end
   end
