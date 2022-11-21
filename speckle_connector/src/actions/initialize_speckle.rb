@@ -13,9 +13,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state)
-        # FIXME: below is how supposed to be
-        # accounts = Accounts.load_accounts.to_json
-        accounts = {}
+        accounts = SpeckleConnector::Accounts.load_accounts.to_json
         speckle_state = States::SpeckleState.new(accounts, {}, {})
         # This should be the only point that `Sketchup_active_model` passed to application state.
         sketchup_state = States::SketchupState.new(Sketchup.active_model)
