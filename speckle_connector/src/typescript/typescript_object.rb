@@ -4,6 +4,7 @@ require 'json'
 
 module SpeckleConnector
   module Typescript
+    # Object to help convert object attributes to JSON and by checking types.
     class TypescriptObject
       # @param attributes [Hash{Symbol=>Object}] attributes are given as key value pairs
       def initialize(**attributes)
@@ -22,6 +23,7 @@ module SpeckleConnector
 
       private
 
+      # rubocop:disable Metrics/CyclomaticComplexity
       def check_attributes
         attribute_types.each do |key, class_or_classes|
           value = @attributes[key]
@@ -45,6 +47,7 @@ module SpeckleConnector
           end
         end
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       def attribute_types
         raise NotImplementedError, 'Implement in child class'

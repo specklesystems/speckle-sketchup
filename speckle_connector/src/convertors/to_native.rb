@@ -2,6 +2,13 @@
 
 require_relative 'converter'
 
+# rubocop:disable Metrics/MethodLength
+# rubocop:disable Metrics/PerceivedComplexity
+# rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/ClassLength
+# rubocop:disable SketchupSuggestions/AddGroup
+
 module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
@@ -375,3 +382,10 @@ module SpeckleConnector
     end
   end
 end
+
+# rubocop:enable Metrics/MethodLength
+# rubocop:enable Metrics/PerceivedComplexity
+# rubocop:enable Metrics/CyclomaticComplexity
+# rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/ClassLength
+# rubocop:enable SketchupSuggestions/AddGroup

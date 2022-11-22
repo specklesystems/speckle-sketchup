@@ -20,6 +20,7 @@ AllCops:
     - 'ui/**/*'
     - 'speckle_connector/src/ext/**/*.rb'
     - 'vendor/bundle/**/*'
+    - 'tests/**/*.rb'
   SketchUp:
     SourcePath: .
     TargetSketchUpVersion: 2017

@@ -53,6 +53,7 @@ module SpeckleConnector
 
           serialized = JSON.generate(plane)
           hash = JSON.parse(serialized, { symbolize_names: true })
+
           assert_equal(serialized_plane, hash)
         end
       end
