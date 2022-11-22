@@ -12,7 +12,7 @@ module SpeckleConnector
       end
 
       def convert(obj)
-        return SpeckleObjects::Geometry::Line.new(edge, @units).to_h if obj.is_a?(Sketchup::Edge)
+        return SpeckleObjects::Geometry::Line.from_edge(obj, @units).to_h if obj.is_a?(Sketchup::Edge)
         return face_to_speckle(obj) if obj.is_a?(Sketchup::Face)
         return group_to_speckle(obj) if obj.is_a?(Sketchup::Group)
         return component_definition_to_speckle(obj) if obj.is_a?(Sketchup::ComponentDefinition)
