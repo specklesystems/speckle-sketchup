@@ -2,6 +2,7 @@
 
 require_relative 'converter'
 require_relative '../speckle_objects/geometry/line'
+require_relative '../speckle_objects/geometry/mesh'
 
 module SpeckleConnector
   module Converters
@@ -13,7 +14,7 @@ module SpeckleConnector
 
       def convert(obj)
         return SpeckleObjects::Geometry::Line.from_edge(obj, @units).to_h if obj.is_a?(Sketchup::Edge)
-        return face_to_speckle(obj) if obj.is_a?(Sketchup::Face)
+        return SpeckleObjects::Geometry::Mesh.from_face(obj, @units) if obj.is_a?(Sketchup::Face)
         return group_to_speckle(obj) if obj.is_a?(Sketchup::Group)
         return component_definition_to_speckle(obj) if obj.is_a?(Sketchup::ComponentDefinition)
 
@@ -221,19 +222,6 @@ module SpeckleConnector
           )
         end
         uvs_array
-      end
-
-      def face_to_speckle(face)
-        mesh = face.loops.count > 1 ? face.mesh : nil
-        {
-          speckle_type: 'Objects.Geometry.Mesh',
-          units: @units,
-          renderMaterial: face.material.nil? ? nil : material_to_speckle(face.material),
-          bbox: bounds_to_speckle(face.bounds),
-          '@(31250)vertices' => mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh),
-          '@(62500)faces' => mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-          '@(31250)faceEdgeFlags' => mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh)
-        }
       end
 
       def vertex_to_speckle(vertex)
