@@ -4,6 +4,7 @@ require_relative 'action'
 require_relative '../accounts/accounts'
 require_relative '../actions/create_stream'
 require_relative '../actions/queue_send'
+require_relative '../convertors/to_speckle'
 
 module SpeckleConnector
   module Actions
@@ -18,13 +19,13 @@ module SpeckleConnector
           puts 'No local account found. Please refer to speckle.guide for more information.'
           return state
         end
-        su_model = Sketchup.active_model
-        to_convert = su_model.selection.count > 0 ? su_model.selection : su_model.entities
-        first_saved_stream = first_saved_stream(su_model)
+        sketchup_model = state.sketchup_state.sketchup_model
+        to_convert = sketchup_model.selection.count > 0 ? sketchup_model.selection : sketchup_model.entities
+        first_saved_stream = first_saved_stream(sketchup_model)
         action = if first_saved_stream.nil?
                    Actions::CreateStream.new
                  else
-                   Actions::QueueSend.new(first_saved_stream, convert_to_speckle(to_convert))
+                   Actions::QueueSend.new(first_saved_stream, convert_to_speckle(sketchup_model, to_convert))
                  end
 
         action.update_state(state)
@@ -35,11 +36,9 @@ module SpeckleConnector
         saved_streams.nil? || saved_streams.empty? ? nil : saved_streams[0]
       end
 
-      def self.convert_to_speckle(to_convert)
-        su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
-        unit = Converters::SKETCHUP_UNITS[su_unit]
-        converter = Converters::ConverterSketchup.new(unit)
-        to_convert.map { |entity| converter.convert_to_speckle(entity) }
+      def self.convert_to_speckle(sketchup_model, to_convert)
+        converter = Converters::ToSpeckle.new(sketchup_model)
+        to_convert.map { |entity| converter.convert(entity) }
       end
     end
   end

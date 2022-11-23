@@ -8,15 +8,19 @@ module SpeckleConnector
     class State < InitialState
       include Immutable::ImmutableUtils
 
+      # @return [States::SketchupState] the state of the Sketchup Application
+      attr_reader :sketchup_state
+
       # @return [States::SpeckleState] the states of the Speckle
       attr_reader :speckle_state
 
       # @return [States::UserState] the user specific part of the states
       attr_reader :user_state
 
-      def initialize(user_state, speckle_state, is_connected)
+      def initialize(user_state, speckle_state, sketchup_state, is_connected)
         @speckle_state = speckle_state
         @is_connected = is_connected
+        @sketchup_state = sketchup_state
         super(user_state)
       end
 

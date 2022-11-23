@@ -34,7 +34,11 @@ end
 ruby_critic_paths = FileList[
   'speckle_connector/**/*.rb',
   'speckle_connector.rb',
-  'tests/**/*.rb'] - FileList['_tools/**/*.rb']
+  'tests/**/*.rb'] -
+                    FileList[
+                    '_tools/**/*.rb',
+                    'speckle_connector/src/ext/**/*.rb',
+                    ]
 
 # for local
 RubyCritic::RakeTask.new('rubycritic') do |task|

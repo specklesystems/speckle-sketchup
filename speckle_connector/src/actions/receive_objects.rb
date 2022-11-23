@@ -2,7 +2,7 @@
 
 require_relative 'action'
 require_relative '../convertors/units'
-require_relative '../convertors/converter_sketchup'
+require_relative '../convertors/to_native'
 
 module SpeckleConnector
   module Actions
@@ -17,10 +17,12 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        su_unit = Sketchup.active_model.options['UnitsOptions']['LengthUnit']
-        unit = Converters::SKETCHUP_UNITS[su_unit]
-        converter = Converters::ConverterSketchup.new(unit)
+        converter = Converters::ToNative.new(state.sketchup_state.sketchup_model)
+        # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
+        start_time = Time.now.to_f
         converter.traverse_commit_object(@base)
+        elapsed_time = (Time.now.to_f - start_time).round(3)
+        puts "==== Converting to Native executed in #{elapsed_time} sec ===="
         state.with_add_queue('finishedReceiveInSketchup', @stream_id, [])
       end
     end

@@ -19,7 +19,12 @@ module SpeckleConnector
       end
 
       db = SQLite3::Database.new(db_path)
-      rows = db.execute('SELECT * FROM objects')
+      # FIXME: It's workaround, throws error when queried from database
+      begin
+        rows = db.execute('SELECT * FROM objects')
+      rescue StandardError
+        rows = db.execute('SELECT * FROM objects')
+      end
       db.close
       rows.map { |row| JSON.parse(row[1]) }
     end
