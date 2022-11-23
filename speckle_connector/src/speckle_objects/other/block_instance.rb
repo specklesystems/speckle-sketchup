@@ -54,6 +54,46 @@ module SpeckleConnector
           )
         end
 
+        # Creates a component instance from a block
+        # rubocop:disable Metrics/AbcSize
+        def self.to_native(sketchup_model, block, entities, &convert)
+          # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
+          # something about this conversion is freaking out if nested block geo is a group
+          # so this is set to false always until I can figure this out
+          is_group = false
+          definition = BLOCK_DEFINITION.to_native(
+            sketchup_model, block['blockDefinition']['geometry'], block['blockDefinition']['name'],
+            block['blockDefinition']['applicationId'], convert
+          )
+
+          name = block['name'].nil? || block['name'].empty? ? block['id'] : block['name']
+          t_arr = block['transform'].is_a?(Hash) ? block['transform']['value'] : block['transform']
+          transform = Other::Transform.to_native(t_arr, block['units'])
+          instance =
+            if is_group
+              # rubocop:disable SketchupSuggestions/AddGroup
+              entities.add_group(definition.entities.to_a)
+              # rubocop:enable SketchupSuggestions/AddGroup
+            else
+              entities.add_instance(definition, transform)
+            end
+          # erase existing instances after creation and before rename because you can't have definitions
+          #  without instances
+          find_and_erase_existing_instance(definition, name, block['applicationId'])
+          puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
+          instance.transformation = transform if is_group
+          instance.material = Other::RenderMaterial.to_native(sketchup_model, block['renderMaterial'])
+          instance.name = name
+          instance
+        end
+        # rubocop:enable Metrics/AbcSize
+
+        # takes a component definition and finds and erases the first instance with the matching name
+        # (and optionally the applicationId)
+        def self.find_and_erase_existing_instance(definition, name, app_id = '')
+          definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
+        end
+
         private
 
         def attribute_types

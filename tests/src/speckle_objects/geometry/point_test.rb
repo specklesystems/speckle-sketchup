@@ -17,7 +17,7 @@ module SpeckleConnector
         end
 
         def test_point_to_json
-          point = Point.new(1.0, 1.0, 1.0, 'm')
+          point = Point.from_coordinates(1.0, 1.0, 1.0, 'm')
           serialized_point = {
             speckle_type: 'Objects.Geometry.Point',
             units: 'm',

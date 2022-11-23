@@ -37,6 +37,14 @@ module SpeckleConnector
           )
         end
 
+        def self.to_native(x, y, z, units)
+          Geom::Point3d.new(
+            Geometry.length_to_native(x, units),
+            Geometry.length_to_native(y, units),
+            Geometry.length_to_native(z, units)
+          )
+        end
+
         def attribute_types
           ATTRIBUTES
         end

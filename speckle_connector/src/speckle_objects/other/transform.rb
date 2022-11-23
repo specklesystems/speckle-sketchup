@@ -28,6 +28,20 @@ module SpeckleConnector
           )
         end
 
+        def self.to_native(t_arr, units)
+          Geom::Transformation.new(
+            [
+              t_arr[0], t_arr[4], t_arr[8], t_arr[12],
+              t_arr[1], t_arr[5], t_arr[9], t_arr[13],
+              t_arr[2], t_arr[6], t_arr[10], t_arr[14],
+              Geometry.length_to_native(t_arr[3], units),
+              Geometry.length_to_native(t_arr[7], units),
+              Geometry.length_to_native(t_arr[11], units),
+              t_arr[15]
+            ]
+          )
+        end
+
         private
 
         def attribute_types

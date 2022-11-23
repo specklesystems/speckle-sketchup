@@ -3,10 +3,14 @@
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
 require_relative '../../typescript/typescript_object'
+require_relative '../../convertors/clean_up'
 
 module SpeckleConnector
   module SpeckleObjects
+    # Geometry objects in the Speckleverse.
     module Geometry
+      include Converters::CleanUp
+
       # Mesh object definition for Speckle.
       class Mesh < Typescript::TypescriptObject
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
@@ -19,6 +23,26 @@ module SpeckleConnector
           '@(62500)faces': Array,
           '@(31250)faceEdgeFlags': Array
         }.freeze
+
+        def self.to_native(sketchup_model, mesh, entities)
+          native_mesh = Geom::PolygonMesh.new(mesh['vertices'].count / 3)
+          points = []
+          mesh['vertices'].each_slice(3) do |pt|
+            points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
+          end
+          faces = mesh['faces']
+          while faces.count > 0
+            num_pts = faces.shift
+            # 0 -> 3, 1 -> 4 to preserve backwards compatibility
+            num_pts += 3 if num_pts < 3
+            indices = faces.shift(num_pts)
+            native_mesh.add_polygon(indices.map { |index| points[index] })
+          end
+          material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
+          entities.add_faces_from_mesh(native_mesh, 4, material)
+          merge_coplanar_faces(entities)
+          native_mesh
+        end
 
         # @param face [Sketchup::Face] face to convert mesh
         def self.from_face(face, units)

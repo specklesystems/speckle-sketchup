@@ -31,6 +31,22 @@ module SpeckleConnector
           )
         end
 
+        def self.to_native(sketchup_model, render_material)
+          return if render_material.nil?
+
+          # return material with same name if it exists
+          name = render_material['name'] || render_material['id']
+          material = sketchup_model.materials[name]
+          return material if material
+
+          # create a new sketchup material
+          material = sketchup_model.materials.add(name)
+          material.alpha = render_material['opacity']
+          argb = render_material['diffuse']
+          material.color = Sketchup::Color.new((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >> 24) & 255)
+          material
+        end
+
         private
 
         def attribute_types

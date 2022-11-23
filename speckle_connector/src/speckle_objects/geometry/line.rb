@@ -37,6 +37,21 @@ module SpeckleConnector
           )
         end
 
+        # rubocop:disable Metrics/AbcSize
+        def self.to_native(line, entities)
+          if line.key?('value')
+            values = line['value']
+            points = values.each_slice(3).to_a.map { |pt| Point.to_native(pt[0], pt[1], pt[2], line['units']) }
+            points.push(points[0]) if line['closed']
+            entities.add_edges(*points)
+          else
+            start_pt = Point.to_native(line['start']['x'], line['start']['y'], line['start']['z'], line['units'])
+            end_pt = Point.to_native(line['end']['x'], line['end']['y'], line['end']['z'], line['units'])
+            entities.add_edges(start_pt, end_pt)
+          end
+        end
+        # rubocop:enable Metrics/AbcSize
+
         def attribute_types
           ATTRIBUTES
         end
