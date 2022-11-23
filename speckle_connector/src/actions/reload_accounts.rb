@@ -10,7 +10,7 @@ module SpeckleConnector
     class ReloadAccounts < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state)
+      def self.update_state(state, _data)
         puts 'Reload of Speckle accounts requested by plugin'
         accounts_data = Accounts.load_accounts.to_json
         state.with_add_queue('loadAccounts', accounts_data, [])
