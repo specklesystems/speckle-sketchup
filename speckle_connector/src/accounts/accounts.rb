@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
 require 'JSON'
+require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
 
 module SpeckleConnector
   # Accounts to communicate with models on user's account.
   module Accounts
     def self.load_accounts
-      require_relative '../ext/sqlite3'
-
       db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
         raise(
@@ -18,13 +17,8 @@ module SpeckleConnector
         )
       end
 
-      db = SQLite3::Database.new(db_path)
-      # FIXME: It's workaround, throws error when queried from database
-      begin
-        rows = db.execute('SELECT * FROM objects')
-      rescue StandardError
-        rows = db.execute('SELECT * FROM objects')
-      end
+      db = Sqlite3::Database.new(db_path)
+      rows = db.exec('SELECT * FROM objects')
       db.close
       rows.map { |row| JSON.parse(row[1]) }
     end
