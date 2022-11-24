@@ -13,5 +13,6 @@ module SpeckleConnector
                      else
                        raise "Unsupported OS: #{host_os.inspect}"
                      end
+  RUBY_VERSION_NUMBER = RUBY_VERSION.split('.')[0..1].join.to_i
 end
 # rubocop:enable Style/Documentation
