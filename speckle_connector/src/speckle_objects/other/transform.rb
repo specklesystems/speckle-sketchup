@@ -11,7 +11,8 @@ module SpeckleConnector
         ATTRIBUTE_TYPES = {
           speckle_type: String,
           units: String,
-          value: Array
+          value: Array,
+          sketchup_attributes: Object
         }.freeze
 
         def self.from_transformation(transformation, units)

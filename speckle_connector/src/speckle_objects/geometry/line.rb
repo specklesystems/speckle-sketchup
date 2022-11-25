@@ -19,7 +19,8 @@ module SpeckleConnector
           start: Geometry::Point,
           end: Geometry::Point,
           domain: Primitive::Interval,
-          bbox: Geometry::BoundingBox
+          bbox: Geometry::BoundingBox,
+          sketchup_attributes: Object
         }.freeze
 
         # @param edge [Sketchup::Edge] edge to convert line.

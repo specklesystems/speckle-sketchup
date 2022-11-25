@@ -15,7 +15,8 @@ module SpeckleConnector
           opacity: Numeric,
           emissive: Numeric,
           metalness: Numeric,
-          roughness: Numeric
+          roughness: Numeric,
+          sketchup_attributes: Object
         }.freeze
 
         def self.from_material(material)

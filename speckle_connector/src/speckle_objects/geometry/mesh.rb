@@ -19,7 +19,8 @@ module SpeckleConnector
           bbox: Geometry::BoundingBox,
           '@(31250)vertices': Array,
           '@(62500)faces': Array,
-          '@(31250)faceEdgeFlags': Array
+          '@(31250)faceEdgeFlags': Array,
+          sketchup_attributes: Object
         }.freeze
 
         def self.to_native(sketchup_model, mesh, entities)
