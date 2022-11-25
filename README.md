@@ -41,27 +41,42 @@ Give Speckle a try in no time by:
 - [![docs](https://img.shields.io/badge/docs-speckle.guide-orange?style=for-the-badge&logo=read-the-docs&logoColor=white)](https://speckle.guide/user/blender.html) reference on almost any end-user and developer functionality
 
 
-# Repo structure
+#  Repo structure
 
 This is the beginning of the Speckle SketchUp Connector. It is still in very early development and is not ready for general use.
+This repo is split into three parts:
 
-This repo is split into two parts: `speckle_connector` which is the Ruby SketchUp plugin and `ui` which is the Vue frontend.
+### 1. **Speckle Connector extension** 
+   
+   Includes the `ruby` source files to run extension on SketchUp environment. SketchUp Extensions are composed of
+   a **.rb** file as entry and **folder** that .rb file refers to. In our case entry file is `speckle_connector.rb`
+   that responsible to register Speckle Connector extension to SketchUp and also it shows address to where extension
+   will start to read extension. Source folder is `speckle_connector`.
 
-## Usage
+### 2. **User Interface**
 
-> NOTE: this connector is still in early development and isn't ready for general use.
+   Includes the `Vue` frontend lives in the `ui` folder.
 
-Copy the whole `speckle_connector` folder to you SketchUp Plugins folder. You will likely find this at: 
+### 3. **SketchUp Sqlite3 extension** [submodule](https://github.com/specklesystems/sketchup-sqlite3)
 
-    C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 2021\SketchUp\Plugins
+   Includes source codes of base `SQLite3` C/C++ library and `ruby` compiler files to be able to run SQLite3
+   functionality on SketchUp in the same ruby module like `SpeckleConnector::Sqlite3::Database`. By this way
+   we use extensions as native part of the source `ruby` code. 
 
+   After building `sqlite3.sln` file, compiled `sqlite3.so` (for Windows) and `sqlite3.bundle` (for OSX) dynamic library files are created
+   by solution to place them into source code into `speckle_connector/src/ext`. Building this project should be only
+   happen when SketchUp starts to support newer Ruby versions (currently it is `2.7`).
 
-You'll need to serve the ui before launching the connector:
+## Contribution Guide
 
-    cd ui
-    npm install
-    npm run serve
+Before start to contribute, it is better to understand how align with other contributors. It will make easier job
+of reviewer when you submit an issue or PR. If it is your first repo to contribute Speckle environment make sure that you read 
+[Contribution Guideline](https://github.com/specklesystems/speckle-sharp/blob/main/.github/CONTRIBUTING.md).
 
+Additionally as mentioned on [Repo Structure](#3-sketchup-sqlite3-extension-submodulehttpsgithubcomspecklesystemssketchup-sqlite3),
+this repo includes a submodule. Contributions on this source files should be done on the [sketchup-sqlite](https://github.com/specklesystems/sketchup-sqlite3)
+by creating issues and PRs on it. If it is your first time works with submodules, please read [git docs](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+briefly to get some insight about it.
 
 ## Development
 
@@ -96,19 +111,9 @@ directory:
 
     C:\Program Files\SketchUp\SketchUp 20XX\
 
-You can now open up the repo in VS Code.
+You can now open up the repo in VS Code or you can use JetBrains' tools RubyMine and Webstorm.
 
-Make sure you've installed the Ruby extension for VS Code.
-
-### Concept to load plugins into SketchUp environment
-
-To tell SketchUp to load the plugin from wherever you happen to be developing,
-you'll need to create a ruby file with the following contents:
-
-```ruby
-$LOAD_PATH << 'C:\YOUR\PATH\TO\THE\sketchup_connector'
-require 'speckle_connector.rb'
-```
+If you will use VS Code, make sure you've installed the Ruby extension for VS Code.
 
 ### Loading the Speckle Connector Plugin
 
