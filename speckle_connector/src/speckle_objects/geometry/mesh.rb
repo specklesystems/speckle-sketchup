@@ -9,8 +9,6 @@ module SpeckleConnector
   module SpeckleObjects
     # Geometry objects in the Speckleverse.
     module Geometry
-      include Converters::CleanUp
-
       # Mesh object definition for Speckle.
       class Mesh < Typescript::TypescriptObject
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
@@ -41,6 +39,7 @@ module SpeckleConnector
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
           entities.add_faces_from_mesh(native_mesh, 4, material)
           merge_coplanar_faces(entities)
+          Converters::CleanUp.merge_coplanar_faces(entities)
           native_mesh
         end
 

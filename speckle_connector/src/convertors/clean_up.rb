@@ -11,7 +11,7 @@ module SpeckleConnector
       # @param entities [Sketchup::Entities] entities to remove edges between that make entities coplanar.
       # @note Merging coplanar faces idea originated from [CleanUp](https://github.com/thomthom/cleanup) plugin
       # which is developed by [Thomas Thomassen](https://github.com/thomthom).
-      def merge_coplanar_faces(entities)
+      def self.merge_coplanar_faces(entities)
         edges = []
         faces = entities.collect { |entity| entity if entity.is_a? Sketchup::Face }.compact
         faces.each { |face| face.edges.each { |edge| edges << edge } }
@@ -31,7 +31,7 @@ module SpeckleConnector
       # @param ignore_materials [Boolean] whether ignore materials or not.
       # Returns true if the given edge separating two coplanar faces.
       # Return false otherwise.
-      def remove_edge_have_coplanar_faces(edge, ignore_materials)
+      def self.remove_edge_have_coplanar_faces(edge, ignore_materials)
         return false unless edge.valid? && edge.is_a?(Sketchup::Edge)
         return false unless edge.faces.size == 2
 
@@ -44,10 +44,9 @@ module SpeckleConnector
         # Check materials match.
         unless ignore_materials
           return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
+
           # Verify UV mapping match.
-          if (!face_1.material.nil? || face_1.material.texture.nil?) && !continuous_uv?(face_1, face_2, edge)
-            return false
-          end
+          return false if !face_1.material.nil? && !continuous_uv?(face_1, face_2, edge) && face_1.material.texture.nil?
         end
         # Check faces are coplanar or not.
         return false unless faces_coplanar?(face_1, face_2)
@@ -57,7 +56,7 @@ module SpeckleConnector
       end
 
       # Determines if two faces are overlapped.
-      def face_duplicate?(face_1, face_2, overlapping: false)
+      def self.face_duplicate?(face_1, face_2, overlapping: false)
         return false if face_1 == face_2
 
         v_1 = face_1.outer_loop.vertices
@@ -76,13 +75,13 @@ module SpeckleConnector
 
       # Checks the given edge for potential problems if the connected faces would
       # be merged.
-      def edge_safe_to_merge?(edge)
+      def self.edge_safe_to_merge?(edge)
         edge.faces.all? { |face| face_safe_to_merge?(face) }
       end
 
       # Returns true if the two faces connected by the edge has continuous UV mapping.
       # UV's are normalized to 0.0..1.0 before comparison.
-      def continuous_uv?(face_1, face_2, edge)
+      def self.continuous_uv?(face_1, face_2, edge)
         tw = Sketchup.create_texture_writer
         uvh_1 = face_1.get_UVHelper(true, true, tw)
         uvh_2 = face_2.get_UVHelper(true, true, tw)
@@ -95,7 +94,7 @@ module SpeckleConnector
       end
 
       # Normalize UV's to 0.0..1.0 and compare them.
-      def uv_equal?(uvq_1, uvq_2)
+      def self.uv_equal?(uvq_1, uvq_2)
         uv_1 = uvq_1.to_a.map { |n| n % 1 }
         uv_2 = uvq_2.to_a.map { |n| n % 1 }
         uv_1 == uv_2
@@ -103,7 +102,7 @@ module SpeckleConnector
 
       # Validates that the given face can be merged with other faces without causing
       # problems.
-      def face_safe_to_merge?(face)
+      def self.face_safe_to_merge?(face)
         stack = face.outer_loop.edges
         edge = stack.shift
         direction = edge.line[1]
@@ -115,7 +114,7 @@ module SpeckleConnector
       end
 
       # Determines if two faces are coplanar.
-      def faces_coplanar?(face_1, face_2)
+      def self.faces_coplanar?(face_1, face_2)
         vertices = face_1.vertices + face_2.vertices
         plane = Geom.fit_plane_to_points(vertices)
         vertices.all? { |v| v.position.on_plane?(plane) }
