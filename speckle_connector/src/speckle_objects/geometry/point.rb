@@ -14,7 +14,8 @@ module SpeckleConnector
           units: String,
           x: Numeric,
           y: Numeric,
-          z: Numeric
+          z: Numeric,
+          sketchup_attributes: Object
         }.freeze
 
         def self.from_coordinates(x, y, z, units)

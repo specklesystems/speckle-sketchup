@@ -16,7 +16,8 @@ module SpeckleConnector
           xdir: Geometry::Vector,
           ydir: Geometry::Vector,
           normal: Geometry::Vector,
-          origin: Geometry::Point
+          origin: Geometry::Point,
+          sketchup_attributes: Object
         }.freeze
 
         # @param x_dir [Geometry::Vector] vector on the x direction

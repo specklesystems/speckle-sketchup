@@ -18,7 +18,8 @@ module SpeckleConnector
           xSize: Primitive::Interval,
           ySize: Primitive::Interval,
           zSize: Primitive::Interval,
-          basePlane: Geometry::Plane
+          basePlane: Geometry::Plane,
+          sketchup_attributes: Object
         }.freeze
 
         # @param bounds [Geom::BoundingBox] bounding box object of Sketchup.

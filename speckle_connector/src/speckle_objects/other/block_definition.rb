@@ -19,7 +19,8 @@ module SpeckleConnector
           applicationId: String,
           name: String,
           basePoint: Geometry::Point,
-          '@geometry': Array
+          '@geometry': Array,
+          sketchup_attributes: Object
         }.freeze
 
         # @param definition [Sketchup::ComponentDefinition] component definition might be belong to group or component

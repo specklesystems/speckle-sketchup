@@ -9,8 +9,6 @@ module SpeckleConnector
   module SpeckleObjects
     # Geometry objects in the Speckleverse.
     module Geometry
-      include Converters::CleanUp
-
       # Mesh object definition for Speckle.
       class Mesh < Typescript::TypescriptObject
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
@@ -21,10 +19,13 @@ module SpeckleConnector
           bbox: Geometry::BoundingBox,
           '@(31250)vertices': Array,
           '@(62500)faces': Array,
-          '@(31250)faceEdgeFlags': Array
+          '@(31250)faceEdgeFlags': Array,
+          sketchup_attributes: Object
         }.freeze
 
+        # rubocop:disable Metrics/AbcSize
         def self.to_native(sketchup_model, mesh, entities)
+          is_soften = mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           native_mesh = Geom::PolygonMesh.new(mesh['vertices'].count / 3)
           points = []
           mesh['vertices'].each_slice(3) do |pt|
@@ -39,14 +40,17 @@ module SpeckleConnector
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
-          entities.add_faces_from_mesh(native_mesh, 4, material)
-          merge_coplanar_faces(entities)
+          smooth_flags = is_soften ? 4 : 1
+          entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
+          Converters::CleanUp.merge_coplanar_faces(entities)
           native_mesh
         end
+        # rubocop:enable Metrics/AbcSize
 
         # @param face [Sketchup::Face] face to convert mesh
         def self.from_face(face, units)
           mesh = face.loops.count > 1 ? face.mesh : nil
+          has_any_soften_edge = face.edges.any?(&:soft?)
           Mesh.new(
             speckle_type: SPECKLE_TYPE,
             units: units,
@@ -54,7 +58,10 @@ module SpeckleConnector
             bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
             '@(31250)vertices': mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
             '@(62500)faces': mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-            '@(31250)faceEdgeFlags': mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh)
+            '@(31250)faceEdgeFlags': mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
+            sketchup_attributes: {
+              is_soften: has_any_soften_edge
+            }
           )
         end
 

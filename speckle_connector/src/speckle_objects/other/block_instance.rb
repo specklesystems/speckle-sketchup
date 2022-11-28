@@ -21,7 +21,8 @@ module SpeckleConnector
           name: [String, NilClass],
           renderMaterial: [Other::RenderMaterial, NilClass],
           transform: Other::Transform,
-          '@blockDefinition': Other::BlockDefinition
+          '@blockDefinition': Other::BlockDefinition,
+          sketchup_attributes: Object
         }.freeze
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
