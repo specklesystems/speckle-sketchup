@@ -25,7 +25,7 @@ module SpeckleConnector
 
         # rubocop:disable Metrics/AbcSize
         def self.to_native(sketchup_model, mesh, entities)
-          is_soften = mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['su_attributes']['is_soften']
+          is_soften = mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           native_mesh = Geom::PolygonMesh.new(mesh['vertices'].count / 3)
           points = []
           mesh['vertices'].each_slice(3) do |pt|
