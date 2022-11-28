@@ -23,14 +23,15 @@ module SpeckleConnector
           sketchup_attributes: Object
         }.freeze
 
-        # rubocop:disable Metrics/AbcSize
+        # @param entities [Sketchup::Entities] entities to add
         def self.to_native(sketchup_model, mesh, entities)
-          is_soften = mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
+          # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
+          is_soften = get_soften_setting(mesh)
+          smooth_flags = is_soften ? 4 : 1
+          # Get native points to add polygon into native mesh.
+          points = get_native_points(mesh)
+          # Initialize native PolygonMesh object later to add polygon inside it.
           native_mesh = Geom::PolygonMesh.new(mesh['vertices'].count / 3)
-          points = []
-          mesh['vertices'].each_slice(3) do |pt|
-            points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
-          end
           faces = mesh['faces']
           while faces.count > 0
             num_pts = faces.shift
@@ -40,12 +41,11 @@ module SpeckleConnector
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
-          smooth_flags = is_soften ? 4 : 1
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
-          Converters::CleanUp.merge_coplanar_faces(entities)
+          # Do not merge coplanar faces if they comes from already sketchup.
+          Converters::CleanUp.merge_coplanar_faces(entities) if mesh['sketchup_attributes'].nil?
           native_mesh
         end
-        # rubocop:enable Metrics/AbcSize
 
         # @param face [Sketchup::Face] face to convert mesh
         def self.from_face(face, units)
@@ -122,8 +122,24 @@ module SpeckleConnector
           edge_flags
         end
 
+        def self.get_soften_setting(mesh)
+          if mesh['sketchup_attributes'].nil?
+            true
+          else
+            mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
+          end
+        end
+
         def attribute_types
           ATTRIBUTES
+        end
+
+        def self.get_native_points(mesh)
+          points = []
+          mesh['vertices'].each_slice(3) do |pt|
+            points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
+          end
+          points
         end
       end
     end
