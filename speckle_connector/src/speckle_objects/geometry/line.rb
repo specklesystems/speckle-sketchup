@@ -68,6 +68,18 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/AbcSize
 
+        def self.test_line(start_point, end_point, units)
+          Line.new(
+            speckle_type: SPECKLE_TYPE,
+            units: units,
+            applicationId: '',
+            start: start_point,
+            end: end_point,
+            domain: Primitive::Interval.from_numeric(0, 5, units),
+            bbox: Geometry::BoundingBox.test_bounds(units)
+          )
+        end
+
         def attribute_types
           ATTRIBUTES
         end

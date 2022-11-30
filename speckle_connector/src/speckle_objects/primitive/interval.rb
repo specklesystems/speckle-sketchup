@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../typescript/typescript_object'
+require_relative '../../speckle_objects/geometry/length'
 
 module SpeckleConnector
   module SpeckleObjects

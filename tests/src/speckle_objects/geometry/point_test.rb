@@ -25,7 +25,7 @@ module SpeckleConnector
             y: 1.0,
             z: 1.0
           }
-          serialized = JSON.generate(point)
+          serialized = point.to_json
           hash = JSON.parse(serialized, { symbolize_names: true })
 
           assert_equal(serialized_point, hash)

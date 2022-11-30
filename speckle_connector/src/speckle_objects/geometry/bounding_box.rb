@@ -37,6 +37,19 @@ module SpeckleConnector
           )
         end
 
+        def self.test_bounds(units)
+          BoundingBox.new(
+            speckle_type: SPECKLE_TYPE,
+            units: units,
+            area: 0,
+            volume: 0,
+            xSize: Primitive::Interval.from_numeric(0, 5, units),
+            ySize: Primitive::Interval.from_numeric(0, 5, units),
+            zSize: Primitive::Interval.from_numeric(0, 0, units),
+            basePlane: Plane.origin(units)
+          )
+        end
+
         private
 
         def attribute_types
