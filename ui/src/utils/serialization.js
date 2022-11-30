@@ -76,7 +76,7 @@ export class BaseObjectSerializer {
 
       // strip leading '@' for detach (to be removed in the future when we have a way
       // to keep track of detachable props to be consistent with sharp and py)
-      if (detach) prop = prop.substring(1)
+      // if (detach) prop = prop.substring(1)
       // 2. base object
       if (val.speckle_type) {
         let child = this.traverseValue({ value: val, detach: detach })
@@ -109,7 +109,6 @@ export class BaseObjectSerializer {
 
     // save obj string if detached
     if (detached) this.objects[hash] = traversed
-
     return { hash, traversed }
   }
 
