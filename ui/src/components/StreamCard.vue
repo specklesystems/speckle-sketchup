@@ -382,7 +382,7 @@ export default {
 
       this.loadingStage = 'serializing'
       let s = new BaseObjectSerializer()
-      let { hash, serialized } = s.writeJson({ '@data': objects, speckle_type: 'Base' })
+      let { hash, serialized } = s.writeJson(objects)
 
       try {
         this.loadingStage = 'uploading'
