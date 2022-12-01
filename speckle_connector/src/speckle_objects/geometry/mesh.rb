@@ -41,7 +41,7 @@ module SpeckleConnector
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
-          number_of_face = entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
+          entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each { |face| face.layer = layer }
           # Do not merge coplanar faces if they comes from already sketchup.

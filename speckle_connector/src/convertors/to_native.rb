@@ -74,7 +74,7 @@ module SpeckleConnector
         headless_layers.each do |layer_name|
           # Add layer first to the layers object of sketchup model.
           layer = sketchup_model.layers.add(layer_name)
-          folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer_name }
+          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer_name }
         end
       end
 
@@ -96,7 +96,7 @@ module SpeckleConnector
         else
           # Add layer first to the layers object of sketchup model.
           layer = sketchup_model.layers.add(folder_array[0])
-          folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer }
+          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer }
         end
       end
 
@@ -105,6 +105,8 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize
       def traverse_commit_object(obj, commit_folder, layer)
         if can_convert_to_native(obj)
           convert_to_native(obj, layer)
@@ -131,6 +133,8 @@ module SpeckleConnector
       end
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/AbcSize
 
       # Find layer of the Speckle object by checking iteratively into folder.
       # @param layer_path [String] complete layer_path to retrieve
@@ -172,7 +176,8 @@ module SpeckleConnector
         case obj['speckle_type']
         when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
         when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
-        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer, entities, &convert)
+        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer, entities,
+                                                                             &convert)
         when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities)
         when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities)
         end

@@ -5,21 +5,16 @@ require_relative '../immutable/immutable'
 
 module SpeckleConnector
   module SpeckleObjects
+    # Dynamic Base object to send it to Speckle server.
     class Base < Hash
       include Immutable::ImmutableUtils
 
-      attr_reader :speckle_type
-
-      attr_reader :applicationId
-
-      attr_reader :totalChildrenCount
-
-      attr_reader :id
+      attr_reader :speckle_type, :application_id, :total_children_count, :id
 
       def initialize(speckle_type: 'Base', total_children_count: 0, application_id: nil, id: nil)
         @speckle_type = speckle_type
-        @totalChildrenCount = total_children_count
-        @applicationId = application_id
+        @total_children_count = total_children_count
+        @application_id = application_id
         @id = id
         super()
         update(

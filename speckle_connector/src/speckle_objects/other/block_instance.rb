@@ -61,6 +61,7 @@ module SpeckleConnector
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/MethodLength
         def self.to_native(sketchup_model, block, layer, entities, &convert)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
@@ -94,6 +95,7 @@ module SpeckleConnector
           instance
         end
         # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/MethodLength
 
         # takes a component definition and finds and erases the first instance with the matching name
         # (and optionally the applicationId)
