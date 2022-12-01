@@ -41,8 +41,18 @@ module SpeckleConnector
         SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions)
       end
 
+      def commit_folder?(folder_name)
+        findings = folder_name.scan(/(@ )|(\[ )|( \])/)
+        return true if findings.length >= 3
+
+        false
+      end
+
       def add_all_layers
         layer_objects = add_layers(sketchup_model.layers.layers)
+        folders_except_committed_before = sketchup_model.layers.folders.filter do |folder|
+          commit_folder?(folder.display_name)
+        end
         add_layers_from_folders(sketchup_model.layers.folders, layer_objects)
         layer_objects
       end

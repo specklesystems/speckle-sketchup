@@ -4,7 +4,10 @@ module SpeckleConnector
   module Converters
     # Helper class to convert geometries between server and Sketchup.
     class Converter
-      attr_accessor :units, :definitions, :registry, :entity_observer, :sketchup_model
+      # @return [Sketchup::Model] active sketchup model.
+      attr_reader :sketchup_model
+
+      attr_accessor :units, :definitions, :registry, :entity_observer
 
       def initialize(sketchup_model)
         @sketchup_model = sketchup_model

@@ -56,8 +56,12 @@ module SpeckleConnector
         end
 
         # Creates a component instance from a block
+        # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
+        # @param block [Object] block object that represents Speckle block.
+        # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
+        # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
-        def self.to_native(sketchup_model, block, entities, &convert)
+        def self.to_native(sketchup_model, block, layer, entities, &convert)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
           # so this is set to false always until I can figure this out
@@ -73,10 +77,12 @@ module SpeckleConnector
           instance =
             if is_group
               # rubocop:disable SketchupSuggestions/AddGroup
-              entities.add_group(definition.entities.to_a)
+              group = entities.add_group(definition.entities.to_a)
+              group.layer = layer
               # rubocop:enable SketchupSuggestions/AddGroup
             else
-              entities.add_instance(definition, transform)
+              instance = entities.add_instance(definition, transform)
+              instance.layer = layer
             end
           # erase existing instances after creation and before rename because you can't have definitions
           #  without instances
