@@ -43,33 +43,50 @@ module SpeckleConnector
         ['Objects.BuiltElements.Revit.Parameter'].include?(obj['speckle_type'])
       end
 
-      def receive_commit_object(obj, stream_name, branch_name, branch_id)
+      # @param obj [Object] speckle commit object.
+      def receive_commit_object(obj)
+        # First create layers on the sketchup before starting traversing
         create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, sketchup_model.layers)
+        # Define default commit layer which is the fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
       end
 
-      def create_layers(layers, folder)
-        layers_with_folders = layers.map { |layer| layer[1..-1] }
-        folder_layers, headless_layers = layers_with_folders.partition { |layer| layer.include?('::') }
-        folder_arrays = create_folder_arrays(folder_layers)
+      # Create actual Sketchup layers from layer_paths that taken from Speckle base object.
+      # @param layer_paths [Array<String>] layer paths to decompose it to folders and it's layers.
+      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create folders and layers under it.
+      def create_layers(layer_paths, folder)
+        # Strip leading '@'
+        layers_with_folders = layer_paths.map { |layer| layer[1..-1] }
+        # Split layer_paths according to having parent folder or not.
+        layers_with_head_folder, headless_layers = layers_with_folders.partition { |layer| layer.include?('::') }
+        # Create array of array that split with '::'
+        folder_layer_arrays = layers_with_head_folder.collect { |folder_layer| folder_layer.split('::') }
+        # Add headless layers into `Sketchup.active_model.layers`
         create_headless_layers(headless_layers, folder)
-        create_folder_layers(folder_arrays, folder)
+        # Create layers that have parent folder(s)- this method is recursive until all tree is created.
+        create_folder_layers(folder_layer_arrays, folder)
       end
 
-      # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
+      # @param headless_layers [Array<String>] headless layer names.
+      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] layer folder to create commit layers under it.
       def create_headless_layers(headless_layers, folder)
         headless_layers.each do |layer_name|
-          # layer_name = "@#{layer_name}" if layer_name == 'Untagged'
+          # Add layer first to the layers object of sketchup model.
           layer = sketchup_model.layers.add(layer_name)
           folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer_name }
         end
       end
 
-      def create_folder_arrays(folder_layers)
-        folder_layers.collect { |folder_layer| folder_layer.split('::') }
+      # Create layers with it's parent folders.
+      # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
+      def create_folder_layers(folder_layer_arrays, folder)
+        folder_layer_arrays.each do |folder_layer_array|
+          create_folder_layer(folder_layer_array, folder)
+        end
       end
 
+      # Create layers that have parent folder(s)- this method is recursive (self-caller) until all tree is created.
       def create_folder_layer(folder_array, folder)
         if folder_array.length > 1
           # add folder if it is not exist.
@@ -77,15 +94,9 @@ module SpeckleConnector
           new_folder = folder.folders.find { |f| f.display_name == folder_array[0] }
           create_folder_layer(folder_array[1..-1], new_folder)
         else
+          # Add layer first to the layers object of sketchup model.
           layer = sketchup_model.layers.add(folder_array[0])
           folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer }
-        end
-      end
-
-      # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
-      def create_folder_layers(folder_arrays, folder)
-        folder_arrays.each do |folder_array|
-          create_folder_layer(folder_array, folder)
         end
       end
 
@@ -121,16 +132,32 @@ module SpeckleConnector
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
 
+      # Find layer of the Speckle object by checking iteratively into folder.
+      # @param layer_path [String] complete layer_path to retrieve
+      # @param folder [Sketchup::LayerFolder, Sketchup::Layers] entry folder to search layer
+      # @param fallback_layer [Sketchup::Layer] fallback layer to assign object later if any error occur.
       # @return [Sketchup::Layer] layer according to path
+      # @example
+      #   "@folder_1::folder_2::layer_1"
+      #   # it will return the layer object which has display name as `layer_1`.
       def find_layer(layer_path, folder, fallback_layer)
         begin
+          # Split folders and it's tail layer (last one is layer, others are folders.)
           layer_path_array = layer_path[1..-1].split('::')
+          # Get sub folders as array, might be empty if `layer_path_array` has only 1 entry
           sub_folders = layer_path_array.length > 1 ? layer_path_array[0..-2] : []
+          # Get exact layer name from last entry
           layer_name = layer_path_array.last
+          # Iterate sub folders to find new sub folder to switch it.
+          # It help to search in the tree by switching the target search folder.
+          # Finally we can reach the layer name.
           sub_folders.each do |sub_folder|
+            # Try to find sub folder into source folder passes by argument
             s_f = folder.folders.find { |f| f.display_name == sub_folder }
+            # Switch source folder if any exist
             folder = s_f unless s_f.nil?
           end
+          # Find finally the layer into related folder
           folder.layers.find { |l| l.display_name == layer_name }
         rescue StandardError
           return fallback_layer
@@ -156,7 +183,7 @@ module SpeckleConnector
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 
-      # creates a component definition and instance from a speckle object with a display value
+      # Creates a component definition and instance from a speckle object with a display value
       def display_value_to_native_component(obj, layer, entities)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
         definition = BLOCK_DEFINITION.to_native(
@@ -175,7 +202,7 @@ module SpeckleConnector
         instance
       end
 
-      # takes a component definition and finds and erases the first instance with the matching name
+      # Takes a component definition and finds and erases the first instance with the matching name
       # (and optionally the applicationId)
       def find_and_erase_existing_instance(definition, name, app_id = '')
         definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
