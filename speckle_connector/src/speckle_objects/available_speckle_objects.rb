@@ -17,6 +17,7 @@ module SpeckleConnector
       Objects.Other.RenderMaterial
       Objects.Other.Transform
       Objects.Primitive.Interval
+      Speckle.Reference
     ].freeze
   end
 end

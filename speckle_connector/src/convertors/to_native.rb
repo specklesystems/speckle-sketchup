@@ -43,45 +43,143 @@ module SpeckleConnector
         ['Objects.BuiltElements.Revit.Parameter'].include?(obj['speckle_type'])
       end
 
+      # @param obj [Object] speckle commit object.
+      def receive_commit_object(obj)
+        # First create layers on the sketchup before starting traversing
+        create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, sketchup_model.layers)
+        # Define default commit layer which is the fallback
+        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
+      end
+
+      # Create actual Sketchup layers from layer_paths that taken from Speckle base object.
+      # @param layer_paths [Array<String>] layer paths to decompose it to folders and it's layers.
+      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create folders and layers under it.
+      def create_layers(layer_paths, folder)
+        # Strip leading '@'
+        layers_with_folders = layer_paths.map { |layer| layer[1..-1] }
+        # Split layer_paths according to having parent folder or not.
+        layers_with_head_folder, headless_layers = layers_with_folders.partition { |layer| layer.include?('::') }
+        # Create array of array that split with '::'
+        folder_layer_arrays = layers_with_head_folder.collect { |folder_layer| folder_layer.split('::') }
+        # Add headless layers into `Sketchup.active_model.layers`
+        create_headless_layers(headless_layers, folder)
+        # Create layers that have parent folder(s)- this method is recursive until all tree is created.
+        create_folder_layers(folder_layer_arrays, folder)
+      end
+
+      # @param headless_layers [Array<String>] headless layer names.
+      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] layer folder to create commit layers under it.
+      def create_headless_layers(headless_layers, folder)
+        headless_layers.each do |layer_name|
+          # Add layer first to the layers object of sketchup model.
+          layer = sketchup_model.layers.add(layer_name)
+          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer_name }
+        end
+      end
+
+      # Create layers with it's parent folders.
+      # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
+      def create_folder_layers(folder_layer_arrays, folder)
+        folder_layer_arrays.each do |folder_layer_array|
+          create_folder_layer(folder_layer_array, folder)
+        end
+      end
+
+      # Create layers that have parent folder(s)- this method is recursive (self-caller) until all tree is created.
+      def create_folder_layer(folder_array, folder)
+        if folder_array.length > 1
+          # add folder if it is not exist.
+          folder.add_folder(folder_array[0]) unless folder.folders.any? { |f| f.display_name == folder_array[0] }
+          new_folder = folder.folders.find { |f| f.display_name == folder_array[0] }
+          create_folder_layer(folder_array[1..-1], new_folder)
+        else
+          # Add layer first to the layers object of sketchup model.
+          layer = sketchup_model.layers.add(folder_array[0])
+          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer }
+        end
+      end
+
       # Traversal method to create Sketchup objects from upcoming base object.
       # @param obj [Hash, Array] object might be source base object or it's sub objects, because this method is a
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj)
+      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize
+      def traverse_commit_object(obj, commit_folder, layer)
         if can_convert_to_native(obj)
-          convert_to_native(obj)
+          convert_to_native(obj, layer)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
           if obj['displayValue'].nil?
             puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
             props = obj.keys.filter_map { |key| key unless key.start_with?('_') }
-            props.each { |prop| traverse_commit_object(obj[prop]) }
+            props.each do |prop|
+              layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
+              layer = find_layer(layer_path, commit_folder, layer)
+              traverse_commit_object(obj[prop], commit_folder, layer)
+            end
           else
             puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            convert_to_native(obj)
+            convert_to_native(obj, layer)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value) }
+          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value) }
+          obj.each { |value| traverse_commit_object(value, commit_folder, layer) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/AbcSize
+
+      # Find layer of the Speckle object by checking iteratively into folder.
+      # @param layer_path [String] complete layer_path to retrieve
+      # @param folder [Sketchup::LayerFolder, Sketchup::Layers] entry folder to search layer
+      # @param fallback_layer [Sketchup::Layer] fallback layer to assign object later if any error occur.
+      # @return [Sketchup::Layer] layer according to path
+      # @example
+      #   "@folder_1::folder_2::layer_1"
+      #   # it will return the layer object which has display name as `layer_1`.
+      def find_layer(layer_path, folder, fallback_layer)
+        begin
+          # Split folders and it's tail layer (last one is layer, others are folders.)
+          layer_path_array = layer_path[1..-1].split('::')
+          # Get sub folders as array, might be empty if `layer_path_array` has only 1 entry
+          sub_folders = layer_path_array.length > 1 ? layer_path_array[0..-2] : []
+          # Get exact layer name from last entry
+          layer_name = layer_path_array.last
+          # Iterate sub folders to find new sub folder to switch it.
+          # It help to search in the tree by switching the target search folder.
+          # Finally we can reach the layer name.
+          sub_folders.each do |sub_folder|
+            # Try to find sub folder into source folder passes by argument
+            s_f = folder.folders.find { |f| f.display_name == sub_folder }
+            # Switch source folder if any exist
+            folder = s_f unless s_f.nil?
+          end
+          # Find finally the layer into related folder
+          folder.layers.find { |l| l.display_name == layer_name }
+        rescue StandardError
+          return fallback_layer
+        end
+      end
 
       # rubocop:disable Metrics/CyclomaticComplexity
-      def convert_to_native(obj, entities = sketchup_model.entities)
-        return display_value_to_native_component(obj, entities) unless obj['displayValue'].nil?
+      def convert_to_native(obj, layer, entities = sketchup_model.entities)
+        return display_value_to_native_component(obj, layer, entities) unless obj['displayValue'].nil?
 
         convert = method(:convert_to_native)
         case obj['speckle_type']
-        when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, entities)
-        when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, entities, &convert)
-        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, entities, &convert)
-        when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, entities)
-        when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], entities)
+        when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
+        when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
+        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer, entities,
+                                                                             &convert)
+        when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities)
+        when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities)
         end
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
@@ -90,12 +188,13 @@ module SpeckleConnector
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 
-      # creates a component definition and instance from a speckle object with a display value
-      def display_value_to_native_component(obj, entities)
+      # Creates a component definition and instance from a speckle object with a display value
+      def display_value_to_native_component(obj, layer, entities)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
         definition = BLOCK_DEFINITION.to_native(
           sketchup_model,
           obj['displayValue'],
+          layer,
           "def::#{obj_id}",
           &method(:convert_to_native)
         )
@@ -108,7 +207,7 @@ module SpeckleConnector
         instance
       end
 
-      # takes a component definition and finds and erases the first instance with the matching name
+      # Takes a component definition and finds and erases the first instance with the matching name
       # (and optionally the applicationId)
       def find_and_erase_existing_instance(definition, name, app_id = '')
         definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!

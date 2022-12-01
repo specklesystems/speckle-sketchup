@@ -24,7 +24,7 @@ module SpeckleConnector
         }.freeze
 
         # @param entities [Sketchup::Entities] entities to add
-        def self.to_native(sketchup_model, mesh, entities)
+        def self.to_native(sketchup_model, mesh, layer, entities)
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh)
           smooth_flags = is_soften ? 4 : 1
@@ -42,6 +42,8 @@ module SpeckleConnector
           end
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
+          added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
+          added_faces.each { |face| face.layer = layer }
           # Do not merge coplanar faces if they comes from already sketchup.
           Converters::CleanUp.merge_coplanar_faces(entities) if mesh['sketchup_attributes'].nil?
           native_mesh

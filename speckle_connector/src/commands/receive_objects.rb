@@ -10,7 +10,10 @@ module SpeckleConnector
       def _run(data)
         stream_id = data['stream_id']
         base = data['base']
-        action = Actions::ReceiveObjects.new(stream_id, base)
+        branch_name = data['branch_name']
+        branch_id = data['branch_id']
+        stream_name = data['stream_name']
+        action = Actions::ReceiveObjects.new(stream_id, base, stream_name, branch_name, branch_id)
         app.update_state!(action)
       end
     end

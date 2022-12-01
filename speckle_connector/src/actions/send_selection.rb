@@ -19,9 +19,11 @@ module SpeckleConnector
         sketchup_model = state.sketchup_state.sketchup_model
         converter = Converters::ToSpeckle.new(sketchup_model)
         converted = converter.convert_selection
-
+        base = {
+          "speckle_type": 'Base'
+        }.merge(converted)
         puts("converted #{converted.count} objects for stream #{@stream_id}")
-        state.with_add_queue('convertedFromSketchup', @stream_id, [converted.to_json])
+        state.with_add_queue('convertedFromSketchup', @stream_id, [base.to_json])
       end
     end
   end

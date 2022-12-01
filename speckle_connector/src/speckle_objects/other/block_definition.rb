@@ -51,20 +51,24 @@ module SpeckleConnector
           )
         end
 
-        # finds or creates a component definition from the geometry and the given name
+        # Finds or creates a component definition from the geometry and the given name
+        # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(sketchup_model, geometry, name, application_id = '', &convert)
+        # rubocop:disable Metrics/ParameterLists
+        def self.to_native(sketchup_model, geometry, layer, name, application_id = '', &convert)
           definition = sketchup_model.definitions[name]
           return definition if definition && (definition.name == name || definition.guid == application_id)
 
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(name)
+          definition.layer = layer
           geometry.each { |obj| convert.call(obj, definition.entities) }
           puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/ParameterLists
 
         def self.group_mesh_to_speckle(definition, units, definitions)
           # {material_id => Mesh}
