@@ -338,9 +338,14 @@ export default {
       })
 
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
-      console.log(rootObj)
 
-      sketchup.exec({name:"receive_objects" , data: {base: rootObj, stream_id: this.streamId}})
+      sketchup.exec({name:"receive_objects" , data: {
+          base: rootObj,
+          stream_name: this.stream.name,
+          stream_id: this.streamId,
+          branch_name: this.selectedCommit.branchName,
+          branch_id: this.selectedCommit.id
+      }})
 
       await this.$apollo.mutate({
         mutation: gql`
