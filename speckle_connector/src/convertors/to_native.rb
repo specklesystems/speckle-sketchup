@@ -44,12 +44,9 @@ module SpeckleConnector
       end
 
       def receive_commit_object(obj, stream_name, branch_name, branch_id)
-        commit_folder = "#{stream_name}[ #{branch_name} @ #{branch_id} ]"
-        sketchup_model.layers.add_folder(commit_folder)
-        folder = sketchup_model.layers.folders.find { |folder| folder.display_name == commit_folder }
-        create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, folder)
-        default_commit_layer = folder.layers.find { |layer| layer.display_name == '@Untagged' }
-        traverse_commit_object(obj, folder, default_commit_layer)
+        create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, sketchup_model.layers)
+        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
       end
 
       def create_layers(layers, folder)
@@ -63,9 +60,9 @@ module SpeckleConnector
       # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
       def create_headless_layers(headless_layers, folder)
         headless_layers.each do |layer_name|
-          layer_name = "@#{layer_name}" if layer_name == 'Untagged'
+          # layer_name = "@#{layer_name}" if layer_name == 'Untagged'
           layer = sketchup_model.layers.add(layer_name)
-          folder.add_layer(layer)
+          folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer_name }
         end
       end
 
@@ -81,7 +78,7 @@ module SpeckleConnector
           create_folder_layer(folder_array[1..-1], new_folder)
         else
           layer = sketchup_model.layers.add(folder_array[0])
-          folder.add_layer(layer)
+          folder.add_layer(layer) unless folder.layers.any? { |layer| layer.display_name == layer }
         end
       end
 
