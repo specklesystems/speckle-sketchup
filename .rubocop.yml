@@ -23,7 +23,7 @@ AllCops:
     - 'tests/**/*.rb'
   SketchUp:
     SourcePath: .
-    TargetSketchUpVersion: 2017
+    TargetSketchUpVersion: 2021
     Exclude: # Exclude common folders.
       - 'tests/**/*'
       - 'benchmarks/**/*'
@@ -83,7 +83,7 @@ Minitest/MultipleAssertions:
   Max: 5
 
 Naming/MethodParameterName:
-  AllowedNames: [x, y, z]
+  AllowedNames: [x, y, z, id]
 
 Naming/VariableNumber:
   EnforcedStyle: snake_case
