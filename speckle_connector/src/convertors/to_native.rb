@@ -3,6 +3,8 @@
 require_relative 'converter'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
+require_relative '../speckle_objects/other/block_definition'
+require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
@@ -196,7 +198,7 @@ module SpeckleConnector
           obj['displayValue'],
           layer,
           "def::#{obj_id}",
-          &method(:convert_to_native)
+          method(:convert_to_native)
         )
 
         find_and_erase_existing_instance(definition, obj_id)

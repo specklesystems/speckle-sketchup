@@ -2,6 +2,7 @@
 
 require_relative 'render_material'
 require_relative 'transform'
+require_relative 'block_instance'
 require_relative '../geometry/point'
 require_relative '../geometry/mesh'
 require_relative '../geometry/bounding_box'
@@ -62,7 +63,7 @@ module SpeckleConnector
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(name)
           definition.layer = layer
-          geometry.each { |obj| convert.call(obj, definition.entities) }
+          geometry.each { |obj| convert.call(obj, layer, definition.entities) }
           puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition
@@ -110,16 +111,20 @@ module SpeckleConnector
         # rubocop:enable Metrics/AbcSize
 
         def self.initialise_group_mesh(face, bounds, units)
+          has_any_soften_edge = face.edges.any?(&:soft?)
           {
             speckle_type: 'Objects.Geometry.Mesh',
-            units: @units,
+            units: units,
             bbox: Geometry::BoundingBox.from_bounds(bounds, units),
             '@(31250)vertices' => [],
             '@(62500)faces' => [],
             '@(31250)faceEdgeFlags' => [],
             '@(31250)textureCoordinates' => [],
             pt_count: 0,
-            renderMaterial: face.material.nil? ? nil : RenderMaterial.from_material(face.material)
+            renderMaterial: face.material.nil? ? nil : RenderMaterial.from_material(face.material),
+            sketchup_attributes: {
+              is_soften: has_any_soften_edge
+            }
           }
         end
 

@@ -67,12 +67,16 @@ module SpeckleConnector
           # something about this conversion is freaking out if nested block geo is a group
           # so this is set to false always until I can figure this out
           is_group = false
-          definition = BLOCK_DEFINITION.to_native(
-            sketchup_model, block['blockDefinition']['geometry'], block['blockDefinition']['name'],
-            block['blockDefinition']['applicationId'], convert
+          definition = BlockDefinition.to_native(
+            sketchup_model,
+            block['@blockDefinition']['@geometry'],
+            layer,
+            block['@blockDefinition']['name'],
+            block['@blockDefinition']['applicationId'],
+            &convert
           )
 
-          name = block['name'].nil? || block['name'].empty? ? block['id'] : block['name']
+          instance_name = block['name'].nil? || block['name'].empty? ? block['id'] : block['name']
           t_arr = block['transform'].is_a?(Hash) ? block['transform']['value'] : block['transform']
           transform = Other::Transform.to_native(t_arr, block['units'])
           instance =
@@ -84,14 +88,15 @@ module SpeckleConnector
             else
               instance = entities.add_instance(definition, transform)
               instance.layer = layer
+              instance
             end
           # erase existing instances after creation and before rename because you can't have definitions
           #  without instances
-          find_and_erase_existing_instance(definition, name, block['applicationId'])
+          find_and_erase_existing_instance(definition, instance_name, block['applicationId'])
           puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
           instance.transformation = transform if is_group
           instance.material = Other::RenderMaterial.to_native(sketchup_model, block['renderMaterial'])
-          instance.name = name
+          instance.name = instance_name
           instance
         end
         # rubocop:enable Metrics/AbcSize
