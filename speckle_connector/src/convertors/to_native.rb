@@ -178,7 +178,9 @@ module SpeckleConnector
         case obj['speckle_type']
         when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
         when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
-        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer, entities,
+        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer,
+                                                                             obj['name'],
+                                                                             entities,
                                                                              &convert)
         when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities)
         when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities)

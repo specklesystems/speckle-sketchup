@@ -26,7 +26,7 @@ module SpeckleConnector
         }.freeze
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
-        def self.from_group(group, units, component_defs)
+        def self.from_group(group, units, component_defs, &convert)
           BlockInstance.new(
             speckle_type: SPECKLE_TYPE,
             units: units,
@@ -36,7 +36,7 @@ module SpeckleConnector
             name: group.name == '' ? nil : group.name,
             renderMaterial: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
-            '@blockDefinition': BlockDefinition.from_definition(group.definition, units, component_defs)
+            '@blockDefinition': BlockDefinition.from_definition(group.definition, units, component_defs, &convert)
           )
         end
 
