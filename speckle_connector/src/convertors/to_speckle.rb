@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'converter'
+require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
@@ -27,7 +28,8 @@ module SpeckleConnector
           layers[layer_name].push(converted_object)
         end
         # send only layers that have any object
-        layers.reject { |_layer_name, objects| objects.empty? }
+        base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
+        SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.

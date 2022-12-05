@@ -11,7 +11,7 @@ module SpeckleConnector
   module SpeckleObjects
     module Geometry
       # Line object definition for Speckle.
-      class Line < Typescript::TypescriptObject
+      class Line < Base
         SPECKLE_TYPE = 'Objects.Geometry.Line'
         ATTRIBUTES = {
           speckle_type: String,
@@ -25,27 +25,33 @@ module SpeckleConnector
         }.freeze
 
         # TODO: Add constructor when we inherit from base object
-        # def initialize(application_id: nil)
-        #   super(
-        #       speckle_type: 'Objects.Geometry.Line',
-        #       total_children_count: 0,
-        #       application_id: application_id,
-        #       id: nil
-        #     )
-        # end
+        def initialize(start_pt:, end_pt:, domain:, bbox:, units:, application_id: nil)
+          super(
+              speckle_type: 'Objects.Geometry.Line',
+              total_children_count: 0,
+              application_id: application_id,
+              id: nil
+            )
+          self[:start] = start_pt
+          self[:end] = end_pt
+          self[:domain] = domain
+          self[:bbox] = bbox
+          self[:units] = units
+        end
 
         # @param edge [Sketchup::Edge] edge to convert line.
         def self.from_edge(edge, units)
-          start_vertex = edge.start.position
-          end_vertex = edge.end.position
+          start_pt = Geometry::Point.from_vertex(edge.start.position, units)
+          end_pt = Geometry::Point.from_vertex(edge.end.position, units)
+          domain = Primitive::Interval.from_numeric(0, Float(edge.length), units)
+          bbox = Geometry::BoundingBox.from_bounds(edge.bounds, units)
           Line.new(
-            speckle_type: SPECKLE_TYPE,
-            units: units,
-            applicationId: edge.persistent_id.to_s,
-            start: Geometry::Point.from_vertex(start_vertex, units),
-            end: Geometry::Point.from_vertex(end_vertex, units),
-            domain: Primitive::Interval.from_numeric(0, Float(edge.length), units),
-            bbox: Geometry::BoundingBox.from_bounds(edge.bounds, units)
+            start_pt: start_pt,
+            end_pt: end_pt,
+            domain: domain,
+            bbox: bbox,
+            application_id: edge.persistent_id.to_s,
+            units: units
           )
         end
 
@@ -69,14 +75,15 @@ module SpeckleConnector
         # rubocop:enable Metrics/AbcSize
 
         def self.test_line(start_point, end_point, units)
+          domain = Primitive::Interval.from_numeric(0, 5, units)
+          bbox = Geometry::BoundingBox.test_bounds(units)
           Line.new(
-            speckle_type: SPECKLE_TYPE,
-            units: units,
-            applicationId: '',
-            start: start_point,
-            end: end_point,
-            domain: Primitive::Interval.from_numeric(0, 5, units),
-            bbox: Geometry::BoundingBox.test_bounds(units)
+            start_pt: start_point,
+            end_pt: end_point,
+            domain: domain,
+            bbox: bbox,
+            application_id: '',
+            units: units
           )
         end
 

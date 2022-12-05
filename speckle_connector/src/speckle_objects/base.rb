@@ -27,6 +27,10 @@ module SpeckleConnector
         )
       end
 
+      def self.with_detached_layers(detached_layers)
+        Base.new.merge(detached_layers)
+      end
+
       def []=(key, val)
         # Clear if setting string or symbol
         if ((key.is_a? String) || (key.is_a? Symbol)) && include?(key)
