@@ -28,19 +28,16 @@ module SpeckleConnector
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
-        def self.from_definition(definition, units, definitions)
+        def self.from_definition(definition, units, definitions, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
-          # FIXME: This part should be refactored.
-          geometry = group_mesh_to_speckle(definition, units, definitions)
-
-          # FIXME: Previously as below, need to understand why
-          # geometry = if definition.entities[0].is_a?(Sketchup::Edge) | definition.entities[0].is_a?(Sketchup::Face)
-          #              group_mesh_to_speckle(definition)
-          #            else
-          #              definition.entities.map { |entity| convert(entity) }
-          #            end
+          # TODO: Solve logic
+          geometry = if definition.entities[0].is_a?(Sketchup::Edge) | definition.entities[0].is_a?(Sketchup::Face)
+                       group_mesh_to_speckle(definition, units, definitions)
+                     else
+                       definition.entities.map { |entity| convert.call(entity) }
+                     end
 
           BlockDefinition.new(
             speckle_type: SPECKLE_TYPE,

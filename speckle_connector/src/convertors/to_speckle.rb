@@ -32,16 +32,17 @@ module SpeckleConnector
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       def convert(entity)
+        convert = method(:convert)
         return SpeckleObjects::Geometry::Line.from_edge(entity, @units).to_h if entity.is_a?(Sketchup::Edge)
         return SpeckleObjects::Geometry::Mesh.from_face(entity, @units) if entity.is_a?(Sketchup::Face)
         if entity.is_a?(Sketchup::Group)
-          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions)
+          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, &convert)
         end
         if entity.is_a?(Sketchup::ComponentInstance)
           return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions)
         end
 
-        SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions)
+        SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, &convert)
       end
 
       # Create layers -> {Hash{Symbol=>Array}} from sketchup model with empty array as hash entry values.
