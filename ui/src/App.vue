@@ -82,7 +82,7 @@
         </v-menu>
       </v-app-bar>
 
-      <CreateStream/>
+      <create-stream/>
 
       <v-container fluid>
         <router-view :stream-search-query="streamSearchQuery" />
@@ -121,7 +121,7 @@ global.setSelectedAccount = function (account) {
 export default {
   name: 'App',
   components: {
-    CreateStream,
+    CreateStream: () => import('@/components/CreateStream'),
     GlobalToast: () => import('@/components/GlobalToast')
   },
   props: {
