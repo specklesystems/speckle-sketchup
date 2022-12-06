@@ -44,7 +44,7 @@ module SpeckleConnector
             units: units,
             applicationId: guid,
             name: definition.name,
-            basePoint: Geometry::Point.from_coordinates(0, 0, 0, units),
+            basePoint: Geometry::Point.new(0, 0, 0, units),
             '@geometry': geometry
           )
         end

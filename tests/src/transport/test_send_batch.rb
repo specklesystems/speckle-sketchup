@@ -29,8 +29,8 @@ module SpeckleConnector
         end
 
         def test_send_line
-          start_point = Point.from_coordinates(0.0, 0.0, 0.0, 'm')
-          end_point = Point.from_coordinates(5.0, 5.0, 0.0, 'm')
+          start_point = Point.new(0.0, 0.0, 0.0, 'm')
+          end_point = Point.new(5.0, 5.0, 0.0, 'm')
           line = Line.test_line(start_point, end_point, 'm')
 
           serialized_line = line.to_json

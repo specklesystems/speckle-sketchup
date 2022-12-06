@@ -3,9 +3,8 @@
 require_relative 'length'
 require_relative 'point'
 require_relative 'bounding_box'
-require_relative '../primitive/interval'
 require_relative '../base'
-require_relative '../../typescript/typescript_object'
+require_relative '../primitive/interval'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -13,18 +12,14 @@ module SpeckleConnector
       # Line object definition for Speckle.
       class Line < Base
         SPECKLE_TYPE = 'Objects.Geometry.Line'
-        ATTRIBUTES = {
-          speckle_type: String,
-          applicationId: String,
-          units: String,
-          start: Geometry::Point,
-          end: Geometry::Point,
-          domain: Primitive::Interval,
-          bbox: Geometry::BoundingBox,
-          sketchup_attributes: Object
-        }.freeze
 
-        # TODO: Add constructor when we inherit from base object
+        # @param start_pt [Geometry::Point] start point speckle object of the speckle line.
+        # @param end_pt [Geometry::Point] end point speckle object of the speckle line.
+        # @param domain [Primitive::Interval] interval speckle object of the speckle line -represents domain.
+        # @param bbox [Geometry::BoundingBox] bounding box speckle object of the speckle line.
+        # @param units [String] units of the speckle line.
+        # @param application_id [String, nil] entity id of the {Sketchup::Edge} that represents to the speckle line.
+        # rubocop:disable Metrics/ParameterLists
         def initialize(start_pt:, end_pt:, domain:, bbox:, units:, application_id: nil)
           super(
               speckle_type: 'Objects.Geometry.Line',
@@ -38,6 +33,7 @@ module SpeckleConnector
           self[:bbox] = bbox
           self[:units] = units
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param edge [Sketchup::Edge] edge to convert line.
         def self.from_edge(edge, units)
@@ -85,10 +81,6 @@ module SpeckleConnector
             application_id: '',
             units: units
           )
-        end
-
-        def attribute_types
-          ATTRIBUTES
         end
       end
     end
