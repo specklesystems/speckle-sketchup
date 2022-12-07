@@ -92,6 +92,7 @@
         </v-dialog>
 
         <!-- DIALOG: Add a Stream by ID or URL -->
+        <!--
         <v-dialog v-model="showCreateStreamById">
           <template #activator="{ on, attrs }">
             <v-btn
@@ -147,6 +148,7 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        -->
       </v-col>
     </v-row>
   </v-container>
