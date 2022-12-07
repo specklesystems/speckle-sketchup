@@ -157,6 +157,8 @@
 <script>
 /*global sketchup*/
 import gql from "graphql-tag";
+import {bus} from "@/main";
+import userQuery from "@/graphql/user.gql";
 
 export default {
   name: "CreateStream",
@@ -180,12 +182,21 @@ export default {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
   },
+  apollo: {
+    user: {
+      query: userQuery
+    }
+  },
   methods: {
     activeAccount(){
       return JSON.parse(localStorage.getItem('selectedAccount'))
     },
     switchAccountToCreateStream(account) {
       this.accountToCreateStream = account
+    },
+    refresh() {
+      this.$apollo.queries.user.refetch()
+      bus.$emit('refresh-streams')
     },
     async createStream(){
       let res = await this.$apollo.mutate({
@@ -206,6 +217,7 @@ export default {
       this.streamName = ""
       this.description = ""
       sketchup.exec({name: "save_stream", data: {stream_id: res["data"]["streamCreate"]}})
+      this.refresh()
       return res
     }
   }
