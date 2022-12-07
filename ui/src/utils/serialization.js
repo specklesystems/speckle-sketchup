@@ -37,6 +37,7 @@ export class BaseObjectSerializer {
         continue
       }
 
+      // determine prop is detached or not as flag.
       const detach = prop.startsWith('@')
 
       // 1. chunked arrays
