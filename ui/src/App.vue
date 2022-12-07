@@ -82,6 +82,8 @@
         </v-menu>
       </v-app-bar>
 
+      <create-stream/>
+
       <v-container fluid>
         <router-view :stream-search-query="streamSearchQuery" />
       </v-container>
@@ -95,6 +97,7 @@
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
 import { onLogin } from './vue-apollo'
+import CreateStream from "@/components/CreateStream";
 
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
@@ -118,16 +121,22 @@ global.setSelectedAccount = function (account) {
 export default {
   name: 'App',
   components: {
+    CreateStream: () => import('@/components/CreateStream'),
     GlobalToast: () => import('@/components/GlobalToast')
   },
   props: {
     size: {
       type: Number,
       default: 42
-    }
+    },
   },
   data() {
-    return { streamSearchQuery: null }
+    return {
+      streamSearchQuery: null,
+      createNewStreamDialog: false,
+      createStreamByIdDialog: false,
+      createStreamByIdText: ""
+    }
   },
   computed: {
     loggedIn() {
