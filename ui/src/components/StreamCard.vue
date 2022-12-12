@@ -153,8 +153,8 @@ import streamQuery from '../graphql/stream.gql'
 import ObjectLoader from '@speckle/objectloader'
 import { BaseObjectSerializer } from '../utils/serialization'
 
-global.convertedFromSketchup = function (streamId, objects) {
-  bus.$emit(`sketchup-objects-${streamId}`, objects)
+global.convertedFromSketchup = function (streamId, batches, commitId, totalChildrenCount) {
+  bus.$emit(`sketchup-objects-${streamId}`, batches, commitId, totalChildrenCount)
 }
 
 global.finishedReceiveInSketchup = function (streamId) {
@@ -271,10 +271,10 @@ export default {
     }
   },
   mounted() {
-    bus.$on(`sketchup-objects-${this.streamId}`, async (objects) => {
+    bus.$on(`sketchup-objects-${this.streamId}`, async (batches, commitId, totalChildrenCount) => {
       console.log('>>> SpeckleSketchUp: Received objects from sketchup')
 
-      await this.createCommit(objects)
+      await this.createCommit(batches, commitId, totalChildrenCount)
     })
     bus.$on(`sketchup-received-${this.streamId}`, () => {
       console.log('>>> SpeckleSketchUp: Finished receiving in sketchup', this.streamId)
@@ -375,8 +375,8 @@ export default {
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
     },
-    async createCommit(objects) {
-      if (objects.length == 0) {
+    async createCommit(batches, commitId, totalChildrenCount) {
+      if (batches.length == 0) {
         this.loadingSend = false
         this.loadingStage = null
         this.$eventHub.$emit('notification', {
@@ -385,14 +385,10 @@ export default {
         return
       }
 
-      this.loadingStage = 'serializing'
-      let s = new BaseObjectSerializer()
-      let { hash, serialized } = s.writeJson(objects)
-
       try {
         this.loadingStage = 'uploading'
         this.loadingSend = true
-        let batches = s.batchObjects()
+        // let batches = s.batchObjects()
         const totBatches = batches.length
         console.log(`>>> SpeckleSketchUp: ${totBatches} batches ready for sending`)
         let batchesSent = 0
@@ -406,10 +402,10 @@ export default {
         let commit = {
           streamId: this.streamId,
           branchName: this.branchName,
-          objectId: hash,
+          objectId: commitId,
           message: this.commitMessage ?? 'sent from sketchup',
           sourceApplication: 'sketchup',
-          totalChildrenCount: s.objects[hash].totalChildrenCount
+          totalChildrenCount: totalChildrenCount
         }
         let res = await this.$apollo.mutate({
           mutation: gql`
