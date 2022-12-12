@@ -1,5 +1,8 @@
 const crypto = require('crypto')
 
+/**
+ * @deprecated Since version 2.11 this process is done by Ruby code anymore.
+ */
 export class BaseObjectSerializer {
   constructor(defaultChunkSize = 1000) {
     this.defaultChunkSize = defaultChunkSize
