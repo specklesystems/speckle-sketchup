@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'converter'
+require_relative 'base_object_serializer'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
@@ -21,7 +22,7 @@ module SpeckleConnector
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
-      def convert_selection
+      def convert_selection_to_base
         sketchup_model.selection.each do |entity|
           converted_object = convert(entity)
           layer_name = entity_layer_path(entity)
@@ -30,6 +31,16 @@ module SpeckleConnector
         # send only layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
         SpeckleObjects::Base.with_detached_layers(base_object_properties)
+      end
+
+      # Serialized and traversed information to send batches.
+      # @param base [SpeckleObjects::Base] base object to serialize.
+      # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
+      def send_info(base)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+        id, _traversed = serializer.serialize(base)
+        base_total_children_count = serializer.total_children_count(id)
+        return id, base_total_children_count, serializer.batch_objects
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.

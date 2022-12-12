@@ -19,7 +19,7 @@ module SpeckleConnector
         sketchup_model = state.sketchup_state.sketchup_model
         converter = Converters::ToSpeckle.new(sketchup_model)
         base = converter.convert_selection_to_base
-        id, total_children_count, batches = converter.batches(base)
+        id, total_children_count, batches = converter.send_info(base)
         puts("converted #{base.count} objects for stream #{@stream_id}")
         state.with_add_queue('convertedFromSketchup', @stream_id, [
           { is_string: false, val: batches },
