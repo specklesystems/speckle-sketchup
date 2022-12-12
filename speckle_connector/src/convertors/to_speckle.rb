@@ -56,8 +56,11 @@ module SpeckleConnector
         if entity.is_a?(Sketchup::ComponentInstance)
           return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions)
         end
+        if entity.is_a?(Sketchup::ComponentDefinition)
+          return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, &convert)
+        end
 
-        SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, &convert)
+        nil
       end
 
       # Create layers -> {Hash{Symbol=>Array}} from sketchup model with empty array as hash entry values.
