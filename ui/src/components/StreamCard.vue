@@ -385,10 +385,19 @@ export default {
         return
       }
 
+      // let s = new BaseObjectSerializer()
+      // let startTime = new Date()
+      // let { hash, serialized } = s.writeJson(objects)
+      // let endTime = new Date();
+      // let timeDiff = endTime - startTime; //in ms
+      // // strip the ms
+      // timeDiff /= 1000;
+      // // get seconds
+      // console.log(timeDiff + " seconds");
+
       try {
         this.loadingStage = 'uploading'
         this.loadingSend = true
-        // let batches = s.batchObjects()
         const totBatches = batches.length
         console.log(`>>> SpeckleSketchUp: ${totBatches} batches ready for sending`)
         let batchesSent = 0
