@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../../convertors/units'
+
 module SpeckleConnector
   module SpeckleObjects
     # Geometric objects to convert speckle.

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
+require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
-require_relative '../../typescript/typescript_object'
 require_relative '../../convertors/clean_up'
 
 module SpeckleConnector
@@ -10,18 +10,33 @@ module SpeckleConnector
     # Geometry objects in the Speckleverse.
     module Geometry
       # Mesh object definition for Speckle.
-      class Mesh < Typescript::TypescriptObject
+      class Mesh < Base
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
-        ATTRIBUTES = {
-          speckle_type: String,
-          units: String,
-          renderMaterial: [NilClass, Other::RenderMaterial],
-          bbox: Geometry::BoundingBox,
-          '@(31250)vertices': Array,
-          '@(62500)faces': Array,
-          '@(31250)faceEdgeFlags': Array,
-          sketchup_attributes: Object
-        }.freeze
+
+        # @param units [String] units of the speckle mesh.
+        # @param render_material [Other::RenderMaterial, nil] render material of the speckle mesh.
+        # @param bbox [Geometry::BoundingBox] bounding box speckle object of the speckle mesh.
+        # @param vertices [Array] vertices of the speckle mesh.
+        # @param faces [Array] faces of the speckle mesh.
+        # @param face_edge_flags [Array] face edge flags of the speckle mesh.
+        # @param sketchup_attributes [Hash] additional information about speckle mesh.
+        # rubocop:disable Metrics/ParameterLists
+        def initialize(units:, render_material:, bbox:, vertices:, faces:, face_edge_flags:, sketchup_attributes:)
+          super(
+            speckle_type: SPECKLE_TYPE,
+            total_children_count: 0,
+            application_id: nil,
+            id: nil
+          )
+          self[:units] = units
+          self[:renderMaterial] = render_material
+          self[:bbox] = bbox
+          self[:'@(31250)vertices'] = vertices
+          self[:'@(62500)faces'] = faces
+          self[:'@(31250)faceEdgeFlags'] = face_edge_flags
+          self[:sketchup_attributes] = sketchup_attributes
+        end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param entities [Sketchup::Entities] entities to add
         def self.to_native(sketchup_model, mesh, layer, entities)
@@ -54,16 +69,13 @@ module SpeckleConnector
           mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
           Mesh.new(
-            speckle_type: SPECKLE_TYPE,
             units: units,
-            renderMaterial: face.material.nil? ? nil : Other::RenderMaterial.from_material(face.material),
+            render_material: face.material.nil? ? nil : Other::RenderMaterial.from_material(face.material),
             bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
-            '@(31250)vertices': mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
-            '@(62500)faces': mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-            '@(31250)faceEdgeFlags': mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
-            sketchup_attributes: {
-              is_soften: has_any_soften_edge
-            }
+            vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
+            faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
+            face_edge_flags: mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
+            sketchup_attributes: { is_soften: has_any_soften_edge }
           )
         end
 
@@ -130,10 +142,6 @@ module SpeckleConnector
           else
             mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
-        end
-
-        def attribute_types
-          ATTRIBUTES
         end
 
         def self.get_native_points(mesh)
