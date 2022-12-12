@@ -38,13 +38,14 @@ export class BaseObjectSerializer {
       }
 
       // determine prop is detached or not as flag.
-      const detach = prop.startsWith('@')
+      const isDetach = prop.startsWith('@')
 
       // 1. chunked arrays
-      let detachMatch = prop.match(/^@\((\d*)\)/) // chunk syntax
-      if (Array.isArray(val) && detachMatch) {
-        const chunkSize = detachMatch[1] !== '' ? parseInt(detachMatch[1]) : this.defaultChunkSize
+      let chunkedDetachMatch = prop.match(/^@\((\d*)\)/) // chunk syntax
+      if (Array.isArray(val) && chunkedDetachMatch) {
+        const chunkSize = chunkedDetachMatch[1] !== '' ? parseInt(chunkedDetachMatch[1]) : this.defaultChunkSize
         let chunks = []
+        // create data chuck base object
         let chunk = {
           // eslint-disable-next-line camelcase
           speckle_type: 'Speckle.Core.Models.DataChunk',
@@ -52,7 +53,9 @@ export class BaseObjectSerializer {
         }
         val.forEach((el, count) => {
           if (count && count % chunkSize == 0) {
+            // push chunk to chunks because we will start to fill next chunk
             chunks.push(chunk)
+            // Reset the chunk for next elements
             chunk = {
               // eslint-disable-next-line camelcase
               speckle_type: 'Speckle.Core.Models.DataChunk',
@@ -62,16 +65,17 @@ export class BaseObjectSerializer {
 
           chunk.data.push(el)
         })
+        // push last chunk to chunks also
         if (chunk.data.length !== 0) chunks.push(chunk)
 
         let chunkRefs = []
         chunks.forEach((chunk) => {
-          this.detachLineage.push(detach) // true
+          this.detachLineage.push(isDetach) // true
           let { hash } = this.traverseBase(chunk)
           chunkRefs.push(this.detachHelper(hash))
         })
 
-        traversed[prop.replace(detachMatch[0], '')] = chunkRefs // strip chunk syntax
+        traversed[prop.replace(chunkedDetachMatch[0], '')] = chunkRefs // strip chunk syntax
         continue
       }
 
@@ -79,14 +83,14 @@ export class BaseObjectSerializer {
       // to keep track of detachable props to be consistent with sharp and py)
       // if (detach) prop = prop.substring(1)
       // 2. base object
-      if (val.speckle_type) {
-        let child = this.traverseValue({ value: val, detach: detach })
-        traversed[prop] = detach ? this.detachHelper(child.id) : child
+      if (val.speckle_type) { // for example -> when line have bbox, start, end as speckle objects
+        let child = this.traverseValue({ value: val, detach: isDetach })
+        traversed[prop] = isDetach ? this.detachHelper(child.id) : child
       } else {
         // 3. anything else (dicts, lists)
-        traversed[prop] = this.traverseValue({ value: val, detach: detach })
+        traversed[prop] = this.traverseValue({ value: val, detach: isDetach })
       }
-    }
+    } // this is where all props are done
 
     const detached = this.detachLineage.pop()
 
@@ -102,8 +106,8 @@ export class BaseObjectSerializer {
     traversed['totalChildrenCount'] = Object.keys(closure).length
 
     const hash = this.getId(traversed)
-
     traversed.id = hash
+
     if (traversed['totalChildrenCount']) {
       traversed['__closure'] = this.closureTable[hash] = closure
     }
@@ -149,10 +153,8 @@ export class BaseObjectSerializer {
   detachHelper(refHash) {
     this.lineage.forEach((parent) => {
       if (!this.familyTree[parent]) this.familyTree[parent] = {}
-      if (
-        !this.familyTree[parent][refHash] ||
-        this.familyTree[parent][refHash] > this.detachLineage.length
-      ) {
+
+      if (!this.familyTree[parent][refHash] || this.familyTree[parent][refHash] > this.detachLineage.length) {
         this.familyTree[parent][refHash] = this.detachLineage.length
       }
     })
