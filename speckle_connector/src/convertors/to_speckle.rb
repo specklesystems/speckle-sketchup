@@ -38,7 +38,9 @@ module SpeckleConnector
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
       def send_info(base)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+        # t = Time.now.to_f
         id, _traversed = serializer.serialize(base)
+        # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
         return id, base_total_children_count, serializer.batch_objects
       end
