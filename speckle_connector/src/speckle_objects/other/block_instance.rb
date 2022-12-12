@@ -13,6 +13,16 @@ module SpeckleConnector
       class BlockInstance < Base
         SPECKLE_TYPE = 'Objects.Other.BlockInstance'
 
+        # @param units [String] units of the block instance.
+        # @param is_sketchup_group [Boolean] whether is sketchup group or not. Sketchup Groups represented as
+        #  block instance on Speckle.
+        # @param bbox [Geometry::BoundingBox] bounding box of the block instance.
+        # @param name [String] name of the block instance.
+        # @param transform [Other::Transform] transform of the block instance.
+        # @param block_definition [Other::BlockDefinition] definition of the block instance.
+        # @param sketchup_attributes [Other::BlockDefinition] sketchup attributes of the block instance.
+        # @param application_id [String] application id of the block instance.
+        # rubocop:disable Metrics/ParameterLists
         def initialize(units:, is_sketchup_group:, bbox:, name:, render_material:, transform:, block_definition:,
                        sketchup_attributes: {}, application_id: nil)
           super(
@@ -30,6 +40,7 @@ module SpeckleConnector
           self[:sketchup_attributes] = sketchup_attributes
           self['@blockDefinition'] = block_definition
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, component_defs, &convert)

@@ -9,6 +9,9 @@ module SpeckleConnector
       class Transform < Base
         SPECKLE_TYPE = 'Objects.Other.Transform'
 
+        # @param units [String] units of the transform.
+        # @param value [Array<Numeric>] values of the transform.
+        # @param sketchup_attributes [Other::BlockDefinition] sketchup attributes of the transform.
         def initialize(units:, value:, sketchup_attributes: {})
           super(
             speckle_type: SPECKLE_TYPE,

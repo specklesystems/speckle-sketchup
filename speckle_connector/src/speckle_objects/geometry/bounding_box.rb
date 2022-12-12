@@ -11,6 +11,10 @@ module SpeckleConnector
       class BoundingBox < Base
         SPECKLE_TYPE = 'Objects.Geometry.Box'
 
+        # @param x_size [Primitive::Interval] interval for x size.
+        # @param y_size [Primitive::Interval] interval for y size.
+        # @param z_size [Primitive::Interval] interval for z size.
+        # @param base_plane [Geometry::Plane] plane for base.
         def initialize(x_size, y_size, z_size, base_plane)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -32,6 +36,7 @@ module SpeckleConnector
           x_size = Primitive::Interval.from_lengths(min_pt[0], bounds.width, units)
           y_size = Primitive::Interval.from_lengths(min_pt[1], bounds.height, units)
           z_size = Primitive::Interval.from_lengths(min_pt[2], bounds.depth, units)
+          # FIXME: Decide how to approach center of bounds for each object?!
           base_plane = Plane.origin(units)
           BoundingBox.new(x_size, y_size, z_size, base_plane)
         end

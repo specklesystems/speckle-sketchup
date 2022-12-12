@@ -10,6 +10,9 @@ module SpeckleConnector
       class Interval < Base
         SPECKLE_TYPE = 'Objects.Primitive.Interval'
 
+        # @param units [String] units of the interval.
+        # @param start_value [Numeric] start value of the transform.
+        # @param end_value [Numeric] end value of the transform.
         def initialize(units:, start_value:, end_value:)
           super(
             speckle_type: SPECKLE_TYPE,

@@ -15,6 +15,11 @@ module SpeckleConnector
       class BlockDefinition < Base
         SPECKLE_TYPE = 'Objects.Other.BlockDefinition'
 
+        # @param geometry [Object] geometric definition of the block.
+        # @param base_point [Geometry::Point] base point of the block definition.
+        # @param name [String] name of the block definition.
+        # @param units [String] units of the block definition.
+        # @param application_id [String, NilClass] application id of the block definition.
         def initialize(geometry:, base_point:, name:, units:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -43,6 +48,7 @@ module SpeckleConnector
                        definition.entities.map { |entity| convert.call(entity) }
                      end
 
+          # FIXME: Decide how to approach base point of the definition instead origin.
           BlockDefinition.new(
             units: units,
             name: definition.name,
@@ -119,7 +125,7 @@ module SpeckleConnector
             vertices: [],
             faces: [],
             face_edge_flags: [],
-            sketchup_attributes: { is_soften: has_any_soften_edge },
+            sketchup_attributes: { is_soften: has_any_soften_edge }
           )
           mesh[:pt_count] = 0
           mesh

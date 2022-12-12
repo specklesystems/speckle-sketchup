@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
+require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
-require_relative '../base'
 require_relative '../../convertors/clean_up'
 
 module SpeckleConnector
@@ -12,16 +12,6 @@ module SpeckleConnector
       # Mesh object definition for Speckle.
       class Mesh < Base
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
-        ATTRIBUTES = {
-          speckle_type: String,
-          units: String,
-          renderMaterial: [NilClass, Other::RenderMaterial],
-          bbox: Geometry::BoundingBox,
-          '@(31250)vertices': Array,
-          '@(62500)faces': Array,
-          '@(31250)faceEdgeFlags': Array,
-          sketchup_attributes: Object
-        }.freeze
 
         # @param units [String] units of the speckle mesh.
         # @param render_material [Other::RenderMaterial, nil] render material of the speckle mesh.
@@ -152,10 +142,6 @@ module SpeckleConnector
           else
             mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
-        end
-
-        def attribute_types
-          ATTRIBUTES
         end
 
         def self.get_native_points(mesh)

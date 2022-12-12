@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+# rubocop:disable SketchupPerformance/OpenSSL
 require 'securerandom'
+# rubocop:enable SketchupPerformance/OpenSSL
 require 'digest'
 require_relative 'converter'
 require_relative '../relations/many_to_one_relation'
@@ -36,6 +38,7 @@ module SpeckleConnector
       end
 
       # @param base [Object] base object to populate all children and their relationship
+      # rubocop:disable Metrics/MethodLength
       def traverse_base(base)
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
@@ -81,7 +84,13 @@ module SpeckleConnector
 
         return id, traversed_base
       end
+      # rubocop:enable Metrics/MethodLength
 
+      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/BlockLength
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/PerceivedComplexity
       def traverse_base_props(base, traversed_base)
         base.each do |prop, value|
           # 3.1. Ignore nil, starts with '_' and 'id'
@@ -134,9 +143,9 @@ module SpeckleConnector
             # 3.5.6. Initialize empty chunk reference array
             chunk_references = []
 
-            chunks.each do |chunk|
+            chunks.each do |chunk_element|
               @detach_lineage.append(is_prop_detach)
-              id, _traversed = traverse_base(chunk)
+              id, _traversed = traverse_base(chunk_element)
               chunk_references.append(detach_helper(id))
             end
 
@@ -156,8 +165,16 @@ module SpeckleConnector
           end
         end
       end
+      # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/BlockLength
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/PerceivedComplexity
 
-      def traverse_value(value, is_detach = false)
+      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/PerceivedComplexity
+      def traverse_value(value, is_detach: false)
         # 1. Return same value if value is primitive type (string, numeric, boolean)
         return value unless value.is_a?(Hash) || value.is_a?(Array)
 
@@ -193,6 +210,9 @@ module SpeckleConnector
         # 5. If it is not returned until here then there is unsupported type
         raise StandardError "Unsupported type #{value.class} : #{value}"
       end
+      # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/PerceivedComplexity
 
       def detach_helper(reference_id)
         @lineage.each do |parent|
@@ -216,6 +236,7 @@ module SpeckleConnector
         Digest::MD5.hexdigest(traversed_base.to_json)
       end
 
+      # rubocop:disable Metrics/MethodLength
       def batch_objects(max_batch_size_mb = 1)
         max_size = 1000 * 1000 * max_batch_size_mb
         batches = []
@@ -239,6 +260,7 @@ module SpeckleConnector
         batches.append("#{batch}]")
         batches
       end
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

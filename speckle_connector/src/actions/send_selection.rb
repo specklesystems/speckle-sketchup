@@ -22,11 +22,10 @@ module SpeckleConnector
         id, total_children_count, batches = converter.send_info(base)
         puts("converted #{base.count} objects for stream #{@stream_id}")
         state.with_add_queue('convertedFromSketchup', @stream_id, [
-          { is_string: false, val: batches },
-          { is_string: true, val: id },
-          { is_string: false, val: total_children_count }
-          ]
-        )
+                               { is_string: false, val: batches },
+                               { is_string: true, val: id },
+                               { is_string: false, val: total_children_count }
+                             ])
       end
     end
   end

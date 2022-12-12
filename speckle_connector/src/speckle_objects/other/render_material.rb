@@ -10,6 +10,15 @@ module SpeckleConnector
       class RenderMaterial < Base
         SPECKLE_TYPE = 'Objects.Other.RenderMaterial'
 
+        # @param name [String] name of the render material.
+        # @param diffuse [Numeric] diffuse value of the render material.
+        # @param opacity [Numeric] opacity value of the render material.
+        # @param emissive [Numeric] emissive value of the render material.
+        # @param metalness [Numeric] metalness value of the render material.
+        # @param roughness [Numeric] roughness value of the render material.
+        # @param sketchup_attributes [Hash] sketchup_attributes of the render material.
+        # @param application_id [Hash] application id of the render material.
+        # rubocop:disable Metrics/ParameterLists
         def initialize(name:, diffuse:, opacity:, emissive:, metalness:, roughness:,
                        sketchup_attributes: {}, application_id: nil)
           super(
@@ -26,7 +35,9 @@ module SpeckleConnector
           self[:roughness] = roughness
           self[:sketchup_attributes] = sketchup_attributes
         end
+        # rubocop:enable Metrics/ParameterLists
 
+        # @param material [Sketchup::Material] material on the Sketchup.
         def self.from_material(material)
           rgba = material.color.to_a
           RenderMaterial.new(
@@ -39,6 +50,7 @@ module SpeckleConnector
           )
         end
 
+        # @param sketchup_model [Sketchup::Model] active model on the sketchup.
         def self.to_native(sketchup_model, render_material)
           return if render_material.nil?
 
