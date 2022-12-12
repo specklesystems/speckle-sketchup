@@ -18,9 +18,15 @@ module SpeckleConnector
       def update_state(state)
         sketchup_model = state.sketchup_state.sketchup_model
         converter = Converters::ToSpeckle.new(sketchup_model)
-        base = converter.convert_selection
+        base = converter.convert_selection_to_base
+        id, total_children_count, batches = converter.batches(base)
         puts("converted #{base.count} objects for stream #{@stream_id}")
-        state.with_add_queue('convertedFromSketchup', @stream_id, [base.to_json])
+        state.with_add_queue('convertedFromSketchup', @stream_id, [
+          { is_string: false, val: batches },
+          { is_string: true, val: id },
+          { is_string: false, val: total_children_count }
+          ]
+        )
       end
     end
   end
