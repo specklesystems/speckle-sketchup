@@ -3,26 +3,30 @@
 require_relative 'render_material'
 require_relative 'transform'
 require_relative 'block_instance'
+require_relative '../base'
 require_relative '../geometry/point'
 require_relative '../geometry/mesh'
 require_relative '../geometry/bounding_box'
-require_relative '../../typescript/typescript_object'
 
 module SpeckleConnector
   module SpeckleObjects
     module Other
       # BlockDefinition object definition for Speckle.
-      class BlockDefinition < Typescript::TypescriptObject
+      class BlockDefinition < Base
         SPECKLE_TYPE = 'Objects.Other.BlockDefinition'
-        ATTRIBUTE_TYPES = {
-          speckle_type: String,
-          units: String,
-          applicationId: String,
-          name: String,
-          basePoint: Geometry::Point,
-          '@geometry': Array,
-          sketchup_attributes: Object
-        }.freeze
+
+        def initialize(geometry:, base_point:, name:, units:, application_id: nil)
+          super(
+            speckle_type: SPECKLE_TYPE,
+            total_children_count: 0,
+            application_id: application_id,
+            id: nil
+          )
+          self[:units] = units
+          self[:name] = name
+          self[:basePoint] = base_point
+          self['@geometry'] = geometry
+        end
 
         # @param definition [Sketchup::ComponentDefinition] component definition might be belong to group or component
         #  instance
@@ -40,12 +44,11 @@ module SpeckleConnector
                      end
 
           BlockDefinition.new(
-            speckle_type: SPECKLE_TYPE,
             units: units,
-            applicationId: guid,
             name: definition.name,
-            basePoint: Geometry::Point.new(0, 0, 0, units),
-            '@geometry': geometry
+            base_point: Geometry::Point.new(0, 0, 0, units),
+            geometry: geometry,
+            application_id: guid
           )
         end
 
@@ -95,13 +98,13 @@ module SpeckleConnector
           mat_group = mat_groups[mat_id]
           if face.loops.size > 1
             mesh = face.mesh
-            mat_group['@(31250)vertices'].push(*Geometry::Mesh.mesh_points_to_array(mesh, units))
-            mat_group['@(62500)faces'].push(*Geometry::Mesh.mesh_faces_to_array(mesh, mat_group[:pt_count] - 1))
-            mat_group['@(31250)faceEdgeFlags'].push(*Geometry::Mesh.mesh_edge_flags_to_array(mesh))
+            mat_group[:'@(31250)vertices'].push(*Geometry::Mesh.mesh_points_to_array(mesh, units))
+            mat_group[:'@(62500)faces'].push(*Geometry::Mesh.mesh_faces_to_array(mesh, mat_group[:pt_count] - 1))
+            mat_group[:'@(31250)faceEdgeFlags'].push(*Geometry::Mesh.mesh_edge_flags_to_array(mesh))
           else
-            mat_group['@(31250)vertices'].push(*Geometry::Mesh.face_vertices_to_array(face, units))
-            mat_group['@(62500)faces'].push(*Geometry::Mesh.face_indices_to_array(face, mat_group[:pt_count]))
-            mat_group['@(31250)faceEdgeFlags'].push(*Geometry::Mesh.face_edge_flags_to_array(face))
+            mat_group[:'@(31250)vertices'].push(*Geometry::Mesh.face_vertices_to_array(face, units))
+            mat_group[:'@(62500)faces'].push(*Geometry::Mesh.face_indices_to_array(face, mat_group[:pt_count]))
+            mat_group[:'@(31250)faceEdgeFlags'].push(*Geometry::Mesh.face_edge_flags_to_array(face))
           end
           mat_group[:pt_count] += face.vertices.count
         end
@@ -109,24 +112,17 @@ module SpeckleConnector
 
         def self.initialise_group_mesh(face, bounds, units)
           has_any_soften_edge = face.edges.any?(&:soft?)
-          {
-            speckle_type: 'Objects.Geometry.Mesh',
+          mesh = Geometry::Mesh.new(
             units: units,
+            render_material: face.material.nil? ? nil : RenderMaterial.from_material(face.material),
             bbox: Geometry::BoundingBox.from_bounds(bounds, units),
-            '@(31250)vertices' => [],
-            '@(62500)faces' => [],
-            '@(31250)faceEdgeFlags' => [],
-            '@(31250)textureCoordinates' => [],
-            pt_count: 0,
-            renderMaterial: face.material.nil? ? nil : RenderMaterial.from_material(face.material),
-            sketchup_attributes: {
-              is_soften: has_any_soften_edge
-            }
-          }
-        end
-
-        def attribute_types
-          ATTRIBUTE_TYPES
+            vertices: [],
+            faces: [],
+            face_edge_flags: [],
+            sketchup_attributes: { is_soften: has_any_soften_edge },
+          )
+          mesh[:pt_count] = 0
+          mesh
         end
       end
     end

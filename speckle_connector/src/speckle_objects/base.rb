@@ -11,7 +11,7 @@ module SpeckleConnector
 
       attr_reader :speckle_type, :application_id, :total_children_count, :id
 
-      def initialize(speckle_type: 'Base', total_children_count: 0, application_id: nil, id: nil)
+      def initialize(speckle_type: 'Base', total_children_count: 0, application_id: nil, id: '')
         @speckle_type = speckle_type
         @total_children_count = total_children_count
         @application_id = application_id

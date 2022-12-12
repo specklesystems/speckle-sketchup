@@ -31,7 +31,7 @@ module SpeckleConnector
         # @param face_edge_flags [Array] face edge flags of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units, render_material, bbox, vertices, faces, face_edge_flags, sketchup_attributes)
+        def initialize(units:, render_material:, bbox:, vertices:, faces:, face_edge_flags:, sketchup_attributes:)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -79,13 +79,13 @@ module SpeckleConnector
           mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
           Mesh.new(
-            units,
-            face.material.nil? ? nil : Other::RenderMaterial.from_material(face.material),
-            Geometry::BoundingBox.from_bounds(face.bounds, units),
-            mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
-            mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-            mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
-            { is_soften: has_any_soften_edge }
+            units: units,
+            render_material: face.material.nil? ? nil : Other::RenderMaterial.from_material(face.material),
+            bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
+            vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
+            faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
+            face_edge_flags: mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
+            sketchup_attributes: { is_soften: has_any_soften_edge }
           )
         end
 
