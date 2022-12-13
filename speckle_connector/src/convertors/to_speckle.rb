@@ -54,7 +54,7 @@ module SpeckleConnector
           return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, &convert)
         end
         if entity.is_a?(Sketchup::ComponentInstance)
-          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions)
+          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, &convert)
         end
         if entity.is_a?(Sketchup::ComponentDefinition)
           return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, &convert)

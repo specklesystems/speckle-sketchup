@@ -57,16 +57,21 @@ module SpeckleConnector
         end
 
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
-        def self.from_component_instance(component_instance, units, component_defs)
+        def self.from_component_instance(component_instance, units, component_defs, &convert)
           BlockInstance.new(
             units: units,
             application_id: component_instance.guid,
             is_sketchup_group: false,
             bbox: Geometry::BoundingBox.from_bounds(component_instance.bounds, units),
             name: component_instance.name == '' ? nil : component_instance.name,
-            render_material: component_instance.material.nil? ? nil : RenderMaterial.from_material(group.material),
+            render_material: if component_instance.material.nil?
+                               nil
+                             else
+                               RenderMaterial.from_material(component_instance.material)
+                             end,
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
-            block_definition: BlockDefinition.from_definition(component_instance.definition, units, component_defs)
+            block_definition: BlockDefinition.from_definition(component_instance.definition, units, component_defs,
+                                                              &convert)
           )
         end
 

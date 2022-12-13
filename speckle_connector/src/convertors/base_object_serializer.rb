@@ -174,7 +174,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Style/OptionalBooleanParamete
+      # rubocop:disable Style/OptionalBooleanParameter
       def traverse_value(value, is_detach = false)
         # 1. Return same value if value is primitive type (string, numeric, boolean)
         return value unless value.is_a?(Hash) || value.is_a?(Array)
@@ -214,7 +214,7 @@ module SpeckleConnector
       # rubocop:enable Metrics/MethodLength
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Style/OptionalBooleanParamete
+      # rubocop:enable Style/OptionalBooleanParameter
 
       def detach_helper(reference_id)
         @lineage.each do |parent|

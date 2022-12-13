@@ -43,7 +43,7 @@ module SpeckleConnector
 
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) | definition.entities[0].is_a?(Sketchup::Face)
-                       group_mesh_to_speckle(definition, units, definitions)
+                       group_entities_to_speckle(definition, units, definitions, &convert)
                      else
                        definition.entities.map { |entity| convert.call(entity) }
                      end
@@ -77,23 +77,21 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/ParameterLists
 
-        def self.group_mesh_to_speckle(definition, units, definitions)
-          # {material_id => Mesh}
-          mat_groups = {}
-          nested_blocks = []
-          lines = []
-
-          definition.entities.each do |entity|
-            if entity.is_a?(Sketchup::ComponentInstance)
-              nested_blocks.push(BlockInstance.from_component_instance(entity, units, definitions))
-            end
-            next unless entity.is_a?(Sketchup::Face)
-
-            group_meshes_by_material(definition, entity, mat_groups, units)
+        def self.group_entities_to_speckle(definition, units, definitions, &convert)
+          orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
+          lines = orphan_edges.collect do |orphan_edge|
+            Geometry::Line.from_edge(orphan_edge, units)
           end
 
-          mat_groups.values.map { |group| group.delete(:pt_count) }
-          mat_groups.values + lines + nested_blocks
+          nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
+            BlockInstance.from_component_instance(component_instance, units, definitions, &convert)
+          end
+
+          meshes = definition.entities.grep(Sketchup::Face).collect do |face|
+            Geometry::Mesh.from_face(face, units)
+          end
+
+          lines + nested_blocks + meshes
         end
 
         # rubocop:disable Metrics/AbcSize
