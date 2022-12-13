@@ -15,8 +15,8 @@ module SpeckleConnector
         edges = []
         faces = entities.collect { |entity| entity if entity.is_a? Sketchup::Face }.compact
         faces.each { |face| face.edges.each { |edge| edges << edge } }
-        edges.compact!
-        edges.each { |edge| remove_edge_have_coplanar_faces(edge, false) }
+        edges.uniq!
+        edges.each { |edge| remove_edge_have_coplanar_faces(edge, faces, false) }
       end
 
       # Detect edges to remove by checking following controls respectively;
@@ -28,12 +28,22 @@ module SpeckleConnector
       #  - Whether UV texture map is aligned between faces or not.
       #  - Finally, if faces are coplanar by correcting these checks, then removes edge from Sketchup.active_model.
       # @param edge [Sketchup::Edge] edge to check.
+      # @param faces [Array<Sketchup::Face>] scoped faces to check 'edge.faces' both (first and second)
+      #  belongs to this faces or not. If any of this faces does not involve this scoped faces, then do not delete.
       # @param ignore_materials [Boolean] whether ignore materials or not.
       # Returns true if the given edge separating two coplanar faces.
       # Return false otherwise.
-      def self.remove_edge_have_coplanar_faces(edge, ignore_materials)
+      # rubocop:disable Metrics/AbcSize
+      def self.remove_edge_have_coplanar_faces(edge, faces, ignore_materials)
         return false unless edge.valid? && edge.is_a?(Sketchup::Edge)
         return false unless edge.faces.size == 2
+
+        # Check scoped faces have this edges
+        if edge.faces.size == 2
+          is_first = faces.include?(edge.faces[0])
+          is_second = faces.include?(edge.faces[1])
+          return false unless is_first && is_second
+        end
 
         face_1, face_2 = edge.faces
 
@@ -54,6 +64,7 @@ module SpeckleConnector
         edge.erase!
         true
       end
+      # rubocop:enable Metrics/AbcSize
 
       # Determines if two faces are overlapped.
       def self.face_duplicate?(face_1, face_2, overlapping: false)

@@ -59,8 +59,8 @@ module SpeckleConnector
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each { |face| face.layer = layer }
-          # Do not merge coplanar faces if they comes from already sketchup.
-          Converters::CleanUp.merge_coplanar_faces(entities) if mesh['sketchup_attributes'].nil?
+          # Merge only added faces in this scope
+          Converters::CleanUp.merge_coplanar_faces(added_faces)
           native_mesh
         end
 
