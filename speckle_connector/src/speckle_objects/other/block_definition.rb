@@ -72,7 +72,7 @@ module SpeckleConnector
           definition.layer = layer
           geometry.each { |obj| convert.call(obj, layer, definition.entities) } if geometry.is_a?(Array)
           convert.call(geometry, layer, definition.entities) unless geometry['speckle_type'].nil?
-          puts("definition finished: #{name} (#{application_id})")
+          # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition
         end
