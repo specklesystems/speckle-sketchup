@@ -48,7 +48,6 @@ module SpeckleConnector
         # 2. Initialize traversed base object that will be filled with traversed values or
         # traversed base objects as props.
         traversed_base = SpeckleObjects::Base.new(speckle_type: base[:speckle_type], id: '')
-        traversed_base.delete(:applicationId)
 
         # 3. Iterate all entries (key, value) of the base {Base > Hash} object
         speckle_state = traverse_base_props(base, traversed_base, speckle_state)
@@ -68,6 +67,9 @@ module SpeckleConnector
 
         # 6. Add total children count
         traversed_base[:totalChildrenCount] = closure.keys.length
+
+        # 6.1 Remove applicationId if it is nil
+        traversed_base.delete(:applicationId) if traversed_base[:applicationId].nil?
 
         # 7. Finally create id
         id = get_id(traversed_base)
