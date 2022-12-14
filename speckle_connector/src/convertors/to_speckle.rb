@@ -17,8 +17,17 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers to hold it's objects under the base object.
       attr_reader :layers
 
-      def initialize(sketchup_model)
+      # @return [States::State] the current state of the {App::SpeckleConnectorApp}
+      attr_reader :state
+
+      # @return [States::SpeckleState] the current speckle state of the {States::State}
+      attr_reader :speckle_state
+
+      # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
+      def initialize(sketchup_model, state)
         super(sketchup_model)
+        @state = state
+        @speckle_state = @state.speckle_state
         @layers = add_all_layers
       end
 
@@ -80,10 +89,10 @@ module SpeckleConnector
       def send_info(base)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
         # t = Time.now.to_f
-        id, _traversed = serializer.serialize(base)
+        new_speckle_state, id, _traversed = serializer.serialize(base, speckle_state)
         # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        return id, base_total_children_count, serializer.batch_objects
+        return new_speckle_state, id, base_total_children_count, serializer.batch_objects
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
