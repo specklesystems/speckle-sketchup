@@ -9,6 +9,9 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
+      # @return [ImmutableHash{Integer=>Object}]
+      attr_reader :speckle_entities
+
       # @return [Array] accounts on appdata.
       attr_reader :accounts
 
@@ -22,6 +25,7 @@ module SpeckleConnector
         @accounts = accounts
         @message_queue = queue
         @stream_queue = stream_queue
+        @speckle_entities = Immutable::EmptyHash
       end
 
       # @param callback_name [String] name of the callback command
@@ -35,6 +39,12 @@ module SpeckleConnector
 
       def with_accounts(new_accounts)
         with(:@accounts => new_accounts)
+      end
+      
+      def with_speckle_entity(traversed_entity)
+        application_id = traversed_entity[:applicationId]
+        new_speckle_entities = speckle_entities.put(application_id, traversed_entity)
+        with(speckle_entities: new_speckle_entities)
       end
     end
   end

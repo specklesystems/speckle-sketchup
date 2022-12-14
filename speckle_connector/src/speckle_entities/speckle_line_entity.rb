@@ -14,9 +14,9 @@ module SpeckleConnector
       # @return [SpeckleObjects::Geometry::Line] speckle line object
       attr_reader :speckle_object
 
-      def initialize(sketchup_model, sketchup_edge)
-        super(sketchup_model, sketchup_edge)
-        @speckle_object = SpeckleObjects::Geometry::Line.from_edge(sketchup_edge, units)
+      def initialize(sketchup_edge, traversed_speckle_object)
+        super(sketchup_edge, traversed_speckle_object)
+        @speckle_object = traversed_speckle_object
       end
 
       alias sketchup_edge sketchup_entity
