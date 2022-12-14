@@ -26,11 +26,12 @@ module SpeckleConnector
       end
 
       # @param base [Object] top base object to populate all children and their relationship
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @return [String, String] id (hash) and traversed hash
-      def serialize(base)
-        id, traversed = traverse_base(base)
+      def serialize(base, speckle_state)
+        new_speckle_state, id, traversed = traverse_base(base, speckle_state)
         @objects[id] = traversed
-        return id, traversed
+        return new_speckle_state, id, traversed
       end
 
       def total_children_count(id)
@@ -38,8 +39,9 @@ module SpeckleConnector
       end
 
       # @param base [Object] base object to populate all children and their relationship
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # rubocop:disable Metrics/MethodLength
-      def traverse_base(base)
+      def traverse_base(base, speckle_state)
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
 
@@ -49,7 +51,7 @@ module SpeckleConnector
         traversed_base.delete(:applicationId)
 
         # 3. Iterate all entries (key, value) of the base {Base > Hash} object
-        traverse_base_props(base, traversed_base)
+        speckle_state = traverse_base_props(base, traversed_base, speckle_state)
         # this is where all props are done for current `traversed_base`
 
         # 4. Get last item from detach_lineage array
@@ -79,10 +81,14 @@ module SpeckleConnector
           traversed_base[:__closure] = closure unless closure.empty?
         end
 
+        unless traversed_base[:applicationId].nil?
+          speckle_state = speckle_state.with_speckle_entity(traversed_base)
+        end
+
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
 
-        return id, traversed_base
+        return speckle_state, id, traversed_base
       end
       # rubocop:enable Metrics/MethodLength
 
@@ -91,7 +97,8 @@ module SpeckleConnector
       # rubocop:disable Metrics/BlockLength
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_base_props(base, traversed_base)
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
+      def traverse_base_props(base, traversed_base, speckle_state)
         base.each do |prop, value|
           # 3.1. Ignore nil, starts with '_' and 'id'
           next if value.nil? || prop[0] == '_' || prop == 'id' || prop == :id
@@ -145,7 +152,8 @@ module SpeckleConnector
 
             chunks.each do |chunk_element|
               @detach_lineage.append(is_prop_detach)
-              id, _traversed = traverse_base(chunk_element)
+              new_speckle_state, id, _traversed = traverse_base(chunk_element, speckle_state)
+              speckle_state = new_speckle_state
               chunk_references.append(detach_helper(id))
             end
 
@@ -156,14 +164,18 @@ module SpeckleConnector
             next
           end
 
+          new_speckle_state, child = traverse_value(value, speckle_state, is_prop_detach)
+
           # 3.6. traverse value according to value is a speckle object or not
-          if value.is_a?(Hash) && !value[:speckle_type].nil?
-            child = traverse_value(value, is_prop_detach)
-            traversed_base[prop] = is_prop_detach ? detach_helper(child[:id]) : child
-          else
-            traversed_base[prop] = traverse_value(value, is_prop_detach)
-          end
+          traversed_base[prop] = if value.is_a?(Hash) && !value[:speckle_type].nil?
+                                   is_prop_detach ? detach_helper(child[:id]) : child
+                                 else
+                                   child
+                                 end
+
+          speckle_state = new_speckle_state
         end
+        speckle_state
       end
       # rubocop:enable Metrics/MethodLength
       # rubocop:enable Metrics/AbcSize
@@ -175,37 +187,48 @@ module SpeckleConnector
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Style/OptionalBooleanParameter
-      def traverse_value(value, is_detach = false)
+      def traverse_value(value, speckle_state, is_detach = false)
         # 1. Return same value if value is primitive type (string, numeric, boolean)
-        return value unless value.is_a?(Hash) || value.is_a?(Array)
+        return speckle_state, value unless value.is_a?(Hash) || value.is_a?(Array)
 
         # 2. Arrays
         if value.is_a?(Array)
           # 2.1. If it is not detached then iterate array by traversing with their value
-          return value.collect { |el| traverse_value(el) } unless is_detach
+          unless is_detach
+            values = value.collect do |el|
+              new_speckle_state, el_value = traverse_value(el, speckle_state)
+              speckle_state = new_speckle_state
+              el_value
+            end
+            return speckle_state, values
+          end
 
           # 2.2. If it is detached than collect them into detached_list
           detached_list = []
           value.each do |el|
             if (el.is_a?(Array) || el.is_a?(Hash)) && !el[:speckle_type].nil?
               @detach_lineage.append(is_detach)
-              id, _traversed_base = traverse_base(el)
+              new_speckle_state, id, _traversed_base = traverse_base(el, speckle_state)
+              speckle_state = new_speckle_state
               detached_list.append(detach_helper(id))
             else
-              detached_list.append(traverse_value(el, is_detach))
+              new_speckle_state, el_value = traverse_value(el, is_detach)
+              speckle_state = new_speckle_state
+              detached_list.append(el_value)
             end
           end
-          return detached_list
+          return speckle_state, detached_list
         end
 
         # 3. Hash
-        return value if value[:speckle_type].nil?
+        return speckle_state, value if value[:speckle_type].nil?
 
         # 4. Base objects
         unless value[:speckle_type].nil?
           @detach_lineage.append(is_detach)
-          _id, traversed_base = traverse_base(value)
-          return traversed_base
+          new_speckle_state, _id, traversed_base = traverse_base(value, speckle_state)
+          speckle_state = new_speckle_state
+          return speckle_state, traversed_base
         end
 
         # 5. If it is not returned until here then there is unsupported type
