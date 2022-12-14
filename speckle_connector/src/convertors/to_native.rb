@@ -107,8 +107,6 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Metrics/MethodLength
-      # rubocop:disable Metrics/AbcSize
       def traverse_commit_object(obj, commit_folder, layer)
         if can_convert_to_native(obj)
           convert_to_native(obj, layer)
@@ -116,7 +114,7 @@ module SpeckleConnector
           return if ignored_speckle_type?(obj)
 
           if obj['displayValue'].nil?
-            puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
+            # puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
             props = obj.keys.filter_map { |key| key unless key.start_with?('_') }
             props.each do |prop|
               layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
@@ -124,7 +122,7 @@ module SpeckleConnector
               traverse_commit_object(obj[prop], commit_folder, layer)
             end
           else
-            puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
+            # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
             convert_to_native(obj, layer)
           end
         elsif obj.is_a?(Hash)
@@ -135,8 +133,6 @@ module SpeckleConnector
       end
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Metrics/MethodLength
-      # rubocop:enable Metrics/AbcSize
 
       # Find layer of the Speckle object by checking iteratively into folder.
       # @param layer_path [String] complete layer_path to retrieve
@@ -172,9 +168,9 @@ module SpeckleConnector
 
       # rubocop:disable Metrics/CyclomaticComplexity
       def convert_to_native(obj, layer, entities = sketchup_model.entities)
-        return display_value_to_native_component(obj, layer, entities) unless obj['displayValue'].nil?
-
         convert = method(:convert_to_native)
+        return display_value_to_native_component(obj, layer, entities, &convert) unless obj['displayValue'].nil?
+
         case obj['speckle_type']
         when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
         when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
@@ -193,14 +189,15 @@ module SpeckleConnector
       # rubocop:enable Metrics/CyclomaticComplexity
 
       # Creates a component definition and instance from a speckle object with a display value
-      def display_value_to_native_component(obj, layer, entities)
+      def display_value_to_native_component(obj, layer, entities, &convert)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
         definition = BLOCK_DEFINITION.to_native(
           sketchup_model,
           obj['displayValue'],
           layer,
           "def::#{obj_id}",
-          method(:convert_to_native)
+          obj_id,
+          &convert
         )
 
         find_and_erase_existing_instance(definition, obj_id)
