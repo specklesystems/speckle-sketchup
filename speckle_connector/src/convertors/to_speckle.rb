@@ -3,6 +3,7 @@
 require_relative 'converter'
 require_relative 'base_object_serializer'
 require_relative '../relations/many_to_one_relation'
+require_relative '../speckle_entities/speckle_entities'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/length'
@@ -30,6 +31,16 @@ module SpeckleConnector
         @speckle_state = @state.speckle_state
         @layers = add_all_layers
         @converted_relation = Relations::ManyToOneRelation.new
+      end
+
+      def traverse_selection
+        state = speckle_state
+        sketchup_model.selection.each do |selected_entity|
+          new_speckle_state, converted_object = convert(selected_entity, state)
+          state = new_speckle_state
+          layer_name = entity_layer_path(selected_entity)
+          layers[layer_name].push(converted_object)
+        end
       end
 
       # Convert selected objects by putting them into related array that grouped by layer.
@@ -92,16 +103,21 @@ module SpeckleConnector
       def send_info(base)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
         # t = Time.now.to_f
-        new_speckle_state, id, _traversed = serializer.serialize(base, speckle_state)
+        new_speckle_state, id, _traversed, _objects = serializer.serialize(base, speckle_state)
         # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
+        puts '#####################'
+        puts serializer.batch_objects
+        puts '#####################'
         return new_speckle_state, id, base_total_children_count, serializer.batch_objects
       end
 
-      def serialize(converted, speckle_state, parent)
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
+      def serialize(converted, speckle_state, parent, entity)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
-        new_speckle_state, id, _traversed = serializer.traverse_base(converted, speckle_state)
-        speckle_state = new_speckle_state
+        new_speckle_state, id, _traversed, objects = serializer.serialize(converted, speckle_state)
+        speckle_entity = SpeckleEntities.with_converted(entity, objects)
+        speckle_state = speckle_state.with_speckle_entity(speckle_entity)
         converted_relation.add(id, parent)
         return speckle_state, converted
       end
@@ -109,6 +125,7 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       def convert(entity, preferences, speckle_state parent = :base)
         convert = method(:convert)
+
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
           return serialize(line, speckle_state, parent)
@@ -128,6 +145,7 @@ module SpeckleConnector
           block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, preferences, speckle_state, &convert)
           return serialize(block_instance, speckle_state, parent)
         end
+        
         if entity.is_a?(Sketchup::ComponentDefinition)
           block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences, speckle_state, &convert)
           return serialize(block_definition, speckle_state, parent)

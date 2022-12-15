@@ -31,7 +31,7 @@ module SpeckleConnector
       def serialize(base, speckle_state)
         new_speckle_state, id, traversed = traverse_base(base, speckle_state)
         @objects[id] = traversed
-        return new_speckle_state, id, traversed
+        return new_speckle_state, id, traversed, @objects
       end
 
       def total_children_count(id)
