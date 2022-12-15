@@ -22,21 +22,23 @@ module SpeckleConnector
       attr_reader :speckle_state
 
       # @return [Relations::ManyToOneRelation] relations between objects.
-      attr_reader :relation
+      attr_reader :converted_relation
 
       def initialize(state)
         super(state.sketchup_state)
         @state = state
         @speckle_state = @state.speckle_state
         @layers = add_all_layers
-        @relation = Relations::ManyToOneRelation.new
+        @converted_relation = Relations::ManyToOneRelation.new
       end
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
+        state = speckle_state
         sketchup_model.selection.each do |entity|
-          converted_object = convert(entity, preferences)
+          new_speckle_state, converted_object = convert(entity, preferences, state)
+          state = new_speckle_state
           layer_name = entity_layer_path(entity)
           layers[layer_name].push(converted_object)
         end
@@ -96,31 +98,41 @@ module SpeckleConnector
         return new_speckle_state, id, base_total_children_count, serializer.batch_objects
       end
 
+      def serialize(converted, speckle_state, parent)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+        new_speckle_state, id, _traversed = serializer.traverse_base(converted, speckle_state)
+        speckle_state = new_speckle_state
+        converted_relation.add(id, parent)
+        return speckle_state, converted
+      end
+
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
-      def convert(entity, preferences, parent = :base)
+      def convert(entity, preferences, speckle_state parent = :base)
         convert = method(:convert)
         if entity.is_a?(Sketchup::Edge)
-          return SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          return serialize(line, speckle_state, parent)
         end
 
         if entity.is_a?(Sketchup::Face)
-          return SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          return serialize(mesh, speckle_state, parent)
         end
 
         if entity.is_a?(Sketchup::Group)
-          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, &convert)
+          block_instance = SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, speckle_state, &convert)
+          return serialize(block_instance, speckle_state, parent)
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
-          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions,
-                                                                              preferences, &convert)
+          block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, preferences, speckle_state, &convert)
+          return serialize(block_instance, speckle_state, parent)
         end
         if entity.is_a?(Sketchup::ComponentDefinition)
-          return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences,
-                                                                        &convert)
-        end
+          block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences, speckle_state, &convert)
+          return serialize(block_definition, speckle_state, parent)
 
-        nil
+        return speckle_state, nil
       end
 
       # Create layers -> {Hash{Symbol=>Array}} from sketchup model with empty array as hash entry values.
