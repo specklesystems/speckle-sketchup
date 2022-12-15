@@ -2,6 +2,7 @@
 
 require_relative 'converter'
 require_relative 'base_object_serializer'
+require_relative '../relations/many_to_one_relation'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/length'
@@ -17,18 +18,18 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers to hold it's objects under the base object.
       attr_reader :layers
 
-      # @return [States::State] the current state of the {App::SpeckleConnectorApp}
-      attr_reader :state
-
       # @return [States::SpeckleState] the current speckle state of the {States::State}
       attr_reader :speckle_state
 
-      # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
+      # @return [Relations::ManyToOneRelation] relations between objects.
+      attr_reader :relation
+
       def initialize(sketchup_model, state)
         super(sketchup_model)
         @state = state
         @speckle_state = @state.speckle_state
         @layers = add_all_layers
+        @relation = Relations::ManyToOneRelation.new
       end
 
       # Convert selected objects by putting them into related array that grouped by layer.
