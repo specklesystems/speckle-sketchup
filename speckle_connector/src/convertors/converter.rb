@@ -7,11 +7,15 @@ module SpeckleConnector
       # @return [Sketchup::Model] active sketchup model.
       attr_reader :sketchup_model
 
-      attr_accessor :units, :definitions, :registry, :entity_observer
+      # @return [String] speckle units
+      attr_reader :units
 
-      def initialize(sketchup_model)
-        @sketchup_model = sketchup_model
-        su_unit = @sketchup_model.options['UnitsOptions']['LengthUnit']
+      attr_accessor :definitions, :registry, :entity_observer
+
+      # @param sketchup_state [States::SketchupState] the current sketchup state of the {States::State}
+      def initialize(sketchup_state)
+        @sketchup_model = sketchup_state.sketchup_model
+        su_unit = sketchup_state.length_units
         @units =  Converters::SKETCHUP_UNITS[su_unit]
         @definitions = {}
         # @registry = Sketchup.active_model.attribute_dictionary("speckle_id_registry", true)

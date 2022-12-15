@@ -16,8 +16,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        sketchup_model = state.sketchup_state.sketchup_model
-        converter = Converters::ToSpeckle.new(sketchup_model, state)
+        converter = Converters::ToSpeckle.new(state)
         base = converter.convert_selection_to_base
         new_speckle_state, id, total_children_count, batches = converter.send_info(base)
         puts("converted #{base.count} objects for stream #{@stream_id}")

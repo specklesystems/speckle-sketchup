@@ -24,8 +24,8 @@ module SpeckleConnector
       # @return [Relations::ManyToOneRelation] relations between objects.
       attr_reader :relation
 
-      def initialize(sketchup_model, state)
-        super(sketchup_model)
+      def initialize(state)
+        super(state.sketchup_state)
         @state = state
         @speckle_state = @state.speckle_state
         @layers = add_all_layers
@@ -97,7 +97,7 @@ module SpeckleConnector
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
-      def convert(entity, preferences)
+      def convert(entity, preferences, parent = :base)
         convert = method(:convert)
         if entity.is_a?(Sketchup::Edge)
           return SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
