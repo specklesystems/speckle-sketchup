@@ -49,8 +49,8 @@ module SpeckleConnector
         # traversed base objects as props.
         traversed_base = SpeckleObjects::Base.new(speckle_type: base[:speckle_type], id: '')
 
-        is_sent_before = check_base_available_on_state(base, speckle_state)
-        return speckle_state, base['id'], speckle_state.speckle_entities[base[:applicationId]] if is_sent_before
+        # is_sent_before = check_base_available_on_state(base, speckle_state)
+        # return speckle_state, base['id'], speckle_state.speckle_entities[base[:applicationId]] if is_sent_before
 
         # 3. Iterate all entries (key, value) of the base {Base > Hash} object
         speckle_state = traverse_base_props(base, traversed_base, speckle_state)
