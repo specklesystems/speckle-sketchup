@@ -97,7 +97,7 @@ module SpeckleConnector
         commands = CommandParser.parse_commands(data)
         commands.each do |cmd|
           puts '### COMMAND CALLED BY DIALOG ###'
-          puts "name: #{cmd.name}, data: #{cmd.data}"
+          puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
           @commands[cmd.name].run(cmd.data)
         end
