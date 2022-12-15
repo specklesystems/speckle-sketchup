@@ -42,7 +42,7 @@ module SpeckleConnector
           return definitions[guid] if definitions.key?(guid)
 
           # TODO: Solve logic
-          geometry = if definition.entities[0].is_a?(Sketchup::Edge) | definition.entities[0].is_a?(Sketchup::Face)
+          geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
                        group_entities_to_speckle(definition, units, definitions, &convert)
                      else
                        definition.entities.map { |entity| convert.call(entity) }
@@ -71,7 +71,7 @@ module SpeckleConnector
           definition ||= sketchup_model.definitions.add(name)
           definition.layer = layer
           geometry.each { |obj| convert.call(obj, layer, definition.entities) } if geometry.is_a?(Array)
-          convert.call(geometry, layer, definition.entities) unless geometry['speckle_type'].nil?
+          convert.call(geometry, layer, definition.entities) if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition
