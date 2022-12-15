@@ -211,13 +211,13 @@ module SpeckleConnector
           # 2.2. If it is detached than collect them into detached_list
           detached_list = []
           value.each do |el|
-            if (el.is_a?(Array) || el.is_a?(Hash)) && !el[:speckle_type].nil?
+            if el.is_a?(Hash) && !el[:speckle_type].nil?
               @detach_lineage.append(is_detach)
               new_speckle_state, id, _traversed_base = traverse_base(el, speckle_state)
               speckle_state = new_speckle_state
               detached_list.append(detach_helper(id))
             else
-              new_speckle_state, el_value = traverse_value(el, is_detach)
+              new_speckle_state, el_value = traverse_value(el, speckle_state, is_detach)
               speckle_state = new_speckle_state
               detached_list.append(el_value)
             end

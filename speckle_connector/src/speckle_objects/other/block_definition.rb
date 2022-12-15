@@ -48,7 +48,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
-        def self.from_definition(definition, units, definitions, preferences, &convert)
+        def self.from_definition(definition, units, definitions, preferences, speckle_state, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 

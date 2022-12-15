@@ -9,7 +9,8 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
-      # @return [ImmutableHash{Integer=>Object}]
+      # @return [ImmutableHash{Integer=>SpeckleBaseEntity}] persistent_id of the sketchup entity and corresponding
+      #  speckle entity
       attr_reader :speckle_entities
 
       # @return [Array] accounts on appdata.
