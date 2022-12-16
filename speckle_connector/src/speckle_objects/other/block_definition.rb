@@ -48,7 +48,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
-        def self.from_definition(definition, units, definitions, preferences, speckle_state, &convert)
+        def self.from_definition(definition, units, definitions, preferences, speckle_state, parent, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
@@ -67,15 +67,24 @@ module SpeckleConnector
 
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
-                       group_entities_to_speckle(definition, units, definitions, preferences, &convert)
+                        new_speckle_state, geo = group_entities_to_speckle(
+                          definition, units, definitions, preferences, speckle_state, definition.persistent_id, &convert
+                        )
+                        speckle_state = new_speckle_state
+                        geo
                      else
                        definition.entities.map do |entity|
-                         convert.call(entity, preferences) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
+                          unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
+                            new_speckle_state, converted = convert.call(entity, preferences, speckle_state, guid.to_s)
+                            speckle_state = new_speckle_state
+                            converted
+                          end
+                          convert.call(entity, preferences) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
                        end
                      end
 
           # FIXME: Decide how to approach base point of the definition instead origin.
-          BlockDefinition.new(
+          block_definition = BlockDefinition.new(
             units: units,
             name: definition.name,
             base_point: Geometry::Point.new(0, 0, 0, units),
@@ -84,6 +93,7 @@ module SpeckleConnector
             sketchup_attributes: att,
             application_id: guid
           )
+          return speckle_state, block_definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
@@ -126,18 +136,24 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        def self.group_entities_to_speckle(definition, units, definitions, preferences, &convert)
+        def self.group_entities_to_speckle(definition, units, definitions, preferences, speckle_state, parent, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
-            Geometry::Line.from_edge(orphan_edge, units, preferences[:model])
+            new_speckle_state, converted = convert.call(orphan_edge, preferences, speckle_state, parent)
+            speckle_state = new_speckle_state
+            converted
           end
 
           nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
-            BlockInstance.from_component_instance(component_instance, units, definitions, preferences, &convert)
+            new_speckle_state, converted = convert.call(component_instance, preferences, speckle_state, parent)
+            speckle_state = new_speckle_state
+            converted
           end
 
           nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
-            BlockInstance.from_group(group, units, definitions, preferences, &convert)
+            new_speckle_state, converted = convert.call(group, preferences, speckle_state, parent)
+            speckle_state = new_speckle_state
+            converted
           end
 
           if preferences[:model][:combine_faces_by_material]

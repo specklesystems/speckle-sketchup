@@ -12,9 +12,9 @@ module SpeckleConnector
       # @return [Hash{String=>SpeckleObjects::Base}] speckle objects belongs to edge
       attr_reader :speckle_children_objects
 
-      def initialize(sketchup_edge, traversed_speckle_objects)
+      def initialize(sketchup_edge, traversed_speckle_objects, parent)
         children, speckle_object = traversed_speckle_objects.partition { |obj| obj[1][:speckle_type] == 'Speckle.Core.Models.DataChunk' }
-        super(sketchup_edge, speckle_object[0][1], children)
+        super(sketchup_edge, speckle_object[0][1], children, parent)
         @speckle_children_objects = children
       end
 

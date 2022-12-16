@@ -106,9 +106,9 @@ module SpeckleConnector
         new_speckle_state, id, _traversed, _objects = serializer.serialize(base, speckle_state)
         # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        puts '#####################'
-        puts serializer.batch_objects
-        puts '#####################'
+        # puts '#####################'
+        # puts serializer.batch_objects
+        # puts '#####################'
         return new_speckle_state, id, base_total_children_count, serializer.batch_objects
       end
 
@@ -116,14 +116,16 @@ module SpeckleConnector
       def serialize(converted, speckle_state, parent, entity)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
         new_speckle_state, id, _traversed, objects = serializer.serialize(converted, speckle_state)
-        speckle_entity = SpeckleEntities.with_converted(entity, objects)
+        speckle_entity = SpeckleEntities.with_converted(entity, objects, parent)
         speckle_state = speckle_state.with_speckle_entity(speckle_entity)
         converted_relation.add(id, parent)
         return speckle_state, converted
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
-      def convert(entity, preferences, speckle_state parent = :base)
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
+      # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
+      def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
         if entity.is_a?(Sketchup::Edge)
@@ -137,18 +139,27 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::Group)
-          block_instance = SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, speckle_state, &convert)
-          return serialize(block_instance, speckle_state, parent)
+          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_group(
+            entity, @units, @definitions, preferences, speckle_state, &convert
+          )
+          speckle_state = new_speckle_state
+          return serialize(block_instance, speckle_state, parent, entity)
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
-          block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, preferences, speckle_state, &convert)
-          return serialize(block_instance, speckle_state, parent)
+          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
+            entity, @units, @definitions, preferences, speckle_state, &convert
+          )
+          speckle_state = new_speckle_state
+          return serialize(block_instance, speckle_state, parent, entity)
         end
         
         if entity.is_a?(Sketchup::ComponentDefinition)
-          block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences, speckle_state, &convert)
-          return serialize(block_definition, speckle_state, parent)
+          new_speckle_state, block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(
+            entity, @units, @definitions, preferences, speckle_state, &convert
+          )
+          speckle_state = new_speckle_state
+          return serialize(block_definition, speckle_state, parent, entity)
 
         return speckle_state, nil
       end
