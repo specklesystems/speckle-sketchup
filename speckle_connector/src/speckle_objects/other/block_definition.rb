@@ -79,7 +79,6 @@ module SpeckleConnector
                             speckle_state = new_speckle_state
                             converted
                           end
-                          convert.call(entity, preferences) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
                        end
                      end
 
