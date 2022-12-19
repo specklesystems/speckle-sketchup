@@ -45,7 +45,8 @@ module SpeckleConnector
         @speckle_type = speckle_object[:speckle_type]
         @speckle_children_objects = children.to_h
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler
-          .write_initial_base_data(@sketchup_entity, id, speckle_type, @speckle_children_objects.keys.to_a.length, parent)
+          .write_initial_base_data(@sketchup_entity, application_id, id, speckle_type,
+                                   @speckle_children_objects.keys.to_a.length, parent)
 
         # FIXME: Understand why below condition does not match for same cases. I guess it is a typo bug.
         # unless total_children_count == speckle_children_objects.length

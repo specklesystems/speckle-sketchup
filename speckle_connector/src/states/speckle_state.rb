@@ -41,10 +41,9 @@ module SpeckleConnector
       def with_accounts(new_accounts)
         with(:@accounts => new_accounts)
       end
-      
+
       def with_speckle_entity(traversed_entity)
-        application_id = traversed_entity[:applicationId]
-        new_speckle_entities = speckle_entities.put(application_id, traversed_entity)
+        new_speckle_entities = speckle_entities.put(traversed_entity.application_id, traversed_entity)
         with(:@speckle_entities => new_speckle_entities)
       end
     end
