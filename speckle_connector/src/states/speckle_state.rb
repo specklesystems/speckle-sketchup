@@ -9,7 +9,7 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
-      # @return [Hash] accounts on appdata.
+      # @return [Array] accounts on appdata.
       attr_reader :accounts
 
       # @return [Hash] queue to send to server.
@@ -31,6 +31,10 @@ module SpeckleConnector
         next_queue_message = Callbacks::CallbackMessage.serialize(callback_name, stream_id, parameters)
         new_queue = message_queue.merge({ "#{callback_name}": next_queue_message })
         with(:@message_queue => new_queue)
+      end
+
+      def with_accounts(new_accounts)
+        with(:@accounts => new_accounts)
       end
     end
   end

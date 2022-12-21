@@ -58,10 +58,10 @@
                 {{ user.bio ? 'Bio: ' + user.bio : '' }}
               </div>
             </v-card-text>
-            <v-card-text v-if="accounts">
+            <v-card-text v-if="accounts()">
               <v-divider class="my-3" />
 
-              <div v-for="account in accounts" :key="account.id">
+              <div v-for="account in accounts()" :key="account.id">
                 <v-btn
                   v-if="account.userInfo.id != user.id"
                   rounded
@@ -82,10 +82,13 @@
         </v-menu>
       </v-app-bar>
 
-      <create-stream/>
+      <create-stream v-if="accounts().length !== 0"/>
 
-      <v-container fluid>
+      <v-container v-if="accounts().length !== 0" fluid>
         <router-view :stream-search-query="streamSearchQuery" />
+      </v-container>
+      <v-container v-else>
+        <login/>
       </v-container>
       <global-toast />
     </v-main>
@@ -97,16 +100,19 @@
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
 import { onLogin } from './vue-apollo'
-import CreateStream from "@/components/CreateStream";
+import Login from "@/views/Login";
 
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
   let uuid = localStorage.getItem('uuid')
-  if (uuid) {
-    global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] == uuid))
-  } else {
-    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+  console.log(accounts.length)
+  if (accounts.length !== 0){
+    if (uuid) {
+      global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] == uuid))
+    } else {
+      global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+    }
   }
 }
 
@@ -121,6 +127,7 @@ global.setSelectedAccount = function (account) {
 export default {
   name: 'App',
   components: {
+    Login,
     CreateStream: () => import('@/components/CreateStream'),
     GlobalToast: () => import('@/components/GlobalToast')
   },
@@ -141,9 +148,6 @@ export default {
   computed: {
     loggedIn() {
       return localStorage.getItem('SpeckleSketchup.AuthToken') !== null
-    },
-    accounts() {
-      return JSON.parse(localStorage.getItem('localAccounts'))
     }
   },
   apollo: {
@@ -167,6 +171,9 @@ export default {
     sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
+    accounts() {
+      return JSON.parse(localStorage.getItem('localAccounts'))
+    },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')

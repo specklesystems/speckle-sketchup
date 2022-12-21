@@ -8,7 +8,7 @@ const routes = [
     path: '*',
     name: 'Streams',
     component: () => import('../views/Streams.vue')
-  }
+  },
 ]
 
 const router = new VueRouter({

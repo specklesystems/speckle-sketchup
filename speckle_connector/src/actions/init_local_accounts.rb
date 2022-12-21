@@ -12,8 +12,8 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, _data)
         puts 'Initialisation of Speckle accounts requested by plugin'
-        accounts_data = Accounts.load_accounts.to_json
-        state.with_add_queue('loadAccounts', accounts_data, [])
+        accounts_data = state.speckle_state.accounts
+        state.with_add_queue('loadAccounts', accounts_data.to_json, [])
       end
     end
   end
