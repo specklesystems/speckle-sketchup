@@ -40,6 +40,10 @@ module SpeckleConnector
         new_speckle_state = speckle_state.with(:@stream_queue => {})
         with(:@speckle_state => new_speckle_state)
       end
+
+      def with_speckle_state(new_speckle_state)
+        with(:@speckle_state => new_speckle_state)
+      end
     end
   end
 end

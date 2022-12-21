@@ -61,7 +61,7 @@ export default {
   },
   computed: {
     streamsFound() {
-      return (this.streams && this.streams?.items?.length != 0) || this.savedStreams?.length !== 0
+      return (this.streams && this.streams?.items?.length !== 0) || this.savedStreams?.length !== 0
     },
     isSavedStream(streamId) {
       return this.savedStreams?.includes(streamId)
