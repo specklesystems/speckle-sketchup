@@ -16,11 +16,10 @@ module SpeckleConnector
         SPECKLE_TYPE = 'Objects.Other.BlockDefinition'
 
         # @param geometry [Object] geometric definition of the block.
-        # @param base_point [Geometry::Point] base point of the block definition.
         # @param name [String] name of the block definition.
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
-        def initialize(geometry:, base_point:, name:, units:, application_id: nil)
+        def initialize(geometry:, name:, units:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -29,7 +28,6 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:name] = name
-          self[:basePoint] = base_point
           self['@geometry'] = geometry
         end
 
@@ -54,7 +52,6 @@ module SpeckleConnector
           BlockDefinition.new(
             units: units,
             name: definition.name,
-            base_point: Geometry::Point.new(0, 0, 0, units),
             geometry: geometry,
             application_id: guid
           )
