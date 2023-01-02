@@ -176,7 +176,8 @@ module SpeckleConnector
         when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
         when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer,
                                                                              obj['name'],
-                                                                             entities,
+                                                                             obj['applicationId'],
+                                                                             obj['always_face_camera'],
                                                                              &convert)
         when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities)
         when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities)
@@ -196,6 +197,7 @@ module SpeckleConnector
           obj['displayValue'],
           layer,
           "def::#{obj_id}",
+          obj['@blockDefinition']['always_face_camera'],
           obj_id,
           &convert
         )

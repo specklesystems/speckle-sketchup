@@ -88,6 +88,7 @@ module SpeckleConnector
             block['@blockDefinition']['@geometry'],
             layer,
             block['@blockDefinition']['name'],
+            block['@blockDefinition']['always_face_camera'],
             block['@blockDefinition']['applicationId'],
             &convert
           )
