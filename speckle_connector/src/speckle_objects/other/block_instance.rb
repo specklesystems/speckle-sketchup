@@ -16,14 +16,13 @@ module SpeckleConnector
         # @param units [String] units of the block instance.
         # @param is_sketchup_group [Boolean] whether is sketchup group or not. Sketchup Groups represented as
         #  block instance on Speckle.
-        # @param bbox [Geometry::BoundingBox] bounding box of the block instance.
         # @param name [String] name of the block instance.
         # @param transform [Other::Transform] transform of the block instance.
         # @param block_definition [Other::BlockDefinition] definition of the block instance.
         # @param sketchup_attributes [Other::BlockDefinition] sketchup attributes of the block instance.
         # @param application_id [String] application id of the block instance.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, is_sketchup_group:, bbox:, name:, render_material:, transform:, block_definition:,
+        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:,
                        sketchup_attributes: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -34,7 +33,6 @@ module SpeckleConnector
           self[:units] = units
           self[:name] = name
           self[:is_sketchup_group] = is_sketchup_group
-          self[:bbox] = bbox
           self[:renderMaterial] = render_material
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes
@@ -48,7 +46,6 @@ module SpeckleConnector
             units: units,
             application_id: group.guid,
             is_sketchup_group: true,
-            bbox: Geometry::BoundingBox.from_bounds(group.bounds, units),
             name: group.name == '' ? nil : group.name,
             render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
@@ -62,7 +59,6 @@ module SpeckleConnector
             units: units,
             application_id: component_instance.guid,
             is_sketchup_group: false,
-            bbox: Geometry::BoundingBox.from_bounds(component_instance.bounds, units),
             name: component_instance.name == '' ? nil : component_instance.name,
             render_material: if component_instance.material.nil?
                                nil
