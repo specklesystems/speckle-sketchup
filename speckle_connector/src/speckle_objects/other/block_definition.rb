@@ -45,7 +45,9 @@ module SpeckleConnector
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
                        group_entities_to_speckle(definition, units, definitions, &convert)
                      else
-                       definition.entities.map { |entity| convert.call(entity) }
+                       definition.entities.map do |entity|
+                         convert.call(entity) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
+                       end
                      end
 
           # FIXME: Decide how to approach base point of the definition instead origin.
