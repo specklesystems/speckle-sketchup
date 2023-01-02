@@ -19,7 +19,7 @@ module SpeckleConnector
         # @param name [String] name of the block definition.
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
-        def initialize(geometry:, name:, units:, application_id: nil)
+        def initialize(geometry:, name:, units:, always_face_camera:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -28,6 +28,7 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:name] = name
+          self[:always_face_camera] = always_face_camera
           self['@geometry'] = geometry
         end
 
@@ -53,6 +54,7 @@ module SpeckleConnector
             units: units,
             name: definition.name,
             geometry: geometry,
+            always_face_camera: definition.behavior.always_face_camera?,
             application_id: guid
           )
         end
@@ -62,7 +64,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.to_native(sketchup_model, geometry, layer, name, application_id = '', &convert)
+        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, application_id = '', &convert)
           definition = sketchup_model.definitions[name]
           return definition if definition && (definition.name == name || definition.guid == application_id)
 
@@ -73,6 +75,7 @@ module SpeckleConnector
           convert.call(geometry, layer, definition.entities) if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
+          definition.behavior.always_face_camera = always_face_camera
           definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity
