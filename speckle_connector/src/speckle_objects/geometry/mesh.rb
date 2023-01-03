@@ -65,12 +65,16 @@ module SpeckleConnector
         end
 
         # @param face [Sketchup::Face] face to convert mesh
+        # rubocop:disable Style/MultilineTernaryOperator
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.from_face(face, units)
           mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
           Mesh.new(
             units: units,
-            render_material: face.material.nil? ? nil : Other::RenderMaterial.from_material(face.material),
+            render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
+                                                          .from_material(face.material || face.back_material),
             bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
             vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
             faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
@@ -78,6 +82,9 @@ module SpeckleConnector
             sketchup_attributes: { is_soften: has_any_soften_edge }
           )
         end
+        # rubocop:enable Style/MultilineTernaryOperator
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
 
         # get a flat array of vertices from a list of sketchup vertices
         def self.face_vertices_to_array(face, units)
