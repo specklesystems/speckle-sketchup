@@ -92,11 +92,15 @@ module SpeckleConnector
             BlockInstance.from_component_instance(component_instance, units, definitions, &convert)
           end
 
+          nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
+            BlockInstance.from_group(group, units, definitions, &convert)
+          end
+
           meshes = definition.entities.grep(Sketchup::Face).collect do |face|
             Geometry::Mesh.from_face(face, units)
           end
 
-          lines + nested_blocks + meshes
+          lines + nested_blocks + nested_groups + meshes
         end
 
         # rubocop:disable Metrics/AbcSize
