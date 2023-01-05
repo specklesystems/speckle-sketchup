@@ -60,7 +60,7 @@ jobs:
     steps:
       - run:
           name: Clone
-          command: git clone https://$GITHUB_TOKEN@github.com/specklesystems/speckle-sharp-ci-tools.git speckle-sharp-ci-tools
+          command: git clone https://$GH_TOKEN@github.com/specklesystems/speckle-sharp-ci-tools.git speckle-sharp-ci-tools
       - persist_to_workspace:
           root: ./
           paths:
