@@ -76,8 +76,10 @@ module SpeckleConnector
           end
           edges.each do |edge|
             edge.layer = layer
-            SketchupModel::Dictionary::DictionaryHandler
-              .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
+            unless line['sketchup_attributes'].nil?
+              SketchupModel::Dictionary::DictionaryHandler
+                .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
+            end
           end
         end
         # rubocop:enable Metrics/AbcSize

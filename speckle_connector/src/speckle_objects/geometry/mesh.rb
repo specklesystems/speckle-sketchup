@@ -63,8 +63,10 @@ module SpeckleConnector
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each do |face|
             face.layer = layer
-            SketchupModel::Dictionary::DictionaryHandler
-              .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
+            unless mesh['sketchup_attributes'].nil?
+              SketchupModel::Dictionary::DictionaryHandler
+                .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
+            end
           end
           # Merge only added faces in this scope
           Converters::CleanUp.merge_coplanar_faces(added_faces) if model_preferences[:merge_coplanar_faces]
