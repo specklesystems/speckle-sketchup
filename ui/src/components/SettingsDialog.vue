@@ -39,6 +39,7 @@
 </template>
 
 <script>
+/*global sketchup*/
 import {bus} from "@/main";
 
 export default {
@@ -64,6 +65,10 @@ export default {
   methods: {
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
+      sketchup.exec({
+        name: "preference_updated",
+        data: {preference_hash: "configDUI", preference: "DarkTheme", value: this.$vuetify.theme.dark}
+      })
       localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
       this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
     },

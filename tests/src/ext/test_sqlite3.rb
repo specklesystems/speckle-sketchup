@@ -9,7 +9,6 @@ module SpeckleConnector
     TABLE_NAME = "sketchup_test"
     TABLE_COLUMNS = "(hash TEXT PRIMARY KEY NOT NULL, content TEXT NOT NULL);"
     INSERT_DATA = "('oguzhan', 'koral');"
-    INSERT_DATA_2 = "('oguzhan', 'koral2');"
 
     def setup
       # Do nothing
