@@ -27,21 +27,21 @@
         <v-divider class="mb-2"/>
         <v-switch
             v-model="combineFacesByMaterial"
-            class="pt-1 ma-0"
+            class="pt-1 mt-n2 mb-n2"
             :label="'Combine faces by material under mesh'"
-        ></v-switch>
+        />
         <v-switch
             v-model="includeAttributes"
-            class="pt-1 ma-0"
+            class="pt-1 my-n5"
             :label="'Include entity attributes'"
-        ></v-switch>
+        />
         <div class="sm1 mt-3">Receive Strategy</div>
         <v-divider class="mb-2"/>
         <v-switch
             v-model="mergeCoplanarFaces"
-            class="pt-1 ma-0"
+            class="pt-1 mt-n2 mb-n2"
             :label="'Merge co-planar faces on receive'"
-        ></v-switch>
+        />
 
       </v-container>
 
