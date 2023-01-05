@@ -97,6 +97,7 @@ workflows:
   build-and-deploy:
     jobs:
       - get-ci-tools:
+          context: github-dev-bot
           filters:
             tags:
               only: /.*/
