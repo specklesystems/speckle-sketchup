@@ -100,11 +100,14 @@ import userQuery from './graphql/user.gql'
 import { onLogin } from './vue-apollo'
 import Login from "@/views/Login";
 
+global.collectPreferences = function (preferences) {
+  bus.$emit('update-preferences', preferences)
+}
+
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
   let uuid = localStorage.getItem('uuid')
-  console.log(accounts.length)
   if (accounts.length !== 0){
     if (uuid) {
       global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] == uuid))
@@ -166,20 +169,19 @@ export default {
       if (!this.user) this.$apollo.queries.user.refetch()
     })
 
-    this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
+    bus.$on('update-preferences', async (preferences) => {
+      let prefs = JSON.parse(preferences)
+      this.$vuetify.theme.dark = prefs.user.dark_theme
+    })
+
+    sketchup.exec({name: "collect_preferences", data: {}})
+    // this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
     sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
+
     accounts() {
       return JSON.parse(localStorage.getItem('localAccounts'))
-    },
-    switchTheme() {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark
-      localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
-      this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
-    },
-    settingsDialog(){
-
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })

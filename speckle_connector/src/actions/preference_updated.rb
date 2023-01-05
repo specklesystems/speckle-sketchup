@@ -39,6 +39,9 @@ module SpeckleConnector
         # Update entry unless equal old to new
         db.exec("UPDATE 'objects' SET content = '#{data_hash.to_json}' WHERE hash = '#{@preference_hash}'")
 
+        # Close db when process done
+        db.close
+
         state
       end
     end

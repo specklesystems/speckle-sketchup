@@ -14,6 +14,10 @@ module SpeckleConnector
       def initialize(preferences)
         @preferences = preferences
       end
+
+      def with_preferences(new_preferences)
+        with(:@preferences => new_preferences)
+      end
     end
   end
 end
