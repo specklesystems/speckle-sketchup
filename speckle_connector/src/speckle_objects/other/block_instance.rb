@@ -5,6 +5,7 @@ require_relative 'transform'
 require_relative 'block_definition'
 require_relative '../base'
 require_relative '../geometry/bounding_box'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -42,7 +43,11 @@ module SpeckleConnector
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, component_defs, preferences, &convert)
-          dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(group)
+          dictionaries = {}
+          if preferences[:model][:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(group)
+          end
+          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           BlockInstance.new(
             units: units,
             is_sketchup_group: true,
@@ -51,15 +56,20 @@ module SpeckleConnector
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: BlockDefinition.from_definition(group.definition, units, component_defs,
                                                               preferences, &convert),
-            sketchup_attributes: { dictionaries: dictionaries },
+            sketchup_attributes: att,
             application_id: group.guid
           )
         end
 
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
+        # rubocop:disable Metrics/MethodLength
         def self.from_component_instance(component_instance, units, component_defs, preferences, &convert)
-          dictionaries = SketchupModel::Dictionary::DictionaryHandler
-                         .attribute_dictionaries_to_speckle(component_instance)
+          dictionaries = {}
+          if preferences[:model][:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler
+                           .attribute_dictionaries_to_speckle(component_instance)
+          end
+          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           BlockInstance.new(
             units: units,
             is_sketchup_group: false,
@@ -72,10 +82,11 @@ module SpeckleConnector
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: BlockDefinition.from_definition(component_instance.definition, units, component_defs,
                                                               preferences, &convert),
-            sketchup_attributes: { dictionaries: dictionaries },
+            sketchup_attributes: att,
             application_id: component_instance.guid
           )
         end
+        # rubocop:enable Metrics/MethodLength
 
         # Creates a component instance from a block
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.

@@ -5,6 +5,7 @@ require_relative 'point'
 require_relative 'bounding_box'
 require_relative '../base'
 require_relative '../primitive/interval'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -20,7 +21,7 @@ module SpeckleConnector
         # @param units [String] units of the speckle line.
         # @param application_id [String, nil] entity id of the {Sketchup::Edge} that represents to the speckle line.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(start_pt:, end_pt:, domain:, bbox:, units:, application_id: nil)
+        def initialize(start_pt:, end_pt:, domain:, bbox:, units:, sketchup_attributes: {}, application_id: nil)
           super(
               speckle_type: 'Objects.Geometry.Line',
               total_children_count: 0,
@@ -32,11 +33,17 @@ module SpeckleConnector
           self[:domain] = domain
           self[:bbox] = bbox
           self[:units] = units
+          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
         # @param edge [Sketchup::Edge] edge to convert line.
-        def self.from_edge(edge, units)
+        def self.from_edge(edge, units, model_preferences)
+          dictionaries = {}
+          if model_preferences[:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
+          end
+          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
           end_pt = Geometry::Point.from_vertex(edge.end.position, units)
           domain = Primitive::Interval.from_numeric(0, Float(edge.length), units)
@@ -46,8 +53,9 @@ module SpeckleConnector
             end_pt: end_pt,
             domain: domain,
             bbox: bbox,
-            application_id: edge.persistent_id.to_s,
-            units: units
+            units: units,
+            sketchup_attributes: att,
+            application_id: edge.persistent_id.to_s
           )
         end
 
@@ -66,7 +74,11 @@ module SpeckleConnector
             end_pt = Point.to_native(line['end']['x'], line['end']['y'], line['end']['z'], line['units'])
             edges = entities.add_edges(start_pt, end_pt)
           end
-          edges.each { |edge| edge.layer = layer }
+          edges.each do |edge|
+            edge.layer = layer
+            SketchupModel::Dictionary::DictionaryHandler
+              .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
+          end
         end
         # rubocop:enable Metrics/AbcSize
 

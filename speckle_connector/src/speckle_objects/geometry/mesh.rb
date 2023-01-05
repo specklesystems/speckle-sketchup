@@ -4,6 +4,7 @@ require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
 require_relative '../../convertors/clean_up'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -76,8 +77,11 @@ module SpeckleConnector
         # rubocop:disable Style/MultilineTernaryOperator
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        def self.from_face(face, units)
-          dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
+        def self.from_face(face, units, model_preferences)
+          dictionaries = {}
+          if model_preferences[:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
+          end
           mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }

@@ -7,6 +7,7 @@ require_relative '../base'
 require_relative '../geometry/point'
 require_relative '../geometry/mesh'
 require_relative '../geometry/bounding_box'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -41,11 +42,15 @@ module SpeckleConnector
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/MethodLength
         def self.from_definition(definition, units, definitions, preferences, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
-          dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+          dictionaries = {}
+          if preferences[:model][:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+          end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
 
           # TODO: Solve logic
@@ -69,6 +74,7 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
+        # rubocop:enable Metrics/MethodLength
 
         # Finds or creates a component definition from the geometry and the given name
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
@@ -105,7 +111,7 @@ module SpeckleConnector
         def self.group_entities_to_speckle(definition, units, definitions, preferences, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
-            Geometry::Line.from_edge(orphan_edge, units)
+            Geometry::Line.from_edge(orphan_edge, units, preferences[:model])
           end
 
           nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
@@ -125,7 +131,7 @@ module SpeckleConnector
             lines + nested_blocks + nested_groups + mesh_groups.values
           else
             meshes = definition.entities.grep(Sketchup::Face).collect do |face|
-              Geometry::Mesh.from_face(face, units)
+              Geometry::Mesh.from_face(face, units, preferences[:model])
             end
 
             lines + nested_blocks + nested_groups + meshes
