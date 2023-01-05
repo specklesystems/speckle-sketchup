@@ -182,6 +182,7 @@ module SpeckleConnector
                                                                              obj['name'],
                                                                              obj['always_face_camera'],
                                                                              model_preferences,
+                                                                             obj['sketchup_attributes'],
                                                                              obj['applicationId'],
                                                                              &convert)
         when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities, model_preferences)
@@ -206,6 +207,7 @@ module SpeckleConnector
           "def::#{obj_id}",
           obj['@blockDefinition']['always_face_camera'],
           model_preferences,
+          obj['@blockDefinition']['sketchup_attributes'],
           obj_id,
           &convert
         )

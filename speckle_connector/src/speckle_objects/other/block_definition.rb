@@ -76,7 +76,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
         def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, model_preferences,
-                           application_id = '', &convert)
+                           sketchup_attributes, application_id = '', &convert)
           definition = sketchup_model.definitions[name]
           return definition if definition && (definition.name == name || definition.guid == application_id)
 
@@ -90,6 +90,8 @@ module SpeckleConnector
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
+          SketchupModel::Dictionary::DictionaryHandler
+            .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
           definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity

@@ -15,7 +15,8 @@ module SpeckleConnector
           return dictionaries if entity.attribute_dictionaries.nil?
 
           entity.attribute_dictionaries.each do |att_dict|
-            dictionaries[att_dict.name] = att_dict.to_h.to_json unless att_dict.name == 'Speckle_Base_Object'
+            dict_name = att_dict == '' ? 'empty_dictionary_name' : att_dict.name
+            dictionaries[dict_name] = att_dict.to_h.to_json unless att_dict.name == 'Speckle_Base_Object'
           end
           dictionaries
         end
@@ -25,6 +26,7 @@ module SpeckleConnector
           return if dictionaries.nil?
 
           dictionaries.each do |dict_name, entries|
+            dict_name = dict_name == 'empty_dictionary_name' ? '' : dict_name
             JSON.parse(entries).each do |key, value|
               entity.set_attribute(dict_name, key, value)
             end

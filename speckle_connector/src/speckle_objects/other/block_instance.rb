@@ -97,6 +97,7 @@ module SpeckleConnector
             block['@blockDefinition']['name'],
             block['@blockDefinition']['always_face_camera'],
             model_preferences,
+            block['@blockDefinition']['sketchup_attributes'],
             block['@blockDefinition']['applicationId'],
             &convert
           )
