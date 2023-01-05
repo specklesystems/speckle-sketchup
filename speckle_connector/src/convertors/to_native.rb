@@ -167,17 +167,22 @@ module SpeckleConnector
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/MethodLength
       def convert_to_native(obj, layer, model_preferences, entities = sketchup_model.entities)
         convert = method(:convert_to_native)
-        return display_value_to_native_component(obj, layer, entities, &convert) unless obj['displayValue'].nil?
+        unless obj['displayValue'].nil?
+          return display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
+        end
 
         case obj['speckle_type']
         when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
-        when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities, &convert)
+        when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities,
+                                                                         model_preferences, &convert)
         when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer,
                                                                              obj['name'],
-                                                                             obj['applicationId'],
                                                                              obj['always_face_camera'],
+                                                                             model_preferences,
+                                                                             obj['applicationId'],
                                                                              &convert)
         when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities, model_preferences)
         when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities,
@@ -189,9 +194,10 @@ module SpeckleConnector
         nil
       end
       # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/MethodLength
 
       # Creates a component definition and instance from a speckle object with a display value
-      def display_value_to_native_component(obj, layer, entities, &convert)
+      def display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
         definition = BLOCK_DEFINITION.to_native(
           sketchup_model,
@@ -199,6 +205,7 @@ module SpeckleConnector
           layer,
           "def::#{obj_id}",
           obj['@blockDefinition']['always_face_camera'],
+          model_preferences,
           obj_id,
           &convert
         )

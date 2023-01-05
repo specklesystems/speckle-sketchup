@@ -19,7 +19,8 @@ module SpeckleConnector
         # @param name [String] name of the block definition.
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
-        def initialize(geometry:, name:, units:, always_face_camera:, application_id: nil)
+        # rubocop:disable Metrics/ParameterLists
+        def initialize(geometry:, name:, units:, always_face_camera:, sketchup_attributes: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -29,23 +30,30 @@ module SpeckleConnector
           self[:units] = units
           self[:name] = name
           self[:always_face_camera] = always_face_camera
+          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           self['@geometry'] = geometry
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param definition [Sketchup::ComponentDefinition] component definition might be belong to group or component
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.from_definition(definition, units, definitions, preferences, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
+
+          dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
 
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
                        group_entities_to_speckle(definition, units, definitions, preferences, &convert)
                      else
                        definition.entities.map do |entity|
-                         convert.call(entity) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
+                         convert.call(entity, preferences) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
                        end
                      end
 
@@ -55,23 +63,29 @@ module SpeckleConnector
             name: definition.name,
             geometry: geometry,
             always_face_camera: definition.behavior.always_face_camera?,
+            sketchup_attributes: att,
             application_id: guid
           )
         end
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
 
         # Finds or creates a component definition from the geometry and the given name
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, application_id = '', &convert)
+        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, model_preferences,
+                           application_id = '', &convert)
           definition = sketchup_model.definitions[name]
           return definition if definition && (definition.name == name || definition.guid == application_id)
 
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(name)
           definition.layer = layer
-          geometry.each { |obj| convert.call(obj, layer, definition.entities) } if geometry.is_a?(Array)
+          if geometry.is_a?(Array)
+            geometry.each { |obj| convert.call(obj, layer, model_preferences, definition.entities) }
+          end
           convert.call(geometry, layer, definition.entities) if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")

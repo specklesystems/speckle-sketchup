@@ -34,11 +34,13 @@ module SpeckleConnector
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:'@(31250)faceEdgeFlags'] = face_edge_flags
-          self[:sketchup_attributes] = sketchup_attributes
+          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
         # @param entities [Sketchup::Entities] entities to add
+        # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/AbcSize
         def self.to_native(sketchup_model, mesh, layer, entities, model_preferences)
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh)
@@ -58,19 +60,28 @@ module SpeckleConnector
           material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
-          added_faces.each { |face| face.layer = layer }
+          added_faces.each do |face|
+            face.layer = layer
+            SketchupModel::Dictionary::DictionaryHandler
+              .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
+          end
           # Merge only added faces in this scope
           Converters::CleanUp.merge_coplanar_faces(added_faces) if model_preferences[:merge_coplanar_faces]
           native_mesh
         end
+        # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/AbcSize
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         def self.from_face(face, units)
+          dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
           mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
+          att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
+                  : { is_soften: has_any_soften_edge }
           Mesh.new(
             units: units,
             render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
@@ -79,7 +90,7 @@ module SpeckleConnector
             vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
             faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
             face_edge_flags: mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
-            sketchup_attributes: { is_soften: has_any_soften_edge }
+            sketchup_attributes: att
           )
         end
         # rubocop:enable Style/MultilineTernaryOperator
