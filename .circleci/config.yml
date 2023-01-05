@@ -63,7 +63,9 @@ jobs:
             - "03:2e:ee:4f:14:67:2b:88:32:e8:cc:f0:cb:df:92:29"
       - run:
           name: I know Github as a host
-          command: ssh-keyscan github.com > ~/.ssh/known_hosts
+          command: |
+            touch ~/.ssh/known_hosts
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run:
           name: Clone
           command: git clone git@github.com:specklesystems/speckle-sharp-ci-tools.git speckle-sharp-ci-tools
