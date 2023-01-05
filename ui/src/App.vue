@@ -144,7 +144,8 @@ export default {
       streamSearchQuery: null,
       createNewStreamDialog: false,
       createStreamByIdDialog: false,
-      createStreamByIdText: ""
+      createStreamByIdText: "",
+      preferences: {}
     }
   },
   computed: {
@@ -171,7 +172,8 @@ export default {
 
     bus.$on('update-preferences', async (preferences) => {
       let prefs = JSON.parse(preferences)
-      this.$vuetify.theme.dark = prefs.user.dark_theme
+      this.preferences = prefs
+      this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
 
     sketchup.exec({name: "collect_preferences", data: {}})
