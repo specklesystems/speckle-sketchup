@@ -36,13 +36,13 @@ module SpeckleConnector
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
-        def self.from_definition(definition, units, definitions, &convert)
+        def self.from_definition(definition, units, definitions, preferences, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
-                       group_entities_to_speckle(definition, units, definitions, &convert)
+                       group_entities_to_speckle(definition, units, definitions, preferences, &convert)
                      else
                        definition.entities.map do |entity|
                          convert.call(entity) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
@@ -82,31 +82,40 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
 
-        def self.group_entities_to_speckle(definition, units, definitions, &convert)
+        def self.group_entities_to_speckle(definition, units, definitions, preferences, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
             Geometry::Line.from_edge(orphan_edge, units)
           end
 
           nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
-            BlockInstance.from_component_instance(component_instance, units, definitions, &convert)
+            BlockInstance.from_component_instance(component_instance, units, definitions, preferences, &convert)
           end
 
           nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
-            BlockInstance.from_group(group, units, definitions, &convert)
+            BlockInstance.from_group(group, units, definitions, preferences, &convert)
           end
 
-          meshes = definition.entities.grep(Sketchup::Face).collect do |face|
-            Geometry::Mesh.from_face(face, units)
-          end
+          if preferences[:model][:combine_faces_by_material]
+            mesh_groups = {}
+            definition.entities.grep(Sketchup::Face).collect do |face|
+              group_meshes_by_material(definition, face, mesh_groups, units, preferences[:model])
+            end
 
-          lines + nested_blocks + nested_groups + meshes
+            lines + nested_blocks + nested_groups + mesh_groups.values
+          else
+            meshes = definition.entities.grep(Sketchup::Face).collect do |face|
+              Geometry::Mesh.from_face(face, units)
+            end
+
+            lines + nested_blocks + nested_groups + meshes
+          end
         end
 
         # rubocop:disable Metrics/AbcSize
-        def self.group_meshes_by_material(definition, face, mat_groups, units)
+        def self.group_meshes_by_material(definition, face, mat_groups, units, model_preferences)
           # convert material
-          mat_id = face.material.nil? ? 'none' : face.material.entityID
+          mat_id = get_mesh_group_id(face, model_preferences)
           mat_groups[mat_id] = initialise_group_mesh(face, definition.bounds, units) unless mat_groups.key?(mat_id)
           mat_group = mat_groups[mat_id]
           if face.loops.size > 1
@@ -136,6 +145,20 @@ module SpeckleConnector
           )
           mesh[:pt_count] = 0
           mesh
+        end
+
+        # Mesh group id helps to determine how to group faces into meshes.
+        # @param face [Sketchup::Face] face to get mesh group id.
+        def self.get_mesh_group_id(face, model_preferences)
+          if model_preferences[:include_entity_attributes]
+            has_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
+            return face.persistent_id.to_s if has_attribute_dictionary
+          end
+
+          material = face.material || face.back_material
+          return 'none' if material.nil?
+
+          return material.entityID.to_s
         end
       end
     end

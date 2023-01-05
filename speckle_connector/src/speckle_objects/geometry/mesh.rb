@@ -39,7 +39,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/ParameterLists
 
         # @param entities [Sketchup::Entities] entities to add
-        def self.to_native(sketchup_model, mesh, layer, entities)
+        def self.to_native(sketchup_model, mesh, layer, entities, model_preferences)
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh)
           smooth_flags = is_soften ? 4 : 1
@@ -60,7 +60,7 @@ module SpeckleConnector
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each { |face| face.layer = layer }
           # Merge only added faces in this scope
-          Converters::CleanUp.merge_coplanar_faces(added_faces)
+          Converters::CleanUp.merge_coplanar_faces(added_faces) if model_preferences[:merge_coplanar_faces]
           native_mesh
         end
 

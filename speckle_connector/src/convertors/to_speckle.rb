@@ -22,9 +22,9 @@ module SpeckleConnector
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
-      def convert_selection_to_base
+      def convert_selection_to_base(preferences)
         sketchup_model.selection.each do |entity|
-          converted_object = convert(entity)
+          converted_object = convert(entity, preferences)
           layer_name = entity_layer_path(entity)
           layers[layer_name].push(converted_object)
         end
@@ -46,18 +46,18 @@ module SpeckleConnector
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
-      def convert(entity)
+      def convert(entity, preferences)
         convert = method(:convert)
         return SpeckleObjects::Geometry::Line.from_edge(entity, @units).to_h if entity.is_a?(Sketchup::Edge)
         return SpeckleObjects::Geometry::Mesh.from_face(entity, @units) if entity.is_a?(Sketchup::Face)
         if entity.is_a?(Sketchup::Group)
-          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, &convert)
+          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, &convert)
         end
         if entity.is_a?(Sketchup::ComponentInstance)
-          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, &convert)
+          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions, preferences, &convert)
         end
         if entity.is_a?(Sketchup::ComponentDefinition)
-          return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, &convert)
+          return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences, &convert)
         end
 
         nil

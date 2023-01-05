@@ -17,20 +17,29 @@
       </v-card-title>
       <v-container class="px-6" pb-0>
         <!-- Switch Theme -->
+        <div class="sm1 mt-3">User Preferences</div>
+        <v-divider class="mb-2"/>
         <v-btn icon small class="mx-1" @click="switchTheme">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
         <span>Color Mode</span>
-        <v-switch class="pt-1 mt-0"
+        <div class="sm1 mt-3">Send Strategy</div>
+        <v-divider class="mb-2"/>
+        <v-switch
             v-model="combineFacesByMaterial"
+            class="pt-1 ma-0"
             :label="'Combine faces by material under mesh'"
         ></v-switch>
-        <v-switch class="pt-1 mt-0"
+        <v-switch
             v-model="includeAttributes"
+            class="pt-1 ma-0"
             :label="'Include entity attributes'"
         ></v-switch>
-        <v-switch class="pt-1 mt-0"
+        <div class="sm1 mt-3">Receive Strategy</div>
+        <v-divider class="mb-2"/>
+        <v-switch
             v-model="mergeCoplanarFaces"
+            class="pt-1 ma-0"
             :label="'Merge co-planar faces on receive'"
         ></v-switch>
 
@@ -133,4 +142,5 @@ export default {
 </script>
 
 <style>
+
 </style>
