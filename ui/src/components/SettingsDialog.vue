@@ -21,6 +21,18 @@
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
         <span>Color Mode</span>
+        <v-switch class="pt-1 mt-0"
+            v-model="combineFacesByMaterial"
+            :label="'Combine faces by material under mesh'"
+        ></v-switch>
+        <v-switch class="pt-1 mt-0"
+            v-model="includeAttributes"
+            :label="'Include entity attributes'"
+        ></v-switch>
+        <v-switch class="pt-1 mt-0"
+            v-model="mergeCoplanarFaces"
+            :label="'Merge co-planar faces on receive'"
+        ></v-switch>
 
       </v-container>
 
@@ -44,29 +56,70 @@ import {bus} from "@/main";
 
 export default {
   name: "ShowSettings",
+  props: {
+    preferences: {
+      type: Object,
+      default: null
+    }
+  },
   data() {
     return {
       showSettings: false,
       streamName: "",
       description: "",
+      combineFacesByMaterial: this.preferences.model.combine_faces_by_material,
+      includeAttributes: this.preferences.model.include_entity_attributes,
+      mergeCoplanarFaces: this.preferences.model.merge_coplanar_faces,
     }
   },
   watch: {
     'showSettings': {
-      handler(newValue, oldValue) {
+      handler(newValue) {
         if (newValue){
-          console.log("mix panel triggered when dialog opened")
           this.$mixpanel.track('Connector Action', { name: 'Open Settings Dialog' })
         }
+      },
+      deep: true
+    },
+    'combineFacesByMaterial': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "combine_faces_by_material", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Combine Faces By Material Option' })
+      },
+      deep: true
+    },
+    'includeAttributes': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "include_entity_attributes", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Include Entity Attributes Option' })
+      },
+      deep: true
+    },
+    'mergeCoplanarFaces': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "merge_coplanar_faces", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Merge Co-Planar Faces Option' })
       },
       deep: true
     }
   },
   methods: {
+    combineFacesByMaterialHandler() {
+
+    },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       sketchup.exec({
-        name: "preference_updated",
+        name: "user_preferences_updated",
         data: {preference_hash: "configDUI", preference: "DarkTheme", value: this.$vuetify.theme.dark}
       })
       this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })

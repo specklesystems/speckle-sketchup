@@ -8,7 +8,7 @@ require_relative '../constants/path_constants'
 module SpeckleConnector
   module Actions
     # When preference updated by UI.
-    class PreferenceUpdated < Action
+    class UserPreferencesUpdated < Action
       def initialize(pref_hash, pref, value)
         super()
         @preference_hash = pref_hash
@@ -42,7 +42,11 @@ module SpeckleConnector
         # Close db when process done
         db.close
 
-        state
+        user = state.user_state.preferences[:user].dup
+        user[@preference.to_sym] = @value
+        new_preferences = state.user_state.preferences.put(:user, user)
+        new_user_state = state.user_state.with_preferences(new_preferences)
+        state.with_user_state(new_user_state)
       end
     end
   end

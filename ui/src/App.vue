@@ -24,7 +24,7 @@
         <v-btn icon small class="mx-1" @click="requestRefresh">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
-        <settings-dialog/>
+        <settings-dialog :preferences="preferences"/>
         <v-menu v-if="loggedIn" bottom min-width="200px" rounded offset-y>
           <template #activator="{ on, attrs }">
             <v-btn class="ml-1" icon x-large v-on="on">

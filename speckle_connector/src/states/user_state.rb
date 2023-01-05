@@ -8,7 +8,7 @@ module SpeckleConnector
     class UserState
       include Immutable::ImmutableUtils
 
-      # @return [Hash{Symbol => Object}] user specific preferences
+      # @return [ImmutableHash{Symbol => Object}] user specific preferences
       attr_reader :preferences
 
       def initialize(preferences)

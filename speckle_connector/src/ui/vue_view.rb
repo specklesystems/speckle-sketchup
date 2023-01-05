@@ -11,7 +11,8 @@ require_relative '../commands/dialog_ready'
 require_relative '../commands/save_stream'
 require_relative '../commands/remove_stream'
 require_relative '../commands/notify_connected'
-require_relative '../commands/preference_updated'
+require_relative '../commands/user_preferences_updated'
+require_relative '../commands/model_preferences_updated'
 
 require_relative '../actions/reload_accounts'
 require_relative '../actions/load_saved_streams'
@@ -64,7 +65,8 @@ module SpeckleConnector
           remove_stream: Commands::RemoveStream.new(@app),
           notify_connected: Commands::NotifyConnected.new(@app),
           collect_preferences: Commands::ActionCommand.new(@app, Actions::CollectPreferences),
-          preference_updated: Commands::PreferenceUpdated.new(@app)
+          user_preferences_updated: Commands::UserPreferencesUpdated.new(@app),
+          model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app)
         }.freeze
       end
     end
