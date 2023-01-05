@@ -41,7 +41,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/ParameterLists
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
-        def self.from_group(group, units, component_defs, &convert)
+        def self.from_group(group, units, component_defs, preferences, &convert)
           BlockInstance.new(
             units: units,
             application_id: group.guid,
@@ -49,12 +49,13 @@ module SpeckleConnector
             name: group.name == '' ? nil : group.name,
             render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
-            block_definition: BlockDefinition.from_definition(group.definition, units, component_defs, &convert)
+            block_definition: BlockDefinition.from_definition(group.definition, units, component_defs,
+                                                              preferences, &convert)
           )
         end
 
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
-        def self.from_component_instance(component_instance, units, component_defs, &convert)
+        def self.from_component_instance(component_instance, units, component_defs, preferences, &convert)
           BlockInstance.new(
             units: units,
             application_id: component_instance.guid,
@@ -67,7 +68,7 @@ module SpeckleConnector
                              end,
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: BlockDefinition.from_definition(component_instance.definition, units, component_defs,
-                                                              &convert)
+                                                              preferences, &convert)
           )
         end
 
@@ -123,12 +124,6 @@ module SpeckleConnector
         # (and optionally the applicationId)
         def self.find_and_erase_existing_instance(definition, name, app_id = '')
           definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
-        end
-
-        private
-
-        def attribute_types
-          ATTRIBUTE_TYPES
         end
       end
     end

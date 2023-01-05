@@ -5,6 +5,7 @@ require_relative '../states/state'
 require_relative '../states/speckle_state'
 require_relative '../states/sketchup_state'
 require_relative '../accounts/accounts'
+require_relative '../preferences/preferences'
 
 module SpeckleConnector
   module Actions
@@ -17,7 +18,9 @@ module SpeckleConnector
         speckle_state = States::SpeckleState.new(accounts, {}, {})
         # This should be the only point that `Sketchup_active_model` passed to application state.
         sketchup_state = States::SketchupState.new(Sketchup.active_model)
-        States::State.new(state.user_state, speckle_state, sketchup_state, false)
+        preferences = Preferences.init_preferences(sketchup_state.sketchup_model)
+        user_state_with_preferences = state.user_state.with_preferences(preferences)
+        States::State.new(user_state_with_preferences, speckle_state, sketchup_state, false)
       end
     end
   end

@@ -46,12 +46,12 @@ module SpeckleConnector
       end
 
       # @param obj [Object] speckle commit object.
-      def receive_commit_object(obj)
+      def receive_commit_object(obj, model_preferences)
         # First create layers on the sketchup before starting traversing
         create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, sketchup_model.layers)
         # Define default commit layer which is the fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, model_preferences)
       end
 
       # Create actual Sketchup layers from layer_paths that taken from Speckle base object.
@@ -107,9 +107,9 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, commit_folder, layer)
+      def traverse_commit_object(obj, commit_folder, layer, model_preferences)
         if can_convert_to_native(obj)
-          convert_to_native(obj, layer)
+          convert_to_native(obj, layer, model_preferences)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -119,16 +119,16 @@ module SpeckleConnector
             props.each do |prop|
               layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
               layer = find_layer(layer_path, commit_folder, layer)
-              traverse_commit_object(obj[prop], commit_folder, layer)
+              traverse_commit_object(obj[prop], commit_folder, layer, model_preferences)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            convert_to_native(obj, layer)
+            convert_to_native(obj, layer, model_preferences)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer) }
+          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer, model_preferences) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, commit_folder, layer) }
+          obj.each { |value| traverse_commit_object(value, commit_folder, layer, model_preferences) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
@@ -167,7 +167,7 @@ module SpeckleConnector
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity
-      def convert_to_native(obj, layer, entities = sketchup_model.entities)
+      def convert_to_native(obj, layer, model_preferences, entities = sketchup_model.entities)
         convert = method(:convert_to_native)
         return display_value_to_native_component(obj, layer, entities, &convert) unless obj['displayValue'].nil?
 
@@ -179,8 +179,9 @@ module SpeckleConnector
                                                                              obj['applicationId'],
                                                                              obj['always_face_camera'],
                                                                              &convert)
-        when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities)
-        when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities)
+        when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities, model_preferences)
+        when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities,
+                                                         model_preferences)
         end
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")

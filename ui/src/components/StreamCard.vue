@@ -401,12 +401,18 @@ export default {
         const totBatches = batches.length
         console.log(`>>> SpeckleSketchUp: ${totBatches} batches ready for sending`)
         let batchesSent = 0
+
+        const t0 = Date.now()
         for (const batch of batches) {
           let res = await this.sendBatch(batch)
           if (res.status !== 201) throw `Upload request failed: ${res.status}`
           batchesSent++
           this.loadingStage = `uploading: ${Math.round((batchesSent / totBatches) * 100)}%`
         }
+
+        const t1 = Date.now()
+        const elapsedTime = (t1-t0) / 1000
+        console.log(`Upload time: ${elapsedTime} second`)
 
         let commit = {
           streamId: this.streamId,
