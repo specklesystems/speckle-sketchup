@@ -12,6 +12,7 @@ module SpeckleConnector
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
 
     # @param sketchup_model [Sketchup::Model] active model.
+    # rubocop:disable Metrics/MethodLength
     def self.init_preferences(sketchup_model)
       # Init sqlite database
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
@@ -55,6 +56,7 @@ module SpeckleConnector
         )
       end
     end
+    # rubocop:enable Metrics/MethodLength
 
     def self.default_model_preferences
       {

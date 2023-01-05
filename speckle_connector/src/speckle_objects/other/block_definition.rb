@@ -82,6 +82,10 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
 
+        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.group_entities_to_speckle(definition, units, definitions, preferences, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
@@ -111,6 +115,10 @@ module SpeckleConnector
             lines + nested_blocks + nested_groups + meshes
           end
         end
+        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
 
         # rubocop:disable Metrics/AbcSize
         def self.group_meshes_by_material(definition, face, mat_groups, units, model_preferences)
