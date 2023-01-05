@@ -21,12 +21,10 @@
           solo
         />
         <v-spacer />
-        <v-btn icon small class="mx-1" @click="switchTheme">
-          <v-icon>mdi-theme-light-dark</v-icon>
-        </v-btn>
         <v-btn icon small class="mx-1" @click="requestRefresh">
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
+        <settings-dialog/>
         <v-menu v-if="loggedIn" bottom min-width="200px" rounded offset-y>
           <template #activator="{ on, attrs }">
             <v-btn class="ml-1" icon x-large v-on="on">
@@ -129,6 +127,7 @@ export default {
   components: {
     Login,
     CreateStream: () => import('@/components/CreateStream'),
+    SettingsDialog: () => import('@/components/SettingsDialog'),
     GlobalToast: () => import('@/components/GlobalToast')
   },
   props: {
@@ -178,6 +177,9 @@ export default {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
       this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
+    },
+    settingsDialog(){
+
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
