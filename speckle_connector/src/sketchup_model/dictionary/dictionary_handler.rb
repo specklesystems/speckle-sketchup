@@ -22,6 +22,8 @@ module SpeckleConnector
 
         # @param entity [Sketchup::Entity] entity to set attribute dictionaries
         def self.attribute_dictionaries_to_native(entity, dictionaries)
+          return if dictionaries.nil?
+
           dictionaries.each do |dict_name, entries|
             JSON.parse(entries).each do |key, value|
               entity.set_attribute(dict_name, key, value)
