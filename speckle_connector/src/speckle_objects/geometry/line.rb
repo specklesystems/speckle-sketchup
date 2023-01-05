@@ -41,7 +41,7 @@ module SpeckleConnector
         def self.from_edge(edge, units, model_preferences)
           dictionaries = {}
           if model_preferences[:include_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(edge)
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
