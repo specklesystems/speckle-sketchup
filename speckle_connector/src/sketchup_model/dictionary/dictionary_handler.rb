@@ -9,6 +9,30 @@ module SpeckleConnector
       class DictionaryHandler
         DICTIONARY_NAME = 'Speckle_Base_Object'
 
+        # @param entity [Sketchup::Entity] entity to get attribute dictionaries
+        def self.attribute_dictionaries_to_speckle(entity)
+          dictionaries = {}
+          return dictionaries if entity.attribute_dictionaries.nil?
+
+          entity.attribute_dictionaries.each do |att_dict|
+            dict_name = att_dict == '' ? 'empty_dictionary_name' : att_dict.name
+            dictionaries[dict_name] = att_dict.to_h.to_json unless att_dict.name == 'Speckle_Base_Object'
+          end
+          dictionaries
+        end
+
+        # @param entity [Sketchup::Entity] entity to set attribute dictionaries
+        def self.attribute_dictionaries_to_native(entity, dictionaries)
+          return if dictionaries.nil?
+
+          dictionaries.each do |dict_name, entries|
+            dict_name = dict_name == 'empty_dictionary_name' ? '' : dict_name
+            JSON.parse(entries).each do |key, value|
+              entity.set_attribute(dict_name, key, value)
+            end
+          end
+        end
+
         # @param entity [Sketchup::Entity] the sketchup entity of Speckle object
         # @param key [Symbol] the name of the attribute
         # @param dictionary_name [String, Symbol] the name of the attribute dictionary

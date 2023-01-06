@@ -7,6 +7,7 @@ require_relative '../base'
 require_relative '../geometry/point'
 require_relative '../geometry/mesh'
 require_relative '../geometry/bounding_box'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -19,7 +20,8 @@ module SpeckleConnector
         # @param name [String] name of the block definition.
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
-        def initialize(geometry:, name:, units:, always_face_camera:, application_id: nil)
+        # rubocop:disable Metrics/ParameterLists
+        def initialize(geometry:, name:, units:, always_face_camera:, sketchup_attributes: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -29,23 +31,34 @@ module SpeckleConnector
           self[:units] = units
           self[:name] = name
           self[:always_face_camera] = always_face_camera
+          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           self['@geometry'] = geometry
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param definition [Sketchup::ComponentDefinition] component definition might be belong to group or component
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
-        def self.from_definition(definition, units, definitions, &convert)
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/MethodLength
+        def self.from_definition(definition, units, definitions, preferences, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
+          dictionaries = {}
+          if preferences[:model][:include_entity_attributes]
+            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+          end
+          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
-                       group_entities_to_speckle(definition, units, definitions, &convert)
+                       group_entities_to_speckle(definition, units, definitions, preferences, &convert)
                      else
                        definition.entities.map do |entity|
-                         convert.call(entity) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
+                         convert.call(entity, preferences) unless entity.is_a?(Sketchup::Edge) && entity.faces.any?
                        end
                      end
 
@@ -55,58 +68,88 @@ module SpeckleConnector
             name: definition.name,
             geometry: geometry,
             always_face_camera: definition.behavior.always_face_camera?,
+            sketchup_attributes: att,
             application_id: guid
           )
         end
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
+        # rubocop:enable Metrics/MethodLength
 
         # Finds or creates a component definition from the geometry and the given name
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, application_id = '', &convert)
+        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, model_preferences,
+                           sketchup_attributes, application_id = '', &convert)
           definition = sketchup_model.definitions[name]
           return definition if definition && (definition.name == name || definition.guid == application_id)
 
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(name)
           definition.layer = layer
-          geometry.each { |obj| convert.call(obj, layer, definition.entities) } if geometry.is_a?(Array)
-          convert.call(geometry, layer, definition.entities) if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
+          if geometry.is_a?(Array)
+            geometry.each { |obj| convert.call(obj, layer, model_preferences, definition.entities) }
+          end
+          if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
+            convert.call(geometry, layer, model_preferences, definition.entities)
+          end
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
+          unless sketchup_attributes.nil?
+            SketchupModel::Dictionary::DictionaryHandler
+              .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
+          end
           definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
 
-        def self.group_entities_to_speckle(definition, units, definitions, &convert)
+        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
+        def self.group_entities_to_speckle(definition, units, definitions, preferences, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
-            Geometry::Line.from_edge(orphan_edge, units)
+            Geometry::Line.from_edge(orphan_edge, units, preferences[:model])
           end
 
           nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
-            BlockInstance.from_component_instance(component_instance, units, definitions, &convert)
+            BlockInstance.from_component_instance(component_instance, units, definitions, preferences, &convert)
           end
 
           nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
-            BlockInstance.from_group(group, units, definitions, &convert)
+            BlockInstance.from_group(group, units, definitions, preferences, &convert)
           end
 
-          meshes = definition.entities.grep(Sketchup::Face).collect do |face|
-            Geometry::Mesh.from_face(face, units)
-          end
+          if preferences[:model][:combine_faces_by_material]
+            mesh_groups = {}
+            definition.entities.grep(Sketchup::Face).collect do |face|
+              group_meshes_by_material(definition, face, mesh_groups, units, preferences[:model])
+            end
 
-          lines + nested_blocks + nested_groups + meshes
+            lines + nested_blocks + nested_groups + mesh_groups.values
+          else
+            meshes = definition.entities.grep(Sketchup::Face).collect do |face|
+              Geometry::Mesh.from_face(face, units, preferences[:model])
+            end
+
+            lines + nested_blocks + nested_groups + meshes
+          end
         end
+        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
 
         # rubocop:disable Metrics/AbcSize
-        def self.group_meshes_by_material(definition, face, mat_groups, units)
+        def self.group_meshes_by_material(definition, face, mat_groups, units, model_preferences)
           # convert material
-          mat_id = face.material.nil? ? 'none' : face.material.entityID
+          mat_id = get_mesh_group_id(face, model_preferences)
           mat_groups[mat_id] = initialise_group_mesh(face, definition.bounds, units) unless mat_groups.key?(mat_id)
           mat_group = mat_groups[mat_id]
           if face.loops.size > 1
@@ -136,6 +179,20 @@ module SpeckleConnector
           )
           mesh[:pt_count] = 0
           mesh
+        end
+
+        # Mesh group id helps to determine how to group faces into meshes.
+        # @param face [Sketchup::Face] face to get mesh group id.
+        def self.get_mesh_group_id(face, model_preferences)
+          if model_preferences[:include_entity_attributes]
+            has_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
+            return face.persistent_id.to_s if has_attribute_dictionary
+          end
+
+          material = face.material || face.back_material
+          return 'none' if material.nil?
+
+          return material.entityID.to_s
         end
       end
     end
