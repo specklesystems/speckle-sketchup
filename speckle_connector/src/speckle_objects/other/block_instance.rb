@@ -99,7 +99,11 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(sketchup_model, block, layer, entities, model_preferences, &convert)
-          is_group = block['is_sketchup_group']
+          # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
+          # something about this conversion is freaking out if nested block geo is a group
+          # so this is set to false always until I can figure this out
+          is_group = false
+          # is_group = block['is_sketchup_group']
           definition = BlockDefinition.to_native(
             sketchup_model,
             block['@blockDefinition']['@geometry'],

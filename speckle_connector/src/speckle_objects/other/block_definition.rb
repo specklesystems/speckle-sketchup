@@ -92,7 +92,9 @@ module SpeckleConnector
           if geometry.is_a?(Array)
             geometry.each { |obj| convert.call(obj, layer, model_preferences, definition.entities) }
           end
-          convert.call(geometry, layer, definition.entities) if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
+          if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
+            convert.call(geometry, layer, model_preferences, definition.entities)
+          end
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
