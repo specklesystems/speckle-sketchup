@@ -33,7 +33,7 @@ module SpeckleConnector
 
         # reset dialog only if it is marked ready, otherwise
         # add_exec_callback is triggered twice upon first initialization
-        reset_dialog! if @ready
+        reset_dialog!
         html_dialog.show
       end
 
@@ -73,6 +73,9 @@ module SpeckleConnector
       # @return [UI::HtmlDialog] the Sketchup interface to html dialog
       def init_dialog
         dialog = UI::HtmlDialog.new(@dialog_specs)
+        dialog.set_can_close do
+          true
+        end
         File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
         # dialog.set_url('http://localhost:8081') # uncomment this line if you want to use your local version of ui
         add_exec_callback(dialog)
