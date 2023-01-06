@@ -29,6 +29,7 @@ module SpeckleConnector
 
       # Show dialog if it's not visible yet
       def show
+        bring_to_front if html_dialog.visible?
         return if html_dialog.visible?
 
         # reset dialog only if it is marked ready, otherwise
