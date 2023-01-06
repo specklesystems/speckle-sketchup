@@ -22,7 +22,8 @@ module SpeckleConnector
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(geometry:, base_point:, name:, units:, always_face_camera:, sketchup_attributes: {}, application_id: nil)
+        def initialize(geometry:, base_point:, name:, units:, always_face_camera:, sketchup_attributes: {},
+                       application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
