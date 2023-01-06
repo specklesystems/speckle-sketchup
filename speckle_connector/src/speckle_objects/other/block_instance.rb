@@ -99,10 +99,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(sketchup_model, block, layer, entities, model_preferences, &convert)
-          # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
-          # something about this conversion is freaking out if nested block geo is a group
-          # so this is set to false always until I can figure this out
-          is_group = false
+          is_group = block['is_sketchup_group']
           definition = BlockDefinition.to_native(
             sketchup_model,
             block['@blockDefinition']['@geometry'],
@@ -118,17 +115,18 @@ module SpeckleConnector
           instance_name = block['name'].nil? || block['name'].empty? ? block['id'] : block['name']
           t_arr = block['transform'].is_a?(Hash) ? block['transform']['value'] : block['transform']
           transform = Other::Transform.to_native(t_arr, block['units'])
-          instance =
-            if is_group
-              # rubocop:disable SketchupSuggestions/AddGroup
-              group = entities.add_group(definition.entities.to_a)
-              group.layer = layer
-              # rubocop:enable SketchupSuggestions/AddGroup
-            else
-              instance = entities.add_instance(definition, transform)
-              instance.layer = layer
-              instance
-            end
+          instance = if is_group
+                       # rubocop:disable SketchupSuggestions/AddGroup
+                       group = entities.add_group(definition.entities.to_a)
+                       group.layer = layer
+                       group
+                       # rubocop:enable SketchupSuggestions/AddGroup
+                     else
+                       instance = entities.add_instance(definition, transform)
+                       instance.layer = layer
+                       instance
+                     end
+
           # erase existing instances after creation and before rename because you can't have definitions
           #  without instances
           find_and_erase_existing_instance(definition, instance_name, block['applicationId'])
