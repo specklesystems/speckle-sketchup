@@ -48,8 +48,14 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       def convert(entity, preferences)
         convert = method(:convert)
-        return SpeckleObjects::Geometry::Line.from_edge(entity, @units).to_h if entity.is_a?(Sketchup::Edge)
-        return SpeckleObjects::Geometry::Mesh.from_face(entity, @units) if entity.is_a?(Sketchup::Face)
+        if entity.is_a?(Sketchup::Edge)
+          return SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+        end
+
+        if entity.is_a?(Sketchup::Face)
+          return SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+        end
+
         if entity.is_a?(Sketchup::Group)
           return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, &convert)
         end
