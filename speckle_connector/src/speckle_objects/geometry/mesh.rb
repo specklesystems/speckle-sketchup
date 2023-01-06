@@ -42,6 +42,7 @@ module SpeckleConnector
         # @param entities [Sketchup::Entities] entities to add
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/CyclomaticComplexity
         def self.to_native(sketchup_model, mesh, layer, entities, model_preferences)
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh)
@@ -74,6 +75,7 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/CyclomaticComplexity
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator

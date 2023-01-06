@@ -96,6 +96,8 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/ParameterLists
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(sketchup_model, block, layer, entities, model_preferences, &convert)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
@@ -134,13 +136,17 @@ module SpeckleConnector
           instance.transformation = transform if is_group
           instance.material = Other::RenderMaterial.to_native(sketchup_model, block['renderMaterial'])
           instance.name = instance_name
-          SketchupModel::Dictionary::DictionaryHandler
-            .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
+          unless block['sketchup_attributes'].nil?
+            SketchupModel::Dictionary::DictionaryHandler
+              .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
+          end
           instance
         end
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/ParameterLists
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
 
         # takes a component definition and finds and erases the first instance with the matching name
         # (and optionally the applicationId)

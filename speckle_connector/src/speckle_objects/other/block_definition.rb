@@ -96,8 +96,10 @@ module SpeckleConnector
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
-          SketchupModel::Dictionary::DictionaryHandler
-            .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
+          unless sketchup_attributes.nil?
+            SketchupModel::Dictionary::DictionaryHandler
+              .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
+          end
           definition
         end
         # rubocop:enable Metrics/CyclomaticComplexity
