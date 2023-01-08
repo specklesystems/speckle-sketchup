@@ -166,6 +166,8 @@ module SpeckleConnector
         end
       end
 
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/MethodLength
       def convert_to_native(obj, layer, model_preferences, entities = sketchup_model.entities)
         convert = method(:convert_to_native)
         unless obj['displayValue'].nil?
@@ -192,6 +194,8 @@ module SpeckleConnector
         puts(e)
         nil
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/MethodLength
 
       # Creates a component definition and instance from a speckle object with a display value
       # rubocop:disable Metrics/PerceivedComplexity

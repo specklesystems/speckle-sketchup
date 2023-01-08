@@ -37,6 +37,7 @@ module SpeckleConnector
           self[:renderMaterial] = render_material
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          # FIXME: Since blockDefinition sends with @ as detached, block basePlane renders on viewer.
           self['@blockDefinition'] = block_definition
         end
         # rubocop:enable Metrics/ParameterLists
