@@ -105,9 +105,10 @@ module SpeckleConnector
           is_group = false
           # is_group = block['is_sketchup_group']
           block_definition = block['@blockDefinition'] || block['blockDefinition']
+          geometry = block_definition['@geometry'] || block_definition['geometry']
           definition = BlockDefinition.to_native(
             sketchup_model,
-            block_definition['@geometry'],
+            geometry,
             layer,
             block_definition['name'],
             block_definition['always_face_camera'].nil? ? false : block_definition['always_face_camera'],
