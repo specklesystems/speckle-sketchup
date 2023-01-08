@@ -198,16 +198,30 @@ module SpeckleConnector
       # rubocop:enable Metrics/MethodLength
 
       # Creates a component definition and instance from a speckle object with a display value
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/MethodLength
       def display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
+
+        block_definition = obj['@blockDefinition'] || obj['blockDefinition']
+
         definition = BLOCK_DEFINITION.to_native(
           sketchup_model,
           obj['displayValue'],
           layer,
           "def::#{obj_id}",
-          obj['@blockDefinition']['always_face_camera'],
+          if block_definition.nil?
+            false
+          else
+            block_definition['always_face_camera'].nil? ? false : block_definition['always_face_camera']
+          end,
           model_preferences,
-          obj['@blockDefinition']['sketchup_attributes'],
+          if block_definition.nil?
+            nil
+          else
+            block_definition['sketchup_attributes'].nil? ? nil : block_definition['sketchup_attributes']
+          end,
           obj_id,
           &convert
         )
@@ -219,6 +233,9 @@ module SpeckleConnector
         instance.name = obj_id
         instance
       end
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/MethodLength
 
       # Takes a component definition and finds and erases the first instance with the matching name
       # (and optionally the applicationId)
