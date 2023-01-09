@@ -65,7 +65,6 @@ jobs:
           name: I know Github as a host
           command: |
             mkdir ~/.ssh
-            touch ~/.ssh/known_hosts
             ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run:
           name: Clone
@@ -116,6 +115,7 @@ workflows:
               only: /.*/
 
       - build-connector:
+          context: innosetup
           slug: sketchup
           requires:
             - get-ci-tools
