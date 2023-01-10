@@ -131,7 +131,7 @@ module SpeckleConnector
         end
 
         def update_mesh
-          puts "Vertex count on mesh #{vertices.length}"
+          # puts "Vertex count on mesh #{vertices.length}"
           self['@(31250)vertices'] = vertices_to_array(units)
           self[:'@(62500)faces'] = polygons
         end
