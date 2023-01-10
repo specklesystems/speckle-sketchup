@@ -145,7 +145,8 @@ module SpeckleConnector
         def face_vertices_to_array(face)
           face.vertices.each do |v|
             pt = v.position
-            vertices.push(pt) unless vertices.any? { |point| point == pt }
+            # vertices.push(pt) unless vertices.any? { |point| point == pt }
+            vertices.push(pt)
           end
         end
 
@@ -154,8 +155,9 @@ module SpeckleConnector
           polygons.push(face.vertices.count)
           face.vertices.each do |v|
             pt = v.position
-            index = vertices.find_index(pt)
-            polygons.push(index)
+            # global_vertex_index = vertices.reverse.find_index(pt)
+            global_vertex_index = vertices.length - vertices.reverse.find_index(pt) - 1
+            polygons.push(global_vertex_index)
           end
         end
 
@@ -163,7 +165,8 @@ module SpeckleConnector
         # @param mesh [Geom::PolygonMesh] mesh to get points.
         def mesh_points_to_array(mesh)
           mesh.points.each do |pt|
-            vertices.push(pt) unless vertices.any? { |point| point == pt }
+            # vertices.push(pt) unless vertices.any? { |point| point == pt }
+            vertices.push(pt)
           end
         end
 
@@ -173,7 +176,8 @@ module SpeckleConnector
           mesh.polygons.each do |poly|
             global_polygon_array = [poly.count]
             poly.each do |index|
-              global_vertex_index = vertices.find_index(mesh.points[index.abs - 1])
+              # global_vertex_index = vertices.reverse.find_index(mesh.points[index.abs - 1])
+              global_vertex_index = vertices.length - vertices.reverse.find_index(mesh.points[index.abs - 1]) - 1
               global_polygon_array.push(global_vertex_index)
             end
             polygons.push(*global_polygon_array)
