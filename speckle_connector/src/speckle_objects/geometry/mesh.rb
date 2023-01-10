@@ -145,6 +145,7 @@ module SpeckleConnector
         def face_vertices_to_array(face)
           face.vertices.each do |v|
             pt = v.position
+            # FIXME: Enable previous line when viewer supports shared vertices
             # vertices.push(pt) unless vertices.any? { |point| point == pt }
             vertices.push(pt)
           end
@@ -155,6 +156,7 @@ module SpeckleConnector
           polygons.push(face.vertices.count)
           face.vertices.each do |v|
             pt = v.position
+            # FIXME: Enable previous line when viewer supports shared vertices
             # global_vertex_index = vertices.reverse.find_index(pt)
             global_vertex_index = vertices.length - vertices.reverse.find_index(pt) - 1
             polygons.push(global_vertex_index)
@@ -165,6 +167,7 @@ module SpeckleConnector
         # @param mesh [Geom::PolygonMesh] mesh to get points.
         def mesh_points_to_array(mesh)
           mesh.points.each do |pt|
+            # FIXME: Enable previous line when viewer supports shared vertices
             # vertices.push(pt) unless vertices.any? { |point| point == pt }
             vertices.push(pt)
           end
@@ -176,6 +179,7 @@ module SpeckleConnector
           mesh.polygons.each do |poly|
             global_polygon_array = [poly.count]
             poly.each do |index|
+              # FIXME: Enable previous line when viewer supports shared vertices
               # global_vertex_index = vertices.reverse.find_index(mesh.points[index.abs - 1])
               global_vertex_index = vertices.length - vertices.reverse.find_index(mesh.points[index.abs - 1]) - 1
               global_polygon_array.push(global_vertex_index)
