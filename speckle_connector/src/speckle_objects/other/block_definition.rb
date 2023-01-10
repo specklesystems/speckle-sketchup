@@ -136,6 +136,8 @@ module SpeckleConnector
             definition.entities.grep(Sketchup::Face).collect do |face|
               group_meshes_by_material(definition, face, mesh_groups, units, preferences[:model])
             end
+            # Update mesh overwrites points and polygons into base object.
+            mesh_groups.each { |_, mesh| mesh.update_mesh }
 
             lines + nested_blocks + nested_groups + mesh_groups.values
           else
@@ -157,17 +159,7 @@ module SpeckleConnector
           mat_id = get_mesh_group_id(face, model_preferences)
           mat_groups[mat_id] = initialise_group_mesh(face, definition.bounds, units) unless mat_groups.key?(mat_id)
           mat_group = mat_groups[mat_id]
-          if face.loops.size > 1
-            mesh = face.mesh
-            mat_group[:'@(31250)vertices'].push(*Geometry::Mesh.mesh_points_to_array(mesh, units))
-            mat_group[:'@(62500)faces'].push(*Geometry::Mesh.mesh_faces_to_array(mesh, mat_group[:pt_count] - 1))
-            mat_group[:'@(31250)faceEdgeFlags'].push(*Geometry::Mesh.mesh_edge_flags_to_array(mesh))
-          else
-            mat_group[:'@(31250)vertices'].push(*Geometry::Mesh.face_vertices_to_array(face, units))
-            mat_group[:'@(62500)faces'].push(*Geometry::Mesh.face_indices_to_array(face, mat_group[:pt_count]))
-            mat_group[:'@(31250)faceEdgeFlags'].push(*Geometry::Mesh.face_edge_flags_to_array(face))
-          end
-          mat_group[:pt_count] += face.vertices.count
+          mat_group.face_to_mesh(face)
         end
         # rubocop:enable Metrics/AbcSize
 
@@ -179,7 +171,6 @@ module SpeckleConnector
             bbox: Geometry::BoundingBox.from_bounds(bounds, units),
             vertices: [],
             faces: [],
-            face_edge_flags: [],
             sketchup_attributes: { is_soften: has_any_soften_edge }
           )
           mesh[:pt_count] = 0

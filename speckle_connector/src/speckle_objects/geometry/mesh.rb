@@ -14,27 +14,37 @@ module SpeckleConnector
       class Mesh < Base
         SPECKLE_TYPE = 'Objects.Geometry.Mesh'
 
+        # @return [Array<Geom::Point3d>] points that construct mesh.
+        attr_accessor :vertices
+
+        # @return [Array] polygons
+        attr_accessor :polygons
+
+        # @return [String] speckle units.
+        attr_reader :units
+
         # @param units [String] units of the speckle mesh.
         # @param render_material [Other::RenderMaterial, nil] render material of the speckle mesh.
         # @param bbox [Geometry::BoundingBox] bounding box speckle object of the speckle mesh.
         # @param vertices [Array] vertices of the speckle mesh.
         # @param faces [Array] faces of the speckle mesh.
-        # @param face_edge_flags [Array] face edge flags of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, render_material:, bbox:, vertices:, faces:, face_edge_flags:, sketchup_attributes:)
+        def initialize(units:, render_material:, bbox:, vertices:, faces:, sketchup_attributes:)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
             application_id: nil,
             id: nil
           )
+          @vertices = []
+          @polygons = []
+          @units = units
           self[:units] = units
           self[:renderMaterial] = render_material
           self[:bbox] = bbox
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
-          self[:'@(31250)faceEdgeFlags'] = face_edge_flags
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
@@ -86,30 +96,37 @@ module SpeckleConnector
           if model_preferences[:include_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
           end
-          mesh = face.loops.count > 1 ? face.mesh : nil
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
-          Mesh.new(
+          speckle_mesh = Mesh.new(
             units: units,
             render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
                                                           .from_material(face.material || face.back_material),
             bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
-            vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
-            faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-            face_edge_flags: mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
+            vertices: [], # mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
+            faces: [], # mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
+            # face_edge_flags: [], # mesh.nil? ? face_edge_flags_to_array(face) : mesh_edge_flags_to_array(mesh),
             sketchup_attributes: att
           )
+          speckle_mesh.face_to_mesh(face)
+          speckle_mesh.update_mesh
+          speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
 
-        # get a flat array of vertices from a list of sketchup vertices
-        def self.face_vertices_to_array(face, units)
+        def face_to_mesh(face)
+          mesh = face.loops.count > 1 ? face.mesh : nil
+          mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh)
+          mesh.nil? ? face_indices_to_array(face) : mesh_faces_to_array(mesh)
+        end
+
+        # Collects indexed Sketchup vertices into flat array for Speckle use.
+        def vertices_to_array(units)
           pts_array = []
-          face.vertices.each do |v|
-            pt = v.position
+          vertices.each do |pt|
             pts_array.push(Geometry.length_to_speckle(pt[0], units),
                            Geometry.length_to_speckle(pt[1], units),
                            Geometry.length_to_speckle(pt[2], units))
@@ -117,49 +134,50 @@ module SpeckleConnector
           pts_array
         end
 
-        # get a flat array of vertices from a sketchup polygon mesh
-        def self.mesh_points_to_array(mesh, units)
-          pts_array = []
+        def update_mesh
+          puts "Vertex count on mesh #{vertices.length}"
+          self['@(31250)vertices'] = vertices_to_array(units)
+          self[:'@(62500)faces'] = polygons
+        end
+
+        # Get a flat array of vertices from a list of sketchup vertices
+        # @param face [Sketchup::Face] face to get vertices.
+        def face_vertices_to_array(face)
+          face.vertices.each do |v|
+            pt = v.position
+            vertices.push(pt) unless vertices.any? { |point| point == pt }
+          end
+        end
+
+        # Get a flat array of face indices from a sketchup face
+        def face_indices_to_array(face)
+          polygons.push(face.vertices.count)
+          face.vertices.each do |v|
+            pt = v.position
+            index = vertices.find_index(pt)
+            polygons.push(index)
+          end
+        end
+
+        # Get a flat array of vertices from a sketchup polygon mesh
+        # @param mesh [Geom::PolygonMesh] mesh to get points.
+        def mesh_points_to_array(mesh)
           mesh.points.each do |pt|
-            pts_array.push(
-              Geometry.length_to_speckle(pt[0], units),
-              Geometry.length_to_speckle(pt[1], units),
-              Geometry.length_to_speckle(pt[2], units)
-            )
+            vertices.push(pt) unless vertices.any? { |point| point == pt }
           end
-          pts_array
         end
 
-        # get a flat array of face indices from a sketchup face
-        def self.face_indices_to_array(face, offset)
-          face_array = [face.vertices.count]
-          face_array.push(*face.vertices.count.times.map { |index| index + offset })
-          face_array
-        end
-
-        # get an array of face indices from a sketchup polygon mesh
-        def self.mesh_faces_to_array(mesh, offset = 0)
-          faces = []
+        # Get an array of face indices from a sketchup polygon mesh
+        # @param mesh [Geom::PolygonMesh] mesh to convert into polygons.
+        def mesh_faces_to_array(mesh)
           mesh.polygons.each do |poly|
-            faces.push(
-              poly.count, *poly.map { |index| index.abs + offset }
-            )
+            global_polygon_array = [poly.count]
+            poly.each do |index|
+              global_vertex_index = vertices.find_index(mesh.points[index.abs - 1])
+              global_polygon_array.push(global_vertex_index)
+            end
+            polygons.push(*global_polygon_array)
           end
-          faces
-        end
-
-        def self.face_edge_flags_to_array(face)
-          face.outer_loop.edges.map(&:soft?)
-        end
-
-        def self.mesh_edge_flags_to_array(mesh)
-          edge_flags = []
-          mesh.polygons.each do |poly|
-            edge_flags.push(
-              *poly.map(&:negative?)
-            )
-          end
-          edge_flags
         end
 
         def self.get_soften_setting(mesh)
