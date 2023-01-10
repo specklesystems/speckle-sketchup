@@ -153,7 +153,6 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
 
-        # rubocop:disable Metrics/AbcSize
         def self.group_meshes_by_material(definition, face, mat_groups, units, model_preferences)
           # convert material
           mat_id = get_mesh_group_id(face, model_preferences)
@@ -161,7 +160,6 @@ module SpeckleConnector
           mat_group = mat_groups[mat_id]
           mat_group.face_to_mesh(face)
         end
-        # rubocop:enable Metrics/AbcSize
 
         def self.initialise_group_mesh(face, bounds, units)
           has_any_soften_edge = face.edges.any?(&:soft?)

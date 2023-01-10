@@ -89,8 +89,6 @@ module SpeckleConnector
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         def self.from_face(face, units, model_preferences)
           dictionaries = {}
           if model_preferences[:include_entity_attributes]
@@ -114,8 +112,6 @@ module SpeckleConnector
           speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
 
         def face_to_mesh(face)
           mesh = face.loops.count > 1 ? face.mesh : nil
