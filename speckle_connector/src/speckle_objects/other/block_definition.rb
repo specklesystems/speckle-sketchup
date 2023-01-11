@@ -134,7 +134,7 @@ module SpeckleConnector
           if preferences[:model][:combine_faces_by_material]
             mesh_groups = {}
             definition.entities.grep(Sketchup::Face).collect do |face|
-              group_meshes_by_material(definition, face, mesh_groups, units, preferences[:model])
+              group_meshes_by_material(face, mesh_groups, units, preferences[:model])
             end
             # Update mesh overwrites points and polygons into base object.
             mesh_groups.each { |_, mesh| mesh.update_mesh }
@@ -153,26 +153,12 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
 
-        def self.group_meshes_by_material(definition, face, mat_groups, units, model_preferences)
+        def self.group_meshes_by_material(face, mat_groups, units, model_preferences)
           # convert material
           mat_id = get_mesh_group_id(face, model_preferences)
-          mat_groups[mat_id] = initialise_group_mesh(face, definition.bounds, units) unless mat_groups.key?(mat_id)
+          mat_groups[mat_id] = Geometry::Mesh.from_face(face, units, model_preferences) unless mat_groups.key?(mat_id)
           mat_group = mat_groups[mat_id]
           mat_group.face_to_mesh(face)
-        end
-
-        def self.initialise_group_mesh(face, bounds, units)
-          has_any_soften_edge = face.edges.any?(&:soft?)
-          mesh = Geometry::Mesh.new(
-            units: units,
-            render_material: face.material.nil? ? nil : RenderMaterial.from_material(face.material),
-            bbox: Geometry::BoundingBox.from_bounds(bounds, units),
-            vertices: [],
-            faces: [],
-            sketchup_attributes: { is_soften: has_any_soften_edge }
-          )
-          mesh[:pt_count] = 0
-          mesh
         end
 
         # Mesh group id helps to determine how to group faces into meshes.
