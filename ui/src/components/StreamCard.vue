@@ -60,6 +60,11 @@
     <v-card-text class="d-flex align-center pb-5 mb-5 -mt-2" style="height: 50px">
       <v-menu offset-y>
         <template #activator="{ on, attrs }">
+          <v-slide-x-transition>
+            <div v-show="hover">
+              <create-branch-dialog :stream-name="stream.name" :stream-id="streamId"/>
+            </div>
+          </v-slide-x-transition>
           <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
             <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
             {{ branchName }}
@@ -171,6 +176,9 @@ global.oneClickSend = function (streamId) {
 
 export default {
   name: 'StreamCard',
+  components: {
+    CreateBranchDialog: () => import('@/components/CreateBranchDialog'),
+  },
   props: {
     streamId: {
       type: String,
