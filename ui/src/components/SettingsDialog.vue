@@ -129,7 +129,7 @@ export default {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       sketchup.exec({
         name: "user_preferences_updated",
-        data: {preference_hash: "configDUI", preference: "DarkTheme", value: this.$vuetify.theme.dark}
+        data: {preference_hash: "configSketchup", preference: "DarkTheme", value: this.$vuetify.theme.dark}
       })
       this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
     },
