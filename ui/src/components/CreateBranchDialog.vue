@@ -1,0 +1,149 @@
+<template>
+  <!-- DIALOG: Create Branch -->
+  <v-dialog v-model="showCreateBranch">
+    <template #activator="{ on, attrs }">
+      <v-btn
+          icon x-small class="ml-0 mr-1"
+          v-bind="attrs"
+          v-on="on"
+      >
+        <v-icon>
+          mdi-plus-circle
+        </v-icon>
+      </v-btn>
+    </template>
+
+    <v-card>
+      <v-card-title class="text-h5">
+        Create a New Branch
+      </v-card-title>
+      <v-card-subtitle class="mt-sm-2 py-0 mb-0 font-italic">
+        under {{ streamName }} stream
+      </v-card-subtitle>
+      <v-container class="px-6" pb-0>
+        <v-text-field
+            v-model="branchName"
+            xxxclass="small-text-field"
+            hide-details
+            dense
+            flat
+            placeholder="Branch Name"
+        />
+        <v-text-field
+            v-model="description"
+            xxxclass="small-text-field"
+            hide-details
+            dense
+            flat
+            placeholder="Description (Optional)"
+        />
+      </v-container>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+            color="blue darken-1"
+            text
+            @click="showCreateBranch = false"
+        >
+          Cancel
+        </v-btn>
+        <v-btn
+            :disabled="branchName === ''"
+            color="blue darken-1"
+            text
+            @click="createBranch"
+        >
+          Create
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script>
+/*global sketchup*/
+import gql from "graphql-tag";
+import {bus} from "@/main";
+import userQuery from "@/graphql/user.gql";
+import streamQuery from "@/graphql/stream.gql";
+
+export default {
+  name: "CreateBranch",
+  props: {
+    streamId: {
+      type: String,
+      default: null
+    },
+    streamName: {
+      type: String,
+      default: null
+    }
+  },
+  data() {
+    return {
+      showCreateBranch: false,
+      branchName: "",
+      description: "",
+      defaultDescription: "Stream created from SketchUp",
+      accountToCreateStream: null
+    }
+  },
+  computed: {
+    loggedIn() {
+      return localStorage.getItem('SpeckleSketchup.AuthToken') !== null
+    },
+    accounts() {
+      return JSON.parse(localStorage.getItem('localAccounts'))
+    },
+  },
+  apollo: {
+    user: {
+      query: userQuery
+    }
+  },
+  methods: {
+    refresh() {
+      this.$apollo.queries.user.refetch()
+      bus.$emit('refresh-streams')
+    },
+    async createBranch(){
+      let res = await this.$apollo.mutate({
+        mutation: gql`
+            mutation branchCreate($branch: BranchCreateInput!) {
+              branchCreate(branch: $branch)
+            }
+          `,
+        variables: {
+          branch: {
+            streamId: this.streamId,
+            name: this.branchName,
+            description: this.description === '' ? this.defaultDescription : this.description,
+          }
+        }
+      })
+      this.showCreateBranch = false
+      this.branchName = ""
+      this.description = ""
+      this.refresh()
+      console.log(res)
+      return res
+    }
+  }
+}
+</script>
+
+<style>
+
+.v-dialog {
+  max-width: 390px
+}
+
+.v-text-field >>> input {
+  font-size: 0.9em;
+}
+.v-text-field >>> label {
+  font-size: 0.9em;
+}
+
+</style>
