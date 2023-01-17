@@ -10,6 +10,7 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
+    DEFAULT_PREFERENCES = "('configSketchup', '{\"DarkTheme\":false}');"
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
@@ -17,8 +18,13 @@ module SpeckleConnector
       # Init sqlite database
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
 
+      # Check configSketchup key is valid or not, otherwise init with default settings
+      if db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").empty?
+        db.exec("INSERT INTO 'objects' VALUES #{DEFAULT_PREFERENCES}")
+      end
+
       # Select data
-      data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configDUI'").first.first
+      data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").first.first
 
       # Parse string to hash
       data_hash = JSON.parse(data).to_h
