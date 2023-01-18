@@ -66,7 +66,7 @@ import gql from "graphql-tag";
 import {bus} from "@/main";
 
 export default {
-  name: "CreateBranch",
+  name: "CreateBranchDialog",
   props: {
     streamId: {
       type: String,
