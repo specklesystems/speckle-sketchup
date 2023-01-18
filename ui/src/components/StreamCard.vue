@@ -70,6 +70,7 @@
             {{ branchName }}
           </v-chip>
         </template>
+        <!-- Branch list -->
         <v-list dense>
           <v-list-item
             v-for="(branch, index) in stream.branches.items"
@@ -78,7 +79,7 @@
             @click="switchBranch(branch.name)"
           >
             <v-list-item-title class="text-caption font-weight-regular">
-              <v-icon v-if="branch.name == branchName" small class="mr-1 float-left">
+              <v-icon v-if="branch.name === branchName" small class="mr-1 float-left">
                 mdi-check
               </v-icon>
               <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>

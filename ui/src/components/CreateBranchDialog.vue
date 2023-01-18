@@ -126,7 +126,6 @@ export default {
       this.branchName = ""
       this.description = ""
       this.refresh()
-      console.log(res)
       return res
     }
   }
