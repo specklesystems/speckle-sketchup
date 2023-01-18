@@ -269,11 +269,11 @@ export default {
   },
   computed: {
     selectedBranch() {
-      if (this.$apollo.loading) return
+      if (!this.stream) return
       return this.stream.branches.items.find((branch) => branch.name == this.branchName)
     },
     selectedCommit() {
-      if (this.$apollo.loading) return
+      if (!this.selectedBranch) return
       if (this.commitId == 'latest') return this.selectedBranch.commits.items[0]
       return this.selectedBranch.commits.items.find((commit) => commit.id == this.commitId)
     }
