@@ -234,7 +234,7 @@ export default {
           }
         `,
         variables() {
-          return { streamId: this.streamId }
+          return { id: this.streamId }
         },
         result() {
           this.$apollo.queries.stream.refetch()
@@ -271,15 +271,18 @@ export default {
   computed: {
     selectedBranch() {
       if (!this.stream) return
-      return this.stream.branches.items.find((branch) => branch.name == this.branchName)
+      return this.stream.branches.items.find((branch) => branch.name === this.branchName)
     },
     selectedCommit() {
       if (!this.selectedBranch) return
-      if (this.commitId == 'latest') return this.selectedBranch.commits.items[0]
-      return this.selectedBranch.commits.items.find((commit) => commit.id == this.commitId)
+      if (this.commitId === 'latest') return this.selectedBranch.commits.items[0]
+      return this.selectedBranch.commits.items.find((commit) => commit.id === this.commitId)
     }
   },
   mounted() {
+    bus.$on(`refresh-stream-${this.streamId}`, () => {
+      this.$apollo.queries.stream.refetch()
+    })
     bus.$on(`sketchup-objects-${this.streamId}`, async (batches, commitId, totalChildrenCount) => {
       console.log('>>> SpeckleSketchUp: Received objects from sketchup')
 
@@ -385,7 +388,7 @@ export default {
       await this.sleep(2000)
     },
     async createCommit(batches, commitId, totalChildrenCount) {
-      if (batches.length == 0) {
+      if (batches.length === 0) {
         this.loadingSend = false
         this.loadingStage = null
         this.$eventHub.$emit('notification', {

@@ -97,16 +97,7 @@ export default {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
   },
-  apollo: {
-    user: {
-      query: userQuery
-    }
-  },
   methods: {
-    refresh() {
-      this.$apollo.queries.user.refetch()
-      bus.$emit('refresh-streams')
-    },
     async createBranch(){
       let res = await this.$apollo.mutate({
         mutation: gql`
@@ -126,7 +117,7 @@ export default {
       this.branchName = ""
       this.description = ""
       this.$mixpanel.track('Connector Action', { name: 'Create Branch' })
-      this.refresh()
+      bus.$emit(`refresh-stream-${this.streamId}`)
       return res
     }
   }
