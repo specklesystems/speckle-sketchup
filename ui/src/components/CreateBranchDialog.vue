@@ -1,23 +1,23 @@
 <template>
   <!-- DIALOG: Create Branch -->
   <v-dialog v-model="showCreateBranch">
-    <template #activator="{ on, attrs }">
+    <template #activator="{ on: dialog, attrs }">
       <v-btn
+          v-tooltip="'Create Branch'"
           icon x-small class="ml-0 mr-1"
           v-bind="attrs"
-          v-on="on"
+          v-on="{...dialog}"
       >
         <v-icon>
           mdi-plus-circle
         </v-icon>
       </v-btn>
     </template>
-
     <v-card>
-      <v-card-title class="text-h5">
+      <v-card-title class="text-h5 mb-1">
         Create a New Branch
       </v-card-title>
-      <v-card-subtitle class="mt-sm-2 py-0 mb-0 font-italic">
+      <v-card-subtitle class="py-0 my-0 font-italic">
         under {{ streamName }} stream
       </v-card-subtitle>
       <v-container class="px-6" pb-0>
