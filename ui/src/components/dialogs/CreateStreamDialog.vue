@@ -161,7 +161,7 @@ import {bus} from "@/main";
 import userQuery from "@/graphql/user.gql";
 
 export default {
-  name: "CreateStream",
+  name: "CreateStreamDialog",
   data() {
     return {
       showCreateNewStream: false,
@@ -216,6 +216,7 @@ export default {
       this.showCreateNewStream = false
       this.streamName = ""
       this.description = ""
+      this.$mixpanel.track('Connector Action', { name: 'Create Stream' })
       sketchup.exec({name: "save_stream", data: {stream_id: res["data"]["streamCreate"]}})
       this.refresh()
       return res

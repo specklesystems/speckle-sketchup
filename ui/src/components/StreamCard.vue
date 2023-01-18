@@ -60,11 +60,17 @@
     <v-card-text class="d-flex align-center pb-5 mb-5 -mt-2" style="height: 50px">
       <v-menu offset-y>
         <template #activator="{ on, attrs }">
+          <v-slide-x-transition>
+            <div v-show="hover">
+              <create-branch-dialog :stream-name="stream.name" :stream-id="streamId"/>
+            </div>
+          </v-slide-x-transition>
           <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
             <v-icon small class="mr-1 float-left">mdi-source-branch</v-icon>
             {{ branchName }}
           </v-chip>
         </template>
+        <!-- Branch list -->
         <v-list dense>
           <v-list-item
             v-for="(branch, index) in stream.branches.items"
@@ -73,7 +79,7 @@
             @click="switchBranch(branch.name)"
           >
             <v-list-item-title class="text-caption font-weight-regular">
-              <v-icon v-if="branch.name == branchName" small class="mr-1 float-left">
+              <v-icon v-if="branch.name === branchName" small class="mr-1 float-left">
                 mdi-check
               </v-icon>
               <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>
@@ -171,6 +177,9 @@ global.oneClickSend = function (streamId) {
 
 export default {
   name: 'StreamCard',
+  components: {
+    CreateBranchDialog: () => import('@/components/dialogs/CreateBranchDialog'),
+  },
   props: {
     streamId: {
       type: String,
@@ -261,16 +270,19 @@ export default {
   },
   computed: {
     selectedBranch() {
-      if (this.$apollo.loading) return
-      return this.stream.branches.items.find((branch) => branch.name == this.branchName)
+      if (!this.stream) return
+      return this.stream.branches.items.find((branch) => branch.name === this.branchName)
     },
     selectedCommit() {
-      if (this.$apollo.loading) return
-      if (this.commitId == 'latest') return this.selectedBranch.commits.items[0]
-      return this.selectedBranch.commits.items.find((commit) => commit.id == this.commitId)
+      if (!this.selectedBranch) return
+      if (this.commitId === 'latest') return this.selectedBranch.commits.items[0]
+      return this.selectedBranch.commits.items.find((commit) => commit.id === this.commitId)
     }
   },
   mounted() {
+    bus.$on(`refresh-stream-${this.streamId}`, () => {
+      this.$apollo.queries.stream.refetch()
+    })
     bus.$on(`sketchup-objects-${this.streamId}`, async (batches, commitId, totalChildrenCount) => {
       console.log('>>> SpeckleSketchUp: Received objects from sketchup')
 
@@ -376,7 +388,7 @@ export default {
       await this.sleep(2000)
     },
     async createCommit(batches, commitId, totalChildrenCount) {
-      if (batches.length == 0) {
+      if (batches.length === 0) {
         this.loadingSend = false
         this.loadingStage = null
         this.$eventHub.$emit('notification', {

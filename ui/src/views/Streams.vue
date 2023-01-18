@@ -73,7 +73,9 @@ export default {
   },
   mounted() {
     bus.$on('refresh-streams', () => {
+      // TODO: We should remember selected branches and commits before refetch
       this.$apollo.queries.streams.refetch()
+      // TODO: We should set previously selected branches and commits after refetch
     })
 
     bus.$on('set-saved-streams', (streamIds) => {
