@@ -234,7 +234,7 @@ export default {
           }
         `,
         variables() {
-          return { id: this.streamId }
+          return { streamId: this.streamId }
         },
         result() {
           this.$apollo.queries.stream.refetch()
@@ -281,7 +281,9 @@ export default {
   },
   mounted() {
     bus.$on(`refresh-stream-${this.streamId}`, () => {
+      let branchName = this.branchName
       this.$apollo.queries.stream.refetch()
+      this.switchBranch(branchName)
     })
     bus.$on(`sketchup-objects-${this.streamId}`, async (batches, commitId, totalChildrenCount) => {
       console.log('>>> SpeckleSketchUp: Received objects from sketchup')
