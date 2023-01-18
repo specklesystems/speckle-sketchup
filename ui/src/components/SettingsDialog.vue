@@ -122,9 +122,6 @@ export default {
     }
   },
   methods: {
-    combineFacesByMaterialHandler() {
-
-    },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       sketchup.exec({
