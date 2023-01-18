@@ -125,6 +125,7 @@ export default {
       this.showCreateBranch = false
       this.branchName = ""
       this.description = ""
+      this.$mixpanel.track('Connector Action', { name: 'Create Branch' })
       this.refresh()
       return res
     }
