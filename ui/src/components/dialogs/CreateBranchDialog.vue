@@ -62,11 +62,8 @@
 </template>
 
 <script>
-/*global sketchup*/
 import gql from "graphql-tag";
 import {bus} from "@/main";
-import userQuery from "@/graphql/user.gql";
-import streamQuery from "@/graphql/stream.gql";
 
 export default {
   name: "CreateBranch",

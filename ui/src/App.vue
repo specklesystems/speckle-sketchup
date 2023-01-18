@@ -80,7 +80,7 @@
         </v-menu>
       </v-app-bar>
 
-      <create-stream v-if="accounts().length !== 0"/>
+      <create-stream-dialog v-if="accounts().length !== 0"/>
 
       <v-container v-if="accounts().length !== 0" fluid>
         <router-view :stream-search-query="streamSearchQuery" />
@@ -129,8 +129,8 @@ export default {
   name: 'App',
   components: {
     Login,
-    CreateStream: () => import('@/components/CreateStream'),
-    SettingsDialog: () => import('@/components/SettingsDialog'),
+    CreateStreamDialog: () => import('@/components/dialogs/CreateStreamDialog'),
+    SettingsDialog: () => import('@/components/dialogs/SettingsDialog'),
     GlobalToast: () => import('@/components/GlobalToast')
   },
   props: {

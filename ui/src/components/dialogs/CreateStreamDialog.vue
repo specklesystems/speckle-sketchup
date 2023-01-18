@@ -161,7 +161,7 @@ import {bus} from "@/main";
 import userQuery from "@/graphql/user.gql";
 
 export default {
-  name: "CreateStream",
+  name: "CreateStreamDialog",
   data() {
     return {
       showCreateNewStream: false,

@@ -178,7 +178,7 @@ global.oneClickSend = function (streamId) {
 export default {
   name: 'StreamCard',
   components: {
-    CreateBranchDialog: () => import('@/components/CreateBranchDialog'),
+    CreateBranchDialog: () => import('@/components/dialogs/CreateBranchDialog'),
   },
   props: {
     streamId: {
