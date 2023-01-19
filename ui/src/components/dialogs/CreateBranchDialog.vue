@@ -110,11 +110,11 @@ export default {
           }
         }
       })
+      bus.$emit(`create-branch-${this.streamId}`, this.branchName)
       this.showCreateBranch = false
       this.branchName = ""
       this.description = ""
       this.$mixpanel.track('Connector Action', { name: 'Create Branch' })
-      bus.$emit(`refresh-stream-${this.streamId}`)
       return res
     }
   }
