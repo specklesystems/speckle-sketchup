@@ -4,9 +4,11 @@ require_relative 'converter'
 require_relative 'base_object_serializer'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
+require_relative '../speckle_objects/geometry/length'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
+require_relative '../speckle_objects/built_elements/view3d'
 
 module SpeckleConnector
   module Converters
@@ -30,8 +32,47 @@ module SpeckleConnector
         end
         # send only layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
+        add_views(base_object_properties) if sketchup_model.pages.any?
         SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
+
+      # Add views from pages.
+      # @param base_object_properties [Hash] dynamically attached base object properties.
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/MethodLength
+      def add_views(base_object_properties)
+        views = []
+        sketchup_model.pages.each do |page|
+          cam = page.camera
+          origin = SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(cam.eye[0], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.eye[1], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.eye[2], @units),
+            @units
+          )
+          target = SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(cam.target[0], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.target[1], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.target[2], @units),
+            @units
+          )
+          direction = SpeckleObjects::Geometry::Vector.new(
+            SpeckleObjects::Geometry.length_to_speckle(cam.direction[0], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.direction[1], @units),
+            SpeckleObjects::Geometry.length_to_speckle(cam.direction[2], @units),
+            @units
+          )
+          view = SpeckleObjects::BuiltElements::View3d.new(
+            page.name,
+            origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, @units),
+            cam.perspective?, cam.fov, @units, page.name
+          )
+          views.append(view)
+        end
+        base_object_properties['@Named Views'] = views
+      end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength
 
       # Serialized and traversed information to send batches.
       # @param base [SpeckleObjects::Base] base object to serialize.
