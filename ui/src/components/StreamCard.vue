@@ -281,7 +281,16 @@ export default {
   },
   mounted() {
     bus.$on(`refresh-stream-${this.streamId}`, () => {
+      let oldBranchName = this.branchName
+      let oldCommitId = this.commitId
       this.$apollo.queries.stream.refetch()
+      this.branchName = oldBranchName
+      this.commitId = oldCommitId
+    })
+    bus.$on(`create-branch-${this.streamId}`, (branchName) => {
+      this.$apollo.queries.stream.refetch()
+      this.branchName = branchName
+      this.commitId = 'latest'
     })
     bus.$on(`sketchup-objects-${this.streamId}`, async (batches, commitId, totalChildrenCount) => {
       console.log('>>> SpeckleSketchUp: Received objects from sketchup')
