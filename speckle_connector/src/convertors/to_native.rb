@@ -48,7 +48,9 @@ module SpeckleConnector
       # @param obj [Object] speckle commit object.
       def receive_commit_object(obj, model_preferences)
         # First create layers on the sketchup before starting traversing
-        create_layers(obj.keys.filter_map { |key| key if key.start_with?('@') }, sketchup_model.layers)
+        filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
+        create_layers(filtered_layer_containers, sketchup_model.layers)
+        create_views(obj.filter_map { |key, value| value if key == '@Named Views' }, sketchup_model)
         # Define default commit layer which is the fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, model_preferences)
@@ -68,6 +70,23 @@ module SpeckleConnector
         create_headless_layers(headless_layers, folder)
         # Create layers that have parent folder(s)- this method is recursive until all tree is created.
         create_folder_layers(folder_layer_arrays, folder)
+      end
+
+      # @param views [Array] views.
+      # @param sketchup_model [Sketchup::Model] active sketchup model.
+      def create_views(views, sketchup_model)
+        return if views.empty?
+
+        views.first.each do |view|
+          origin = view['origin']
+          target = view['target']
+          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
+          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
+          # Set camera position before creating scene on it.
+          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], view['lens'])
+          sketchup_model.active_view.camera = my_camera
+          sketchup_model.pages.add(view['name'])
+        end
       end
 
       # @param headless_layers [Array<String>] headless layer names.
