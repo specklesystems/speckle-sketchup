@@ -89,10 +89,7 @@ export default {
   computed: {
     loggedIn() {
       return localStorage.getItem('SpeckleSketchup.AuthToken') !== null
-    },
-    accounts() {
-      return JSON.parse(localStorage.getItem('localAccounts'))
-    },
+    }
   },
   methods: {
     async createBranch(){

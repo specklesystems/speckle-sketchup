@@ -92,7 +92,6 @@
         </v-dialog>
 
         <!-- DIALOG: Add a Stream by ID or URL -->
-        <!--
         <v-dialog v-model="showCreateStreamById">
           <template #activator="{ on, attrs }">
             <v-btn
@@ -141,14 +140,13 @@
                   :disabled="createStreamByIdText === ''"
                   color="blue darken-1"
                   text
-                  @click="showCreateStreamById = false"
+                  @click="getStream"
               >
                 Add
               </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
-        -->
       </v-col>
     </v-row>
   </v-container>
@@ -159,9 +157,20 @@
 import gql from "graphql-tag";
 import {bus} from "@/main";
 import userQuery from "@/graphql/user.gql";
+import {StreamWrapper} from "@/utils/streamWrapper";
 
 export default {
   name: "CreateStreamDialog",
+  props: {
+    accountId: {
+      type: String,
+      default: null
+    },
+    serverUrl: {
+      type: String,
+      default: null
+    }
+  },
   data() {
     return {
       showCreateNewStream: false,
@@ -177,10 +186,7 @@ export default {
   computed: {
     loggedIn() {
       return localStorage.getItem('SpeckleSketchup.AuthToken') !== null
-    },
-    accounts() {
-      return JSON.parse(localStorage.getItem('localAccounts'))
-    },
+    }
   },
   apollo: {
     user: {
@@ -188,15 +194,66 @@ export default {
     }
   },
   methods: {
-    activeAccount(){
-      return JSON.parse(localStorage.getItem('selectedAccount'))
-    },
-    switchAccountToCreateStream(account) {
-      this.accountToCreateStream = account
-    },
     refresh() {
       this.$apollo.queries.user.refetch()
       bus.$emit('refresh-streams')
+    },
+    async getStream(){
+      try {
+        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl)
+        let res = await this.$apollo.query({
+          query: gql`
+            query Stream($id: String!){
+              stream(id: $id){
+                id
+                name
+                description
+                isPublic
+                role
+                createdAt
+                updatedAt
+                commentCount
+                favoritedDate
+                favoritesCount
+                collaborators {
+                  id
+                  name
+                  role
+                  avatar
+                },
+                branches (limit: ${10}){
+                  totalCount,
+                  cursor,
+                  items {
+                    id,
+                    name,
+                    description,
+                    commits {
+                      totalCount
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: streamWrapper.streamId
+          }
+        })
+        let stream = res.data.stream
+
+        this.$eventHub.$emit('notification', {
+          text: 'Stream Added by URL!',
+        })
+        bus.$emit('stream-added-by-id-or-url', stream.id)
+      }
+      catch (e){
+        this.$eventHub.$emit('notification', {
+          text: 'Can not add stream by URL!',
+        })
+      }
+
+      this.showCreateStreamById = false
     },
     async createStream(){
       let res = await this.$apollo.mutate({

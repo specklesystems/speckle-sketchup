@@ -16,11 +16,10 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def update_state(state)
         to_send_stream_id = state.speckle_state.stream_queue[:stream_id]
-        return state if to_send_stream_id == @stream_id
+        return state if to_send_stream_id == @stream_id || to_send_stream_id.nil?
 
         to_send_converted = state.speckle_state.stream_queue[:converted].to_json
         new_state = state.with_add_queue('convertedFromSketchup', to_send_stream_id, [to_send_converted])
-        new_state = new_state.with_add_queue('oneClickSend', to_send_stream_id, [])
         new_state.with_empty_stream_queue
       end
     end
