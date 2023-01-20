@@ -28,7 +28,10 @@ module SpeckleConnector
           dictionaries.each do |dict_name, entries|
             dict_name = dict_name == 'empty_dictionary_name' ? '' : dict_name
             JSON.parse(entries).each do |key, value|
-              entity.set_attribute(dict_name, key, value)
+              set_attribute(entity, key, value, dict_name)
+            rescue StandardError => e
+              puts("Failed to write key: #{key} value: #{value} to dictionary #{dict_name}")
+              puts(e)
             end
           end
         end
