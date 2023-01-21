@@ -41,12 +41,41 @@ module SpeckleConnector
               dark_theme: dark_theme
             },
             model: {
-              combine_faces_by_material: DICT_HANDLER.get_attribute(sketchup_model,
-                                                                    :combine_faces_by_material, 'Speckle'),
-              include_entity_attributes: DICT_HANDLER.get_attribute(sketchup_model,
-                                                                    :include_entity_attributes, 'Speckle'),
-              merge_coplanar_faces: DICT_HANDLER.get_attribute(sketchup_model,
-                                                               :merge_coplanar_faces, 'Speckle')
+              combine_faces_by_material: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :combine_faces_by_material,
+                'Speckle'
+              ),
+              include_entity_attributes: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :include_entity_attributes,
+                'Speckle'
+              ),
+              include_face_entity_attributes: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :include_face_entity_attributes,
+                'Speckle'
+              ),
+              include_edge_entity_attributes: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :include_edge_entity_attributes,
+                'Speckle'
+              ),
+              include_group_entity_attributes: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :include_group_entity_attributes,
+                'Speckle'
+              ),
+              include_component_entity_attributes: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :include_component_entity_attributes,
+                'Speckle'
+              ),
+              merge_coplanar_faces: DICT_HANDLER.get_attribute(
+                sketchup_model,
+                :merge_coplanar_faces,
+                'Speckle'
+              )
             }
           }
         )
@@ -68,6 +97,10 @@ module SpeckleConnector
       {
         combine_faces_by_material: true,
         include_entity_attributes: true,
+        include_face_entity_attributes: true,
+        include_edge_entity_attributes: true,
+        include_group_entity_attributes: true,
+        include_component_entity_attributes: true,
         merge_coplanar_faces: true
       }
     end
