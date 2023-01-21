@@ -35,6 +35,35 @@
             class="pt-1 my-n5"
             :label="'Include entity attributes'"
         />
+        <v-icon class="ml-3" style="line-height: 0;">mdi-arrow-right-bottom</v-icon>
+        <v-switch
+            v-model="includeEdgeAttributes"
+            class="pt-1 my-n5 ml-10"
+            :label="'Edge'"
+            :disabled="!includeAttributes"
+        />
+        <v-icon class="ml-3" style="line-height: 0;">mdi-arrow-right-bottom</v-icon>
+        <v-switch
+            v-model="includeFaceAttributes"
+            class="pt-1 my-n5 ml-10"
+            :label="'Face'"
+            :disabled="!includeAttributes"
+        />
+        <v-icon class="ml-3" style="line-height: 0;">mdi-arrow-right-bottom</v-icon>
+        <v-switch
+            v-model="includeGroupAttributes"
+            class="pt-1 my-n5 ml-10"
+            :label="'Group'"
+            :disabled="!includeAttributes"
+        />
+        <v-icon class="ml-3" style="line-height: 0;">mdi-arrow-right-bottom</v-icon>
+        <v-switch
+            v-model="includeComponentAttributes"
+            class="pt-1 my-n5 ml-10"
+            :label="'Component'"
+            :disabled="!includeAttributes"
+        />
+
         <div class="sm1 mt-3">Receive Strategy</div>
         <v-divider class="mb-2"/>
         <v-switch
@@ -78,6 +107,10 @@ export default {
       description: "",
       combineFacesByMaterial: this.preferences.model.combine_faces_by_material,
       includeAttributes: this.preferences.model.include_entity_attributes,
+      includeFaceAttributes: this.preferences.model.include_face_entity_attributes,
+      includeEdgeAttributes: this.preferences.model.include_edge_entity_attributes,
+      includeGroupAttributes: this.preferences.model.include_group_entity_attributes,
+      includeComponentAttributes: this.preferences.model.include_component_entity_attributes,
       mergeCoplanarFaces: this.preferences.model.merge_coplanar_faces,
     }
   },
@@ -107,6 +140,46 @@ export default {
           data: {preference: "include_entity_attributes", value: newValue}
         })
         this.$mixpanel.track('Connector Action', { name: 'Include Entity Attributes Option' })
+      },
+      deep: true
+    },
+    'includeFaceAttributes': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "include_face_entity_attributes", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Include Face Entity Attributes Option' })
+      },
+      deep: true
+    },
+    'includeEdgeAttributes': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "include_edge_entity_attributes", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Include Edge Entity Attributes Option' })
+      },
+      deep: true
+    },
+    'includeGroupAttributes': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "include_group_entity_attributes", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Include Group Entity Attributes Option' })
+      },
+      deep: true
+    },
+    'includeComponentAttributes': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "model_preferences_updated",
+          data: {preference: "include_component_entity_attributes", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Include Component Entity Attributes Option' })
       },
       deep: true
     },

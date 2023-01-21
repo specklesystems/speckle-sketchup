@@ -40,7 +40,7 @@ module SpeckleConnector
         # @param edge [Sketchup::Edge] edge to convert line.
         def self.from_edge(edge, units, model_preferences)
           dictionaries = {}
-          if model_preferences[:include_entity_attributes]
+          if model_preferences[:include_entity_attributes] && model_preferences[:include_edge_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(edge)
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}

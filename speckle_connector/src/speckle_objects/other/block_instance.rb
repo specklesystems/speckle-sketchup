@@ -45,7 +45,7 @@ module SpeckleConnector
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, component_defs, preferences, &convert)
           dictionaries = {}
-          if preferences[:model][:include_entity_attributes]
+          if preferences[:model][:include_entity_attributes] && preferences[:model][:include_group_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(group)
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
@@ -66,7 +66,8 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         def self.from_component_instance(component_instance, units, component_defs, preferences, &convert)
           dictionaries = {}
-          if preferences[:model][:include_entity_attributes]
+          if preferences[:model][:include_entity_attributes] &&
+             preferences[:model][:include_component_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler
                            .attribute_dictionaries_to_speckle(component_instance)
           end

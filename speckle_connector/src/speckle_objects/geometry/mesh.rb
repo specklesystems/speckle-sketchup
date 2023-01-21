@@ -89,9 +89,10 @@ module SpeckleConnector
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator
+        # rubocop:disable Metrics/CyclomaticComplexity
         def self.from_face(face, units, model_preferences)
           dictionaries = {}
-          if model_preferences[:include_entity_attributes]
+          if model_preferences[:include_entity_attributes] && model_preferences[:include_face_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
           end
           has_any_soften_edge = face.edges.any?(&:soft?)
@@ -112,6 +113,7 @@ module SpeckleConnector
           speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
+        # rubocop:enable Metrics/CyclomaticComplexity
 
         def face_to_mesh(face)
           mesh = face.loops.count > 1 ? face.mesh : nil
