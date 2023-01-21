@@ -47,13 +47,21 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/AbcSize
         def self.from_definition(definition, units, definitions, preferences, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
 
           dictionaries = {}
           if preferences[:model][:include_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+            if definition.group?
+              if preferences[:model][:include_group_entity_attributes]
+                dictionaries = SketchupModel::Dictionary::DictionaryHandler
+                               .attribute_dictionaries_to_speckle(definition)
+              end
+            elsif preferences[:model][:include_component_entity_attributes]
+              dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
+            end
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
 
@@ -80,6 +88,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/AbcSize
 
         # Finds or creates a component definition from the geometry and the given name
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
