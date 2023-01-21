@@ -9,7 +9,8 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, _data)
-        (saved_streams = state.sketchup_state.sketchup_model.attribute_dictionary('speckle', true)['streams']) or []
+        (saved_streams = state.sketchup_state.sketchup_model
+                              .attribute_dictionary('Speckle', true)['saved_streams']) or []
         state.with_add_queue('setSavedStreams', saved_streams, [])
       end
     end

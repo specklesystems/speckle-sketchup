@@ -80,7 +80,11 @@
         </v-menu>
       </v-app-bar>
 
-      <create-stream-dialog v-if="accounts().length !== 0"/>
+      <create-stream-dialog
+          v-if="accounts().length !== 0"
+          :account-id="activeAccount().userInfo.id"
+          :server-url="activeAccount().serverInfo.url"
+      />
 
       <v-container v-if="accounts().length !== 0" fluid>
         <router-view :stream-search-query="streamSearchQuery" />
@@ -181,9 +185,11 @@ export default {
     sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
-
     accounts() {
       return JSON.parse(localStorage.getItem('localAccounts'))
+    },
+    activeAccount(){
+      return this.accounts().find((account) => account['isDefault'])
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })

@@ -77,9 +77,19 @@ export default {
       this.$apollo.queries.streams.refetch()
       // TODO: We should set previously selected branches and commits after refetch
     })
-
     bus.$on('set-saved-streams', (streamIds) => {
       this.savedStreams = streamIds
+    })
+    bus.$on('stream-added-by-id-or-url', (streamId) => {
+      if (!this.savedStreams){
+        this.savedStreams = []
+        this.savedStreams.push(streamId)
+      } else {
+        if (!this.savedStreams.includes(streamId)){
+          this.savedStreams.push(streamId)
+        }
+      }
+      sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
     })
     sketchup.exec({name: "load_saved_streams", data: {}})
     console.log('LAUNCHED')
