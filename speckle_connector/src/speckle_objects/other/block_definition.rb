@@ -173,7 +173,7 @@ module SpeckleConnector
         # Mesh group id helps to determine how to group faces into meshes.
         # @param face [Sketchup::Face] face to get mesh group id.
         def self.get_mesh_group_id(face, model_preferences)
-          if model_preferences[:include_entity_attributes]
+          if model_preferences[:include_entity_attributes] && model_preferences[:include_face_entity_attributes]
             has_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
             return face.persistent_id.to_s if has_attribute_dictionary
           end
