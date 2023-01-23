@@ -55,7 +55,7 @@
       <timeago class="mr-1" :datetime="stream.updatedAt" />
       |
       <v-icon class="ml-1" small>mdi-account-key-outline</v-icon>
-      {{ stream.role.split(':')[1] }}
+      {{ stream.role === null ? "" : stream.role.split(':')[1] }}
     </v-card-text>
     <v-card-text class="d-flex align-center pb-5 mb-5 -mt-2" style="height: 50px">
       <v-menu offset-y>
