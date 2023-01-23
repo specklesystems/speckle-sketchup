@@ -243,13 +243,16 @@ export default {
         let stream = res.data.stream
 
         this.$eventHub.$emit('notification', {
-          text: 'Stream Added by URL!',
+          text: 'Stream Added by URL!\n',
         })
         bus.$emit('stream-added-by-id-or-url', stream.id)
       }
       catch (e){
-        this.$eventHub.$emit('notification', {
-          text: 'Can not add stream by URL!',
+        this.$eventHub.$emit('error', {
+          text: 'The stream you are trying to add might;\n' +
+              '- lies on different server, \n' +
+              '- be private, \n' +
+              '- not be existed anymore.',
         })
       }
 
