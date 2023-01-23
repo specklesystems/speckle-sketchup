@@ -401,7 +401,7 @@ export default {
         this.loadingSend = false
         this.loadingStage = null
         this.$eventHub.$emit('notification', {
-          text: 'No objects selected. Nothing was sent.'
+          text: 'No objects selected. Nothing was sent.\n'
         })
         return
       }
@@ -455,7 +455,7 @@ export default {
         })
         console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
         this.$eventHub.$emit('notification', {
-          text: 'Model selection sent!',
+          text: 'Model selection sent!\n',
           action: {
             name: 'View in Web',
             url: `${localStorage.getItem('serverUrl')}/streams/${this.streamId}/commits/${
