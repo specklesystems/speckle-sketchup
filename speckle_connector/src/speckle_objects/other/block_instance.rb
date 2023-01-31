@@ -43,16 +43,16 @@ module SpeckleConnector
         # rubocop:enable Metrics/ParameterLists
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
-        def self.from_group(group, units, component_defs, preferences, speckle_state, parent, &convert)
-          new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state, group.persistent_id)
+        def self.from_group(group, units, preferences, speckle_state, &convert)
+          new_speckle_state, _traversed, block_definition = convert.call(group.definition, preferences, speckle_state, group.persistent_id)
           speckle_state = new_speckle_state
           dictionaries = {}
           if preferences[:model][:include_entity_attributes] && preferences[:model][:include_group_entity_attributes]
             dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(group)
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
-          
-          BlockInstance.new(
+
+          block_instance = BlockInstance.new(
             units: units,
             is_sketchup_group: true,
             name: group.name == '' ? nil : group.name,
@@ -67,9 +67,13 @@ module SpeckleConnector
 
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
         # rubocop:disable Metrics/MethodLength
-        def self.from_component_instance(component_instance, units, component_defs, preferences, speckle_state, &convert)
-          new_speckle_state, block_definition = convert.call(component_instance.definition, preferences, speckle_state,
-                                                             component_instance.persistent_id)
+        def self.from_component_instance(component_instance, units, preferences, speckle_state, &convert)
+          new_speckle_state, _traversed, block_definition = convert.call(
+            component_instance.definition,
+            preferences,
+            speckle_state,
+            component_instance.persistent_id
+          )
           speckle_state = new_speckle_state
 
           dictionaries = {}
@@ -79,8 +83,8 @@ module SpeckleConnector
                            .attribute_dictionaries_to_speckle(component_instance)
           end
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
-          
-          BlockInstance.new(
+
+          block_instance = BlockInstance.new(
             units: units,
             is_sketchup_group: false,
             name: component_instance.name == '' ? nil : component_instance.name,
@@ -92,7 +96,7 @@ module SpeckleConnector
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: block_definition,
             sketchup_attributes: att,
-            application_id: component_instance.guid
+            application_id: component_instance.persistent_id.to_s
           )
           return speckle_state, block_instance
         end

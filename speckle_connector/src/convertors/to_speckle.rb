@@ -23,20 +23,20 @@ module SpeckleConnector
       attr_reader :speckle_state
 
       # @return [Relations::ManyToOneRelation] relations between objects.
-      attr_reader :converted_relation
+      attr_accessor :relation
 
       def initialize(state)
         super(state.sketchup_state)
         @state = state
         @speckle_state = @state.speckle_state
         @layers = add_all_layers
-        @converted_relation = Relations::ManyToOneRelation.new
+        @relation = Relations::ManyToOneRelation.new
       end
 
-      def traverse_selection
+      def traverse_selection(preferences)
         state = speckle_state
         sketchup_model.selection.each do |selected_entity|
-          new_speckle_state, converted_object = convert(selected_entity, state)
+          new_speckle_state, converted_object = convert(selected_entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(selected_entity)
           layers[layer_name].push(converted_object)
@@ -48,15 +48,15 @@ module SpeckleConnector
       def convert_selection_to_base(preferences)
         state = speckle_state
         sketchup_model.selection.each do |entity|
-          new_speckle_state, converted_object = convert(entity, preferences, state)
+          new_speckle_state, _traversed, converted_object = convert(entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(entity)
           layers[layer_name].push(converted_object)
         end
-        # send only layers that have any object
+        # send only+ layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
         add_views(base_object_properties) if sketchup_model.pages.any?
-        SpeckleObjects::Base.with_detached_layers(base_object_properties)
+        return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
 
       # Add views from pages.
@@ -103,23 +103,30 @@ module SpeckleConnector
       def send_info(base)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
         # t = Time.now.to_f
-        new_speckle_state, id, _traversed, _objects = serializer.serialize(base, speckle_state)
+        id, _traversed, _objects = serializer.serialize(base)
         # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
         # puts '#####################'
         # puts serializer.batch_objects
         # puts '#####################'
-        return new_speckle_state, id, base_total_children_count, serializer.batch_objects
+        # puts _traversed.to_json
+        return id, base_total_children_count, serializer.batch_objects
       end
 
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       def serialize(converted, speckle_state, parent, entity)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
-        new_speckle_state, id, _traversed, objects = serializer.serialize(converted, speckle_state)
+        # NOTE: Scoped serialization process does not pass to server for now
+        id, traversed, objects = serializer.serialize(converted)
+
+        objects.each do |obj_id, _obj|
+          @relation = @relation.add(obj_id, id) unless id == obj_id
+        end
+        @relation = @relation.add(id, parent)
         speckle_entity = SpeckleEntities.with_converted(entity, objects, parent)
         speckle_state = speckle_state.with_speckle_entity(speckle_entity)
-        converted_relation.add(id, parent)
-        return speckle_state, converted
+        # puts objects.to_json
+        return speckle_state, traversed, converted
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
@@ -130,17 +137,17 @@ module SpeckleConnector
 
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
-          return serialize(line, speckle_state, parent)
+          return serialize(line, speckle_state, parent, entity)
         end
 
         if entity.is_a?(Sketchup::Face)
           mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
-          return serialize(mesh, speckle_state, parent)
+          return serialize(mesh, speckle_state, parent, entity)
         end
 
         if entity.is_a?(Sketchup::Group)
           new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_group(
-            entity, @units, @definitions, preferences, speckle_state, &convert
+            entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
           return serialize(block_instance, speckle_state, parent, entity)
@@ -148,18 +155,19 @@ module SpeckleConnector
 
         if entity.is_a?(Sketchup::ComponentInstance)
           new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
-            entity, @units, @definitions, preferences, speckle_state, &convert
+            entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
           return serialize(block_instance, speckle_state, parent, entity)
         end
-        
+
         if entity.is_a?(Sketchup::ComponentDefinition)
           new_speckle_state, block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(
-            entity, @units, @definitions, preferences, speckle_state, &convert
+            entity, @units, @definitions, preferences, speckle_state, parent, &convert
           )
           speckle_state = new_speckle_state
           return serialize(block_definition, speckle_state, parent, entity)
+        end
 
         return speckle_state, nil
       end

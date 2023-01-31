@@ -103,9 +103,9 @@ module SpeckleConnector
             render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
                                                           .from_material(face.material || face.back_material),
             bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
-            vertices: mesh.nil? ? face_vertices_to_array(face, units) : mesh_points_to_array(mesh, units),
-            faces: mesh.nil? ? face_indices_to_array(face, 0) : mesh_faces_to_array(mesh, -1),
-            sketchup_attributes: { is_soften: has_any_soften_edge },
+            vertices: [],
+            faces: [],
+            sketchup_attributes: att,
             application_id: face.persistent_id
           )
           speckle_mesh.face_to_mesh(face)
