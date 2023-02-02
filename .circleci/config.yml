@@ -121,7 +121,6 @@ workflows:
               only: /.*/
 
       - build-connector:
-          context: innosetup
           slug: sketchup
           requires:
             - get-ci-tools
