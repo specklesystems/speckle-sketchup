@@ -1,26 +1,33 @@
 # frozen_string_literal: true
 
+require_relative 'observable'
+
 module SpeckleConnector
   module Observers
     # Entities observer.
     class EntitiesObserver < Sketchup::EntitiesObserver
-      attr_accessor :registry
-
-      def initialize
-        super()
-        @registry = Sketchup.active_model.attribute_dictionary('speckle_id_registry', true)
-      end
+      include Observable
 
       # rubocop:disable Naming/MethodName
-      def onEraseEntity(entity)
-        app_id = entity.get_attribute('speckle', 'applicationId')
-        return if app_id.nil?
+      # @param entities (Sketchup::Entities)
+      # @param entity (Sketchup::Entity)
+      def onElementAdded(entities, entity)
+        puts "onElementAdded"
+        push_event(:onElementAdded, entities, entity)
+      end
 
-        p(app_id)
+      # @param entities (Sketchup::Entities)
+      # @param entity (Sketchup::Entity)
+      def onElementModified(entities, entity)
+        puts "onElementModified"
+        push_event(:onElementModified, entities, entity)
+      end
 
-        @registry.delete_key(app_id)
-
-        p(@registry)
+      # @param entities (Sketchup::Entities)
+      # @param entity_id (Integer) id of the removed entity.
+      def onElementRemoved(entities, entity_id)
+        puts "onElementRemoved"
+        push_event(:onElementRemoved, entities, entity_id)
       end
       # rubocop:enable Naming/MethodName
     end

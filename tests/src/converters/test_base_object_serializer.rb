@@ -18,7 +18,7 @@ module SpeckleConnector
       end
 
       def test_base_initialize
-        speckle_state = States::SpeckleState.new({}, {}, {})
+        speckle_state = States::SpeckleState.new({}, {}, {}, {})
         start_point = SpeckleObjects::Geometry::Point.new(0.0, 0.0, 0.0, 'm')
         end_point = SpeckleObjects::Geometry::Point.new(10.0, 10.0, 0.0, 'm')
         line = SpeckleObjects::Geometry::Line.test_line(start_point, end_point, 'm')

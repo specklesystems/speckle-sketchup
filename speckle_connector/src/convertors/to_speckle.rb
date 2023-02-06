@@ -124,6 +124,7 @@ module SpeckleConnector
         end
         @relation = @relation.add(id, parent)
         speckle_entity = SpeckleEntities.with_converted(entity, objects, parent)
+        speckle_state = speckle_state.with_relation(@relation)
         speckle_state = speckle_state.with_speckle_entity(speckle_entity)
         # puts objects.to_json
         return speckle_state, traversed, converted
