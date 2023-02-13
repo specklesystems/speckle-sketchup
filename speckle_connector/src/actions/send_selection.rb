@@ -18,7 +18,7 @@ module SpeckleConnector
       def update_state(state)
         converter = Converters::ToSpeckle.new(state)
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
-        id, total_children_count, batches = converter.send_info(base)
+        id, total_children_count, batches, new_speckle_state = converter.send_info(base, new_speckle_state)
         puts("converted #{base.count} objects for stream #{@stream_id}")
         new_state = state.with_speckle_state(new_speckle_state)
         new_state.with_add_queue('convertedFromSketchup', @stream_id, [
