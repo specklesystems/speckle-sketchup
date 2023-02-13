@@ -15,15 +15,15 @@ module SpeckleConnector
   #   If no, then create SpeckleEntity and add it to the SpeckleState to check later.
   module SpeckleEntities
     # Speckle entity is the state object for Sketchup::Entity and it's converted (or not yet) state.
-    def self.with_converted(skp_entity, objs, parent)
+    def self.with_converted(skp_entity, traversed)
       # return the same object if it is already SpeckleEntity
       return skp_entity if skp_entity.is_a?(SpeckleEntity)
-      return SpeckleBlockInstanceEntity.new(skp_entity, objs, parent) if skp_entity.is_a?(Sketchup::Group)
-      return SpeckleBlockInstanceEntity.new(skp_entity, objs, parent) if skp_entity.is_a?(Sketchup::ComponentInstance)
-      return SpeckleBlockDefinitionEntity.new(skp_entity, objs, parent) if skp_entity.is_a?(Sketchup::ComponentDefinition)
-      return SpeckleMeshEntity.new(skp_entity, objs, parent) if skp_entity.is_a?(Sketchup::Face)
+      return SpeckleBlockInstanceEntity.new(skp_entity, traversed) if skp_entity.is_a?(Sketchup::Group)
+      return SpeckleBlockInstanceEntity.new(skp_entity, traversed) if skp_entity.is_a?(Sketchup::ComponentInstance)
+      return SpeckleBlockDefinitionEntity.new(skp_entity, traversed) if skp_entity.is_a?(Sketchup::ComponentDefinition)
+      return SpeckleMeshEntity.new(skp_entity, traversed) if skp_entity.is_a?(Sketchup::Face)
 
-      SpeckleLineEntity.new(skp_entity, objs, parent) if skp_entity.is_a?(Sketchup::Edge)
+      SpeckleLineEntity.new(skp_entity, traversed) if skp_entity.is_a?(Sketchup::Edge)
     end
   end
 end

@@ -35,7 +35,7 @@ module SpeckleConnector
       attr_reader :status
 
       # @param sketchup_entity [Sketchup::Entity] sketchup entity represents {SpeckleEntity} on the model.
-      def initialize(sketchup_entity, traversed_speckle_object, children, parent)
+      def initialize(sketchup_entity, traversed_speckle_object, children)
         @status = SpeckleEntityStatus::UP_TO_DATE
         @sketchup_entity = sketchup_entity
         @application_id = @sketchup_entity.persistent_id
@@ -43,10 +43,10 @@ module SpeckleConnector
         @total_children_count = traversed_speckle_object[:totalChildrenCount]
         @speckle_object = traversed_speckle_object
         @speckle_type = speckle_object[:speckle_type]
-        @speckle_children_objects = children.to_h
+        @speckle_children_objects = children
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler
           .write_initial_base_data(@sketchup_entity, application_id, id, speckle_type,
-                                   @speckle_children_objects.keys.to_a.length, parent)
+                                   @speckle_children_objects.length)
 
         # FIXME: Understand why below condition does not match for same cases. I guess it is a typo bug.
         # unless total_children_count == speckle_children_objects.length

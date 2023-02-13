@@ -9,10 +9,9 @@ module SpeckleConnector
     class SpeckleMeshEntity < SpeckleEntities::SpeckleEntity
       include Immutable::ImmutableUtils
 
-      def initialize(sketchup_face, traversed_speckle_objects, parent)
-        children, speckle_object = traversed_speckle_objects.partition { |obj| obj[1][:speckle_type] == 'Speckle.Core.Models.DataChunk' }
-        super(sketchup_face, speckle_object[0][1], children, parent)
-        @speckle_children_objects = children.to_h
+      def initialize(sketchup_face, traversed_speckle_object)
+        @speckle_children_objects = traversed_speckle_object[:__closure].keys
+        super(sketchup_face, traversed_speckle_object, speckle_children_objects)
       end
 
       alias sketchup_edge sketchup_entity
