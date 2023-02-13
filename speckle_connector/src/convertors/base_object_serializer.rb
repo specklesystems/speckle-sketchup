@@ -15,7 +15,10 @@ module SpeckleConnector
       # @return [Integer] default chunk size the determine splitting base prop into chucks
       attr_reader :default_chunk_size
 
-      def initialize(default_chunk_size = 1000)
+      attr_accessor :speckle_state
+
+      def initialize(speckle_state, default_chunk_size = 1000)
+        @speckle_state = speckle_state
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
@@ -30,33 +33,45 @@ module SpeckleConnector
       def serialize(base)
         id, traversed = traverse_base(base)
         @objects[id] = traversed
-        return id, traversed, @objects
+        return id, traversed, @objects, speckle_state
       end
 
       def total_children_count(id)
         @objects[id][:totalChildrenCount]
       end
 
-      # @param base [Object] base object to populate all children and their relationship
+      # @param base_and_entity [Object] base object to populate all children and their relationship
       # rubocop:disable Metrics/MethodLength
-      def traverse_base(base)
+      def traverse_base(base_and_entity)
+        base, entity = base_and_entity
+
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
 
-        # 2. Initialize traversed base object that will be filled with traversed values or
+        # 2. Get last item from detach_lineage array
+        is_detached = @detach_lineage.pop
+
+        unless entity.nil?
+          is_sent_before = check_base_available_on_state(entity, speckle_state)
+          if is_sent_before
+            speckle_entity = speckle_state.speckle_entities[entity.persistent_id]
+            ref_object = detach_helper(speckle_entity.id)
+            lineage_id = @lineage.pop
+            parent = @lineage[-1]
+            @family_tree[parent] = @family_tree[parent].merge(speckle_entity.speckle_object[:__closure])
+            @objects[speckle_entity.id] = ref_object if is_detached
+            return speckle_entity.id, ref_object
+          end
+        end
+
+        # 3. Initialize traversed base object that will be filled with traversed values or
         # traversed base objects as props.
         traversed_base = SpeckleObjects::Base.new(speckle_type: base[:speckle_type], id: '')
 
-        # is_sent_before = check_base_available_on_state(base, speckle_state)
-        # return speckle_state, base['id'], speckle_state.speckle_entities[base[:applicationId]] if is_sent_before
-
-        # 3. Iterate all entries (key, value) of the base {Base > Hash} object
+        # 4. Iterate all entries (key, value) of the base {Base > Hash} object
         # speckle_state = traverse_base_props(base, traversed_base)
         traverse_base_props(base, traversed_base)
         # this is where all props are done for current `traversed_base`
-
-        # 4. Get last item from detach_lineage array
-        is_detached = @detach_lineage.pop
 
         # 5. Add closures
         closure = {}
@@ -88,6 +103,11 @@ module SpeckleConnector
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
 
+        unless entity.nil?
+          speckle_entity = SpeckleEntities.with_converted(entity, traversed_base)
+          @speckle_state = speckle_state.with_speckle_entity(speckle_entity)
+        end
+
         return id, traversed_base
       end
       # rubocop:enable Metrics/MethodLength
@@ -111,7 +131,7 @@ module SpeckleConnector
           # FIXME: This part is WIP. To pass directly already traversed objects.
           if value.is_a?(Hash) && !value[:speckle_type].nil? && (!value[:id].nil? && value[:id] != '')
             traversed_base[prop] = value
-            puts "in the body"
+            puts 'in the body'
             puts value[:id]
             next
           end
@@ -196,6 +216,12 @@ module SpeckleConnector
 
         # 2. Arrays
         if value.is_a?(Array)
+          if value[1].is_a?(Sketchup::Entity)
+            @detach_lineage.append(is_detach)
+            _id, traversed_base = traverse_base(value)
+            return traversed_base
+          end
+
           # 2.1. If it is not detached then iterate array by traversing with their value
           unless is_detach
             values = value.collect do |el|
@@ -286,10 +312,10 @@ module SpeckleConnector
       end
       # rubocop:enable Metrics/MethodLength
 
-      # @param base [Object] base object to populate all children and their relationship
+      # @param entity [Sketchup::Entity] source entity object
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
-      def check_base_available_on_state(base, speckle_state)
-        speckle_state.speckle_entities.keys.include?(base[:applicationId])
+      def check_base_available_on_state(entity, speckle_state)
+        speckle_state.speckle_entities.keys.include?(entity.persistent_id)
       end
     end
   end

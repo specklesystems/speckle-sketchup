@@ -11,6 +11,7 @@ require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../constants/path_constants'
 
 module SpeckleConnector
   module Converters
@@ -36,7 +37,7 @@ module SpeckleConnector
       def traverse_selection(preferences)
         state = speckle_state
         sketchup_model.selection.each do |selected_entity|
-          new_speckle_state, converted_object = convert(selected_entity, preferences, state)
+          new_speckle_state, _traversed, converted_object = convert(selected_entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(selected_entity)
           layers[layer_name].push(converted_object)
@@ -48,10 +49,10 @@ module SpeckleConnector
       def convert_selection_to_base(preferences)
         state = speckle_state
         sketchup_model.selection.each do |entity|
-          new_speckle_state, _traversed, converted_object = convert(entity, preferences, state)
+          new_speckle_state, _traversed, converted_object_with_entity = convert(entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(entity)
-          layers[layer_name].push(converted_object)
+          layers[layer_name].push(converted_object_with_entity)
         end
         # send only+ layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
@@ -98,27 +99,43 @@ module SpeckleConnector
       # rubocop:enable Metrics/MethodLength
 
       # Serialized and traversed information to send batches.
-      # @param base [SpeckleObjects::Base] base object to serialize.
+      # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def send_info(base)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+      def send_info(base_and_entity, speckle_state)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state)
         # t = Time.now.to_f
-        id, _traversed, _objects = serializer.serialize(base)
+        id, _traversed, _objects = serializer.serialize(base_and_entity)
+        batches = serializer.batch_objects
+        write_to_desktop(id, batches)
         # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        # puts '#####################'
-        # puts serializer.batch_objects
-        # puts '#####################'
-        # puts _traversed.to_json
-        return id, base_total_children_count, serializer.batch_objects
+        return id, base_total_children_count, batches, serializer.speckle_state
+      end
+
+      def write_to_desktop(id, batches)
+        File.write("#{DESKTOP_PATH}/#{id}.json", batches.first)
+      end
+
+      def serialize(converted, speckle_state, parent, entity)
+        # serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+        # # NOTE: Scoped serialization process does not pass to server for now
+        # id, traversed, objects = serializer.serialize([converted, entity], speckle_state)
+        # objects.each do |obj_id, _obj|
+        #   @relation = @relation.add(obj_id, id) unless id == obj_id
+        # end
+        # @relation = @relation.add(id, parent)
+        # speckle_entity = SpeckleEntities.with_converted(entity, objects, parent)
+        # speckle_state = speckle_state.with_relation(@relation)
+        # speckle_state = speckle_state.with_speckle_entity(speckle_entity)
+        # puts objects.to_json
+        return speckle_state, nil, [converted, entity]
       end
 
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
-      def serialize(converted, speckle_state, parent, entity)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
+      def serialize_old(converted, speckle_state, parent, entity)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state)
         # NOTE: Scoped serialization process does not pass to server for now
-        id, traversed, objects = serializer.serialize(converted)
-
+        id, traversed, objects = serializer.serialize([converted, entity])
         objects.each do |obj_id, _obj|
           @relation = @relation.add(obj_id, id) unless id == obj_id
         end
