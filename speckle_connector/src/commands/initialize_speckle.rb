@@ -31,9 +31,9 @@ module SpeckleConnector
       # Do the actual Speckle initialization.
       def initialize_speckle(app)
         # TODO: Initialize here speckle states and observers.
-        handler = Observers::Factory.create_handler(app)
-        app.add_observer_handler!(handler)
-        observers = Observers::Factory.create_observers(handler)
+        observer_handler = Observers::Factory.create_handler(app)
+        app.add_observer_handler!(observer_handler)
+        observers = Observers::Factory.create_observers(observer_handler)
         app.update_state!(Actions::InitializeSpeckle, observers)
         dialog_specs = {
           dialog_id: Ui::SPECKLE_UI_ID,
