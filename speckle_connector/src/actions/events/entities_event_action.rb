@@ -2,7 +2,6 @@
 
 require_relative 'event_action'
 require_relative '../../sketchup_model/utils/face_utils'
-require_relative '../../sketchup_model/utils/entity_utils'
 
 module SpeckleConnector
   module Actions
