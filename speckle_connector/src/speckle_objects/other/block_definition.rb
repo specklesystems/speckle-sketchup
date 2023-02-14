@@ -68,7 +68,7 @@ module SpeckleConnector
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
                        new_speckle_state, geo = group_entities_to_speckle(
-                         definition, units, preferences, speckle_state, parent, &convert
+                         definition, preferences, speckle_state, parent, &convert
                        )
                        speckle_state = new_speckle_state
                        geo
@@ -76,7 +76,7 @@ module SpeckleConnector
                        definition.entities.map do |entity|
                          next if entity.is_a?(Sketchup::Edge) && entity.faces.any?
 
-                         new_speckle_state, _traversed, converted = convert.call(entity, preferences,
+                         new_speckle_state, converted = convert.call(entity, preferences,
                                                                                  speckle_state,
                                                                                  definition.persistent_id)
                          speckle_state = new_speckle_state
@@ -137,22 +137,22 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        def self.group_entities_to_speckle(definition, units, preferences, speckle_state, parent, &convert)
+        def self.group_entities_to_speckle(definition, preferences, speckle_state, parent, &convert)
           orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
-            new_speckle_state, _traversed, converted = convert.call(orphan_edge, preferences, speckle_state, parent)
+            new_speckle_state, converted = convert.call(orphan_edge, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
           end
 
           nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
-            new_speckle_state, _traversed, converted = convert.call(component_instance, preferences, speckle_state, parent)
+            new_speckle_state, converted = convert.call(component_instance, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
           end
 
           nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
-            new_speckle_state, _traversed, converted = convert.call(group, preferences, speckle_state, parent)
+            new_speckle_state, converted = convert.call(group, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
           end
@@ -166,13 +166,13 @@ module SpeckleConnector
               speckle_state = new_speckle_state
             end
             # Update mesh overwrites points and polygons into base object.
-            mesh_groups.each { |_, mesh| mesh.update_mesh }
+            mesh_groups.each { |_, mesh| mesh.first.update_mesh }
 
             return speckle_state, lines + nested_blocks + nested_groups + mesh_groups.values
           else
             meshes = []
             definition.entities.grep(Sketchup::Face).collect do |face|
-              new_speckle_state, _traversed, converted = convert.call(face, preferences, speckle_state, parent)
+              new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
               meshes.append(converted)
               speckle_state = new_speckle_state
             end
@@ -188,10 +188,11 @@ module SpeckleConnector
         def self.group_meshes_by_material(face, mesh_groups, speckle_state, preferences, parent, &convert)
           # convert material
           mesh_group_id = get_mesh_group_id(face, preferences[:model])
-          new_speckle_state, _traversed, converted = convert.call(face, preferences, speckle_state, parent)
+          new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
           mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
           mesh_group = mesh_groups[mesh_group_id]
-          mesh_group.face_to_mesh(face)
+          mesh_group[0].face_to_mesh(face)
+          mesh_group[1].append(face)
           new_speckle_state
         end
 

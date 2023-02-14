@@ -10,15 +10,15 @@ module SpeckleConnector
       include Immutable::ImmutableUtils
 
       # @return [Hash{String=>SpeckleObjects::Base}] speckle objects belongs to block instance
-      attr_reader :speckle_children_objects
+      attr_reader :children
 
       # @return [Boolean] whether block instance represented as sketchup group or component instance
       attr_reader :is_sketchup_group
 
       def initialize(sketchup_group_or_component_instance, traversed_speckle_object)
-        @speckle_children_objects = traversed_speckle_object[:__closure].keys
+        @children = traversed_speckle_object[:__closure].nil? ? {} : traversed_speckle_object[:__closure]
         @is_sketchup_group = traversed_speckle_object[:is_sketchup_group]
-        super(sketchup_group_or_component_instance, traversed_speckle_object, speckle_children_objects)
+        super(sketchup_group_or_component_instance, traversed_speckle_object, children)
       end
 
       alias sketchup_edge sketchup_entity

@@ -9,9 +9,12 @@ module SpeckleConnector
     class SpeckleMeshEntity < SpeckleEntities::SpeckleEntity
       include Immutable::ImmutableUtils
 
+      # @return [Hash{String=>SpeckleObjects::Base}] speckle objects belongs to edge
+      attr_reader :children
+
       def initialize(sketchup_face, traversed_speckle_object)
-        @speckle_children_objects = traversed_speckle_object[:__closure].keys
-        super(sketchup_face, traversed_speckle_object, speckle_children_objects)
+        @children = traversed_speckle_object[:__closure].nil? ? {} : traversed_speckle_object[:__closure]
+        super(sketchup_face, traversed_speckle_object, children)
       end
 
       alias sketchup_edge sketchup_entity

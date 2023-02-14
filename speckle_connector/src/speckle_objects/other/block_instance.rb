@@ -44,7 +44,7 @@ module SpeckleConnector
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, preferences, speckle_state, &convert)
-          new_speckle_state, _traversed, block_definition = convert.call(group.definition, preferences, speckle_state, group.persistent_id)
+          new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state, group.persistent_id)
           speckle_state = new_speckle_state
           dictionaries = {}
           if preferences[:model][:include_entity_attributes] && preferences[:model][:include_group_entity_attributes]
@@ -68,7 +68,7 @@ module SpeckleConnector
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
         # rubocop:disable Metrics/MethodLength
         def self.from_component_instance(component_instance, units, preferences, speckle_state, &convert)
-          new_speckle_state, _traversed, block_definition = convert.call(
+          new_speckle_state, block_definition = convert.call(
             component_instance.definition,
             preferences,
             speckle_state,
