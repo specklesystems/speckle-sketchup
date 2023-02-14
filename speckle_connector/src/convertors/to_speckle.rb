@@ -96,7 +96,7 @@ module SpeckleConnector
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_objects
-        write_to_desktop(id, batches)
+        # write_to_desktop(id, batches)
         puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
         return id, base_total_children_count, batches, serializer.speckle_state

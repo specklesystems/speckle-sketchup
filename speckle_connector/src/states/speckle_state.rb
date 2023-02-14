@@ -53,6 +53,10 @@ module SpeckleConnector
 
       def with_speckle_entity(traversed_entity)
         new_speckle_entities = speckle_entities.put(traversed_entity.application_id, traversed_entity)
+        with_speckle_entities(new_speckle_entities)
+      end
+
+      def with_speckle_entities(new_speckle_entities)
         with(:@speckle_entities => new_speckle_entities)
       end
 

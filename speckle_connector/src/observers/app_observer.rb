@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'observable'
+require_relative 'event_observer'
 
 module SpeckleConnector
   module Observers
     # App observer.
     class AppObserver < Sketchup::AppObserver
-      include Observable
+      include EventObserver
 
       # rubocop:disable Naming/MethodName
       # SketchUp observer method triggered when new empty model is created.

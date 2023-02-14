@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'observable'
+require_relative 'event_observer'
 
 module SpeckleConnector
   module Observers
     # Entities observer.
     class EntitiesObserver < Sketchup::EntitiesObserver
-      include Observable
+      include EventObserver
 
       # rubocop:disable Naming/MethodName
       # @param entities (Sketchup::Entities)

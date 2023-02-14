@@ -3,6 +3,7 @@
 require_relative 'action'
 require_relative 'events/app_event_action'
 require_relative 'events/entities_event_action'
+require_relative 'events/model_event_action'
 require_relative '../constants/observer_constants'
 
 module SpeckleConnector
@@ -12,7 +13,7 @@ module SpeckleConnector
       RUN_ORDER = {
         APP_OBSERVER => Events::AppEventAction,
         ENTITIES_OBSERVER => Events::EntitiesEventAction,
-        # MODEL_OBSERVER => Events::ModelEventAction,
+        MODEL_OBSERVER => Events::ModelEventAction,
         # MATERIALS_OBSERVER => Events::MaterialsEventAction,
         # LAYERS_OBSERVER => Events::LayerEventAction,
         # PAGES_OBSERVER => Events::PagesEventAction,

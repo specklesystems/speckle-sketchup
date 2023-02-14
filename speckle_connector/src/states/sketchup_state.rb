@@ -10,9 +10,12 @@ module SpeckleConnector
       # @return [Sketchup::Model] active model on the sketchup
       attr_reader :sketchup_model
 
+      attr_reader :attached_observers
+
       # @param sketchup_model [Sketchup::Model] active model on the sketchup
       def initialize(sketchup_model)
         @sketchup_model = sketchup_model
+        @attached_observers = Immutable::EmptyHash
       end
 
       # @return [Integer] length units code of the sketchup model.

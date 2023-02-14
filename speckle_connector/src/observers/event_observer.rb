@@ -6,7 +6,7 @@ require_relative '../actions/on_events_action'
 module SpeckleConnector
   module Observers
     # Observer classes includes it to check common operations for all observer classes.
-    module Observable
+    module EventObserver
       # @return [ObserverHandler] handler for observer events
       attr_reader :observer_handler
 

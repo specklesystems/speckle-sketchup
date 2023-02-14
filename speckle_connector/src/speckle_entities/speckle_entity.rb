@@ -54,6 +54,18 @@ module SpeckleConnector
         # end
       end
 
+      def with_up_to_date
+        with(:@status => SpeckleEntityStatus::UP_TO_DATE)
+      end
+
+      def with_edited
+        with(:@status => SpeckleEntityStatus::EDITED)
+      end
+
+      def with_removed
+        with(:@status => SpeckleEntityStatus::REMOVED)
+      end
+
       def valid?
         sketchup_entity.valid?
       end

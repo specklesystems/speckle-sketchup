@@ -32,7 +32,7 @@ module SpeckleConnector
         # layers.add_observer(observers[LAYERS_OBSERVER_NAME])
         entities = sketchup_model.entities
         entities.add_observer(observers[ENTITIES_OBSERVER])
-        # sketchup_model.add_observer(observers[MODEL_OBSERVER])
+        sketchup_model.add_observer(observers[MODEL_OBSERVER])
         # materials = sketchup_model.materials
         # materials.add_observer(observers[MATERIALS_OBSERVER_NAME])
         # pages = sketchup_model.pages

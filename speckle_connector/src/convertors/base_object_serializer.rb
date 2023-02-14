@@ -48,21 +48,21 @@ module SpeckleConnector
         # 2. Get last item from detach_lineage array
         is_detached = @detach_lineage.pop
 
-        unless entities.nil?
-          is_sent_before = entities.all? do |entity|
-            check_base_available_on_state(entity, speckle_state)
-          end
-          if is_sent_before
-            speckle_entity = speckle_state.speckle_entities[entities.first.persistent_id]
-            ref_object = detach_helper(speckle_entity.id)
-            parent = @lineage[-1]
-            unless @family_tree[parent].nil?
-              @family_tree[parent] = @family_tree[parent].merge(speckle_entity.speckle_object[:__closure])
-            end
-            @objects[speckle_entity.id] = ref_object if is_detached
-            return speckle_entity.id, ref_object
-          end
-        end
+        # unless entities.nil?
+        #   is_sent_before = entities.all? do |entity|
+        #     check_base_available_on_state(entity, speckle_state)
+        #   end
+        #   if is_sent_before
+        #     speckle_entity = speckle_state.speckle_entities[entities.first.persistent_id]
+        #     ref_object = detach_helper(speckle_entity.id)
+        #     parent = @lineage[-1]
+        #     unless @family_tree[parent].nil?
+        #       @family_tree[parent] = @family_tree[parent].merge(speckle_entity.speckle_object[:__closure])
+        #     end
+        #     @objects[speckle_entity.id] = ref_object if is_detached
+        #     return speckle_entity.id, ref_object
+        #   end
+        # end
 
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
@@ -320,7 +320,10 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] source entity object
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       def check_base_available_on_state(entity, speckle_state)
-        speckle_state.speckle_entities.keys.include?(entity.persistent_id)
+        is_exist = speckle_state.speckle_entities.keys.include?(entity.persistent_id)
+        return is_exist unless is_exist
+
+        speckle_state.speckle_entities[entity.persistent_id].status == 0
       end
     end
   end
