@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'action'
+require_relative 'initialize_materials'
 require_relative '../states/state'
 require_relative '../constants/observer_constants'
 
@@ -18,6 +19,7 @@ module SpeckleConnector
         # new_model_state = InitializeMaterials.update_state(new_model_state)
         new_sketchup_state = state.sketchup_state.with(:@sketchup_model => sketchup_model)
         new_state = state.with(:@sketchup_state => new_sketchup_state)
+        new_state = InitializeMaterials.update_state(new_state)
         attach_observers(sketchup_model, new_state.speckle_state.observers)
         new_state
       end

@@ -18,12 +18,11 @@ module SpeckleConnector
             sketchup_state = state.sketchup_state
             active_path = sketchup_state.sketchup_model.active_path
             observers = state.speckle_state.observers
-            attached_observers = sketchup_state.attached_observers
-            update_object_observers(active_path, observers, attached_observers)
+            update_object_observers(active_path, observers)
             return state
           end
 
-          def self.update_object_observers(path, observers, attached_observers)
+          def self.update_object_observers(path, observers)
             path[-1].definition.entities.add_observer(observers[ENTITIES_OBSERVER]) unless path.nil?
           end
         end
