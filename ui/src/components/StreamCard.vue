@@ -7,7 +7,8 @@
   >
     <v-toolbar flat height="70" :color="getColor(invalid)">
       <v-btn v-tooptip="''" icon small outlined class="delta-btn" v-if="invalid" @click="activateDiffing">
-        <v-icon class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-delta</v-icon>
+        <v-icon v-if="!diffing" class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-triangle-outline</v-icon>
+        <v-icon v-else class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-triangle</v-icon>
       </v-btn>
       <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
