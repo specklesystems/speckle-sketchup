@@ -2,6 +2,7 @@
 
 require_relative 'event_action'
 require_relative '../../sketchup_model/utils/face_utils'
+require_relative '../../constants/dict_constants'
 
 module SpeckleConnector
   module Actions
@@ -10,7 +11,10 @@ module SpeckleConnector
         class OnElementAdded
           # @param state [States::State] the current state of the SpeckleConnector Application
           def self.update_state(state, event_data)
-            # TODO: Do state updates when element added
+            speckle_state = state.speckle_state
+            modified_entities = event_data.to_a.collect { |e| e[1] }
+            # do not copy speckle base object specific attributes, because they are entity specific
+            modified_entities.each { |entity| entity.delete_attribute(SPECKLE_BASE_OBJECT) }
             state
           end
         end
@@ -23,11 +27,12 @@ module SpeckleConnector
             if modified_entity.is_a?(Sketchup::Face)
               path = state.sketchup_state.sketchup_model.active_path
               modified_faces = SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
-              parent_ids = path.nil? ? [] : path.collect(&:persistent_id)
+              path_objects = path.nil? ? [] : path + path.collect(&:definition)
+              parent_ids = path_objects.collect(&:persistent_id)
               ids_to_invalidate = modified_faces.collect(&:persistent_id) + parent_ids
               entities_to_invalidate = speckle_entities_to_invalidate(speckle_state, ids_to_invalidate)
               new_speckle_state = invalidate_speckle_entities(speckle_state, entities_to_invalidate)
-              return state.with_speckle_state(new_speckle_state)
+              return state.with_speckle_state(new_speckle_state.with_invalid_streams_queue)
             end
 
             state
@@ -42,7 +47,7 @@ module SpeckleConnector
           def self.invalidate_speckle_entities(speckle_state, entities_to_invalidate)
             speckle_entities = speckle_state.speckle_entities
             entities_to_invalidate.each do |id, speckle_entity|
-              edited_speckle_entity = speckle_entity.with_edited
+              edited_speckle_entity = speckle_entity.with_invalid
               speckle_entities = speckle_entities.put(id, edited_speckle_entity)
             end
             speckle_state.with_speckle_entities(speckle_entities)

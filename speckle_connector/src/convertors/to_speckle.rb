@@ -90,9 +90,10 @@ module SpeckleConnector
 
       # Serialized and traversed information to send batches.
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
+      # @param stream_id [String] stream id to send conversion
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def send_info(base_and_entity, speckle_state)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state)
+      def serialize(base_and_entity, speckle_state, stream_id)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_objects

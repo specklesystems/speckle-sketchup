@@ -15,10 +15,15 @@ module SpeckleConnector
       # @return [Integer] default chunk size the determine splitting base prop into chucks
       attr_reader :default_chunk_size
 
+      # @return [String] stream id to send conversion
+      attr_reader :stream_id
+
       attr_accessor :speckle_state
 
-      def initialize(speckle_state, default_chunk_size = 1000)
+      # @param stream_id [String] stream id to send conversion
+      def initialize(speckle_state, stream_id, default_chunk_size = 1000)
         @speckle_state = speckle_state
+        @stream_id = stream_id
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
@@ -107,8 +112,13 @@ module SpeckleConnector
         @objects[id] = traversed_base if is_detached
 
         unless entities.nil?
-          entities.each do |entity|
-            speckle_entity = SpeckleEntities.with_converted(entity, traversed_base)
+          entities.uniq.each do |entity|
+
+            speckle_entity = if speckle_state.speckle_entities.keys.include?(entity.persistent_id)
+                               speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
+                             else
+                               SpeckleEntities.with_converted(entity, traversed_base, stream_id)
+                             end
             @speckle_state = speckle_state.with_speckle_entity(speckle_entity)
           end
         end

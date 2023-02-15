@@ -11,7 +11,6 @@ module SpeckleConnector
       # rubocop:disable Naming/MethodName
       # @param model (Sketchup::Model)
       def onActivePathChanged(model)
-        puts 'onActivePathChanged'
         push_event(:onActivePathChanged, model)
       end
       # rubocop:enable Naming/MethodName
