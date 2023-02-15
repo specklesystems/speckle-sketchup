@@ -2,6 +2,7 @@
 
 require_relative '../immutable/immutable'
 require_relative '../callbacks/callback_message'
+require_relative '../speckle_entities/speckle_entity'
 
 module SpeckleConnector
   module States
@@ -9,8 +10,8 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
-      # @return [ImmutableHash{Integer=>SpeckleBaseEntity}] persistent_id of the sketchup entity and corresponding
-      #  speckle entity
+      # @return [ImmutableHash{Integer=>SpeckleEntities::SpeckleEntity}] persistent_id of the sketchup entity and
+      #  corresponding speckle entity
       attr_reader :speckle_entities
 
       # @return [Array] accounts on appdata.
@@ -47,6 +48,12 @@ module SpeckleConnector
         with(:@message_queue => new_queue)
       end
 
+      def with_invalid_streams_queue
+        new_queue = message_queue.merge({ "updateInvalidStreams":
+                                            "updateInvalidStreams(#{JSON.generate(invalid_streams)})" })
+        with(:@message_queue => new_queue)
+      end
+
       def with_accounts(new_accounts)
         with(:@accounts => new_accounts)
       end
@@ -62,6 +69,12 @@ module SpeckleConnector
 
       def with_relation(new_relation)
         with(:@relation => new_relation)
+      end
+
+      def invalid_streams
+        speckle_entities.collect do |_id, speckle_entity|
+          speckle_entity.invalid_stream_ids
+        end.reduce([], :concat).uniq
       end
     end
   end
