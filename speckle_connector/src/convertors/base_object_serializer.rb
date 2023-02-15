@@ -50,9 +50,6 @@ module SpeckleConnector
       def traverse_base(base_and_entities)
         base, entities = base_and_entities
 
-        # 2. Get last item from detach_lineage array
-        is_detached = @detach_lineage.pop
-
         # unless entities.nil?
         #   is_sent_before = entities.all? do |entity|
         #     check_base_available_on_state(entity, speckle_state)
@@ -72,14 +69,17 @@ module SpeckleConnector
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
 
-        # 3. Initialize traversed base object that will be filled with traversed values or
+        # 2. Initialize traversed base object that will be filled with traversed values or
         # traversed base objects as props.
         traversed_base = SpeckleObjects::Base.new(speckle_type: base[:speckle_type], id: '')
 
-        # 4. Iterate all entries (key, value) of the base {Base > Hash} object
+        # 3. Iterate all entries (key, value) of the base {Base > Hash} object
         # speckle_state = traverse_base_props(base, traversed_base)
         traverse_base_props(base, traversed_base)
         # this is where all props are done for current `traversed_base`
+
+        # 4. Get last item from detach_lineage array
+        is_detached = @detach_lineage.pop
 
         # 5. Add closures
         closure = {}
