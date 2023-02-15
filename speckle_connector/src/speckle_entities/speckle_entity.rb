@@ -42,10 +42,13 @@ module SpeckleConnector
 
       attr_reader :source_material
 
+      attr_reader :active_diffing_stream_id
+
       # @param sketchup_entity [Sketchup::Entity] sketchup entity represents {SpeckleEntity} on the model.
       def initialize(sketchup_entity, traversed_speckle_object, children, stream_id)
         @status = SpeckleEntityStatus::UP_TO_DATE
         @source_material = sketchup_entity.material
+        @active_diffing_stream_id = nil
         @valid_stream_ids = [stream_id]
         @invalid_stream_ids = []
         @sketchup_entity = sketchup_entity
@@ -74,6 +77,16 @@ module SpeckleConnector
         sketchup_entity.set_attribute(SPECKLE_BASE_OBJECT, VALID_STREAM_IDS, [])
         sketchup_entity.set_attribute(SPECKLE_BASE_OBJECT, INVALID_STREAM_IDS, valid)
         with(:@valid_stream_ids => [], :@invalid_stream_ids => valid)
+      end
+
+      def activate_diffing(stream_id, material)
+        sketchup_entity.material = material
+        with(:@active_diffing_stream_id => stream_id)
+      end
+
+      def deactivate_diffing
+        sketchup_entity.material = @source_material
+        with(:@active_diffing_stream_id => nil)
       end
 
       def change_material(material)

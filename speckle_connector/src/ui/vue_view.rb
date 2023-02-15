@@ -13,11 +13,13 @@ require_relative '../commands/remove_stream'
 require_relative '../commands/notify_connected'
 require_relative '../commands/user_preferences_updated'
 require_relative '../commands/model_preferences_updated'
+require_relative '../commands/activate_diffing'
 
 require_relative '../actions/reload_accounts'
 require_relative '../actions/load_saved_streams'
 require_relative '../actions/init_local_accounts'
 require_relative '../actions/collect_preferences'
+require_relative '../actions/deactivate_diffing'
 require_relative '../actions/collect_versions'
 
 module SpeckleConnector
@@ -68,7 +70,9 @@ module SpeckleConnector
           collect_preferences: Commands::ActionCommand.new(@app, Actions::CollectPreferences),
           collect_versions: Commands::ActionCommand.new(@app, Actions::CollectVersions),
           user_preferences_updated: Commands::UserPreferencesUpdated.new(@app),
-          model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app)
+          model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app),
+          activate_diffing: Commands::ActivateDiffing.new(@app),
+          deactivate_diffing: Commands::ActionCommand.new(@app, Actions::DeactivateDiffing)
         }.freeze
       end
     end
