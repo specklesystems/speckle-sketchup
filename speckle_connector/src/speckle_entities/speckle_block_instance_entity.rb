@@ -15,10 +15,10 @@ module SpeckleConnector
       # @return [Boolean] whether block instance represented as sketchup group or component instance
       attr_reader :is_sketchup_group
 
-      def initialize(sketchup_group_or_component_instance, traversed_speckle_object)
+      def initialize(sketchup_group_or_component_instance, traversed_speckle_object, stream_id)
         @children = traversed_speckle_object[:__closure].nil? ? {} : traversed_speckle_object[:__closure]
         @is_sketchup_group = traversed_speckle_object[:is_sketchup_group]
-        super(sketchup_group_or_component_instance, traversed_speckle_object, children)
+        super(sketchup_group_or_component_instance, traversed_speckle_object, children, stream_id)
       end
 
       alias sketchup_edge sketchup_entity

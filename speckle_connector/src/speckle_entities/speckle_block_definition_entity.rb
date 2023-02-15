@@ -12,9 +12,9 @@ module SpeckleConnector
       # @return [Hash{String=>SpeckleObjects::Base}] speckle objects belongs to block instance
       attr_reader :children
 
-      def initialize(sketchup_group_or_component_instance, traversed_speckle_object)
+      def initialize(sketchup_group_or_component_instance, traversed_speckle_object, stream_id)
         @children = traversed_speckle_object[:__closure].nil? ? {} : traversed_speckle_object[:__closure]
-        super(sketchup_group_or_component_instance, traversed_speckle_object, children)
+        super(sketchup_group_or_component_instance, traversed_speckle_object, children, stream_id)
       end
 
       alias sketchup_edge sketchup_entity
