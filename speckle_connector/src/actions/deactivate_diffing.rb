@@ -8,7 +8,7 @@ module SpeckleConnector
     class DeactivateDiffing < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _data)
+      def self.update_state(state)
         puts 'Diffing deactivated!'
         speckle_entities = state.speckle_state.speckle_entities
         diffing_activated_speckle_entities = speckle_entities.reject do |_id, entity|
