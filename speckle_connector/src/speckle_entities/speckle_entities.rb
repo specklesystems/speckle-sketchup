@@ -19,8 +19,15 @@ module SpeckleConnector
       # return the same object if it is already SpeckleEntity
       return skp_entity if skp_entity.is_a?(SpeckleEntity)
       return SpeckleBlockInstanceEntity.new(skp_entity, traversed, stream_id) if skp_entity.is_a?(Sketchup::Group)
-      return SpeckleBlockInstanceEntity.new(skp_entity, traversed, stream_id) if skp_entity.is_a?(Sketchup::ComponentInstance)
-      return SpeckleBlockDefinitionEntity.new(skp_entity, traversed, stream_id) if skp_entity.is_a?(Sketchup::ComponentDefinition)
+
+      if skp_entity.is_a?(Sketchup::ComponentInstance)
+        return SpeckleBlockInstanceEntity.new(skp_entity, traversed,
+                                              stream_id)
+      end
+      if skp_entity.is_a?(Sketchup::ComponentDefinition)
+        return SpeckleBlockDefinitionEntity.new(skp_entity, traversed,
+                                                stream_id)
+      end
       return SpeckleMeshEntity.new(skp_entity, traversed, stream_id) if skp_entity.is_a?(Sketchup::Face)
 
       SpeckleLineEntity.new(skp_entity, traversed, stream_id) if skp_entity.is_a?(Sketchup::Edge)

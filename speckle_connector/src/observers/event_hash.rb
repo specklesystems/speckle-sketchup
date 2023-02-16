@@ -4,6 +4,7 @@ require_relative '../ext/immutable_ruby/core'
 
 module SpeckleConnector
   module Observers
+    # Collection of events.
     class EventHash < Immutable::Hash
       def push_event(observer_class, event_name, data)
         observer_events = self[observer_class] || Immutable::EmptyHash

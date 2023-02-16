@@ -8,8 +8,7 @@ module SpeckleConnector
     # `A has child B` is Many to One relationship. Each person can have only one parent,
     # but one parent can have several children.
     class ManyToOneRelation
-      attr_reader :parent_table
-      attr_reader :children_table
+      attr_reader :parent_table, :children_table
 
       # @param child [Object] the child element in the relation to look for parent
       # @return [Object] the parent element that is in relation with the child

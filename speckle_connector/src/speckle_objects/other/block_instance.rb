@@ -44,7 +44,8 @@ module SpeckleConnector
 
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, preferences, speckle_state, &convert)
-          new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state, group.persistent_id)
+          new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state,
+                                                             group.persistent_id)
           speckle_state = new_speckle_state
           dictionaries = {}
           if preferences[:model][:include_entity_attributes] && preferences[:model][:include_group_entity_attributes]

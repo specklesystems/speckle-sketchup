@@ -40,9 +40,7 @@ module SpeckleConnector
       # @return [SpeckleEntityStatus] current status of the Speckle Entity.
       attr_reader :status
 
-      attr_reader :source_material
-
-      attr_reader :active_diffing_stream_id
+      attr_reader :source_material, :active_diffing_stream_id
 
       # @param sketchup_entity [Sketchup::Entity] sketchup entity represents {SpeckleEntity} on the model.
       def initialize(sketchup_entity, traversed_speckle_object, children, stream_id)

@@ -7,11 +7,12 @@ require_relative '../../constants/dict_constants'
 module SpeckleConnector
   module Actions
     module Events
+      # Event actions related to entities.
       class EntitiesEventAction < EventAction
+        # Event action when element added.
         class OnElementAdded
           # @param state [States::State] the current state of the SpeckleConnector Application
           def self.update_state(state, event_data)
-            speckle_state = state.speckle_state
             modified_entities = event_data.to_a.collect { |e| e[1] }
             # do not copy speckle base object specific attributes, because they are entity specific
             modified_entities.each { |entity| entity.delete_attribute(SPECKLE_BASE_OBJECT) }
@@ -19,6 +20,7 @@ module SpeckleConnector
           end
         end
 
+        # Event action when element modified.
         class OnElementModified
           # @param state [States::State] the current state of the SpeckleConnector Application
           def self.update_state(state, event_data)
@@ -54,9 +56,10 @@ module SpeckleConnector
           end
         end
 
+        # Event action when element removed.
         class OnElementRemoved
           # @param state [States::State] the current state of the SpeckleConnector Application
-          def self.update_state(state, event_data)
+          def self.update_state(state, _event_data)
             # TODO: Do state updates when element removed
             state
           end

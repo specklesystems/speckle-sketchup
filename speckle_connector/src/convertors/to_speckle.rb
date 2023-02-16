@@ -116,6 +116,7 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
+      # rubocop:disable Metrics/MethodLength
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
@@ -155,6 +156,7 @@ module SpeckleConnector
 
         return speckle_state, nil
       end
+      # rubocop:enable Metrics/MethodLength
 
       # Create layers -> {Hash{Symbol=>Array}} from sketchup model with empty array as hash entry values.
       # This method add first headless layers (not belong to any folder),

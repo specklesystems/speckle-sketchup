@@ -11,10 +11,11 @@ module SpeckleConnector
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
     DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false}');"
-    DEFAULT_PREFERENCES = "{\"dark_theme\":false, \"diffing\":false}"
+    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/AbcSize
     def self.init_preferences(sketchup_model)
       # Init sqlite database
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
@@ -103,6 +104,7 @@ module SpeckleConnector
       end
     end
     # rubocop:enable Metrics/MethodLength
+    # rubocop:enable Metrics/AbcSize
 
     def self.default_model_preferences
       {

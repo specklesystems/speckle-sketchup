@@ -48,6 +48,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/ParameterLists
         def self.from_definition(definition, units, definitions, preferences, speckle_state, parent, &convert)
           guid = definition.guid
           return definitions[guid] if definitions.key?(guid)
@@ -77,8 +78,8 @@ module SpeckleConnector
                          next if entity.is_a?(Sketchup::Edge) && entity.faces.any?
 
                          new_speckle_state, converted = convert.call(entity, preferences,
-                                                                                 speckle_state,
-                                                                                 definition.persistent_id)
+                                                                     speckle_state,
+                                                                     definition.persistent_id)
                          speckle_state = new_speckle_state
                          converted
                        end
@@ -100,6 +101,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/ParameterLists
 
         # Finds or creates a component definition from the geometry and the given name
         # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
@@ -185,6 +187,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
 
+        # rubocop:disable Metrics/ParameterLists
         def self.group_meshes_by_material(face, mesh_groups, speckle_state, preferences, parent, &convert)
           # convert material
           mesh_group_id = get_mesh_group_id(face, preferences[:model])
@@ -195,6 +198,7 @@ module SpeckleConnector
           mesh_group[1].append(face)
           new_speckle_state
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # Mesh group id helps to determine how to group faces into meshes.
         # @param face [Sketchup::Face] face to get mesh group id.

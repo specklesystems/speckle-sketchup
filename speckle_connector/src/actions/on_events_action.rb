@@ -13,7 +13,7 @@ module SpeckleConnector
       RUN_ORDER = {
         APP_OBSERVER => Events::AppEventAction,
         ENTITIES_OBSERVER => Events::EntitiesEventAction,
-        MODEL_OBSERVER => Events::ModelEventAction,
+        MODEL_OBSERVER => Events::ModelEventAction
         # MATERIALS_OBSERVER => Events::MaterialsEventAction,
         # LAYERS_OBSERVER => Events::LayerEventAction,
         # PAGES_OBSERVER => Events::PagesEventAction,

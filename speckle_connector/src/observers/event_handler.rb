@@ -5,6 +5,7 @@ require_relative '../actions/on_events_action'
 
 module SpeckleConnector
   module Observers
+    # Event handler class.
     class EventHandler
       # @return [SpeckleConnectorApp] an object that contains current state of speckle objects
       attr_reader :app

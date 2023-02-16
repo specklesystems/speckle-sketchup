@@ -48,6 +48,9 @@ module SpeckleConnector
 
       # @param base_and_entities [Object] base object to populate all children and their relationship
       # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/AbcSize
       def traverse_base(base_and_entities)
         base, entities = base_and_entities
 
@@ -114,7 +117,6 @@ module SpeckleConnector
 
         if @preferences[:user][:diffing] && !entities.nil?
           entities.uniq.each do |entity|
-
             speckle_entity = if speckle_state.speckle_entities.keys.include?(entity.persistent_id)
                                speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
                              else
@@ -127,6 +129,9 @@ module SpeckleConnector
         return id, traversed_base
       end
       # rubocop:enable Metrics/MethodLength
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/AbcSize
 
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/AbcSize
@@ -233,6 +238,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Style/OptionalBooleanParameter
+      # rubocop:disable Metrics/AbcSize
       def traverse_value(value, is_detach = false)
         # 1. Return same value if value is primitive type (string, numeric, boolean)
         return value unless value.is_a?(Hash) || value.is_a?(Array)
@@ -281,6 +287,7 @@ module SpeckleConnector
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
       # rubocop:enable Style/OptionalBooleanParameter
+      # rubocop:enable Metrics/AbcSize
 
       def detach_helper(reference_id)
         @lineage.each do |parent|
