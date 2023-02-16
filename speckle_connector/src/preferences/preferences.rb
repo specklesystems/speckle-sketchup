@@ -10,7 +10,8 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
-    DEFAULT_PREFERENCES = "('configSketchup', '{\"DarkTheme\":false}');"
+    DEFAULT_CONFIG = "('configSketchup', '{\"DarkTheme\":false, \"Diffing\":false}');"
+    DEFAULT_PREFERENCES = "{\"DarkTheme\":false, \"Diffing\":false}"
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
@@ -18,9 +19,16 @@ module SpeckleConnector
       # Init sqlite database
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
 
+      data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
+      is_data_empty = data.empty?
+      is_data_incomplete = !is_data_empty && !JSON.parse(data.first.first).to_h.length != 2
+
       # Check configSketchup key is valid or not, otherwise init with default settings
-      if db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").empty?
-        db.exec("INSERT INTO 'objects' VALUES #{DEFAULT_PREFERENCES}")
+      if is_data_empty || is_data_incomplete
+        db.exec("INSERT INTO 'objects' VALUES #{DEFAULT_CONFIG}") if is_data_empty
+        if is_data_incomplete
+          db.exec("UPDATE 'objects' SET content = '#{DEFAULT_PREFERENCES}' WHERE hash = 'configSketchup'")
+        end
       end
 
       # Select data
@@ -31,6 +39,7 @@ module SpeckleConnector
 
       # Get current theme value
       dark_theme = data_hash['DarkTheme']
+      diffing = data_hash['Diffing']
 
       speckle_dictionary = sketchup_model.attribute_dictionary('Speckle')
 
@@ -38,7 +47,8 @@ module SpeckleConnector
         Immutable::Hash.new(
           {
             user: {
-              dark_theme: dark_theme
+              dark_theme: dark_theme,
+              diffing: diffing
             },
             model: {
               combine_faces_by_material: DICT_HANDLER.get_attribute(
@@ -84,7 +94,8 @@ module SpeckleConnector
         Immutable::Hash.new(
           {
             user: {
-              dark_theme: dark_theme
+              dark_theme: dark_theme,
+              diffing: diffing
             },
             model: default_model_preferences
           }
