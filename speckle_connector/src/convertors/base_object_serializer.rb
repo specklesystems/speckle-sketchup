@@ -144,8 +144,10 @@ module SpeckleConnector
             next
           end
 
-          # 3.3. Determine prop is detached or not
-          is_prop_detach = prop[0] == '@'
+          # 3.3. Determine prop is dynamically detached or not
+          is_detach_prop = prop[0] == '@'
+          is_dynamically_detached = prop[0] == '@' && prop.length > 2 && prop[1] == '@'
+          prop = prop[2..-1] if is_dynamically_detached
 
           # 3.4. Check prop needs to split into chunks
           chunked_detach_match = prop.match(/^@\((\d*)\)/)
@@ -186,7 +188,7 @@ module SpeckleConnector
             chunk_references = []
 
             chunks.each do |chunk_element|
-              @detach_lineage.append(is_prop_detach)
+              @detach_lineage.append(is_detach_prop)
               id, _traversed = traverse_base(chunk_element)
               chunk_references.append(detach_helper(id))
             end
@@ -198,14 +200,14 @@ module SpeckleConnector
             next
           end
 
-          child = traverse_value(value, is_prop_detach)
+          child = traverse_value(value, is_detach_prop)
 
           is_base = (value.is_a?(Hash) && !value[:speckle_type].nil?) ||
-                    (base_and_entities?(value) && value[0][0].is_a?(Hash) && !value[0][0][:speckle_type].nil?)
+                    (base_and_entities?(value) && value[0].is_a?(Hash) && !value[0][:speckle_type].nil?)
 
           # 3.6. traverse value according to value is a speckle object or not
           traversed_base[prop] = if is_base
-                                   is_prop_detach ? detach_helper(child[:id]) : child
+                                   is_detach_prop ? detach_helper(child[:id]) : child
                                  else
                                    child
                                  end

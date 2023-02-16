@@ -36,7 +36,7 @@ module SpeckleConnector
           self[:always_face_camera] = always_face_camera
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           # FIXME: Since geometry sends with @ as detached, block basePlane renders on viewer.
-          self['@geometry'] = geometry
+          self['@@geometry'] = geometry
         end
         # rubocop:enable Metrics/ParameterLists
 
