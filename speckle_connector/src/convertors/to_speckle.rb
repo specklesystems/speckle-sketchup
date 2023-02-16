@@ -104,7 +104,10 @@ module SpeckleConnector
       end
 
       def write_to_desktop(id, batches)
-        File.write("#{DESKTOP_PATH}/#{id}.json", batches.first)
+        folder_path = "#{HOME_PATH}/Speckle"
+        file_path = "#{folder_path}/#{id}.json"
+        FileUtils.mkdir_p(folder_path) unless File.exist?(folder_path)
+        File.write(file_path, batches.first)
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
