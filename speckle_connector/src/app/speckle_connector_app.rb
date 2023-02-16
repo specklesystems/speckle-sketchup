@@ -15,6 +15,9 @@ module SpeckleConnector
       # @return [Ui::UiController] controller for ui views
       attr_reader :ui_controller
 
+      # @return [Observers::Handler] the observers indexed by their classes to handle
+      attr_reader :observer_handler
+
       def initialize(menu_commands, state, ui_controller)
         @menu_commands = menu_commands
         @state = state
@@ -33,6 +36,10 @@ module SpeckleConnector
         queue = @state.speckle_state.message_queue
         queue.each_value { |value| ui_controller.user_interfaces[Ui::SPECKLE_UI_ID].dialog.execute_script(value) }
         update_state!(Actions::ClearQueue)
+      end
+
+      def add_observer_handler!(observer_handler)
+        @observer_handler = observer_handler
       end
 
       def update_state!(action, *parameters)

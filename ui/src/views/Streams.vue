@@ -44,6 +44,14 @@ global.setSavedStreams = function (streamIds) {
   bus.$emit('set-saved-streams', streamIds)
 }
 
+global.updateInvalidStreams = function (streamIds) {
+  bus.$emit('validate-streams')
+
+  streamIds.forEach((id) => {
+    bus.$emit(`invalidate-stream-${id}`)
+  })
+}
+
 const streamLimit = 5
 export default {
   name: 'Streams',
@@ -72,6 +80,26 @@ export default {
     }
   },
   mounted() {
+    bus.$on("deactivate-diffing-except", (exceptedStreamId) => {
+      this.savedStreams.forEach((streamId) => {
+        if (streamId !== exceptedStreamId){
+          bus.$emit(`deactivate-diffing-${streamId}`)
+        }
+      })
+      this.allStreamsList.forEach((stream) => {
+        if (stream.id !== exceptedStreamId){
+          bus.$emit(`deactivate-diffing-${stream.id}`)
+        }
+      })
+    })
+    bus.$on('validate-streams', () => {
+      this.savedStreams.forEach((streamId) => {
+        bus.$emit(`validate-stream-${streamId}`)
+      })
+      this.allStreamsList.forEach((stream) => {
+        bus.$emit(`validate-stream-${stream.id}`)
+      })
+    })
     bus.$on('refresh-streams', () => {
       // TODO: We should remember selected branches and commits before refetch
       this.$apollo.queries.streams.refetch()

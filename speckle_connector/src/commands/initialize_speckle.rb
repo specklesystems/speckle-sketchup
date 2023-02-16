@@ -4,6 +4,7 @@ require_relative 'command'
 require_relative '../states/initial_state'
 require_relative '../ui/vue_view'
 require_relative '../actions/initialize_speckle'
+require_relative '../observers/factory'
 
 module SpeckleConnector
   module Commands
@@ -30,7 +31,10 @@ module SpeckleConnector
       # Do the actual Speckle initialization.
       def initialize_speckle(app)
         # TODO: Initialize here speckle states and observers.
-        app.update_state!(Actions::InitializeSpeckle)
+        observer_handler = Observers::Factory.create_handler(app)
+        app.add_observer_handler!(observer_handler)
+        observers = Observers::Factory.create_observers(observer_handler)
+        app.update_state!(Actions::InitializeSpeckle, observers)
         dialog_specs = {
           dialog_id: Ui::SPECKLE_UI_ID,
           htm_file: Ui::VUE_UI_HTML,

@@ -7,6 +7,7 @@ require_relative 'platform_constants'
 module SpeckleConnector
   dir = __dir__.dup
   dir.force_encoding('UTF-8') if dir.respond_to?(:force_encoding)
+  HOME_PATH = (ENV['HOME']).to_s
   SPECKLE_SRC_PATH = Pathname.new(File.expand_path('..', dir)).cleanpath.to_s
   SPECKLE_APPDATA_PATH = case OPERATING_SYSTEM
                          when OS_WIN

@@ -35,6 +35,10 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
       ].freeze
 
+      def initialize(state)
+        super(state.sketchup_state)
+      end
+
       def can_convert_to_native(obj)
         return false unless obj.is_a?(Hash) && obj.key?('speckle_type')
 

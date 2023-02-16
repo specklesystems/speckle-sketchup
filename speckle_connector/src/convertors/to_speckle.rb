@@ -2,6 +2,8 @@
 
 require_relative 'converter'
 require_relative 'base_object_serializer'
+require_relative '../relations/many_to_one_relation'
+require_relative '../speckle_entities/speckle_entities'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/length'
@@ -9,6 +11,7 @@ require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../constants/path_constants'
 
 module SpeckleConnector
   module Converters
@@ -17,23 +20,37 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers to hold it's objects under the base object.
       attr_reader :layers
 
-      def initialize(sketchup_model)
-        super(sketchup_model)
+      # @return [States::State] the current speckle state of the {States::State}
+      attr_reader :state
+
+      # @return [States::SpeckleState] the current speckle state of the {States::State}
+      attr_reader :speckle_state
+
+      # @return [Relations::ManyToOneRelation] relations between objects.
+      attr_accessor :relation
+
+      def initialize(state)
+        super(state.sketchup_state)
+        @state = state
+        @speckle_state = @state.speckle_state
         @layers = add_all_layers
+        @relation = Relations::ManyToOneRelation.new
       end
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
+        state = speckle_state
         sketchup_model.selection.each do |entity|
-          converted_object = convert(entity, preferences)
+          new_speckle_state, converted_object_with_entity = convert(entity, preferences, state)
+          state = new_speckle_state
           layer_name = entity_layer_path(entity)
-          layers[layer_name].push(converted_object)
+          layers[layer_name].push(converted_object_with_entity)
         end
-        # send only layers that have any object
+        # send only+ layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
         add_views(base_object_properties) if sketchup_model.pages.any?
-        SpeckleObjects::Base.with_detached_layers(base_object_properties)
+        return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
 
       # Add views from pages.
@@ -75,43 +92,71 @@ module SpeckleConnector
       # rubocop:enable Metrics/MethodLength
 
       # Serialized and traversed information to send batches.
-      # @param base [SpeckleObjects::Base] base object to serialize.
+      # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
+      # @param stream_id [String] stream id to send conversion
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def send_info(base)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new
-        # t = Time.now.to_f
-        id, _traversed = serializer.serialize(base)
-        # puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
+      def serialize(base_and_entity, speckle_state, preferences, stream_id)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id, preferences)
+        t = Time.now.to_f
+        id = serializer.serialize(base_and_entity)
+        batches = serializer.batch_objects
+        # write_to_speckle_folder(id, batches)
+        puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        return id, base_total_children_count, serializer.batch_objects
+        return id, base_total_children_count, batches, serializer.speckle_state
+      end
+
+      def write_to_speckle_folder(id, batches)
+        folder_path = "#{HOME_PATH}/Speckle"
+        file_path = "#{folder_path}/#{id}.json"
+        FileUtils.mkdir_p(folder_path) unless File.exist?(folder_path)
+        File.write(file_path, batches.first)
       end
 
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
-      def convert(entity, preferences)
+      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
+      # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
+      # rubocop:disable Metrics/MethodLength
+      def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
+
         if entity.is_a?(Sketchup::Edge)
-          return SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          return speckle_state, [line, [entity]]
         end
 
         if entity.is_a?(Sketchup::Face)
-          return SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          return speckle_state, [mesh, [entity]]
         end
 
         if entity.is_a?(Sketchup::Group)
-          return SpeckleObjects::Other::BlockInstance.from_group(entity, @units, @definitions, preferences, &convert)
+          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_group(
+            entity, @units, preferences, speckle_state, &convert
+          )
+          speckle_state = new_speckle_state
+          return speckle_state, [block_instance, [entity]]
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
-          return SpeckleObjects::Other::BlockInstance.from_component_instance(entity, @units, @definitions,
-                                                                              preferences, &convert)
-        end
-        if entity.is_a?(Sketchup::ComponentDefinition)
-          return SpeckleObjects::Other::BlockDefinition.from_definition(entity, @units, @definitions, preferences,
-                                                                        &convert)
+          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
+            entity, @units, preferences, speckle_state, &convert
+          )
+          speckle_state = new_speckle_state
+          return speckle_state, [block_instance, [entity]]
         end
 
-        nil
+        if entity.is_a?(Sketchup::ComponentDefinition)
+          new_speckle_state, block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(
+            entity, @units, @definitions, preferences, speckle_state, parent, &convert
+          )
+          speckle_state = new_speckle_state
+          return speckle_state, [block_definition, [entity]]
+        end
+
+        return speckle_state, nil
       end
+      # rubocop:enable Metrics/MethodLength
 
       # Create layers -> {Hash{Symbol=>Array}} from sketchup model with empty array as hash entry values.
       # This method add first headless layers (not belong to any folder),

@@ -18,10 +18,21 @@ module SpeckleConnector
 
       def run(*parameters)
         # Run here common operations that same for each command.
-        _run(*parameters)
+        with_observers_disabled do
+          _run(*parameters)
+        end
       end
 
       private
+
+      def with_observers_disabled(&block)
+        observer_handler = @app.observer_handler
+        if observer_handler
+          observer_handler.with_observers_disabled(&block)
+        else
+          block.call
+        end
+      end
 
       def _run(*_parameters)
         raise NotImplementedError, 'Implement in subclass'

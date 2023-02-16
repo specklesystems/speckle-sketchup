@@ -23,6 +23,14 @@
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
         <span>Color Mode</span>
+
+        <!-- Switch Diffing -->
+        <v-switch
+            v-model="diffing"
+            class="pt-3 mt-n2 mb-n2"
+            :label="'Diffing (Alpha)'"
+            @click="switchDiffing"
+        />
         <div class="sm1 mt-3">Send Strategy</div>
         <v-divider class="mb-2"/>
         <v-switch
@@ -112,6 +120,7 @@ export default {
       includeGroupAttributes: this.preferences.model.include_group_entity_attributes,
       includeComponentAttributes: this.preferences.model.include_component_entity_attributes,
       mergeCoplanarFaces: this.preferences.model.merge_coplanar_faces,
+      diffing: this.preferences.user.diffing
     }
   },
   watch: {
@@ -192,6 +201,16 @@ export default {
         this.$mixpanel.track('Connector Action', { name: 'Merge Co-Planar Faces Option' })
       },
       deep: true
+    },
+    'diffing': {
+      handler(newValue) {
+        sketchup.exec({
+          name: "user_preferences_updated",
+          data: {preference_hash: "configSketchup", preference: "diffing", value: newValue}
+        })
+        this.$mixpanel.track('Connector Action', { name: 'Diffing' })
+      },
+      deep: true
     }
   },
   methods: {
@@ -199,7 +218,7 @@ export default {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       sketchup.exec({
         name: "user_preferences_updated",
-        data: {preference_hash: "configSketchup", preference: "DarkTheme", value: this.$vuetify.theme.dark}
+        data: {preference_hash: "configSketchup", preference: "dark_theme", value: this.$vuetify.theme.dark}
       })
       this.$mixpanel.track('Connector Action', { name: 'Toggle Theme' })
     },

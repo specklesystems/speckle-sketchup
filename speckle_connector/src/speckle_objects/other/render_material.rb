@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../base'
-require_relative '../../typescript/typescript_object'
 
 module SpeckleConnector
   module SpeckleObjects
