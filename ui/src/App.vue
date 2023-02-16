@@ -108,13 +108,19 @@ global.collectPreferences = function (preferences) {
   bus.$emit('update-preferences', preferences)
 }
 
+global.collectVersions = function (versions) {
+  let vers = JSON.parse(versions)
+  localStorage.setItem('hostAppVersion', vers.sketchup)
+  localStorage.setItem('speckleVersion', vers.speckle)
+}
+
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
   let uuid = localStorage.getItem('uuid')
   if (accounts.length !== 0){
     if (uuid) {
-      global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] == uuid))
+      global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] === uuid))
     } else {
       global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
     }
@@ -180,8 +186,13 @@ export default {
       this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
 
+    // Collect versions to inform mixpanel
+    sketchup.exec({name: "collect_versions", data: {}})
+
+    // Collect preferences to render UI according to it
     sketchup.exec({name: "collect_preferences", data: {}})
-    // this.$vuetify.theme.dark = localStorage.getItem('theme') == 'dark'
+
+    // Collect accounts from 'Accounts.db' by ruby sqlite3
     sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {

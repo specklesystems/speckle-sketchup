@@ -18,6 +18,7 @@ require_relative '../actions/reload_accounts'
 require_relative '../actions/load_saved_streams'
 require_relative '../actions/init_local_accounts'
 require_relative '../actions/collect_preferences'
+require_relative '../actions/collect_versions'
 
 module SpeckleConnector
   module Ui
@@ -65,6 +66,7 @@ module SpeckleConnector
           remove_stream: Commands::RemoveStream.new(@app),
           notify_connected: Commands::NotifyConnected.new(@app),
           collect_preferences: Commands::ActionCommand.new(@app, Actions::CollectPreferences),
+          collect_versions: Commands::ActionCommand.new(@app, Actions::CollectVersions),
           user_preferences_updated: Commands::UserPreferencesUpdated.new(@app),
           model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app)
         }.freeze
