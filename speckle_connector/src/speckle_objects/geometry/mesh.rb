@@ -25,12 +25,11 @@ module SpeckleConnector
 
         # @param units [String] units of the speckle mesh.
         # @param render_material [Other::RenderMaterial, nil] render material of the speckle mesh.
-        # @param bbox [Geometry::BoundingBox] bounding box speckle object of the speckle mesh.
         # @param vertices [Array] vertices of the speckle mesh.
         # @param faces [Array] faces of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, render_material:, bbox:, vertices:, faces:, sketchup_attributes:, application_id: nil)
+        def initialize(units:, render_material:, vertices:, faces:, sketchup_attributes:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -42,7 +41,7 @@ module SpeckleConnector
           @units = units
           self[:units] = units
           self[:renderMaterial] = render_material
-          self[:bbox] = bbox
+          # self[:bbox] = bbox
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
@@ -102,7 +101,7 @@ module SpeckleConnector
             units: units,
             render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
                                                           .from_material(face.material || face.back_material),
-            bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
+            # bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
             vertices: [],
             faces: [],
             sketchup_attributes: att,
