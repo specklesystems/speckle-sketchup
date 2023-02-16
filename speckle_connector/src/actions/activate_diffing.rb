@@ -15,7 +15,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        state = DeactivateDiffing.update_state(state)
+        state = DeactivateDiffing.update_state(state, {})
         puts "Diffing activated for #{@stream_id}"
         speckle_entities = state.speckle_state.speckle_entities
         invalid_speckle_entities = speckle_entities.select do |_id, entity|

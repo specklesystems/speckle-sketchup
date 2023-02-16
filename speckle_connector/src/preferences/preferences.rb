@@ -10,8 +10,8 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
-    DEFAULT_CONFIG = "('configSketchup', '{\"DarkTheme\":false, \"Diffing\":false}');"
-    DEFAULT_PREFERENCES = "{\"DarkTheme\":false, \"Diffing\":false}"
+    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false}');"
+    DEFAULT_PREFERENCES = "{\"dark_theme\":false, \"diffing\":false}"
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
@@ -38,8 +38,8 @@ module SpeckleConnector
       data_hash = JSON.parse(data).to_h
 
       # Get current theme value
-      dark_theme = data_hash['DarkTheme']
-      diffing = data_hash['Diffing']
+      dark_theme = data_hash['dark_theme']
+      diffing = data_hash['diffing']
 
       speckle_dictionary = sketchup_model.attribute_dictionary('Speckle')
 

@@ -21,9 +21,10 @@ module SpeckleConnector
       attr_accessor :speckle_state
 
       # @param stream_id [String] stream id to send conversion
-      def initialize(speckle_state, stream_id, default_chunk_size = 1000)
+      def initialize(speckle_state, stream_id, preferences, default_chunk_size = 1000)
         @speckle_state = speckle_state
         @stream_id = stream_id
+        @preferences = preferences
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
@@ -111,7 +112,7 @@ module SpeckleConnector
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
 
-        unless entities.nil?
+        if @preferences[:user][:diffing] && !entities.nil?
           entities.uniq.each do |entity|
 
             speckle_entity = if speckle_state.speckle_entities.keys.include?(entity.persistent_id)

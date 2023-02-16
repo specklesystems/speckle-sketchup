@@ -20,6 +20,9 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers to hold it's objects under the base object.
       attr_reader :layers
 
+      # @return [States::State] the current speckle state of the {States::State}
+      attr_reader :state
+
       # @return [States::SpeckleState] the current speckle state of the {States::State}
       attr_reader :speckle_state
 
@@ -92,8 +95,8 @@ module SpeckleConnector
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
       # @param stream_id [String] stream id to send conversion
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def serialize(base_and_entity, speckle_state, stream_id)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id)
+      def serialize(base_and_entity, speckle_state, preferences, stream_id)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id, preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_objects
