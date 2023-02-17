@@ -10,6 +10,7 @@ require_relative '../speckle_objects/geometry/length'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
+require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../constants/path_constants'
 
@@ -63,9 +64,10 @@ module SpeckleConnector
           target = get_camera_target(cam)
           direction = get_camera_direction(cam)
           update_properties = get_scene_update_properties(page)
+          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
           view = SpeckleObjects::BuiltElements::View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, @units),
-            cam.perspective?, cam.fov, @units, page.name, update_properties
+            cam.perspective?, cam.fov, @units, page.name, update_properties, rendering_options
           )
           views.append(view)
         end
@@ -220,7 +222,7 @@ module SpeckleConnector
       private
 
       def get_camera_direction(cam)
-        direction = SpeckleObjects::Geometry::Vector.new(
+        SpeckleObjects::Geometry::Vector.new(
           SpeckleObjects::Geometry.length_to_speckle(cam.direction[0], @units),
           SpeckleObjects::Geometry.length_to_speckle(cam.direction[1], @units),
           SpeckleObjects::Geometry.length_to_speckle(cam.direction[2], @units),
@@ -229,7 +231,7 @@ module SpeckleConnector
       end
 
       def get_camera_target(cam)
-        target = SpeckleObjects::Geometry::Point.new(
+        SpeckleObjects::Geometry::Point.new(
           SpeckleObjects::Geometry.length_to_speckle(cam.target[0], @units),
           SpeckleObjects::Geometry.length_to_speckle(cam.target[1], @units),
           SpeckleObjects::Geometry.length_to_speckle(cam.target[2], @units),
@@ -238,7 +240,7 @@ module SpeckleConnector
       end
 
       def get_camera_origin(camera)
-        origin = SpeckleObjects::Geometry::Point.new(
+        SpeckleObjects::Geometry::Point.new(
           SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], @units),
           SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], @units),
           SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], @units),
