@@ -20,9 +20,10 @@ module SpeckleConnector
         # @param lens [Boolean] fov value of the view camera.
         # @param units [String] units of the camera.
         # @param application_id [String] application_id of the view.
+        # @param update_properties [Hash{Symbol=>boolean}] properties of the view.
         # rubocop:disable Metrics/ParameterLists
         def initialize(name, origin, target, direction, up_direction,
-                       is_perspective, lens, units, application_id)
+                       is_perspective, lens, units, application_id, update_properties)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -37,6 +38,7 @@ module SpeckleConnector
           self[:isOrthogonal] = !is_perspective
           self[:lens] = lens
           self[:units] = units
+          self[:update_properties] = update_properties
         end
         # rubocop:enable Metrics/ParameterLists
       end

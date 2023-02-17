@@ -90,6 +90,14 @@ module SpeckleConnector
           my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], view['lens'])
           sketchup_model.active_view.camera = my_camera
           sketchup_model.pages.add(view['name'])
+          page = sketchup_model.pages[view['name']]
+          set_page_update_properties(page, view['update_properties'])
+        end
+      end
+
+      def set_page_update_properties(page, update_properties)
+        update_properties.each do |prop, value|
+          page.instance_variable_set(:"@#{prop}", value)
         end
       end
 
