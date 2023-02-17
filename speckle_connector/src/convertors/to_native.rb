@@ -78,6 +78,7 @@ module SpeckleConnector
 
       # @param views [Array] views.
       # @param sketchup_model [Sketchup::Model] active sketchup model.
+      # rubocop:disable Metrics/AbcSize
       def create_views(views, sketchup_model)
         return if views.empty?
 
@@ -90,6 +91,30 @@ module SpeckleConnector
           my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], view['lens'])
           sketchup_model.active_view.camera = my_camera
           sketchup_model.pages.add(view['name'])
+          page = sketchup_model.pages[view['name']]
+          set_page_update_properties(page, view['update_properties'])
+          set_rendering_options(page.rendering_options, view['rendering_options'])
+        end
+      end
+      # rubocop:enable Metrics/AbcSize
+
+      # @param page [Sketchup::Page] scene to update -update properties-
+      def set_page_update_properties(page, update_properties)
+        update_properties.each do |prop, value|
+          page.instance_variable_set(:"@#{prop}", value)
+        end
+      end
+
+      # @param rendering_options [Sketchup::RenderingOptions] rendering options of scene (page)
+      def set_rendering_options(rendering_options, speckle_rendering_options)
+        speckle_rendering_options.each do |prop, value|
+          next if rendering_options[prop].nil?
+
+          rendering_options[prop] = if value.is_a?(Hash)
+                                      SpeckleObjects::Others::Color.to_native(value)
+                                    else
+                                      value
+                                    end
         end
       end
 

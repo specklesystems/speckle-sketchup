@@ -10,6 +10,7 @@ require_relative '../speckle_objects/geometry/length'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
+require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../constants/path_constants'
 
@@ -55,41 +56,39 @@ module SpeckleConnector
 
       # Add views from pages.
       # @param base_object_properties [Hash] dynamically attached base object properties.
-      # rubocop:disable Metrics/AbcSize
-      # rubocop:disable Metrics/MethodLength
       def add_views(base_object_properties)
         views = []
         sketchup_model.pages.each do |page|
           cam = page.camera
-          origin = SpeckleObjects::Geometry::Point.new(
-            SpeckleObjects::Geometry.length_to_speckle(cam.eye[0], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.eye[1], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.eye[2], @units),
-            @units
-          )
-          target = SpeckleObjects::Geometry::Point.new(
-            SpeckleObjects::Geometry.length_to_speckle(cam.target[0], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.target[1], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.target[2], @units),
-            @units
-          )
-          direction = SpeckleObjects::Geometry::Vector.new(
-            SpeckleObjects::Geometry.length_to_speckle(cam.direction[0], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.direction[1], @units),
-            SpeckleObjects::Geometry.length_to_speckle(cam.direction[2], @units),
-            @units
-          )
+          origin = get_camera_origin(cam)
+          target = get_camera_target(cam)
+          direction = get_camera_direction(cam)
+          update_properties = get_scene_update_properties(page)
+          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
           view = SpeckleObjects::BuiltElements::View3d.new(
-            page.name,
-            origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, @units),
-            cam.perspective?, cam.fov, @units, page.name
+            page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, @units),
+            cam.perspective?, cam.fov, @units, page.name, update_properties, rendering_options
           )
           views.append(view)
         end
         base_object_properties['@Named Views'] = views
       end
-      # rubocop:enable Metrics/AbcSize
-      # rubocop:enable Metrics/MethodLength
+
+      # Get scene properties
+      # @param page [Sketchup::Page] page on sketchup.
+      def get_scene_update_properties(page)
+        {
+          use_axes: page.use_axes?,
+          use_camera: page.use_camera?,
+          use_hidden_geometry: page.use_hidden_geometry?,
+          use_hidden_layers: page.use_hidden_layers?,
+          use_hidden_objects: page.use_hidden_objects?,
+          use_rendering_options: page.use_rendering_options?,
+          use_section_planes: page.use_section_planes?,
+          use_shadow_info: page.use_shadow_info?,
+          use_style: page.use_style?
+        }
+      end
 
       # Serialized and traversed information to send batches.
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
@@ -218,6 +217,35 @@ module SpeckleConnector
         else
           folder_name(folder.folder, folders.push(folder.display_name))
         end
+      end
+
+      private
+
+      def get_camera_direction(cam)
+        SpeckleObjects::Geometry::Vector.new(
+          SpeckleObjects::Geometry.length_to_speckle(cam.direction[0], @units),
+          SpeckleObjects::Geometry.length_to_speckle(cam.direction[1], @units),
+          SpeckleObjects::Geometry.length_to_speckle(cam.direction[2], @units),
+          @units
+        )
+      end
+
+      def get_camera_target(cam)
+        SpeckleObjects::Geometry::Point.new(
+          SpeckleObjects::Geometry.length_to_speckle(cam.target[0], @units),
+          SpeckleObjects::Geometry.length_to_speckle(cam.target[1], @units),
+          SpeckleObjects::Geometry.length_to_speckle(cam.target[2], @units),
+          @units
+        )
+      end
+
+      def get_camera_origin(camera)
+        SpeckleObjects::Geometry::Point.new(
+          SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], @units),
+          SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], @units),
+          SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], @units),
+          @units
+        )
       end
     end
   end
