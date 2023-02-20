@@ -38,7 +38,7 @@ module SpeckleConnector
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           # FIXME: Since blockDefinition sends with @ as detached, block basePlane renders on viewer.
-          self['@@blockDefinition'] = block_definition
+          self['@@definition'] = block_definition
         end
         # rubocop:enable Metrics/ParameterLists
 
@@ -119,8 +119,9 @@ module SpeckleConnector
           # so this is set to false always until I can figure this out
           is_group = false
           # is_group = block['is_sketchup_group']
-          block_definition = block['@blockDefinition'] || block['blockDefinition']
-          geometry = block_definition['@geometry'] || block_definition['geometry']
+          # NOTE: nil checks for backward compatibility
+          block_definition = block['definition'] || block['blockDefinition'] || block['@blockDefinition']
+          geometry = block_definition['geometry'] || block_definition['@geometry']
           definition = BlockDefinition.to_native(
             sketchup_model,
             geometry,
