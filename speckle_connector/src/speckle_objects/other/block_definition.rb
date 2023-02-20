@@ -17,12 +17,11 @@ module SpeckleConnector
         SPECKLE_TYPE = 'Objects.Other.BlockDefinition'
 
         # @param geometry [Object] geometric definition of the block.
-        # @param base_point [Geometry::Point] base point of the block definition.
         # @param name [String] name of the block definition.
         # @param units [String] units of the block definition.
         # @param application_id [String, NilClass] application id of the block definition.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(geometry:, base_point:, name:, units:, always_face_camera:, sketchup_attributes: {},
+        def initialize(geometry:, name:, units:, always_face_camera:, sketchup_attributes: {},
                        application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -32,7 +31,6 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:name] = name
-          self[:basePoint] = base_point
           self[:always_face_camera] = always_face_camera
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           # FIXME: Since geometry sends with @ as detached, block basePlane renders on viewer.
@@ -89,7 +87,6 @@ module SpeckleConnector
           block_definition = BlockDefinition.new(
             units: units,
             name: definition.name,
-            base_point: Geometry::Point.new(0, 0, 0, units),
             geometry: geometry,
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
