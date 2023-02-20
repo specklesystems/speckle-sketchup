@@ -22,20 +22,23 @@ module SpeckleConnector
 
           entity.attribute_dictionaries.each do |att_dict|
             dict_name = att_dict == '' ? 'empty_dictionary_name' : att_dict.name
-            dictionaries[dict_name] = att_dict.to_h.to_json unless IGNORED_DICTIONARY_NAMES.include?(att_dict.name)
+            dictionaries[dict_name] = att_dict.to_h unless IGNORED_DICTIONARY_NAMES.include?(att_dict.name)
           end
           dictionaries
         end
 
         # @param entity [Sketchup::Entity] entity to set attribute dictionaries
+        # rubocop:disable Metrics/CyclomaticComplexity
         def self.attribute_dictionaries_to_native(entity, dictionaries)
           return if dictionaries.nil?
 
           classification_to_native(entity, dictionaries) if entity.is_a?(Sketchup::ComponentDefinition)
 
           dictionaries.each do |dict_name, entries|
+            next unless entries.is_a?(Hash)
+
             dict_name = dict_name == 'empty_dictionary_name' ? '' : dict_name
-            JSON.parse(entries).each do |key, value|
+            entries.each do |key, value|
               set_attribute(entity, key, value, dict_name)
             rescue StandardError => e
               puts("Failed to write key: #{key} value: #{value} to dictionary #{dict_name}")
@@ -43,6 +46,7 @@ module SpeckleConnector
             end
           end
         end
+        # rubocop:enable Metrics/CyclomaticComplexity
 
         # Classification is ComponentDefinition specific, so they can be added only definition by add_classification
         # method.
@@ -51,7 +55,7 @@ module SpeckleConnector
           applied_schema_types = dictionaries['AppliedSchemaTypes']
           return if applied_schema_types.nil?
 
-          JSON.parse(applied_schema_types).each do |key, value|
+          applied_schema_types.each do |key, value|
             definition_entity.add_classification(key, value)
           end
         end
