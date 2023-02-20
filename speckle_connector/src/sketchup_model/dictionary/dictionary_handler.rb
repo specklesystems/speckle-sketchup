@@ -9,6 +9,12 @@ module SpeckleConnector
       class DictionaryHandler
         DICTIONARY_NAME = 'Speckle_Base_Object'
 
+        IGNORED_DICTIONARY_NAMES = [
+          DICTIONARY_NAME,
+          'IFC 4',
+          'IFC 2x3'
+        ].freeze
+
         # @param entity [Sketchup::Entity] entity to get attribute dictionaries
         def self.attribute_dictionaries_to_speckle(entity)
           dictionaries = {}
@@ -16,7 +22,7 @@ module SpeckleConnector
 
           entity.attribute_dictionaries.each do |att_dict|
             dict_name = att_dict == '' ? 'empty_dictionary_name' : att_dict.name
-            dictionaries[dict_name] = att_dict.to_h.to_json unless att_dict.name == 'Speckle_Base_Object'
+            dictionaries[dict_name] = att_dict.to_h.to_json unless IGNORED_DICTIONARY_NAMES.include?(att_dict.name)
           end
           dictionaries
         end
@@ -24,6 +30,8 @@ module SpeckleConnector
         # @param entity [Sketchup::Entity] entity to set attribute dictionaries
         def self.attribute_dictionaries_to_native(entity, dictionaries)
           return if dictionaries.nil?
+
+          classification_to_native(entity, dictionaries) if entity.is_a?(Sketchup::ComponentDefinition)
 
           dictionaries.each do |dict_name, entries|
             dict_name = dict_name == 'empty_dictionary_name' ? '' : dict_name
@@ -33,6 +41,18 @@ module SpeckleConnector
               puts("Failed to write key: #{key} value: #{value} to dictionary #{dict_name}")
               puts(e)
             end
+          end
+        end
+
+        # Classification is ComponentDefinition specific, so they can be added only definition by add_classification
+        # method.
+        # @param definition_entity [Sketchup::ComponentDefinition] definition to add callback
+        def self.classification_to_native(definition_entity, dictionaries)
+          applied_schema_types = dictionaries['AppliedSchemaTypes']
+          return if applied_schema_types.nil?
+
+          JSON.parse(applied_schema_types).each do |key, value|
+            definition_entity.add_classification(key, value)
           end
         end
 
