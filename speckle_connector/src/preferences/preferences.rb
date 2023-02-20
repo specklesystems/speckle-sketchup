@@ -7,6 +7,7 @@ require_relative '../sketchup_model/dictionary/speckle_model_dictionary_handler'
 
 module SpeckleConnector
   # Preferences that stored on config database and sketchup_model.
+  # rubocop:disable Metrics/ModuleLength
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
@@ -15,33 +16,17 @@ module SpeckleConnector
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
-    # rubocop:disable Metrics/AbcSize
     def self.init_preferences(sketchup_model)
-      # Init sqlite database
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
-
-      data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
-      is_data_empty = data.empty?
-      is_data_incomplete = !is_data_empty && !JSON.parse(data.first.first).to_h.length != 2
-
-      # Check configSketchup key is valid or not, otherwise init with default settings
-      if is_data_empty || is_data_incomplete
-        db.exec("INSERT INTO 'objects' VALUES #{DEFAULT_CONFIG}") if is_data_empty
-        if is_data_incomplete
-          db.exec("UPDATE 'objects' SET content = '#{DEFAULT_PREFERENCES}' WHERE hash = 'configSketchup'")
-        end
-      end
+      validate_preferences(db)
 
       # Select data
-      data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").first.first
-
+      row_data = db.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").first.first
       # Parse string to hash
-      data_hash = JSON.parse(data).to_h
-
+      data_hash = JSON.parse(row_data).to_h
       # Get current theme value
       dark_theme = data_hash['dark_theme']
       diffing = data_hash['diffing']
-
       speckle_dictionary = sketchup_model.attribute_dictionary('Speckle')
 
       if speckle_dictionary
@@ -104,7 +89,6 @@ module SpeckleConnector
       end
     end
     # rubocop:enable Metrics/MethodLength
-    # rubocop:enable Metrics/AbcSize
 
     def self.default_model_preferences
       {
@@ -117,5 +101,38 @@ module SpeckleConnector
         merge_coplanar_faces: true
       }
     end
+
+    # Whether row data is complete with preference or not.
+    # It is useful for backward compatibility, when we add new preferences it should be reset when user initialize it.
+    def self.data_complete?(row_data)
+      return false if row_data.empty?
+
+      data = JSON.parse(row_data.first.first)
+      return false if data['dark_theme'].nil? || data['diffing'].nil?
+
+      true
+    end
+
+    # Validates current preferences. If there are incomplete data then this method resets it with default preferences.
+    # @param database [Sqlite3::Database] database for queries.
+    def self.validate_preferences(database)
+      row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
+      is_config_sketchup_exist = !row_data.empty?
+      is_data_complete = data_complete?(row_data)
+      # rubocop:disable Style/GuardClause
+      if !is_config_sketchup_exist || !is_data_complete
+        if is_config_sketchup_exist
+          unless is_data_complete
+            # Update table with default preferences
+            database.exec("UPDATE 'objects' SET content = '#{DEFAULT_PREFERENCES}' WHERE hash = 'configSketchup'")
+          end
+        else
+          # Insert configSketchup completely to objects.
+          database.exec("INSERT INTO 'objects' VALUES #{DEFAULT_CONFIG}")
+        end
+      end
+      # rubocop:enable Style/GuardClause
+    end
   end
+  # rubocop:enable Metrics/ModuleLength
 end
