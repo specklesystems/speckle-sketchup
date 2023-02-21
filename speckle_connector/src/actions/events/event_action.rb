@@ -12,8 +12,8 @@ module SpeckleConnector
 
         # Handle the events that were collected by the observer. In case of the selection observer,
         # we only need to handle the events once if any of the events actually happened.
-        # @param event_data [Hash{Symbol=>Array}] the event data grouped by the event name
         # @param state [States::State] the current state of the SpeckleConnector Application
+        # @param events [Hash{Symbol=>Array}] the event data grouped by the event name
         # @return [States::State] the transformed state
         def self.update_state(state, events)
           # Don't do anything if there are no events for this action

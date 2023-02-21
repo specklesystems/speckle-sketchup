@@ -2,7 +2,9 @@
 
 require_relative 'action'
 require_relative 'initialize_materials'
+require_relative '../preferences/preferences'
 require_relative '../states/state'
+require_relative '../states/sketchup_state'
 require_relative '../constants/observer_constants'
 
 module SpeckleConnector
@@ -15,11 +17,18 @@ module SpeckleConnector
       # @param additional_parameters [Array] parameters that the action takes
       # @return [States::State] the new updated state object
       def self.update_state(state, sketchup_model)
-        # new_model_state = SketchupModel::Readers::ModelReader.read_model(sketchup_model)
-        # new_model_state = InitializeMaterials.update_state(new_model_state)
-        new_sketchup_state = state.sketchup_state.with(:@sketchup_model => sketchup_model)
+        # Init sketchup state again with new model
+        new_sketchup_state = States::SketchupState.new(sketchup_model)
         new_state = state.with(:@sketchup_state => new_sketchup_state)
+        # Init materials again
         new_state = InitializeMaterials.update_state(new_state)
+
+        # TODO: Read here SpeckleEntities if they exist in model.
+
+        # Read preferences from database and model.
+        preferences = Preferences.read_preferences(new_state.sketchup_state.sketchup_model)
+        new_user_state = new_state.user_state.with_preferences(preferences)
+        new_state = new_state.with(:@user_state => new_user_state)
         attach_observers(sketchup_model, new_state.speckle_state.observers)
         new_state
       end

@@ -20,7 +20,7 @@ module SpeckleConnector
         speckle_state = States::SpeckleState.new(accounts, observers, {}, {})
         # This should be the only point that `Sketchup_active_model` passed to application state.
         sketchup_state = States::SketchupState.new(Sketchup.active_model)
-        preferences = Preferences.init_preferences(sketchup_state.sketchup_model)
+        preferences = Preferences.read_preferences(sketchup_state.sketchup_model)
         user_state_with_preferences = state.user_state.with_preferences(preferences)
         state = States::State.new(user_state_with_preferences, speckle_state, sketchup_state, false)
         Actions::LoadSketchupModel.update_state(state, sketchup_state.sketchup_model)
