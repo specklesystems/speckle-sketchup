@@ -16,7 +16,7 @@ module SpeckleConnector
 
     # @param sketchup_model [Sketchup::Model] active model.
     # rubocop:disable Metrics/MethodLength
-    def self.init_preferences(sketchup_model)
+    def self.read_preferences(sketchup_model)
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
       validate_preferences(db)
 

@@ -123,6 +123,19 @@ export default {
       diffing: this.preferences.user.diffing
     }
   },
+  mounted() {
+    bus.$on('update-preferences', async (preferences) => {
+      let prefs = JSON.parse(preferences)
+      this.combineFacesByMaterial = prefs.model.combine_faces_by_material
+      this.includeAttributes = prefs.model.include_entity_attributes
+      this.includeFaceAttributes = prefs.model.include_face_entity_attributes
+      this.includeEdgeAttributes = prefs.model.include_edge_entity_attributes
+      this.includeGroupAttributes = prefs.model.include_group_entity_attributes
+      this.includeComponentAttributes = prefs.model.include_component_entity_attributes
+      this.mergeCoplanarFaces = prefs.model.merge_coplanar_faces
+      this.diffing = prefs.user.diffing
+    })
+  },
   watch: {
     'showSettings': {
       handler(newValue) {

@@ -2,6 +2,7 @@
 
 require_relative 'event_action'
 require_relative '../load_sketchup_model'
+require_relative '../collect_preferences'
 
 module SpeckleConnector
   module Actions
@@ -18,7 +19,13 @@ module SpeckleConnector
             return state unless event_data&.any?
 
             model = event_data.flatten.first
-            Actions::LoadSketchupModel.update_state(state, model)
+            # LoadSketchupModel action should be responsible to update all model specific data for state and then
+            #  should notify the UI to update it's components.
+            new_state = Actions::LoadSketchupModel.update_state(state, model)
+            # Action to let UI to render itself with new preferences state
+            # TODO: Later UI should be updated if any stream is invalid after
+            #  we collected speckle_entities appropriately
+            CollectPreferences.update_state(new_state, {})
           end
         end
 
