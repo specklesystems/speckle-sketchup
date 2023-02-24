@@ -12,13 +12,14 @@ module SpeckleConnector
         # Writes initial data while speckle entity is creating first time.
         # @param sketchup_entity [Sketchup::Entity] Sketchup entity to write data into it's attribute dictionary.
         # rubocop:disable Metrics/ParameterLists
-        def self.write_initial_base_data(sketchup_entity, application_id, id, speckle_type, children_count, stream_id)
+        def self.write_initial_base_data(sketchup_entity, application_id, id, speckle_type, children, stream_id)
           initial_dict_data = {
             # Add here more if you want to write here initial data
             SPECKLE_ID => id,
             APPLICATION_ID => application_id,
             SPECKLE_TYPE => speckle_type,
-            TOTAL_CHILDREN_COUNT => children_count,
+            TOTAL_CHILDREN_COUNT => children.length,
+            CHILDREN => children.keys,
             VALID_STREAM_IDS => [stream_id],
             INVALID_STREAM_IDS => []
           }

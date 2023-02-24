@@ -5,6 +5,7 @@ require 'securerandom'
 # rubocop:enable SketchupPerformance/OpenSSL
 require 'digest'
 require_relative 'converter'
+require_relative '../speckle_entities/speckle_entity'
 require_relative '../relations/many_to_one_relation'
 
 module SpeckleConnector
@@ -117,11 +118,7 @@ module SpeckleConnector
 
         if @preferences[:user][:diffing] && !entities.nil?
           entities.uniq.each do |entity|
-            speckle_entity = if speckle_state.speckle_entities.keys.include?(entity.persistent_id)
-                               speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
-                             else
-                               SpeckleEntities.with_converted(entity, traversed_base, stream_id)
-                             end
+            speckle_entity = create_or_update_speckle_entity(entity, id, traversed_base)
             @speckle_state = speckle_state.with_speckle_entity(speckle_entity)
           end
         end
@@ -344,6 +341,22 @@ module SpeckleConnector
         return is_exist unless is_exist
 
         speckle_state.speckle_entities[entity.persistent_id].valid_stream_ids.include?(stream_id)
+      end
+
+      # Creates or updates speckle entity.
+      # If speckle entity exist in state, creates new one by updating old one.
+      # Else creates new one
+      # @return [SpeckleEntity] speckle entity that collects both speckle and sketchup information.
+      def create_or_update_speckle_entity(entity, id, traversed_base)
+        if speckle_state.speckle_entities.keys.include?(entity.persistent_id)
+          speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
+        else
+          children = traversed_base[:__closure].nil? ? {} : traversed_base[:__closure]
+          speckle_entity = SpeckleEntities::SpeckleEntity.new(entity, id, traversed_base[:speckle_type],
+                                                              children.keys, [stream_id])
+          speckle_entity.write_initial_base_data
+          speckle_entity
+        end
       end
     end
   end

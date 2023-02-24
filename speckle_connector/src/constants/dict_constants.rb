@@ -6,6 +6,7 @@ module SpeckleConnector
   SPECKLE_TYPE = 'speckle_type'
   APPLICATION_ID = 'application_id'
   TOTAL_CHILDREN_COUNT = 'total_children_count'
+  CHILDREN = 'children'
   PARENT = 'parent'
   VALID_STREAM_IDS = 'valid_stream_ids'
   INVALID_STREAM_IDS = 'invalid_stream_ids'
