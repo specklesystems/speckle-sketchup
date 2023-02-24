@@ -2,6 +2,7 @@
 
 require_relative 'action'
 require_relative 'initialize_materials'
+require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../preferences/preferences'
 require_relative '../states/state'
 require_relative '../states/sketchup_state'
@@ -23,7 +24,10 @@ module SpeckleConnector
         # Init materials again
         new_state = InitializeMaterials.update_state(new_state)
 
-        # TODO: Read here SpeckleEntities if they exist in model.
+        # Read speckle entities
+        new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
+        new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
+        new_state = new_state.with_speckle_state(new_speckle_state)
 
         # Read preferences from database and model.
         preferences = Preferences.read_preferences(new_state.sketchup_state.sketchup_model)
