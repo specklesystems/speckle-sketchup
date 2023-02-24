@@ -147,7 +147,7 @@ export default {
     'showSettings': {
       handler(newValue) {
         if (newValue){
-          this.$mixpanel.track('Connector Action', { name: 'Open Settings Dialog' })
+          this.$mixpanel.track('Connector Action', { name: 'Settings Open' })
         }
       }
     }
@@ -159,7 +159,7 @@ export default {
         name: "user_preferences_updated",
         data: {preference_hash: "configSketchup", preference: "diffing", value: this.diffing}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Diffing' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Diffing' })
     },
     combineFacesByMaterialHandler(newValue){
       this.combineFacesByMaterial = !!newValue
@@ -167,7 +167,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "combine_faces_by_material", value: this.combineFacesByMaterial}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Combine Faces By Material Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Combine Faces By Material' })
     },
     includeAttributesHandler(newValue){
       this.includeAttributes = !!newValue
@@ -175,7 +175,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "include_entity_attributes", value: this.includeAttributes}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Include Entity Attributes Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Include Entity Attributes' })
     },
     includeFaceAttributesHandler(newValue){
       this.includeFaceAttributes = !!newValue
@@ -183,7 +183,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "include_face_entity_attributes", value: this.includeFaceAttributes}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Include Face Entity Attributes Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Include Face Entity Attributes' })
     },
     includeEdgeAttributesHandler(newValue){
       this.includeEdgeAttributes = !!newValue
@@ -191,7 +191,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "include_edge_entity_attributes", value: this.includeEdgeAttributes}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Include Edge Entity Attributes Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Include Edge Entity Attributes' })
     },
     includeGroupAttributesHandler(newValue){
       this.includeGroupAttributes = !!newValue
@@ -199,7 +199,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "include_group_entity_attributes", value: this.includeGroupAttributes}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Include Group Entity Attributes Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Include Group Entity Attributes' })
     },
     includeComponentAttributesHandler(newValue){
       this.includeComponentAttributes = !!newValue
@@ -207,7 +207,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "include_component_entity_attributes", value: this.includeComponentAttributes}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Include Component Entity Attributes Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Include Component Entity Attributes' })
     },
     mergeCoplanarFacesHandler(newValue){
       this.mergeCoplanarFaces = !!newValue
@@ -215,7 +215,7 @@ export default {
         name: "model_preferences_updated",
         data: {preference: "merge_coplanar_faces", value: this.mergeCoplanarFaces}
       })
-      this.$mixpanel.track('Connector Action', { name: 'Merge Co-Planar Faces Option' })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Merge Co-Planar Faces' })
     },
     switchTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
