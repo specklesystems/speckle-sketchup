@@ -3,7 +3,6 @@
 require_relative 'converter'
 require_relative 'base_object_serializer'
 require_relative '../relations/many_to_one_relation'
-require_relative '../speckle_entities/speckle_entities'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/length'

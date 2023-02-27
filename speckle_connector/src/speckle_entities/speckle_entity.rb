@@ -13,9 +13,6 @@ module SpeckleConnector
       # @return [Sketchup::Entity] Sketchup Entity represents {SpeckleEntity} on the model.
       attr_reader :sketchup_entity
 
-      # @return [SpeckleObjects::Base] Speckle object that represented on server.
-      attr_reader :speckle_object
-
       # @return [String] Speckle object type.
       attr_reader :speckle_type
 
@@ -43,27 +40,26 @@ module SpeckleConnector
       attr_reader :source_material, :active_diffing_stream_id
 
       # @param sketchup_entity [Sketchup::Entity] sketchup entity represents {SpeckleEntity} on the model.
-      def initialize(sketchup_entity, traversed_speckle_object, children, stream_id)
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(sketchup_entity, speckle_id, speckle_type, children, valid_stream_ids, invalid_stream_ids = [])
         @status = SpeckleEntityStatus::UP_TO_DATE
         @source_material = sketchup_entity.material
         @active_diffing_stream_id = nil
-        @valid_stream_ids = [stream_id]
-        @invalid_stream_ids = []
+        @valid_stream_ids = valid_stream_ids
+        @invalid_stream_ids = invalid_stream_ids
         @sketchup_entity = sketchup_entity
         @application_id = @sketchup_entity.persistent_id
-        @id = traversed_speckle_object[:id]
-        @total_children_count = traversed_speckle_object[:totalChildrenCount]
-        @speckle_object = traversed_speckle_object
-        @speckle_type = speckle_object[:speckle_type]
+        @id = speckle_id
+        @total_children_count = children.length
+        @speckle_type = speckle_type
         @speckle_children_objects = children
+      end
+      # rubocop:enable Metrics/ParameterLists
+
+      def write_initial_base_data
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler
           .write_initial_base_data(@sketchup_entity, application_id, id, speckle_type,
-                                   @speckle_children_objects.length, stream_id)
-
-        # FIXME: Understand why below condition does not match for same cases. I guess it is a typo bug.
-        # unless total_children_count == speckle_children_objects.length
-        #   raise StandardError "total children count mismatch for #{application_id}"
-        # end
+                                   @speckle_children_objects, valid_stream_ids.first)
       end
 
       def with_up_to_date
