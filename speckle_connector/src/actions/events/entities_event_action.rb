@@ -34,7 +34,10 @@ module SpeckleConnector
               ids_to_invalidate = modified_faces.collect(&:persistent_id) + parent_ids
               entities_to_invalidate = speckle_entities_to_invalidate(speckle_state, ids_to_invalidate)
               new_speckle_state = invalidate_speckle_entities(speckle_state, entities_to_invalidate)
-              return state.with_speckle_state(new_speckle_state.with_invalid_streams_queue)
+              # This is the place we can send information to UI for diffing check
+              diffing = state.user_state.preferences[:user][:diffing]
+              new_speckle_state = new_speckle_state.with_invalid_streams_queue if diffing
+              return state.with_speckle_state(new_speckle_state)
             end
 
             state
