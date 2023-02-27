@@ -24,7 +24,12 @@ module SpeckleConnector
                                                                                    state.user_state.preferences,
                                                                                    @stream_id)
         puts("converted #{base.count} objects for stream #{@stream_id}")
-        new_state = state.with_speckle_state(new_speckle_state.with_invalid_streams_queue)
+
+        # This is the place we can send information to UI for diffing check
+        diffing = state.user_state.preferences[:user][:diffing]
+        new_speckle_state = new_speckle_state.with_invalid_streams_queue if diffing
+
+        new_state = state.with_speckle_state(new_speckle_state)
         new_state.with_add_queue('convertedFromSketchup', @stream_id, [
                                    { is_string: false, val: batches },
                                    { is_string: true, val: id },

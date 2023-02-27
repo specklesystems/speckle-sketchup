@@ -252,7 +252,7 @@ module SpeckleConnector
       def display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
         obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
 
-        block_definition = obj['@blockDefinition'] || obj['blockDefinition']
+        block_definition = block['definition'] || block['blockDefinition'] || block['@blockDefinition']
 
         definition = BLOCK_DEFINITION.to_native(
           sketchup_model,
@@ -274,22 +274,16 @@ module SpeckleConnector
           &convert
         )
 
-        find_and_erase_existing_instance(definition, obj_id)
+        BLOCK_INSTANCE.find_and_erase_existing_instance(definition, obj['id'], obj['applicationId'])
         t_arr = obj['transform']
         transform = t_arr.nil? ? Geom::Transformation.new : OTHER::Transform.to_native(t_arr, units)
         instance = entities.add_instance(definition, transform)
-        instance.name = obj_id
+        instance.name = obj['name'] unless obj['name'].nil?
         instance
       end
       # rubocop:enable Metrics/PerceivedComplexity
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/MethodLength
-
-      # Takes a component definition and finds and erases the first instance with the matching name
-      # (and optionally the applicationId)
-      def find_and_erase_existing_instance(definition, name, app_id = '')
-        definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
-      end
     end
   end
 end

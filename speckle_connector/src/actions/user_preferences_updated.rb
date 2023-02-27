@@ -46,6 +46,15 @@ module SpeckleConnector
         user[@preference.to_sym] = @value
         new_preferences = state.user_state.preferences.put(:user, user)
         new_user_state = state.user_state.with_preferences(new_preferences)
+        # This is the place we can send information to UI for diffing check. It is a technical depth!
+        if @preference == 'diffing'
+          new_speckle_state = if @value
+                                state.speckle_state.with_invalid_streams_queue
+                              else
+                                state.speckle_state.with_empty_invalid_streams_queue
+                              end
+          state = state.with_speckle_state(new_speckle_state)
+        end
         state.with_user_state(new_user_state)
       end
     end

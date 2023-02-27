@@ -116,7 +116,7 @@ module SpeckleConnector
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
 
-        if @preferences[:user][:diffing] && !entities.nil?
+        unless entities.nil?
           entities.uniq.each do |entity|
             speckle_entity = create_or_update_speckle_entity(entity, id, traversed_base)
             @speckle_state = speckle_state.with_speckle_entity(speckle_entity)

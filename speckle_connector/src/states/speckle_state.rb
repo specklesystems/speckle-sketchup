@@ -54,6 +54,12 @@ module SpeckleConnector
         with(:@message_queue => new_queue)
       end
 
+      def with_empty_invalid_streams_queue
+        new_queue = message_queue.merge({ "updateInvalidStreams":
+                                            "updateInvalidStreams(#{JSON.generate([])})" })
+        with(:@message_queue => new_queue)
+      end
+
       def with_accounts(new_accounts)
         with(:@accounts => new_accounts)
       end
