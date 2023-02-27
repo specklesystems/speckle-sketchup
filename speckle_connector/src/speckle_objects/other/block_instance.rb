@@ -134,7 +134,6 @@ module SpeckleConnector
             &convert
           )
 
-          instance_name = block['name'].nil? || block['name'].empty? ? block['id'] : block['name']
           t_arr = block['transform'].is_a?(Hash) ? block['transform']['value'] : block['transform']
           transform = Other::Transform.to_native(t_arr, block['units'])
           instance = if is_group
@@ -151,11 +150,11 @@ module SpeckleConnector
 
           # erase existing instances after creation and before rename because you can't have definitions
           #  without instances
-          find_and_erase_existing_instance(definition, instance_name, block['applicationId'])
+          find_and_erase_existing_instance(definition, block['id'], block['applicationId'])
           puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
           instance.transformation = transform if is_group
           instance.material = Other::RenderMaterial.to_native(sketchup_model, block['renderMaterial'])
-          instance.name = instance_name
+          instance.name = block['name'] unless block['name'].nil?
           unless block['sketchup_attributes'].nil?
             SketchupModel::Dictionary::DictionaryHandler
               .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
@@ -170,8 +169,17 @@ module SpeckleConnector
 
         # takes a component definition and finds and erases the first instance with the matching name
         # (and optionally the applicationId)
-        def self.find_and_erase_existing_instance(definition, name, app_id = '')
-          definition.instances.find { |ins| ins.name == name || ins.guid == app_id }&.erase!
+        def self.find_and_erase_existing_instance(definition, upcoming_speckle_id, upcoming_app_id = '')
+          definition.instances.find do |ins|
+            next if ins.attribute_dictionaries.nil?
+            next if ins.attribute_dictionaries.to_a.empty?
+            next if ins.attribute_dictionaries.to_a.none? { |dict| dict.name == SPECKLE_BASE_OBJECT }
+
+            dict = ins.attribute_dictionaries.to_a.find { |dict| dict.name == SPECKLE_BASE_OBJECT }
+            speckle_id = dict[:speckle_id]
+            application_id = dict[:application_id]
+            speckle_id == upcoming_speckle_id || application_id == upcoming_app_id
+          end&.erase!
         end
       end
     end

@@ -19,7 +19,7 @@ module SpeckleConnector
             APPLICATION_ID => application_id,
             SPECKLE_TYPE => speckle_type,
             TOTAL_CHILDREN_COUNT => children.length,
-            CHILDREN => children.keys,
+            CHILDREN => children,
             VALID_STREAM_IDS => [stream_id],
             INVALID_STREAM_IDS => []
           }
