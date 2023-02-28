@@ -8,14 +8,17 @@ module SpeckleConnector
   module Actions
     # Action to receive objects from Speckle Server.
     class ReceiveObjects < Action
-      def initialize(stream_id, base, stream_name, branch_name, branch_id)
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(stream_id, base, stream_name, branch_name, branch_id, source_app)
         super()
         @stream_id = stream_id
         @base = base
         @stream_name = stream_name
         @branch_name = branch_name
         @branch_id = branch_id
+        @source_app = source_app
       end
+      # rubocop:enable Metrics/ParameterLists
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
@@ -26,6 +29,7 @@ module SpeckleConnector
         converter.receive_commit_object(@base, state.user_state.preferences[:model])
         elapsed_time = (Time.now.to_f - start_time).round(3)
         puts "==== Converting to Native executed in #{elapsed_time} sec ===="
+        puts "==== Source application is #{@source_app}. ===="
         state.with_add_queue('finishedReceiveInSketchup', @stream_id, [])
       end
     end
