@@ -42,6 +42,7 @@ query Stream($id: String!) {
             branchName
             authorName
             authorAvatar
+            sourceApplication
             referencedObject
           }
         }
