@@ -18,11 +18,10 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def update_state(state)
         state = DeactivateDiffing.update_state(state, {})
-        converter = Converters::ToSpeckle.new(state)
+        converter = Converters::ToSpeckle.new(state, @stream_id)
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
-                                                                                   state.user_state.preferences,
-                                                                                   @stream_id)
+                                                                                   state.user_state.preferences)
         puts("converted #{base.count} objects for stream #{@stream_id}")
 
         # This is the place we can send information to UI for diffing check
