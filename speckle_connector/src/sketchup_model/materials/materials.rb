@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../../constants/mat_constants'
+
 module SpeckleConnector
   # Operations related to {SketchupModel}.
   module SketchupModel
@@ -7,6 +9,10 @@ module SpeckleConnector
     class Materials
       def self.from_sketchup_model(model)
         materials = model.materials
+        materials = materials.select do |material|
+          !material.attribute_dictionaries.nil? &&
+            material.attribute_dictionaries.any? { |dict| dict.name == MAT_DICTIONARY }
+        end
         mat_hash = materials.collect { |material| [material.get_attribute(MAT_DICTIONARY, MAT_ID), material] }.to_h
         Materials.new(mat_hash)
       end
