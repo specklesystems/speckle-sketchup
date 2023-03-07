@@ -24,6 +24,14 @@
         </v-btn>
         <span>Color Mode</span>
 
+        <!-- Register objects as Speckle Entity on send/receive -->
+        <v-switch
+            :input-value="registerSpeckleEntity"
+            class="pt-3 mt-n2 mb-n7"
+            :label="'Register objects as Speckle Entity on send/receive'"
+            @change="registerSpeckleEntityHandler"
+        />
+
         <!-- Switch Diffing -->
         <v-switch
             :input-value="diffing"
@@ -31,7 +39,8 @@
             :label="'Diffing (Alpha)'"
             @change="diffingHandler"
         />
-        <div class="sm1 mt-3">Send Strategy</div>
+
+        <div class="sm1 mt-3">Model Preferences</div>
         <v-divider class="mb-2"/>
         <v-switch
             class="pt-1 mt-n2 mb-n2"
@@ -77,9 +86,6 @@
             :disabled="!includeAttributes"
             @change="includeComponentAttributesHandler"
         />
-
-        <div class="sm1 mt-3">Receive Strategy</div>
-        <v-divider class="mb-2"/>
         <v-switch
             :input-value="mergeCoplanarFaces"
             class="pt-1 mt-n2 mb-n2"
@@ -126,7 +132,8 @@ export default {
       includeGroupAttributes: this.preferences.model.include_group_entity_attributes,
       includeComponentAttributes: this.preferences.model.include_component_entity_attributes,
       mergeCoplanarFaces: this.preferences.model.merge_coplanar_faces,
-      diffing: this.preferences.user.diffing
+      diffing: this.preferences.user.diffing,
+      registerSpeckleEntity: this.preferences.user.register_speckle_entity
     }
   },
   watch: {
@@ -140,6 +147,7 @@ export default {
         this.includeComponentAttributes = newValue.model.include_component_entity_attributes
         this.mergeCoplanarFaces = newValue.model.merge_coplanar_faces
         this.diffing = newValue.user.diffing
+        this.registerSpeckleEntity = newValue.user.register_speckle_entity
       },
       deep: true,
       immediate: true
@@ -160,6 +168,14 @@ export default {
         data: {preference_hash: "configSketchup", preference: "diffing", value: this.diffing}
       })
       this.$mixpanel.track('Connector Action', { name: 'Toggle Diffing' })
+    },
+    registerSpeckleEntityHandler(newValue){
+      this.registerSpeckleEntity = !!newValue
+      sketchup.exec({
+        name: "user_preferences_updated",
+        data: {preference_hash: "configSketchup", preference: "register_speckle_entity", value: this.registerSpeckleEntity}
+      })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle Register Speckle Entity' })
     },
     combineFacesByMaterialHandler(newValue){
       this.combineFacesByMaterial = !!newValue

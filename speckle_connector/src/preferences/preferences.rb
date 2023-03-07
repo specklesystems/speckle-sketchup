@@ -11,8 +11,8 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
-    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false}');"
-    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false}'
+    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false}');"
+    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
@@ -33,7 +33,7 @@ module SpeckleConnector
       return false if row_data.empty?
 
       data = JSON.parse(row_data.first.first)
-      return false if data['dark_theme'].nil? || data['diffing'].nil?
+      return false if data['dark_theme'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
 
       true
     end
@@ -63,10 +63,12 @@ module SpeckleConnector
       # Get current theme value
       dark_theme = data_hash['dark_theme']
       diffing = data_hash['diffing']
+      register_speckle_entity = data_hash['register_speckle_entity']
 
       {
         dark_theme: dark_theme,
-        diffing: diffing
+        diffing: diffing,
+        register_speckle_entity: register_speckle_entity
       }.freeze
     end
 
