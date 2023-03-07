@@ -5,6 +5,7 @@ require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/other/block_instance'
+require_relative '../speckle_objects/other/display_value'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
@@ -13,6 +14,9 @@ module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
     class ToNative < Converter
+      # @return [States::SpeckleState] the current speckle state of the {States::State}
+      attr_accessor :speckle_state
+
       # Module aliases
       GEOMETRY = SpeckleObjects::Geometry
       OTHER = SpeckleObjects::Other
@@ -23,6 +27,8 @@ module SpeckleConnector
       MESH = GEOMETRY::Mesh
       BLOCK_DEFINITION = OTHER::BlockDefinition
       BLOCK_INSTANCE = OTHER::BlockInstance
+      RENDER_MATERIAL = OTHER::RenderMaterial
+      DISPLAY_VALUE = OTHER::DisplayValue
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -35,11 +41,29 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
       ].freeze
 
-      def initialize(state)
-        super(state.sketchup_state)
+      # ReceiveObjects action call this method by giving everything that comes from server.
+      # Upcoming object is a referencedObject of selected commit to receive.
+      # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
+      # @param obj [Object] speckle commit object.
+      def receive_commit_object(obj)
+        # First create layers on the sketchup before starting traversing
+        # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
+        filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
+        create_layers(filtered_layer_containers, sketchup_model.layers)
+        create_views(obj.filter_map { |key, value| value if key == '@Named Views' }, sketchup_model)
+        # Get default commit layer from sketchup model which will be used as fallback
+        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
+        @state
       end
 
-      def can_convert_to_native(obj)
+      # Conditions for converting speckle object to native sketchup entity:
+      #  1- `obj` is a hash
+      #  2- `obj` has a property as 'speckle_type'
+      #  3- `obj` is a convertable 'speckle_type' which sketchup supports
+      # @param obj [Object] candidate object to convert from speckle to sketchup.
+      # @return [Boolean] whether object is convertable or not.
+      def convertible_to_native?(obj)
         return false unless obj.is_a?(Hash) && obj.key?('speckle_type')
 
         CONVERTABLE_SPECKLE_TYPES.include?(obj['speckle_type'])
@@ -47,17 +71,6 @@ module SpeckleConnector
 
       def ignored_speckle_type?(obj)
         ['Objects.BuiltElements.Revit.Parameter'].include?(obj['speckle_type'])
-      end
-
-      # @param obj [Object] speckle commit object.
-      def receive_commit_object(obj, model_preferences)
-        # First create layers on the sketchup before starting traversing
-        filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
-        create_layers(filtered_layer_containers, sketchup_model.layers)
-        create_views(obj.filter_map { |key, value| value if key == '@Named Views' }, sketchup_model)
-        # Define default commit layer which is the fallback
-        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, model_preferences)
       end
 
       # Create actual Sketchup layers from layer_paths that taken from Speckle base object.
@@ -155,9 +168,9 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, commit_folder, layer, model_preferences)
-        if can_convert_to_native(obj)
-          convert_to_native(obj, layer, model_preferences)
+      def traverse_commit_object(obj, commit_folder, layer)
+        if convertible_to_native?(obj)
+          @state = convert_to_native(@state, obj, layer)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -167,16 +180,16 @@ module SpeckleConnector
             props.each do |prop|
               layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
               layer = find_layer(layer_path, commit_folder, layer)
-              traverse_commit_object(obj[prop], commit_folder, layer, model_preferences)
+              traverse_commit_object(obj[prop], commit_folder, layer)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            convert_to_native(obj, layer, model_preferences)
+            @state = convert_to_native(@state, obj, layer)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer, model_preferences) }
+          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, commit_folder, layer, model_preferences) }
+          obj.each { |value| traverse_commit_object(value, commit_folder, layer) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
@@ -214,76 +227,36 @@ module SpeckleConnector
         end
       end
 
-      # rubocop:disable Metrics/CyclomaticComplexity
-      # rubocop:disable Metrics/MethodLength
-      def convert_to_native(obj, layer, model_preferences, entities = sketchup_model.entities)
-        convert = method(:convert_to_native)
-        unless obj['displayValue'].nil?
-          return display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
-        end
+      def speckle_object_to_native(obj)
+        return DISPLAY_VALUE.method(:to_native) unless obj['displayValue'].nil?
 
-        case obj['speckle_type']
-        when 'Objects.Geometry.Line', 'Objects.Geometry.Polyline' then LINE.to_native(obj, layer, entities)
-        when 'Objects.Other.BlockInstance' then BLOCK_INSTANCE.to_native(sketchup_model, obj, layer, entities,
-                                                                         model_preferences, &convert)
-        when 'Objects.Other.BlockDefinition' then BLOCK_DEFINITION.to_native(sketchup_model, obj, layer,
-                                                                             obj['name'],
-                                                                             obj['always_face_camera'],
-                                                                             model_preferences,
-                                                                             obj['sketchup_attributes'],
-                                                                             obj['applicationId'],
-                                                                             &convert)
-        when 'Objects.Geometry.Mesh' then MESH.to_native(sketchup_model, obj, layer, entities, model_preferences)
-        when 'Objects.Geometry.Brep' then MESH.to_native(sketchup_model, obj['displayValue'], layer, entities,
-                                                         model_preferences)
-        end
+        SPECKLE_OBJECT_TO_NATIVE[obj['speckle_type']]
+      end
+
+      SPECKLE_OBJECT_TO_NATIVE = {
+        OBJECTS_GEOMETRY_LINE => LINE.method(:to_native),
+        OBJECTS_GEOMETRY_POLYLINE => LINE.method(:to_native),
+        OBJECTS_GEOMETRY_MESH => MESH.method(:to_native),
+        OBJECTS_GEOMETRY_BREP => MESH.method(:to_native),
+        OBJECTS_OTHER_BLOCKDEFINITION => BLOCK_DEFINITION.method(:to_native),
+        OBJECTS_OTHER_BLOCKINSTANCE => BLOCK_INSTANCE.method(:to_native),
+        # OBJECTS_OTHER_INSTANCE => BLOCK_INSTANCE.method(:to_native),
+        OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native)
+      }.freeze
+
+      def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
+        # store this method as parameter to re-call it inner callstack
+        convert_to_native = method(:convert_to_native)
+        # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
+        to_native_method = speckle_object_to_native(obj)
+        # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
+        # It returns updated state to achieve continuous traversal by creating SpeckleEntity.
+        to_native_method.call(state, obj, layer, entities, stream_id, &convert_to_native)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
-        nil
+        return state
       end
-      # rubocop:enable Metrics/CyclomaticComplexity
-      # rubocop:enable Metrics/MethodLength
-
-      # Creates a component definition and instance from a speckle object with a display value
-      # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Metrics/CyclomaticComplexity
-      # rubocop:disable Metrics/MethodLength
-      def display_value_to_native_component(obj, layer, entities, model_preferences, &convert)
-        obj_id = obj['applicationId'].to_s.empty? ? obj['id'] : obj['applicationId']
-
-        block_definition = block['definition'] || block['blockDefinition'] || block['@blockDefinition']
-
-        definition = BLOCK_DEFINITION.to_native(
-          sketchup_model,
-          obj['displayValue'],
-          layer,
-          "def::#{obj_id}",
-          if block_definition.nil?
-            false
-          else
-            block_definition['always_face_camera'].nil? ? false : block_definition['always_face_camera']
-          end,
-          model_preferences,
-          if block_definition.nil?
-            nil
-          else
-            block_definition['sketchup_attributes'].nil? ? nil : block_definition['sketchup_attributes']
-          end,
-          obj_id,
-          &convert
-        )
-
-        BLOCK_INSTANCE.find_and_erase_existing_instance(definition, obj['id'], obj['applicationId'])
-        t_arr = obj['transform']
-        transform = t_arr.nil? ? Geom::Transformation.new : OTHER::Transform.to_native(t_arr, units)
-        instance = entities.add_instance(definition, transform)
-        instance.name = obj['name'] unless obj['name'].nil?
-        instance
-      end
-      # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Metrics/CyclomaticComplexity
-      # rubocop:enable Metrics/MethodLength
     end
   end
 end

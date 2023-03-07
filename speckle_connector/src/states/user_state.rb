@@ -15,6 +15,14 @@ module SpeckleConnector
         @preferences = preferences
       end
 
+      def user_preferences
+        @preferences[:user]
+      end
+
+      def model_preferences
+        @preferences[:model]
+      end
+
       def with_preferences(new_preferences)
         with(:@preferences => new_preferences)
       end

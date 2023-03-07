@@ -2,7 +2,6 @@
 
 require_relative 'converter'
 require_relative 'base_object_serializer'
-require_relative '../relations/many_to_one_relation'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/length'
@@ -17,29 +16,10 @@ module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
     class ToSpeckle < Converter
-      # @return [Hash{Symbol=>Array}] layers to hold it's objects under the base object.
-      attr_reader :layers
-
-      # @return [States::State] the current speckle state of the {States::State}
-      attr_reader :state
-
-      # @return [States::SpeckleState] the current speckle state of the {States::State}
-      attr_reader :speckle_state
-
-      # @return [Relations::ManyToOneRelation] relations between objects.
-      attr_accessor :relation
-
-      def initialize(state)
-        super(state.sketchup_state)
-        @state = state
-        @speckle_state = @state.speckle_state
-        @layers = add_all_layers
-        @relation = Relations::ManyToOneRelation.new
-      end
-
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
+        layers = add_all_layers
         state = speckle_state
         sketchup_model.selection.each do |entity|
           new_speckle_state, converted_object_with_entity = convert(entity, preferences, state)
@@ -91,9 +71,8 @@ module SpeckleConnector
 
       # Serialized and traversed information to send batches.
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
-      # @param stream_id [String] stream id to send conversion
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def serialize(base_and_entity, speckle_state, preferences, stream_id)
+      def serialize(base_and_entity, speckle_state, preferences)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id, preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)

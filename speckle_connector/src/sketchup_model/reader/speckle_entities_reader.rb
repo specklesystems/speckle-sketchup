@@ -28,7 +28,7 @@ module SpeckleConnector
 
         # @param entity [Sketchup::Entity] sketchup entity to read from attribute dictionary.
         def self.read_speckle_entity(entity)
-          dict = entity.attribute_dictionaries.to_a.find { |dict| dict.name == SPECKLE_BASE_OBJECT }
+          dict = entity.attribute_dictionaries.to_a.find { |d| d.name == SPECKLE_BASE_OBJECT }
           speckle_id = dict[:speckle_id]
           speckle_type = dict[:speckle_type]
           children = dict[:children]

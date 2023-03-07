@@ -11,8 +11,10 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
-    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false}');"
-    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false}'
+    # rubocop:disable Layout/LineLength
+    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false}');"
+    # rubocop:enable Layout/LineLength
+    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
@@ -33,13 +35,14 @@ module SpeckleConnector
       return false if row_data.empty?
 
       data = JSON.parse(row_data.first.first)
-      return false if data['dark_theme'].nil? || data['diffing'].nil?
+      return false if data['dark_theme'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
 
       true
     end
 
     # Validates current preferences. If there are incomplete data then this method resets it with default preferences.
     # @param database [Sqlite3::Database] database for queries.
+    # rubocop:disable Metrics/MethodLength
     def self.validate_user_preferences(database)
       row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
       is_config_sketchup_exist = !row_data.empty?
@@ -63,12 +66,15 @@ module SpeckleConnector
       # Get current theme value
       dark_theme = data_hash['dark_theme']
       diffing = data_hash['diffing']
+      register_speckle_entity = data_hash['register_speckle_entity']
 
       {
         dark_theme: dark_theme,
-        diffing: diffing
+        diffing: diffing,
+        register_speckle_entity: register_speckle_entity
       }.freeze
     end
+    # rubocop:enable Metrics/MethodLength
 
     # @param sketchup_model [Sketchup::Model] sketchup model to validate model preferences
     def self.validate_model_preferences(sketchup_model)
