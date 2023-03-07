@@ -116,10 +116,10 @@ module SpeckleConnector
           return def_obj['name'] unless def_obj['name'].nil?
 
           # TODO: Check unique elements when instancing implemented to add element id.
-          #if built_element?(def_obj) && unique_element?(def_obj)
+          # if built_element?(def_obj) && unique_element?(def_obj)
           #  return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
-          #end
-          #return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
+          # end
+          # return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
 
           # TODO: Enable below when instancing implemented.
           if built_element?(def_obj)
@@ -134,6 +134,8 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
+        # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/AbcSize
         def self.to_native(state, definition_obj, layer, _entities, stream_id, &convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
@@ -172,6 +174,8 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
+        # rubocop:enable Metrics/MethodLength
+        # rubocop:enable Metrics/AbcSize
 
         # @param state [States::State] state of the application
         def self.definition_to_speckle_entity(state, definition, speckle_definition, stream_id)

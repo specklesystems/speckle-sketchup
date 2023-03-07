@@ -21,7 +21,7 @@ module SpeckleConnector
       end
 
       def self.merged_faces(faces)
-        faces.select { |face| !face.deleted? }
+        faces.reject(&:deleted?)
       end
 
       # Detect edges to remove by checking following controls respectively;

@@ -197,18 +197,22 @@ module SpeckleConnector
 
         # takes a component definition and finds and erases the first instance with the matching name
         # (and optionally the applicationId)
+        # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/CyclomaticComplexity
         def self.find_and_erase_existing_instance(definition, upcoming_speckle_id, upcoming_app_id = '')
           definition.instances.find do |ins|
             next if ins.attribute_dictionaries.nil?
             next if ins.attribute_dictionaries.to_a.empty?
             next if ins.attribute_dictionaries.to_a.none? { |dict| dict.name == SPECKLE_BASE_OBJECT }
 
-            dict = ins.attribute_dictionaries.to_a.find { |dict| dict.name == SPECKLE_BASE_OBJECT }
+            dict = ins.attribute_dictionaries.to_a.find { |d| d.name == SPECKLE_BASE_OBJECT }
             speckle_id = dict[:speckle_id]
             application_id = dict[:application_id]
             speckle_id == upcoming_speckle_id || application_id == upcoming_app_id
           end&.erase!
         end
+        # rubocop:enable Metrics/PerceivedComplexity
+        # rubocop:enable Metrics/CyclomaticComplexity
       end
     end
   end

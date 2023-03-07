@@ -11,7 +11,9 @@ module SpeckleConnector
   module Preferences
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
+    # rubocop:disable Layout/LineLength
     DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false}');"
+    # rubocop:enable Layout/LineLength
     DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
@@ -40,6 +42,7 @@ module SpeckleConnector
 
     # Validates current preferences. If there are incomplete data then this method resets it with default preferences.
     # @param database [Sqlite3::Database] database for queries.
+    # rubocop:disable Metrics/MethodLength
     def self.validate_user_preferences(database)
       row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
       is_config_sketchup_exist = !row_data.empty?
@@ -71,6 +74,7 @@ module SpeckleConnector
         register_speckle_entity: register_speckle_entity
       }.freeze
     end
+    # rubocop:enable Metrics/MethodLength
 
     # @param sketchup_model [Sketchup::Model] sketchup model to validate model preferences
     def self.validate_model_preferences(sketchup_model)

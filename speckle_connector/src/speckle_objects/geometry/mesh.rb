@@ -52,6 +52,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity:
         # rubocop:disable Metrics/ParameterLists
         def self.to_native(state, mesh, layer, entities, stream_id, &convert_to_native)
           model_preferences = state.user_state.preferences[:model]
@@ -98,6 +99,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity:
         # rubocop:enable Metrics/ParameterLists
 
         def self.faces_to_speckle_entities(state, faces, speckle_mesh, stream_id)

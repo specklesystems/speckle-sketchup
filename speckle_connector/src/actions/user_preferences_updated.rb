@@ -18,6 +18,8 @@ module SpeckleConnector
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/MethodLength
       def update_state(state)
         # Init sqlite database
         db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
@@ -57,6 +59,8 @@ module SpeckleConnector
         end
         state.with_user_state(new_user_state)
       end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

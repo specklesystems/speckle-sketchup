@@ -14,6 +14,7 @@ module SpeckleConnector
       class DisplayValue
         # Creates a component definition and instance from a speckle object with a display value
         # @param state [States::State] state of the application.
+        # rubocop:disable Metrics/ParameterLists
         def self.to_native(state, obj, layer, entities, stream_id, &convert_to_native)
           # Switch displayValue with geometry
           obj['geometry'] = obj['displayValue']
@@ -37,6 +38,7 @@ module SpeckleConnector
           instance.name = obj['name'] unless obj['name'].nil?
           display_value_to_speckle_entity(new_state, instance, obj, stream_id)
         end
+        # rubocop:enable Metrics/ParameterLists
 
         def self.display_value_to_speckle_entity(state, instance, speckle_instance, stream_id)
           return state unless state.user_state.user_preferences[:register_speckle_entity]
