@@ -100,24 +100,65 @@ module SpeckleConnector
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/ParameterLists
 
+        def self.built_element?(definition_object)
+          definition_object['speckle_type'].include?('Objects.BuiltElements')
+        end
+
+        def self.unique_element?(definition_object)
+          UNIQUE_DEFINITIONS.any? { |d| d.include?(definition_object['speckle_type']) }
+        end
+
+        UNIQUE_DEFINITIONS = [
+          'Wall'
+        ].freeze
+
+        def self.get_definition_name(def_obj)
+          return def_obj['name'] unless def_obj['name'].nil?
+
+          # TODO: Check unique elements when instancing implemented to add element id.
+          #if built_element?(def_obj) && unique_element?(def_obj)
+          #  return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
+          #end
+          #return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
+
+          # TODO: Enable below when instancing implemented.
+          if built_element?(def_obj)
+            return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
+          end
+
+          return "def::#{def_obj['applicationId']}"
+        end
+
         # Finds or creates a component definition from the geometry and the given name
-        # @param sketchup_model [Sketchup::Model] sketchup model to check block definitions.
+        # @param state [States::State] state of the application.
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.to_native(sketchup_model, geometry, layer, name, always_face_camera, model_preferences,
-                           sketchup_attributes, application_id = '', &convert)
-          definition = sketchup_model.definitions[name]
-          return definition if definition && (definition.name == name || definition.guid == application_id)
+        def self.to_native(state, definition_obj, layer, _entities, stream_id, &convert_to_native)
+          sketchup_model = state.sketchup_state.sketchup_model
 
+          # FIXME: Check later this is a valid check or not. Maybe unnecessary? If necessary document it!
+          # Check definitions from sketchup_model with name and application id
+          definition_name = get_definition_name(definition_obj)
+          application_id = definition_obj['applicationId']
+          definition = sketchup_model.definitions[definition_name]
+          return state if definition && (definition.name == definition_name || definition.guid == application_id)
+
+          geometry = definition_obj['geometry'] || definition_obj['@geometry']
+
+          always_face_camera = definition_obj['always_face_camera'].nil? ? false : definition_obj['always_face_camera']
+          sketchup_attributes = definition_obj['sketchup_attributes']
           definition&.entities&.clear!
-          definition ||= sketchup_model.definitions.add(name)
+          definition ||= sketchup_model.definitions.add(definition_name)
           definition.layer = layer
+
           if geometry.is_a?(Array)
-            geometry.each { |obj| convert.call(obj, layer, model_preferences, definition.entities) }
+            geometry.each do |obj|
+              state = convert_to_native.call(state, obj, layer, definition.entities)
+            end
           end
-          if geometry.is_a?(Hash) && !geometry['speckle_type'].nil?
-            convert.call(geometry, layer, model_preferences, definition.entities)
+          if geometry.is_a?(Hash) && !definition_obj['speckle_type'].nil?
+            state = convert_to_native.call(state, geometry, layer, definition.entities)
           end
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
@@ -126,11 +167,24 @@ module SpeckleConnector
             SketchupModel::Dictionary::DictionaryHandler
               .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
           end
-          definition
+          definition_to_speckle_entity(state, definition, definition_obj, stream_id)
         end
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
+
+        # @param state [States::State] state of the application
+        def self.definition_to_speckle_entity(state, definition, speckle_definition, stream_id)
+          return state unless state.user_state.user_preferences[:register_speckle_entity]
+
+          speckle_id = speckle_definition['id']
+          speckle_type = speckle_definition['speckle_type']
+          children = speckle_definition['__closure'].nil? ? [] : speckle_definition['__closure']
+          ent = SpeckleEntities::SpeckleEntity.new(definition, speckle_id, speckle_type, children, [stream_id])
+          ent.write_initial_base_data
+          new_speckle_state = state.speckle_state.with_speckle_entity(ent)
+          state.with_speckle_state(new_speckle_state)
+        end
 
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/MethodLength

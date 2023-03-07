@@ -52,9 +52,11 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(sketchup_model, mesh, layer, entities, model_preferences)
+        # rubocop:disable Metrics/ParameterLists
+        def self.to_native(state, mesh, layer, entities, stream_id, &convert_to_native)
+          model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
-          is_soften = get_soften_setting(mesh)
+          is_soften = get_soften_setting(mesh, entities)
           smooth_flags = is_soften ? 4 : 1
           # Get native points to add polygon into native mesh.
           points = get_native_points(mesh)
@@ -68,8 +70,17 @@ module SpeckleConnector
             indices = faces.shift(num_pts)
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
-          material = Other::RenderMaterial.to_native(sketchup_model, mesh['renderMaterial'])
-          entities.add_faces_from_mesh(native_mesh, smooth_flags, material)
+          new_state = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
+                                                      layer, entities, stream_id, &convert_to_native)
+          # Find and assign material if exist
+          unless mesh['renderMaterial'].nil?
+            material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id']
+            # Retrieve material from state
+            material = new_state.sketchup_state.materials.by_id(material_name)
+          end
+
+          # Add faces from mesh with material and smooth setting
+          entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each do |face|
             face.layer = layer
@@ -79,12 +90,30 @@ module SpeckleConnector
             end
           end
           # Merge only added faces in this scope
-          Converters::CleanUp.merge_coplanar_faces(added_faces) if model_preferences[:merge_coplanar_faces]
-          native_mesh
+          if model_preferences[:merge_coplanar_faces]
+            added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
+          end
+          faces_to_speckle_entities(new_state, added_faces, mesh, stream_id)
         end
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/ParameterLists
+
+        def self.faces_to_speckle_entities(state, faces, speckle_mesh, stream_id)
+          return state unless state.user_state.user_preferences[:register_speckle_entity]
+
+          speckle_id = speckle_mesh['id']
+          speckle_type = speckle_mesh['speckle_type']
+          children = speckle_mesh['__closure'].nil? ? [] : speckle_mesh['__closure']
+          speckle_state = state.speckle_state
+          faces.each do |face|
+            ent = SpeckleEntities::SpeckleEntity.new(face, speckle_id, speckle_type, children, [stream_id])
+            ent.write_initial_base_data
+            speckle_state = speckle_state.with_speckle_entity(ent)
+          end
+          state.with_speckle_state(speckle_state)
+        end
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator
@@ -185,12 +214,19 @@ module SpeckleConnector
           end
         end
 
-        def self.get_soften_setting(mesh)
-          if mesh['sketchup_attributes'].nil?
-            true
-          else
-            mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
+        DEFINITIONS_WILL_BE_SOFT_EDGE = %w[
+          Furniture-
+          Topography-
+        ].freeze
+
+        # @param mesh [Object] speckle mesh object
+        # @param entities [Sketchup::Entities] sketchup entities that mesh will be created in it as face.
+        def self.get_soften_setting(mesh, entities)
+          unless mesh['sketchup_attributes'].nil?
+            return mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
+
+          return DEFINITIONS_WILL_BE_SOFT_EDGE.any? { |def_name| entities.parent.name.include?(def_name) }
         end
 
         def self.get_native_points(mesh)
