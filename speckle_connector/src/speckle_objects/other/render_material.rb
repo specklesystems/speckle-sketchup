@@ -50,9 +50,8 @@ module SpeckleConnector
         end
 
         # @param state [States::State] state of the application.
-        # rubocop:disable Metrics/ParameterLists
-        def self.to_native(state, render_material, _layer, _entities, _stream_id, &_convert_to_native)
-          return state if render_material.nil?
+        def self.to_native(state, render_material, _layer, _entities, &_convert_to_native)
+          return state, [] if render_material.nil?
 
           sketchup_model = state.sketchup_state.sketchup_model
           materials = state.sketchup_state.materials
@@ -60,7 +59,7 @@ module SpeckleConnector
           # return material with same name if it exists
           name = render_material['name'] || render_material['id']
           material = materials.by_id(name)
-          return state if material
+          return state, [material] if material
 
           # create a new sketchup material
           material = sketchup_model.materials.add(name)
@@ -68,9 +67,8 @@ module SpeckleConnector
           argb = render_material['diffuse']
           material.color = Sketchup::Color.new((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >> 24) & 255)
           new_sketchup_state = state.sketchup_state.with_materials(materials.add_material(name, material))
-          state.with_sketchup_state(new_sketchup_state)
+          return state.with_sketchup_state(new_sketchup_state), [material]
         end
-        # rubocop:enable Metrics/ParameterLists
       end
     end
   end

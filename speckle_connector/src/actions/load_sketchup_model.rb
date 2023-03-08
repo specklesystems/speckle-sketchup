@@ -20,6 +20,9 @@ module SpeckleConnector
       def self.update_state(state, sketchup_model)
         # Init sketchup state again with new model
         new_sketchup_state = States::SketchupState.new(sketchup_model)
+        sketchup_model.rendering_options['DisplaySectionPlanes'] = true
+        # Transparency sort is the having transparent depth, by default it is 0. If so it looks cloudy.
+        sketchup_model.rendering_options['TransparencySort'] = 3
         new_state = state.with(:@sketchup_state => new_sketchup_state)
         # Init materials again
         new_state = InitializeMaterials.update_state(new_state)

@@ -108,8 +108,9 @@ module SpeckleConnector
           UNIQUE_DEFINITIONS.any? { |d| d.include?(definition_object['speckle_type']) }
         end
 
-        UNIQUE_DEFINITIONS = [
-          'Wall'
+        UNIQUE_DEFINITIONS = %w[
+          Walls-
+          Floors-
         ].freeze
 
         def self.get_definition_name(def_obj)
@@ -133,10 +134,9 @@ module SpeckleConnector
         # @param state [States::State] state of the application.
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        # rubocop:disable Metrics/ParameterLists
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
-        def self.to_native(state, definition_obj, layer, _entities, stream_id, &convert_to_native)
+        def self.to_native(state, definition_obj, layer, _entities, &convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
           # FIXME: Check later this is a valid check or not. Maybe unnecessary? If necessary document it!
@@ -144,7 +144,9 @@ module SpeckleConnector
           definition_name = get_definition_name(definition_obj)
           application_id = definition_obj['applicationId']
           definition = sketchup_model.definitions[definition_name]
-          return state if definition && (definition.name == definition_name || definition.guid == application_id)
+          if definition && (definition.name == definition_name || definition.guid == application_id)
+            return state, [definition]
+          end
 
           geometry = definition_obj['geometry'] || definition_obj['@geometry']
 
@@ -169,26 +171,13 @@ module SpeckleConnector
             SketchupModel::Dictionary::DictionaryHandler
               .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
           end
-          definition_to_speckle_entity(state, definition, definition_obj, stream_id)
+          return state, [definition]
         end
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
-        # rubocop:enable Metrics/ParameterLists
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
 
-        # @param state [States::State] state of the application
-        def self.definition_to_speckle_entity(state, definition, speckle_definition, stream_id)
-          return state unless state.user_state.user_preferences[:register_speckle_entity]
-
-          speckle_id = speckle_definition['id']
-          speckle_type = speckle_definition['speckle_type']
-          children = speckle_definition['__closure'].nil? ? [] : speckle_definition['__closure']
-          ent = SpeckleEntities::SpeckleEntity.new(definition, speckle_id, speckle_type, children, [stream_id])
-          ent.write_initial_base_data
-          new_speckle_state = state.speckle_state.with_speckle_entity(ent)
-          state.with_speckle_state(new_speckle_state)
-        end
 
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/MethodLength

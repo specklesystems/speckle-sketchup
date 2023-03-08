@@ -244,18 +244,59 @@ module SpeckleConnector
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native)
       }.freeze
 
+      # @param state [States::State] state of the speckle application
       def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
         # store this method as parameter to re-call it inner callstack
         convert_to_native = method(:convert_to_native)
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
-        # It returns updated state to achieve continuous traversal by creating SpeckleEntity.
-        to_native_method.call(state, obj, layer, entities, stream_id, &convert_to_native)
+        # It returns updated state and converted entities.
+        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        # Create levels as section planes if they exists
+        create_levels(state, obj)
+        # Create speckle entities from sketchup entities to achieve continuous traversal.
+        convert_to_speckle_entities(state, obj, converted_entities)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
         return state
+      end
+
+      # @param state [States::State] state of the speckle application
+      def create_levels(state, speckle_object)
+        return state if speckle_object['level'].nil?
+        return state unless speckle_object['level']['speckle_type'].include?('Objects.BuiltElements.Level')
+
+        level_name = speckle_object['level']['name'] || speckle_object['level']['id']
+        entities = state.sketchup_state.sketchup_model.entities
+        is_exist = entities.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
+        return state if is_exist
+
+        elevation = SpeckleObjects::Geometry.length_to_native(speckle_object['level']['elevation'],
+                                                              speckle_object['level']['units'])
+
+        shift_value = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
+
+        section_plane = entities.add_section_plane([0, 0, elevation + shift_value], [0, 0, -1])
+        section_plane.name = level_name
+        state
+      end
+
+      # @param state [States::State] state of the application
+      def convert_to_speckle_entities(state, speckle_object, entities)
+        return state unless state.user_state.user_preferences[:register_speckle_entity]
+
+        speckle_id = speckle_object['id']
+        speckle_type = speckle_object['speckle_type']
+        children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
+        speckle_state = state.speckle_state
+        entities.each do |entity|
+          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, speckle_type, children, [stream_id])
+          ent.write_initial_base_data
+          speckle_state = speckle_state.with_speckle_entity(ent)
+        end
+        state.with_speckle_state(speckle_state)
       end
     end
   end
