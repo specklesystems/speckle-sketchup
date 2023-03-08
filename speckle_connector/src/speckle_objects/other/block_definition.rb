@@ -108,8 +108,9 @@ module SpeckleConnector
           UNIQUE_DEFINITIONS.any? { |d| d.include?(definition_object['speckle_type']) }
         end
 
-        UNIQUE_DEFINITIONS = [
-          'Wall'
+        UNIQUE_DEFINITIONS = %w[
+          Walls-
+          Floors-
         ].freeze
 
         def self.get_definition_name(def_obj)
