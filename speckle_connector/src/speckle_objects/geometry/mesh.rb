@@ -70,8 +70,8 @@ module SpeckleConnector
             indices = faces.shift(num_pts)
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
-          state, materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
-                                                             layer, entities, &convert_to_native)
+          state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
+                                                              layer, entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
             material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id']

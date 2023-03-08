@@ -150,9 +150,10 @@ module SpeckleConnector
           #  without instances
           find_and_erase_existing_instance(definition, block['id'], block['applicationId'])
           puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
+          # Transform already applied to instance unless is group
           instance.transformation = transform if is_group
-          state, materials = Other::RenderMaterial.to_native(state, block['renderMaterial'],
-                                                             layer, entities, &convert_to_native)
+          state, _materials = Other::RenderMaterial.to_native(state, block['renderMaterial'],
+                                                              layer, entities, &convert_to_native)
 
           # Retrieve material from state
           unless block['renderMaterial'].nil?
