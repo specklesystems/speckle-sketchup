@@ -18,8 +18,20 @@ module SpeckleConnector
         # @param state [States::State] state of the application.
         def self.to_native(state, obj, layer, entities, &convert_to_native)
           # Switch displayValue with geometry
+
           obj['geometry'] = obj['displayValue']
-          obj['geometry'] += obj['elements'] unless obj['elements'].nil?
+          # obj['geometry'] += obj['elements'] unless obj['elements'].nil?
+
+          if !obj['elements'].nil? && obj['elements'].is_a?(Array)
+            obj['elements'].each do |element|
+              # Mullions is a special case here, they are extracted as base object with @displayValue from revit..
+              if element['@displayValue'].nil?
+                obj['geometry'].append(element)
+              else
+                obj['geometry'] += element['@displayValue']
+              end
+            end
+          end
 
           state, _definitions = BlockDefinition.to_native(
             state,
