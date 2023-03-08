@@ -53,8 +53,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity:
-        # rubocop:disable Metrics/ParameterLists
-        def self.to_native(state, mesh, layer, entities, stream_id, &convert_to_native)
+        def self.to_native(state, mesh, layer, entities, &convert_to_native)
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
@@ -71,13 +70,13 @@ module SpeckleConnector
             indices = faces.shift(num_pts)
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
-          new_state = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
-                                                      layer, entities, stream_id, &convert_to_native)
+          state, materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
+                                                             layer, entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
             material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id']
             # Retrieve material from state
-            material = new_state.sketchup_state.materials.by_id(material_name)
+            material = state.sketchup_state.materials.by_id(material_name)
           end
 
           # Add faces from mesh with material and smooth setting
@@ -94,28 +93,12 @@ module SpeckleConnector
           if model_preferences[:merge_coplanar_faces]
             added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
           end
-          faces_to_speckle_entities(new_state, added_faces, mesh, stream_id)
+          return state, added_faces
         end
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity:
-        # rubocop:enable Metrics/ParameterLists
-
-        def self.faces_to_speckle_entities(state, faces, speckle_mesh, stream_id)
-          return state unless state.user_state.user_preferences[:register_speckle_entity]
-
-          speckle_id = speckle_mesh['id']
-          speckle_type = speckle_mesh['speckle_type']
-          children = speckle_mesh['__closure'].nil? ? [] : speckle_mesh['__closure']
-          speckle_state = state.speckle_state
-          faces.each do |face|
-            ent = SpeckleEntities::SpeckleEntity.new(face, speckle_id, speckle_type, children, [stream_id])
-            ent.write_initial_base_data
-            speckle_state = speckle_state.with_speckle_entity(ent)
-          end
-          state.with_speckle_state(speckle_state)
-        end
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator

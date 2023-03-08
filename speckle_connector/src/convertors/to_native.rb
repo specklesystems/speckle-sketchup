@@ -250,12 +250,30 @@ module SpeckleConnector
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
-        # It returns updated state to achieve continuous traversal by creating SpeckleEntity.
-        to_native_method.call(state, obj, layer, entities, stream_id, &convert_to_native)
+        # It returns updated state and converted entities.
+        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        # Create speckle entities from sketchup entities to achieve continuous traversal.
+        convert_to_speckle_entities(state, obj, converted_entities)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
         return state
+      end
+
+      # @param state [States::State] state of the application
+      def convert_to_speckle_entities(state, speckle_object, entities)
+        return state unless state.user_state.user_preferences[:register_speckle_entity]
+
+        speckle_id = speckle_object['id']
+        speckle_type = speckle_object['speckle_type']
+        children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
+        speckle_state = state.speckle_state
+        entities.each do |entity|
+          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, speckle_type, children, [stream_id])
+          ent.write_initial_base_data
+          speckle_state = speckle_state.with_speckle_entity(ent)
+        end
+        state.with_speckle_state(speckle_state)
       end
     end
   end

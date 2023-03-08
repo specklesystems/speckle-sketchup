@@ -112,8 +112,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        # rubocop:disable Metrics/ParameterLists
-        def self.to_native(state, block, layer, entities, stream_id, &convert_to_native)
+        def self.to_native(state, block, layer, entities, &convert_to_native)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
           # so this is set to false always until I can figure this out
@@ -121,17 +120,17 @@ module SpeckleConnector
           # is_group = block['is_sketchup_group']
           # NOTE: nil checks for backward compatibility
           block_definition = block['definition'] || block['blockDefinition'] || block['@blockDefinition']
-          new_state = BlockDefinition.to_native(
+
+          state, _definitions = BlockDefinition.to_native(
             state,
             block_definition,
             layer,
             entities,
-            stream_id,
             &convert_to_native
           )
 
-          definition = new_state.sketchup_state.sketchup_model
-                                .definitions[BlockDefinition.get_definition_name(block_definition)]
+          definition = state.sketchup_state.sketchup_model
+                            .definitions[BlockDefinition.get_definition_name(block_definition)]
 
           t_arr = get_transform_matrix(block)
           transform = Other::Transform.to_native(t_arr, block['units'])
@@ -152,13 +151,13 @@ module SpeckleConnector
           find_and_erase_existing_instance(definition, block['id'], block['applicationId'])
           puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
           instance.transformation = transform if is_group
-          new_state = Other::RenderMaterial.to_native(new_state, block['renderMaterial'],
-                                                      layer, entities, stream_id, &convert_to_native)
+          state, materials = Other::RenderMaterial.to_native(state, block['renderMaterial'],
+                                                             layer, entities, &convert_to_native)
 
           # Retrieve material from state
           unless block['renderMaterial'].nil?
             material_name = block['renderMaterial']['name'] || block['renderMaterial']['id']
-            material = new_state.sketchup_state.materials.by_id(material_name)
+            material = state.sketchup_state.materials.by_id(material_name)
             instance.material = material
           end
 
@@ -167,13 +166,12 @@ module SpeckleConnector
             SketchupModel::Dictionary::DictionaryHandler
               .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
           end
-          instance_to_speckle_entity(new_state, instance, block, stream_id)
+          return state, [instance, definition]
         end
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
-        # rubocop:enable Metrics/ParameterLists
 
         def self.get_transform_matrix(block)
           if block['transform'].is_a?(Hash)

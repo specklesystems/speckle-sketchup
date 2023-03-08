@@ -64,8 +64,7 @@ module SpeckleConnector
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/ParameterLists
-        def self.to_native(state, line, layer, entities, stream_id, &_convert_to_native)
+        def self.to_native(state, line, layer, entities, &_convert_to_native)
           if line.key?('value')
             values = line['value']
             points = values.each_slice(3).to_a.map { |pt| Point.to_native(pt[0], pt[1], pt[2], line['units']) }
@@ -83,26 +82,9 @@ module SpeckleConnector
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
             end
           end
-          edges_to_speckle_entities(state, edges, line, stream_id)
+          return state, edges
         end
         # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/ParameterLists
-
-        # @param state [States::State] state of the application
-        def self.edges_to_speckle_entities(state, edges, speckle_line, stream_id)
-          return state unless state.user_state.user_preferences[:register_speckle_entity]
-
-          speckle_id = speckle_line['id']
-          speckle_type = speckle_line['speckle_type']
-          children = speckle_line['__closure'].nil? ? [] : speckle_line['__closure']
-          speckle_state = state.speckle_state
-          edges.each do |edge|
-            ent = SpeckleEntities::SpeckleEntity.new(edge, speckle_id, speckle_type, children, [stream_id])
-            ent.write_initial_base_data
-            speckle_state = speckle_state.with_speckle_entity(ent)
-          end
-          state.with_speckle_state(speckle_state)
-        end
 
         def self.test_line(start_point, end_point, units)
           domain = Primitive::Interval.from_numeric(0, 5, units)
