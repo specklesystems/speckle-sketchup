@@ -105,27 +105,26 @@ module SpeckleConnector
         end
 
         def self.unique_element?(definition_object)
-          UNIQUE_DEFINITIONS.any? { |d| d.include?(definition_object['speckle_type']) }
+          UNIQUE_DEFINITIONS.any? { |d| definition_object['speckle_type'].include?(d) }
         end
 
         UNIQUE_DEFINITIONS = %w[
-          Walls-
-          Floors-
+          Objects.BuiltElements.Wall
+          Objects.BuiltElements.Floor
+          Objects.BuiltElements.Ceiling
+          Objects.BuiltElements.Column
+          Objects.BuiltElements.Beam
         ].freeze
 
         def self.get_definition_name(def_obj)
           return def_obj['name'] unless def_obj['name'].nil?
 
-          # TODO: Check unique elements when instancing implemented to add element id.
-          # if built_element?(def_obj) && unique_element?(def_obj)
-          #  return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
-          # end
-          # return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
-
-          # TODO: Enable below when instancing implemented.
-          if built_element?(def_obj)
+          # Check unique elements when instancing implemented to add it with element id.
+          if built_element?(def_obj) && unique_element?(def_obj)
             return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
           end
+
+          return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
 
           return "def::#{def_obj['applicationId']}"
         end
@@ -148,7 +147,7 @@ module SpeckleConnector
             return state, [definition]
           end
 
-          geometry = definition_obj['geometry'] || definition_obj['@geometry']
+          geometry = definition_obj['geometry'] || definition_obj['@geometry'] || definition_obj['displayValue']
 
           always_face_camera = definition_obj['always_face_camera'].nil? ? false : definition_obj['always_face_camera']
           sketchup_attributes = definition_obj['sketchup_attributes']
@@ -177,7 +176,6 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/AbcSize
-
 
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/MethodLength
