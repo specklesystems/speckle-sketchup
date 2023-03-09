@@ -17,6 +17,14 @@ module SpeckleConnector
       # @return [States::SpeckleState] the current speckle state of the {States::State}
       attr_accessor :speckle_state
 
+      # @return [String] source application of received object that will be converted to native
+      attr_reader :source_app
+
+      def initialize(state, stream_id, source_app)
+        super(state, stream_id)
+        @source_app = source_app
+      end
+
       # Module aliases
       GEOMETRY = SpeckleObjects::Geometry
       OTHER = SpeckleObjects::Other
@@ -55,7 +63,22 @@ module SpeckleConnector
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
+        check_hiding_layers_needed
         @state
+      end
+
+      LAYERS_WILL_BE_HIDDEN = [
+        'Rooms',
+        'Mass',
+        'Mass Floor'
+      ].freeze
+
+      def check_hiding_layers_needed
+        return unless source_app.downcase.include?('revit')
+
+        sketchup_model.layers.each do |layer|
+          layer.visible = false if LAYERS_WILL_BE_HIDDEN.any? { |layer_name| layer.display_name.include?(layer_name) }
+        end
       end
 
       # Conditions for converting speckle object to native sketchup entity:
