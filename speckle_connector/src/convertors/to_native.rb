@@ -75,7 +75,9 @@ module SpeckleConnector
       LAYERS_WILL_BE_HIDDEN = [
         'Rooms',
         'Mass',
-        'Mass Floor'
+        'Mass Floor',
+        'Grid',
+        'Shaft Openings'
       ].freeze
 
       def check_hiding_layers_needed
