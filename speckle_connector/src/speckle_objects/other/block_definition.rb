@@ -114,6 +114,7 @@ module SpeckleConnector
           Objects.BuiltElements.Ceiling
           Objects.BuiltElements.Column
           Objects.BuiltElements.Beam
+          Objects.BuiltElements.Roof
         ].freeze
 
         def self.get_definition_name(def_obj)

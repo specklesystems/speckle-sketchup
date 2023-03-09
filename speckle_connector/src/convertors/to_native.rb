@@ -13,6 +13,7 @@ require_relative '../speckle_objects/geometry/mesh'
 module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
+    # rubocop:disable Metrics/ClassLength
     class ToNative < Converter
       # @return [States::SpeckleState] the current speckle state of the {States::State}
       attr_accessor :speckle_state
@@ -22,7 +23,7 @@ module SpeckleConnector
 
       def initialize(state, stream_id, source_app)
         super(state, stream_id)
-        @source_app = source_app
+        @source_app = source_app.downcase
       end
 
       # Module aliases
@@ -50,6 +51,10 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
       ].freeze
 
+      def from_revit
+        @from_revit ||= source_app.include?('revit')
+      end
+
       # ReceiveObjects action call this method by giving everything that comes from server.
       # Upcoming object is a referencedObject of selected commit to receive.
       # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
@@ -74,7 +79,7 @@ module SpeckleConnector
       ].freeze
 
       def check_hiding_layers_needed
-        return unless source_app.downcase.include?('revit')
+        return unless from_revit
 
         sketchup_model.layers.each do |layer|
           layer.visible = false if LAYERS_WILL_BE_HIDDEN.any? { |layer_name| layer.display_name.include?(layer_name) }
@@ -277,8 +282,12 @@ module SpeckleConnector
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
         state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
-        # Create levels as section planes if they exists
-        create_levels(state, obj)
+        if from_revit
+          # Create levels as section planes if they exists
+          create_levels(state, obj)
+          # Create layers from category of object and place object in it
+          create_layers_from_categories(state, obj, converted_entities)
+        end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
         convert_to_speckle_entities(state, obj, converted_entities)
       rescue StandardError => e
@@ -286,6 +295,27 @@ module SpeckleConnector
         puts(e)
         return state
       end
+
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/PerceivedComplexity
+      def create_layers_from_categories(state, speckle_object, entities)
+        return state if speckle_object['category'].nil?
+
+        layer = sketchup_model.layers.find { |l| l.display_name == speckle_object['category'] }
+        unless layer.nil?
+          entities.each { |entity| entity.layer = layer } if layer
+          return state
+        end
+
+        layer = sketchup_model.layers.add(speckle_object['category'])
+        unless layer.nil?
+          entities.each { |entity| entity.layer = layer } if layer
+          state
+        end
+        state
+      end
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/PerceivedComplexity
 
       # @param state [States::State] state of the speckle application
       def create_levels(state, speckle_object)
@@ -323,5 +353,6 @@ module SpeckleConnector
         state.with_speckle_state(speckle_state)
       end
     end
+    # rubocop:enable Metrics/ClassLength
   end
 end
