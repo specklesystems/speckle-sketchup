@@ -122,10 +122,10 @@ module SpeckleConnector
 
           # Check unique elements when instancing implemented to add it with element id.
           if built_element?(def_obj) && unique_element?(def_obj)
-            return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
+            return "#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
           end
 
-          return "#{def_obj['category']}-#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
+          return "#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
 
           return "def::#{def_obj['applicationId']}"
         end
