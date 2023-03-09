@@ -115,17 +115,25 @@ module SpeckleConnector
           Objects.BuiltElements.Column
           Objects.BuiltElements.Beam
           Objects.BuiltElements.Roof
+          Objects.BuiltElements.Room
+          Objects.BuiltElements.Topography
         ].freeze
 
         def self.get_definition_name(def_obj)
-          return def_obj['name'] unless def_obj['name'].nil?
+          return def_obj['name'] if !def_obj['name'].nil? && !def_obj['is_sketchup_group'].nil?
+
+          family = def_obj['family']
+          type = def_obj['type']
+          category = def_obj['category']
 
           # Check unique elements when instancing implemented to add it with element id.
           if built_element?(def_obj) && unique_element?(def_obj)
-            return "#{def_obj['family']}-#{def_obj['type']}-#{def_obj['elementId']}"
+            element_id = def_obj['elementId']
+
+            return "#{family}-#{type}-#{category}-#{element_id}"
           end
 
-          return "#{def_obj['family']}-#{def_obj['type']}" if built_element?(def_obj)
+          return "#{family}-#{type}-#{category}" if built_element?(def_obj)
 
           return "def::#{def_obj['applicationId']}"
         end
