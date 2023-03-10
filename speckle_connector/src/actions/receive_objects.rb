@@ -23,7 +23,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        converter = Converters::ToNative.new(state, @stream_id, @source_app)
+        converter = Converters::ToNative.new(state, @stream_id, @stream_name, @branch_name, @source_app)
         # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
         start_time = Time.now.to_f
         state = converter.receive_commit_object(@base)
