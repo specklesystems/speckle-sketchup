@@ -21,8 +21,10 @@ module SpeckleConnector
       # @return [String] source application of received object that will be converted to native
       attr_reader :source_app
 
-      def initialize(state, stream_id, source_app)
+      def initialize(state, stream_id, stream_name, branch_name, source_app)
         super(state, stream_id)
+        @stream_name = stream_name
+        @branch_name = branch_name
         @source_app = source_app.downcase
       end
 
@@ -55,6 +57,10 @@ module SpeckleConnector
         @from_revit ||= source_app.include?('revit')
       end
 
+      def from_sketchup
+        @from_sketchup ||= source_app.include?('sketchup')
+      end
+
       # ReceiveObjects action call this method by giving everything that comes from server.
       # Upcoming object is a referencedObject of selected commit to receive.
       # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
@@ -67,9 +73,18 @@ module SpeckleConnector
         create_views(obj.filter_map { |key, value| value if key == '@Named Views' }, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer)
+        entities_to_fill = entities_to_fill(obj)
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, entities_to_fill)
         check_hiding_layers_needed
         @state
+      end
+
+      def entities_to_fill(_obj)
+        return sketchup_model.entities if from_sketchup
+
+        definition = sketchup_model.definitions.add("#{@stream_name}-#{@branch_name}")
+        sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
+        definition.entities
       end
 
       LAYERS_WILL_BE_HIDDEN = [
@@ -199,9 +214,9 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, commit_folder, layer)
+      def traverse_commit_object(obj, commit_folder, layer, entities)
         if convertible_to_native?(obj)
-          @state = convert_to_native(@state, obj, layer)
+          @state = convert_to_native(@state, obj, layer, entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -211,16 +226,16 @@ module SpeckleConnector
             props.each do |prop|
               layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
               layer = find_layer(layer_path, commit_folder, layer)
-              traverse_commit_object(obj[prop], commit_folder, layer)
+              traverse_commit_object(obj[prop], commit_folder, layer, entities)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            @state = convert_to_native(@state, obj, layer)
+            @state = convert_to_native(@state, obj, layer, entities)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer) }
+          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer, entities) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, commit_folder, layer) }
+          obj.each { |value| traverse_commit_object(value, commit_folder, layer, entities) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
