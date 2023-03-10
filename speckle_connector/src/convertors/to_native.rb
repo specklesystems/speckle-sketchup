@@ -368,7 +368,8 @@ module SpeckleConnector
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
-          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children, [stream_id])
+          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children,
+                                                   [stream_id])
           ent.write_initial_base_data
           speckle_state = speckle_state.with_speckle_entity(ent)
         end
