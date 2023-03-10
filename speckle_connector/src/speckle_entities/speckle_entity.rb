@@ -41,14 +41,15 @@ module SpeckleConnector
 
       # @param sketchup_entity [Sketchup::Entity] sketchup entity represents {SpeckleEntity} on the model.
       # rubocop:disable Metrics/ParameterLists
-      def initialize(sketchup_entity, speckle_id, speckle_type, children, valid_stream_ids, invalid_stream_ids = [])
+      def initialize(sketchup_entity, speckle_id, application_id, speckle_type, children, valid_stream_ids,
+                     invalid_stream_ids = [])
         @status = SpeckleEntityStatus::UP_TO_DATE
         @source_material = sketchup_entity.material
         @active_diffing_stream_id = nil
         @valid_stream_ids = valid_stream_ids
         @invalid_stream_ids = invalid_stream_ids
         @sketchup_entity = sketchup_entity
-        @application_id = @sketchup_entity.persistent_id
+        @application_id = application_id
         @id = speckle_id
         @total_children_count = children.length
         @speckle_type = speckle_type

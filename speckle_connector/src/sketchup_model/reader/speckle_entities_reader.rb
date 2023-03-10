@@ -30,11 +30,12 @@ module SpeckleConnector
         def self.read_speckle_entity(entity)
           dict = entity.attribute_dictionaries.to_a.find { |d| d.name == SPECKLE_BASE_OBJECT }
           speckle_id = dict[:speckle_id]
+          application_id = dict[:application_id]
           speckle_type = dict[:speckle_type]
           children = dict[:children]
           valid_stream_ids = dict[:valid_stream_ids]
           invalid_stream_ids = dict[:invalid_stream_ids]
-          SpeckleEntities::SpeckleEntity.new(entity, speckle_id, speckle_type, children,
+          SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children,
                                              valid_stream_ids, invalid_stream_ids)
         end
 

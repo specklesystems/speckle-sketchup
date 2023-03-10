@@ -200,12 +200,12 @@ module SpeckleConnector
         end
 
         DEFINITIONS_WILL_BE_SOFT_EDGE = %w[
-          Furniture-
-          Topography-
-          Column-
-          Lighting Fixtures-
-          Railings-
-          Roofs-
+          Furniture
+          Topography
+          Column
+          Lighting Fixtures
+          Railings
+          Roofs
         ].freeze
 
         # @param mesh [Object] speckle mesh object

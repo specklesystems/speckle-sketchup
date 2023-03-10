@@ -352,7 +352,8 @@ module SpeckleConnector
           speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
         else
           children = traversed_base[:__closure].nil? ? {} : traversed_base[:__closure]
-          speckle_entity = SpeckleEntities::SpeckleEntity.new(entity, id, traversed_base[:speckle_type],
+          speckle_entity = SpeckleEntities::SpeckleEntity.new(entity, id, entity.persistent_id,
+                                                              traversed_base[:speckle_type],
                                                               children.keys, [stream_id])
           speckle_entity.write_initial_base_data
           speckle_entity
