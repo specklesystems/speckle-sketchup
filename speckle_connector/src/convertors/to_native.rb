@@ -82,8 +82,12 @@ module SpeckleConnector
       def entities_to_fill(_obj)
         return sketchup_model.entities if from_sketchup
 
-        definition = sketchup_model.definitions.add("#{@stream_name}-#{@branch_name}")
-        sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
+        definition_name = "#{@stream_name}-#{@branch_name}"
+        definition = sketchup_model.definitions.find { |d| d.name == definition_name }
+        if definition.nil?
+          definition = sketchup_model.definitions.add(definition_name)
+          sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
+        end
         definition.entities
       end
 
@@ -359,11 +363,12 @@ module SpeckleConnector
         return state unless state.user_state.user_preferences[:register_speckle_entity]
 
         speckle_id = speckle_object['id']
+        application_id = speckle_object['applicationId']
         speckle_type = speckle_object['speckle_type']
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
-          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, speckle_type, children, [stream_id])
+          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children, [stream_id])
           ent.write_initial_base_data
           speckle_state = speckle_state.with_speckle_entity(ent)
         end

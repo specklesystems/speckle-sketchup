@@ -182,18 +182,6 @@ module SpeckleConnector
           end
         end
 
-        def self.instance_to_speckle_entity(state, instance, speckle_instance, stream_id)
-          return state unless state.user_state.user_preferences[:register_speckle_entity]
-
-          speckle_id = speckle_instance['id']
-          speckle_type = speckle_instance['speckle_type']
-          children = speckle_instance['__closure'].nil? ? [] : speckle_instance['__closure']
-          ent = SpeckleEntities::SpeckleEntity.new(instance, speckle_id, speckle_type, children, [stream_id])
-          ent.write_initial_base_data
-          new_speckle_state = state.speckle_state.with_speckle_entity(ent)
-          state.with_speckle_state(new_speckle_state)
-        end
-
         # takes a component definition and finds and erases the first instance with the matching name
         # (and optionally the applicationId)
         # rubocop:disable Metrics/PerceivedComplexity
