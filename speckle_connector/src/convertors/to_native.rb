@@ -70,7 +70,8 @@ module SpeckleConnector
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
         filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
         create_layers(filtered_layer_containers, sketchup_model.layers)
-        create_views(obj.filter_map { |key, value| value if key == '@Named Views' }, sketchup_model)
+        views = collect_views(obj)
+        create_views(views, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         entities_to_fill = entities_to_fill(obj)
@@ -103,7 +104,10 @@ module SpeckleConnector
         return unless from_revit
 
         sketchup_model.layers.each do |layer|
-          layer.visible = false if LAYERS_WILL_BE_HIDDEN.any? { |layer_name| layer.display_name.include?(layer_name) }
+          if LAYERS_WILL_BE_HIDDEN.any? { |layer_name| layer.display_name.include?(layer_name) }
+            layer.visible = false
+            sketchup_model.pages.each { |page| page.update(PAGE_USE_LAYER_VISIBILITY) }
+          end
         end
       end
 
@@ -139,24 +143,35 @@ module SpeckleConnector
         create_folder_layers(folder_layer_arrays, folder)
       end
 
+      def collect_views(obj)
+        views = []
+        views += obj.filter_map { |key, value| value if key == '@Named Views' }
+        views += obj.filter_map { |key, value| value if key == '@Views' } if from_revit
+        views.flatten
+      end
+
       # @param views [Array] views.
       # @param sketchup_model [Sketchup::Model] active sketchup model.
       # rubocop:disable Metrics/AbcSize
       def create_views(views, sketchup_model)
         return if views.empty?
 
-        views.first.each do |view|
+        views.each do |view|
+          next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
+
           origin = view['origin']
           target = view['target']
+          lens = view['lens'] || 50
+          name = view['name'] || view['id']
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
           # Set camera position before creating scene on it.
-          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], view['lens'])
+          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
           sketchup_model.active_view.camera = my_camera
-          sketchup_model.pages.add(view['name'])
-          page = sketchup_model.pages[view['name']]
-          set_page_update_properties(page, view['update_properties'])
-          set_rendering_options(page.rendering_options, view['rendering_options'])
+          sketchup_model.pages.add(name)
+          page = sketchup_model.pages[name]
+          set_page_update_properties(page, view['update_properties']) if view['update_properties']
+          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
         end
       end
       # rubocop:enable Metrics/AbcSize
