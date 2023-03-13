@@ -74,19 +74,47 @@ module SpeckleConnector
         create_views(views, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        entities_to_fill = entities_to_fill(obj)
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, entities_to_fill)
+        @entities_to_fill = entities_to_fill(obj)
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, @entities_to_fill)
+        create_levels_from_section_planes
         check_hiding_layers_needed
         @state
+      end
+
+      # Create levels from section planes that already created for this commit object.
+      def create_levels_from_section_planes
+        return unless from_revit
+
+        section_planes = @entities_to_fill.grep(Sketchup::SectionPlane)
+        bbox = @entities_to_fill.parent.bounds
+        c_1 = bbox.corner(0)
+        c_2 = bbox.corner(1)
+        c_3 = bbox.corner(3)
+        c_4 = bbox.corner(2)
+        section_planes.each do |section_plane|
+          level_name = "#{@definition_name}-#{section_plane.name}"
+          definition = sketchup_model.definitions.add(level_name)
+          @entities_to_fill.add_instance(definition, Geom::Transformation.new)
+          elevation = section_plane.bounds.center.z
+          c1_e = Geom::Point3d.new(c_1.x, c_1.y, elevation - LEVEL_SHIFT_VALUE)
+          c2_e = Geom::Point3d.new(c_2.x, c_2.y, elevation - LEVEL_SHIFT_VALUE)
+          c3_e = Geom::Point3d.new(c_3.x, c_3.y, elevation - LEVEL_SHIFT_VALUE)
+          c4_e = Geom::Point3d.new(c_4.x, c_4.y, elevation - LEVEL_SHIFT_VALUE)
+          definition.entities.add_cline(c1_e, c2_e)
+          definition.entities.add_cline(c2_e, c3_e)
+          definition.entities.add_cline(c3_e, c4_e)
+          definition.entities.add_cline(c4_e, c1_e)
+          definition.entities.add_text(" #{section_plane.name}", c1_e)
+        end
       end
 
       def entities_to_fill(_obj)
         return sketchup_model.entities if from_sketchup
 
-        definition_name = "#{@stream_name}-#{@branch_name}"
-        definition = sketchup_model.definitions.find { |d| d.name == definition_name }
+        @definition_name = "#{@stream_name}-#{@branch_name}"
+        definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         if definition.nil?
-          definition = sketchup_model.definitions.add(definition_name)
+          definition = sketchup_model.definitions.add(@definition_name)
           sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
         end
         definition.entities
@@ -359,16 +387,13 @@ module SpeckleConnector
         return state unless speckle_object['level']['speckle_type'].include?('Objects.BuiltElements.Level')
 
         level_name = speckle_object['level']['name'] || speckle_object['level']['id']
-        entities = state.sketchup_state.sketchup_model.entities
-        is_exist = entities.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
+        is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
         return state if is_exist
 
         elevation = SpeckleObjects::Geometry.length_to_native(speckle_object['level']['elevation'],
                                                               speckle_object['level']['units'])
 
-        shift_value = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
-
-        section_plane = entities.add_section_plane([0, 0, elevation + shift_value], [0, 0, -1])
+        section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
         section_plane.name = level_name
         state
       end
