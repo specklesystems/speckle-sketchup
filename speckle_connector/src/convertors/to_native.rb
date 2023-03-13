@@ -74,8 +74,8 @@ module SpeckleConnector
         create_views(views, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        entities_to_fill = entities_to_fill(obj)
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, entities_to_fill)
+        @entities_to_fill = entities_to_fill(obj)
+        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, @entities_to_fill)
         check_hiding_layers_needed
         @state
       end
@@ -359,8 +359,7 @@ module SpeckleConnector
         return state unless speckle_object['level']['speckle_type'].include?('Objects.BuiltElements.Level')
 
         level_name = speckle_object['level']['name'] || speckle_object['level']['id']
-        entities = state.sketchup_state.sketchup_model.entities
-        is_exist = entities.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
+        is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
         return state if is_exist
 
         elevation = SpeckleObjects::Geometry.length_to_native(speckle_object['level']['elevation'],
@@ -368,7 +367,7 @@ module SpeckleConnector
 
         shift_value = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
 
-        section_plane = entities.add_section_plane([0, 0, elevation + shift_value], [0, 0, -1])
+        section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + shift_value], [0, 0, -1])
         section_plane.name = level_name
         state
       end
