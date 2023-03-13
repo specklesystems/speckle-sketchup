@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../speckle_objects/geometry/length'
+
 module SpeckleConnector
   COMBINE_FACES_BY_MATERIAL = :combine_faces_by_material
   INCLUDE_ENTITY_ATTRIBUTES = :include_entity_attributes
@@ -8,6 +10,8 @@ module SpeckleConnector
   INCLUDE_GROUP_ENTITY_ATTRIBUTES = :include_group_entity_attributes
   INCLUDE_COMPONENT_ENTITY_ATTRIBUTES = :include_component_entity_attributes
   MERGE_COPLANAR_FACES = :merge_coplanar_faces
+
+  LEVEL_SHIFT_VALUE = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
 
   DEFAULT_MODEL_PREFERENCES = {
     COMBINE_FACES_BY_MATERIAL => true,
