@@ -402,14 +402,15 @@ module SpeckleConnector
 
       # @param state [States::State] state of the application
       def convert_to_speckle_entities(state, speckle_object, entities)
-        return state unless state.user_state.user_preferences[:register_speckle_entity]
-
         speckle_id = speckle_object['id']
         application_id = speckle_object['applicationId']
         speckle_type = speckle_object['speckle_type']
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
+          next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
+                  !state.user_state.user_preferences[:register_speckle_entity]
+
           ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children,
                                                    [stream_id])
           ent.write_initial_base_data
