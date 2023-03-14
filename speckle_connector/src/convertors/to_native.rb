@@ -187,10 +187,12 @@ module SpeckleConnector
         views.each do |view|
           next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
+          name = view['name'] || view['id']
+          next if sketchup_model.pages.any? { |page| page.name == name }
+
           origin = view['origin']
           target = view['target']
           lens = view['lens'] || 50
-          name = view['name'] || view['id']
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
           # Set camera position before creating scene on it.
