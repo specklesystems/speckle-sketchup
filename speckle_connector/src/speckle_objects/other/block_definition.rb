@@ -100,40 +100,8 @@ module SpeckleConnector
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/ParameterLists
 
-        def self.built_element?(definition_object)
-          definition_object['speckle_type'].include?('Objects.BuiltElements')
-        end
-
-        def self.unique_element?(definition_object)
-          UNIQUE_DEFINITIONS.any? { |d| definition_object['speckle_type'].include?(d) }
-        end
-
-        UNIQUE_DEFINITIONS = %w[
-          Objects.BuiltElements.Wall
-          Objects.BuiltElements.Floor
-          Objects.BuiltElements.Ceiling
-          Objects.BuiltElements.Column
-          Objects.BuiltElements.Beam
-          Objects.BuiltElements.Roof
-          Objects.BuiltElements.Room
-          Objects.BuiltElements.Topography
-        ].freeze
-
         def self.get_definition_name(def_obj)
-          return def_obj['name'] if !def_obj['name'].nil? && !def_obj['is_sketchup_group'].nil?
-
-          family = def_obj['family']
-          type = def_obj['type']
-          category = def_obj['category']
-
-          # Check unique elements when instancing implemented to add it with element id.
-          if built_element?(def_obj) && unique_element?(def_obj)
-            element_id = def_obj['elementId']
-
-            return "#{family}-#{type}-#{category}-#{element_id}"
-          end
-
-          return "#{family}-#{type}-#{category}" if built_element?(def_obj)
+          return def_obj['name'] unless def_obj['name'].nil?
 
           return "def::#{def_obj['applicationId']}"
         end

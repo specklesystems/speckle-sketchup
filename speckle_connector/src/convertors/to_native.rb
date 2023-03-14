@@ -6,6 +6,7 @@ require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/display_value'
+require_relative '../speckle_objects/other/revit/revit_instance'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
@@ -38,6 +39,7 @@ module SpeckleConnector
       MESH = GEOMETRY::Mesh
       BLOCK_DEFINITION = OTHER::BlockDefinition
       BLOCK_INSTANCE = OTHER::BlockInstance
+      REVIT_INSTANCE = OTHER::Revit::RevitInstance
       RENDER_MATERIAL = OTHER::RenderMaterial
       DISPLAY_VALUE = OTHER::DisplayValue
 
@@ -340,7 +342,7 @@ module SpeckleConnector
         OBJECTS_GEOMETRY_BREP => MESH.method(:to_native),
         OBJECTS_OTHER_BLOCKDEFINITION => BLOCK_DEFINITION.method(:to_native),
         OBJECTS_OTHER_BLOCKINSTANCE => BLOCK_INSTANCE.method(:to_native),
-        OBJECTS_OTHER_REVIT_REVITINSTANCE => BLOCK_INSTANCE.method(:to_native),
+        OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native)
       }.freeze
 
