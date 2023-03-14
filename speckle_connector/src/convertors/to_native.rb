@@ -111,7 +111,7 @@ module SpeckleConnector
       def entities_to_fill(_obj)
         return sketchup_model.entities if from_sketchup
 
-        @definition_name = "#{@stream_name}-#{@branch_name}"
+        @definition_name = "#{@branch_name}-#{@stream_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         if definition.nil?
           definition = sketchup_model.definitions.add(@definition_name)
@@ -187,10 +187,12 @@ module SpeckleConnector
         views.each do |view|
           next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
+          name = view['name'] || view['id']
+          next if sketchup_model.pages.any? { |page| page.name == name }
+
           origin = view['origin']
           target = view['target']
           lens = view['lens'] || 50
-          name = view['name'] || view['id']
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
           # Set camera position before creating scene on it.
@@ -400,14 +402,15 @@ module SpeckleConnector
 
       # @param state [States::State] state of the application
       def convert_to_speckle_entities(state, speckle_object, entities)
-        return state unless state.user_state.user_preferences[:register_speckle_entity]
-
         speckle_id = speckle_object['id']
         application_id = speckle_object['applicationId']
         speckle_type = speckle_object['speckle_type']
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
+          next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
+                  !state.user_state.user_preferences[:register_speckle_entity]
+
           ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children,
                                                    [stream_id])
           ent.write_initial_base_data
