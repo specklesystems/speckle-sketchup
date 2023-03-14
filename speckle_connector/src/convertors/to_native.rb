@@ -413,6 +413,7 @@ module SpeckleConnector
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
+          next if entity.is_a?(Sketchup::Material)
           next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
                   !state.user_state.user_preferences[:register_speckle_entity]
 
