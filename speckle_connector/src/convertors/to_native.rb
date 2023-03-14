@@ -111,7 +111,7 @@ module SpeckleConnector
       def entities_to_fill(_obj)
         return sketchup_model.entities if from_sketchup
 
-        @definition_name = "#{@stream_name}-#{@branch_name}"
+        @definition_name = "#{@branch_name}-#{@stream_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         if definition.nil?
           definition = sketchup_model.definitions.add(@definition_name)
