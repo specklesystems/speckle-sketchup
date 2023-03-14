@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'converter'
+require_relative '../constants/type_constants'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
@@ -10,6 +11,7 @@ require_relative '../speckle_objects/other/revit/revit_instance'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
+require_relative '../speckle_objects/built_elements/view3d'
 
 module SpeckleConnector
   module Converters
@@ -72,8 +74,8 @@ module SpeckleConnector
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
         filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
         create_layers(filtered_layer_containers, sketchup_model.layers)
-        views = collect_views(obj)
-        create_views(views, sketchup_model)
+        # Convert views to sketchup scenes
+        SpeckleObjects::BuiltElements::View3d.to_native(obj, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         @entities_to_fill = entities_to_fill(obj)
@@ -181,45 +183,6 @@ module SpeckleConnector
         # Create layers that have parent folder(s)- this method is recursive until all tree is created.
         create_folder_layers(folder_layer_arrays, folder)
       end
-
-      def collect_views(obj)
-        views = []
-        views += obj.filter_map { |key, value| value if key == '@Named Views' }
-        views += obj.filter_map { |key, value| value if key == '@Views' } if from_revit
-        views.flatten
-      end
-
-      # @param views [Array] views.
-      # @param sketchup_model [Sketchup::Model] active sketchup model.
-      # rubocop:disable Metrics/AbcSize
-      # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Metrics/CyclomaticComplexity
-      def create_views(views, sketchup_model)
-        return if views.empty?
-
-        views.each do |view|
-          next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
-
-          name = view['name'] || view['id']
-          next if sketchup_model.pages.any? { |page| page.name == name }
-
-          origin = view['origin']
-          target = view['target']
-          lens = view['lens'] || 50
-          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
-          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
-          # Set camera position before creating scene on it.
-          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
-          sketchup_model.active_view.camera = my_camera
-          sketchup_model.pages.add(name)
-          page = sketchup_model.pages[name]
-          set_page_update_properties(page, view['update_properties']) if view['update_properties']
-          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
-        end
-      end
-      # rubocop:enable Metrics/AbcSize
-      # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Metrics/CyclomaticComplexity
 
       # @param page [Sketchup::Page] scene to update -update properties-
       def set_page_update_properties(page, update_properties)
