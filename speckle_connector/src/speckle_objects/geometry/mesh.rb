@@ -199,13 +199,13 @@ module SpeckleConnector
           end
         end
 
-        DEFINITIONS_WILL_BE_SOFT_EDGE = %w[
-          Furniture
-          Topography
-          Column
-          Lighting Fixtures
-          Railings
-          Roofs
+        DEFINITIONS_WILL_BE_HARD_EDGE = %w[
+          Walls
+          Floors
+          Stairs
+          Structural Foundations
+          Doors
+          Windows
         ].freeze
 
         # @param mesh [Object] speckle mesh object
@@ -215,7 +215,7 @@ module SpeckleConnector
             return mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
 
-          return DEFINITIONS_WILL_BE_SOFT_EDGE.any? { |def_name| entities.parent.name.include?(def_name) }
+          return DEFINITIONS_WILL_BE_HARD_EDGE.none? { |def_name| entities.parent.name.include?(def_name) }
         end
 
         def self.get_native_points(mesh)

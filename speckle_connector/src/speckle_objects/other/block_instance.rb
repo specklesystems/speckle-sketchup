@@ -108,10 +108,6 @@ module SpeckleConnector
         # @param block [Object] block object that represents Speckle block.
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
-        # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/MethodLength
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(state, block, layer, entities, &convert_to_native)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
@@ -132,6 +128,42 @@ module SpeckleConnector
           definition = state.sketchup_state.sketchup_model
                             .definitions[BlockDefinition.get_definition_name(block_definition)]
 
+          return add_instance_from_definition(state, block, layer, entities, definition, is_group, &convert_to_native)
+        end
+
+        def self.get_transform_matrix(block)
+          if block['transform'].is_a?(Hash)
+            block['transform']['matrix'] || block['transform']['value']
+          else
+            block['transform']
+          end
+        end
+
+        # takes a component definition and finds and erases the first instance with the matching name
+        # (and optionally the applicationId)
+        # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/CyclomaticComplexity
+        def self.find_and_erase_existing_instance(definition, upcoming_speckle_id, upcoming_app_id = '')
+          definition.instances.find do |ins|
+            next if ins.attribute_dictionaries.nil?
+            next if ins.attribute_dictionaries.to_a.empty?
+            next if ins.attribute_dictionaries.to_a.none? { |dict| dict.name == SPECKLE_BASE_OBJECT }
+
+            dict = ins.attribute_dictionaries.to_a.find { |d| d.name == SPECKLE_BASE_OBJECT }
+            speckle_id = dict[:speckle_id]
+            application_id = dict[:application_id]
+            speckle_id == upcoming_speckle_id || application_id == upcoming_app_id
+          end&.erase!
+        end
+        # rubocop:enable Metrics/PerceivedComplexity
+        # rubocop:enable Metrics/CyclomaticComplexity
+
+        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/MethodLength
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/ParameterLists
+        def self.add_instance_from_definition(state, block, layer, entities, definition, is_group, &convert_to_native)
           t_arr = get_transform_matrix(block)
           transform = Other::Transform.to_native(t_arr, block['units'])
           instance = if is_group
@@ -173,33 +205,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
-
-        def self.get_transform_matrix(block)
-          if block['transform'].is_a?(Hash)
-            block['transform']['matrix'] || block['transform']['value']
-          else
-            block['transform']
-          end
-        end
-
-        # takes a component definition and finds and erases the first instance with the matching name
-        # (and optionally the applicationId)
-        # rubocop:disable Metrics/PerceivedComplexity
-        # rubocop:disable Metrics/CyclomaticComplexity
-        def self.find_and_erase_existing_instance(definition, upcoming_speckle_id, upcoming_app_id = '')
-          definition.instances.find do |ins|
-            next if ins.attribute_dictionaries.nil?
-            next if ins.attribute_dictionaries.to_a.empty?
-            next if ins.attribute_dictionaries.to_a.none? { |dict| dict.name == SPECKLE_BASE_OBJECT }
-
-            dict = ins.attribute_dictionaries.to_a.find { |d| d.name == SPECKLE_BASE_OBJECT }
-            speckle_id = dict[:speckle_id]
-            application_id = dict[:application_id]
-            speckle_id == upcoming_speckle_id || application_id == upcoming_app_id
-          end&.erase!
-        end
-        # rubocop:enable Metrics/PerceivedComplexity
-        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/ParameterLists
       end
     end
   end
