@@ -81,6 +81,10 @@ module SpeckleConnector
         @state
       end
 
+      def levels_layer
+        @levels_layer ||= sketchup_model.layers.add('Levels')
+      end
+
       # Create levels from section planes that already created for this commit object.
       def create_levels_from_section_planes
         return unless from_revit
@@ -100,11 +104,12 @@ module SpeckleConnector
           c2_e = Geom::Point3d.new(c_2.x, c_2.y, elevation - LEVEL_SHIFT_VALUE)
           c3_e = Geom::Point3d.new(c_3.x, c_3.y, elevation - LEVEL_SHIFT_VALUE)
           c4_e = Geom::Point3d.new(c_4.x, c_4.y, elevation - LEVEL_SHIFT_VALUE)
-          definition.entities.add_cline(c1_e, c2_e)
-          definition.entities.add_cline(c2_e, c3_e)
-          definition.entities.add_cline(c3_e, c4_e)
-          definition.entities.add_cline(c4_e, c1_e)
-          definition.entities.add_text(" #{section_plane.name}", c1_e)
+          cline_1 = definition.entities.add_cline(c1_e, c2_e)
+          cline_2 = definition.entities.add_cline(c2_e, c3_e)
+          cline_3 = definition.entities.add_cline(c3_e, c4_e)
+          cline_4 = definition.entities.add_cline(c4_e, c1_e)
+          text = definition.entities.add_text(" #{section_plane.name}", c1_e)
+          [cline_1, cline_2, cline_3, cline_4, text, definition].each { |o| o.layer = levels_layer }
         end
       end
 
