@@ -22,7 +22,6 @@ module SpeckleConnector
           # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
           # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
           def self.to_native(state, block, layer, entities, &convert_to_native)
-
             block_definition = block['definition']
 
             state, _definitions = RevitDefinition.to_native(

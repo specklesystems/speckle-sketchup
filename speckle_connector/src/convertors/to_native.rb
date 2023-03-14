@@ -88,6 +88,8 @@ module SpeckleConnector
       end
 
       # Create levels from section planes that already created for this commit object.
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/MethodLength
       def create_levels_from_section_planes
         return unless from_revit
 
@@ -114,6 +116,8 @@ module SpeckleConnector
           [cline_1, cline_2, cline_3, cline_4, text, definition].each { |o| o.layer = levels_layer }
         end
       end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength
 
       def entities_to_fill(_obj)
         return sketchup_model.entities if from_sketchup
@@ -188,6 +192,8 @@ module SpeckleConnector
       # @param views [Array] views.
       # @param sketchup_model [Sketchup::Model] active sketchup model.
       # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
       def create_views(views, sketchup_model)
         return if views.empty?
 
@@ -212,6 +218,8 @@ module SpeckleConnector
         end
       end
       # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       # @param page [Sketchup::Page] scene to update -update properties-
       def set_page_update_properties(page, update_properties)
