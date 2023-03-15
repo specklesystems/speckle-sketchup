@@ -376,7 +376,9 @@ export default {
     async receive() {
       this.loadingStage = 'requesting'
       this.loadingReceive = true
-      this.$mixpanel.track('Receive')
+      const selectedAccount = JSON.parse(localStorage.getItem('selectedAccount'))
+      const isMultiplayer = this.selectedCommit.authorId !== selectedAccount['userInfo']['id']
+      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer })
       const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
