@@ -161,6 +161,7 @@ import gql from 'graphql-tag'
 import { bus } from '../main'
 import streamQuery from '../graphql/stream.gql'
 import ObjectLoader from '@speckle/objectloader'
+import {HostApplications} from '@/utils/hostApplications'
 
 global.convertedFromSketchup = function (streamId, batches, commitId, totalChildrenCount) {
   bus.$emit(`sketchup-objects-${streamId}`, batches, commitId, totalChildrenCount)
@@ -378,7 +379,9 @@ export default {
       this.loadingReceive = true
       const selectedAccount = JSON.parse(localStorage.getItem('selectedAccount'))
       const isMultiplayer = this.selectedCommit.authorId !== selectedAccount['userInfo']['id']
-      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer })
+      const sourceApp = this.selectedCommit.sourceApplication
+      const sourceAppSlug = HostApplications.GetHostAppFromString(sourceApp).slug
+      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer, sourceHostApp: sourceAppSlug, sourceHostAppVersion: sourceApp})
       const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
