@@ -11,6 +11,7 @@ module SpeckleConnector
   OBJECTS_GEOMETRY_BREP = 'Objects.Geometry.Brep'
 
   OBJECTS_OTHER_BLOCKINSTANCE = 'Objects.Other.BlockInstance'
+  OBJECTS_OTHER_BLOCKINSTANCE_FULL = 'Objects.Other.Instance:Objects.Other.BlockInstance'
   OBJECTS_OTHER_INSTANCE = 'Objects.Other.Instance:Objects.Other.Instance'
   OBJECTS_OTHER_REVIT_REVITINSTANCE = 'Objects.Other.Revit.RevitInstance'
   OBJECTS_OTHER_BLOCKDEFINITION = 'Objects.Other.BlockDefinition'

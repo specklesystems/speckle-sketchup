@@ -55,6 +55,7 @@ module SpeckleConnector
         Objects.Other.Revit.RevitInstance
         Objects.Other.BlockDefinition
         Objects.Other.RenderMaterial
+        Objects.Other.Instance:Objects.Other.BlockInstance
       ].freeze
 
       def from_revit
@@ -313,6 +314,7 @@ module SpeckleConnector
         OBJECTS_GEOMETRY_BREP => MESH.method(:to_native),
         OBJECTS_OTHER_BLOCKDEFINITION => BLOCK_DEFINITION.method(:to_native),
         OBJECTS_OTHER_BLOCKINSTANCE => BLOCK_INSTANCE.method(:to_native),
+        OBJECTS_OTHER_BLOCKINSTANCE_FULL => BLOCK_INSTANCE.method(:to_native),
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native)
       }.freeze
