@@ -73,7 +73,7 @@ module SpeckleConnector
         # First create layers on the sketchup before starting traversing
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
         filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
-        create_layers(filtered_layer_containers, sketchup_model.layers)
+        create_layers(filtered_layer_containers, sketchup_model.layers) unless from_revit
         # Convert views to sketchup scenes
         SpeckleObjects::BuiltElements::View3d.to_native(obj, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
