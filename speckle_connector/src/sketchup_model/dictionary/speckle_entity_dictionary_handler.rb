@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'dictionary_handler'
+require_relative 'base_dictionary_handler'
 require_relative '../../constants/dict_constants'
 require_relative '../../constants/type_constants'
 
