@@ -4,7 +4,8 @@ require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
 require_relative '../../convertors/clean_up'
-require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -29,7 +30,8 @@ module SpeckleConnector
         # @param faces [Array] faces of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, render_material:, vertices:, faces:, sketchup_attributes:, application_id: nil)
+        def initialize(units:, render_material:, vertices:, faces:,
+                       sketchup_attributes:, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -41,10 +43,10 @@ module SpeckleConnector
           @units = units
           self[:units] = units
           self[:renderMaterial] = render_material
-          # self[:bbox] = bbox
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
@@ -85,7 +87,7 @@ module SpeckleConnector
           added_faces.each do |face|
             face.layer = layer
             unless mesh['sketchup_attributes'].nil?
-              SketchupModel::Dictionary::DictionaryHandler
+              SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
             end
           end
@@ -102,23 +104,21 @@ module SpeckleConnector
 
         # @param face [Sketchup::Face] face to convert mesh
         # rubocop:disable Style/MultilineTernaryOperator
-        # rubocop:disable Metrics/CyclomaticComplexity
         def self.from_face(face, units, model_preferences)
-          dictionaries = {}
-          if model_preferences[:include_entity_attributes] && model_preferences[:include_face_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
-          end
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(face)
           speckle_mesh = Mesh.new(
             units: units,
             render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
                                                           .from_material(face.material || face.back_material),
-            # bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
             vertices: [],
             faces: [],
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: face.persistent_id
           )
           speckle_mesh.face_to_mesh(face)
@@ -126,7 +126,6 @@ module SpeckleConnector
           speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
-        # rubocop:enable Metrics/CyclomaticComplexity
 
         def face_to_mesh(face)
           mesh = face.loops.count > 1 ? face.mesh : nil

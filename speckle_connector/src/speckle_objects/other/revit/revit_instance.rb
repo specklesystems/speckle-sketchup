@@ -6,7 +6,7 @@ require_relative '../transform'
 require_relative '../block_definition'
 require_relative '../../base'
 require_relative '../../geometry/bounding_box'
-require_relative '../../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../../sketchup_model/dictionary/base_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
