@@ -2,6 +2,9 @@
 
 module SpeckleConnector
   SPECKLE_BASE_OBJECT = 'Speckle_Base_Object'
+  SPECKLE_MAPPING_TOOL_SCHEMA = 'Speckle_Mapping_Tool_Schema'
+  SPECKLE_SCHEMA = 'Speckle_Schema'
+
   SPECKLE_ID = 'speckle_id'
   SPECKLE_TYPE = 'speckle_type'
   APPLICATION_ID = 'application_id'
