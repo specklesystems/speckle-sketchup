@@ -1,17 +1,12 @@
 # frozen_string_literal: true
 
 require_relative 'revit_definition'
-require_relative '../render_material'
-require_relative '../transform'
-require_relative '../block_definition'
-require_relative '../../base'
-require_relative '../../geometry/bounding_box'
-require_relative '../../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../base'
 
 module SpeckleConnector
   module SpeckleObjects
-    module Other
-      module Revit
+    module Revit
+      module Other
         # RevitInstance object definition for Speckle.
         class RevitInstance < Base
           SPECKLE_TYPE = OBJECTS_OTHER_REVIT_REVITINSTANCE
