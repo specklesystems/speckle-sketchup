@@ -30,12 +30,22 @@ module SpeckleConnector
       # @return [Relations::ManyToOneRelation] relations between objects.
       attr_accessor :relation
 
+      # TODO: Do cashing later
+      # @return [ImmutableHash{String=>SpeckleObjects::Other::RenderMaterial}] converted render materials
+      attr_accessor :render_materials
+
+      # TODO: Do cashing later
+      # @return [ImmutableHash{String=>SpeckleObjects::Other::BlockDefinition}] converted component definitions
+      attr_accessor :definitions
+
       def initialize(accounts, observers, queue, stream_queue)
         @accounts = accounts
         @observers = observers
         @message_queue = queue
         @stream_queue = stream_queue
         @speckle_entities = Immutable::EmptyHash
+        @render_materials = Immutable::EmptyHash
+        @definitions = Immutable::EmptyHash
         @relation = Relations::ManyToOneRelation.new
       end
 
