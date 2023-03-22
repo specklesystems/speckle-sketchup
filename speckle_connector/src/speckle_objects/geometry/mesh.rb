@@ -103,8 +103,12 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity:
 
         # @param face [Sketchup::Face] face to convert mesh
+        # @param units [String] model units to send Speckle.
+        # @param model_preferences [Hash{Symbol=>Boolean}] model preferences to check include attributes or not.
+        # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
+        #  into any component.
         # rubocop:disable Style/MultilineTernaryOperator
-        def self.from_face(face, units, model_preferences)
+        def self.from_face(face, units, model_preferences, global_transform = nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
@@ -121,16 +125,24 @@ module SpeckleConnector
             speckle_schema: speckle_schema,
             application_id: face.persistent_id
           )
-          speckle_mesh.face_to_mesh(face)
+          speckle_mesh.face_to_mesh(face, global_transform)
           speckle_mesh.update_mesh
           speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
 
-        def face_to_mesh(face)
+        # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
+        #  into any component. So it's mesh will be transformed into global coordinates to represent it correctly in
+        #  Speckle viewer or other connectors.
+        def face_to_mesh(face, global_transform = nil)
           mesh = face.loops.count > 1 ? face.mesh : nil
-          mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh)
-          mesh.nil? ? face_indices_to_array(face) : mesh_faces_to_array(mesh)
+          if global_transform.nil?
+            mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh)
+            mesh.nil? ? face_indices_to_array(face) : mesh_faces_to_array(mesh)
+          else
+            mesh_points_to_array(face.mesh, global_transform)
+            mesh_faces_to_array(face.mesh, global_transform)
+          end
         end
 
         # Collects indexed Sketchup vertices into flat array for Speckle use.
@@ -175,7 +187,8 @@ module SpeckleConnector
 
         # Get a flat array of vertices from a sketchup polygon mesh
         # @param mesh [Geom::PolygonMesh] mesh to get points.
-        def mesh_points_to_array(mesh)
+        def mesh_points_to_array(mesh, global_transform = nil)
+          mesh.transform!(global_transform) unless global_transform.nil?
           mesh.points.each do |pt|
             # FIXME: Enable previous line when viewer supports shared vertices
             # vertices.push(pt) unless vertices.any? { |point| point == pt }
@@ -185,7 +198,8 @@ module SpeckleConnector
 
         # Get an array of face indices from a sketchup polygon mesh
         # @param mesh [Geom::PolygonMesh] mesh to convert into polygons.
-        def mesh_faces_to_array(mesh)
+        def mesh_faces_to_array(mesh, global_transform = nil)
+          mesh.transform!(global_transform) unless global_transform.nil?
           mesh.polygons.each do |poly|
             global_polygon_array = [poly.count]
             poly.each do |index|
