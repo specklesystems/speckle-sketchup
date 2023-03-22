@@ -39,6 +39,7 @@ module SpeckleConnector
         return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
 
+      # Find flatten direct shapes by calculating their path to find global transformation later.
       def direct_shapes
         flat_selection_with_path = SketchupModel::Query::Entity
                                    .flat_entities_with_path(
@@ -105,10 +106,6 @@ module SpeckleConnector
         File.write(file_path, batches.first)
       end
 
-      CONVERSION_OBJECT_DICTIONARY = {
-
-      }.freeze
-
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
@@ -122,6 +119,8 @@ module SpeckleConnector
         return speckle_state, nil
       end
 
+      # Checks entity is mapped or not.
+      # @param entity [Sketchup::Entity] entity to check whether is mapped or not.
       def mapped_with_schema?(entity)
         !SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
       end

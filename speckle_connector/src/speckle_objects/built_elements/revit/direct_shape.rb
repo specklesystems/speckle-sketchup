@@ -25,18 +25,6 @@ module SpeckleConnector
             self[:baseGeometries] = base_geometries
           end
 
-          def self.from_face(entity, units, preferences, speckle_state, parent)
-            schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
-            mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, units, preferences[:model])
-            DirectShape.new(
-              name: schema[:name],
-              category: schema[:category],
-              units: units,
-              base_geometries: [mesh],
-              application_id: entity.persistent_id
-            )
-          end
-
           def self.from_entity(entity, path, units, preferences)
             schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
             entities = []
