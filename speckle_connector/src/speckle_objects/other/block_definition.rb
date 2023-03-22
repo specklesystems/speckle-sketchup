@@ -44,15 +44,9 @@ module SpeckleConnector
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/ParameterLists
-        # rubocop:disable Metrics/AbcSize
-        def self.from_definition(definition, units, definitions, preferences, speckle_state, parent, &convert)
-          guid = definition.guid
-          return definitions[guid] if definitions.key?(guid)
-
+        def self.from_definition(definition, units, preferences, speckle_state, parent, &convert)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(definition, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
@@ -89,11 +83,8 @@ module SpeckleConnector
           )
           return speckle_state, block_definition
         end
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/MethodLength
         # rubocop:enable Metrics/ParameterLists
-        # rubocop:enable Metrics/AbcSize
 
         def self.get_definition_name(def_obj)
           return def_obj['name'] unless def_obj['name'].nil?
