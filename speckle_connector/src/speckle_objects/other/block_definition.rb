@@ -167,6 +167,8 @@ module SpeckleConnector
           if preferences[:model][:combine_faces_by_material]
             mesh_groups = {}
             definition.entities.grep(Sketchup::Face).collect do |face|
+              next unless SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(face).nil?
+
               new_speckle_state = group_meshes_by_material(
                 face, mesh_groups, speckle_state, preferences, parent, &convert
               )
