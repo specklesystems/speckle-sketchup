@@ -7,7 +7,7 @@ require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/display_value'
-require_relative '../speckle_objects/other/revit/revit_instance'
+require_relative '../speckle_objects/revit/revit_instance'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
@@ -34,6 +34,7 @@ module SpeckleConnector
       # Module aliases
       GEOMETRY = SpeckleObjects::Geometry
       OTHER = SpeckleObjects::Other
+      REVIT = SpeckleObjects::Revit
 
       # Class aliases
       POINT = GEOMETRY::Point
@@ -41,7 +42,7 @@ module SpeckleConnector
       MESH = GEOMETRY::Mesh
       BLOCK_DEFINITION = OTHER::BlockDefinition
       BLOCK_INSTANCE = OTHER::BlockInstance
-      REVIT_INSTANCE = OTHER::Revit::RevitInstance
+      REVIT_INSTANCE = REVIT::Other::RevitInstance
       RENDER_MATERIAL = OTHER::RenderMaterial
       DISPLAY_VALUE = OTHER::DisplayValue
 

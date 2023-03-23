@@ -7,7 +7,8 @@ require_relative '../base'
 require_relative '../geometry/point'
 require_relative '../geometry/mesh'
 require_relative '../geometry/bounding_box'
-require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -22,7 +23,7 @@ module SpeckleConnector
         # @param application_id [String, NilClass] application id of the block definition.
         # rubocop:disable Metrics/ParameterLists
         def initialize(geometry:, name:, units:, always_face_camera:, sketchup_attributes: {},
-                       application_id: nil)
+                       speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -33,7 +34,8 @@ module SpeckleConnector
           self[:name] = name
           self[:always_face_camera] = always_face_camera
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
-          # FIXME: Since geometry sends with @ as detached, block basePlane renders on viewer.
+          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
+          # '@@' means that it is a detached property.
           self['@@geometry'] = geometry
         end
         # rubocop:enable Metrics/ParameterLists
@@ -42,27 +44,14 @@ module SpeckleConnector
         #  instance
         # @param units [String] units of the Sketchup model
         # @param definitions [Hash{String=>BlockDefinition}] all converted {BlockDefinition}s on the converter.
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
-        # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/ParameterLists
-        def self.from_definition(definition, units, definitions, preferences, speckle_state, parent, &convert)
-          guid = definition.guid
-          return definitions[guid] if definitions.key?(guid)
-
-          dictionaries = {}
-          if preferences[:model][:include_entity_attributes]
-            if definition.group?
-              if preferences[:model][:include_group_entity_attributes]
-                dictionaries = SketchupModel::Dictionary::DictionaryHandler
-                               .attribute_dictionaries_to_speckle(definition)
-              end
-            elsif preferences[:model][:include_component_entity_attributes]
-              dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(definition)
-            end
-          end
+        def self.from_definition(definition, units, preferences, speckle_state, parent, &convert)
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(definition, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
+                           .speckle_schema_to_speckle(definition)
 
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
@@ -83,21 +72,18 @@ module SpeckleConnector
                        end
                      end
 
-          # FIXME: Decide how to approach base point of the definition instead origin.
           block_definition = BlockDefinition.new(
             units: units,
             name: definition.name,
             geometry: geometry,
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: definition.persistent_id.to_s
           )
           return speckle_state, block_definition
         end
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/MethodLength
-        # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/ParameterLists
 
         def self.get_definition_name(def_obj)
@@ -144,7 +130,7 @@ module SpeckleConnector
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
           unless sketchup_attributes.nil?
-            SketchupModel::Dictionary::DictionaryHandler
+            SketchupModel::Dictionary::BaseDictionaryHandler
               .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
           end
           return state, [definition]
@@ -181,6 +167,8 @@ module SpeckleConnector
           if preferences[:model][:combine_faces_by_material]
             mesh_groups = {}
             definition.entities.grep(Sketchup::Face).collect do |face|
+              next unless SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(face).nil?
+
               new_speckle_state = group_meshes_by_material(
                 face, mesh_groups, speckle_state, preferences, parent, &convert
               )

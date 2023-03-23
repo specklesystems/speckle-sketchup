@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative '../block_definition'
-require_relative '../../base'
+require_relative '../other/block_definition'
+require_relative '../base'
 
 module SpeckleConnector
   module SpeckleObjects
-    module Other
-      module Revit
+    module Revit
+      module Other
         # RevitDefinition for Speckle.
         class RevitDefinition < Base
           SPECKLE_TYPE = OBJECTS_OTHER_REVIT_REVITINSTANCE
