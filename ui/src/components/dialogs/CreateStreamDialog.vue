@@ -1,13 +1,13 @@
 <template>
-  <v-container fluid class="px-1 pb-0 pt-1">
+  <v-container fluid class="px-1 pb-0 pt-0">
     <v-row>
-      <v-col>
+      <v-col class="py-2">
         <!-- DIALOG: Create New Stream -->
         <v-dialog v-model="showCreateNewStream">
           <template #activator="{ on, attrs }">
             <v-btn
                 class="ma-2 pa-3"
-                x-small
+                small
                 v-bind="attrs"
                 v-on="on"
             >
@@ -96,7 +96,7 @@
           <template #activator="{ on, attrs }">
             <v-btn
                 class="ma-2 pa-3"
-                x-small
+                small
                 min-width="163"
                 v-bind="attrs"
                 v-on="on"
