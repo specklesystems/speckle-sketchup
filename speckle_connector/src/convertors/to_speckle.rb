@@ -12,7 +12,7 @@ require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/revit/direct_shape'
 require_relative '../constants/path_constants'
-require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
+require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/query/entity'
 
 module SpeckleConnector
@@ -46,7 +46,9 @@ module SpeckleConnector
                                      sketchup_model.selection,
                                      [Sketchup::Face, Sketchup::ComponentInstance, Sketchup::Group], [sketchup_model]
                                    )
-        flat_selection_with_path.select { |entities| mapped_with_schema?(entities[0]) }
+        flat_selection_with_path.select do |entities|
+          SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entities[0])
+        end
       end
 
       # Add views from pages.
@@ -112,17 +114,11 @@ module SpeckleConnector
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
-        unless mapped_with_schema?(entity)
+        unless SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 
         return speckle_state, nil
-      end
-
-      # Checks entity is mapped or not.
-      # @param entity [Sketchup::Entity] entity to check whether is mapped or not.
-      def mapped_with_schema?(entity)
-        !SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
       end
 
       def from_mapped_to_speckle(entity, path, preferences)

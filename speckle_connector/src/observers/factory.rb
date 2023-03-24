@@ -5,6 +5,7 @@ require_relative 'entities_observer'
 require_relative 'observer_handler'
 require_relative 'model_observer'
 require_relative 'event_handler'
+require_relative 'selection_observer'
 require_relative '../constants/observer_constants'
 
 module SpeckleConnector
@@ -22,7 +23,8 @@ module SpeckleConnector
         {
           APP_OBSERVER => AppObserver.new(handler),
           ENTITIES_OBSERVER => EntitiesObserver.new(handler),
-          MODEL_OBSERVER => ModelObserver.new(handler)
+          MODEL_OBSERVER => ModelObserver.new(handler),
+          SELECTION_OBSERVER => SelectionObserver.new(handler)
         }.freeze
       end
     end

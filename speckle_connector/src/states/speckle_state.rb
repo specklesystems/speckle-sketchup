@@ -58,6 +58,17 @@ module SpeckleConnector
         with(:@message_queue => new_queue)
       end
 
+      def with_selection_queue(selection_parameters)
+        new_queue = message_queue.merge({ "entitySelected":
+                                            "entitySelected(#{JSON.generate(selection_parameters)})" })
+        with(:@message_queue => new_queue)
+      end
+
+      def with_deselection_queue
+        new_queue = message_queue.merge({ "entitiesDeselected": 'entitiesDeselected()' })
+        with(:@message_queue => new_queue)
+      end
+
       def with_invalid_streams_queue
         new_queue = message_queue.merge({ "updateInvalidStreams":
                                             "updateInvalidStreams(#{JSON.generate(invalid_streams)})" })

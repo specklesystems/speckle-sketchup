@@ -1,26 +1,87 @@
 <template>
   <v-container fluid class="px-5 btn-container">
-    <v-autocomplete
-        label="Mapper Method"
-        :items="['Direct Shape']"
-        density="compact"
-    ></v-autocomplete>
 
-    <v-autocomplete
-        :items="availableCategories"
-        label="Category"
-        density="compact"
-    ></v-autocomplete>
-
-    <v-text-field v-model="name" label="Name"></v-text-field>
-
-    <v-btn
-        class="ma-2 pa-3"
+    <v-expansion-panels
+      v-model="panel"
+      accordion
+      multiple
+      expand
     >
-      <v-icon dark left>
-        mdi-checkbox-marked-circle
-      </v-icon>Apply Mappings
-    </v-btn>
+      <v-expansion-panel key="selection">
+        <v-expansion-panel-header>
+          <div>
+            <v-icon>
+              {{ selectedEntityCount === 0 ? 'mdi-playlist-remove' : 'mdi-playlist-check' }}
+            </v-icon>
+            {{ `Selection (${selectedEntityCount})` }}
+          </div>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          {{"test"}}
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+
+      <v-expansion-panel key="mapping">
+        <v-expansion-panel-header>
+          <div>
+            <v-icon>
+              mdi-multiplication
+            </v-icon>
+            {{ `Mapping` }}
+          </div>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <v-autocomplete
+              v-model="selectedMethod"
+              class="pt-0"
+              label="Mapper Method"
+              :disabled="!entitySelected"
+              :items="enabledMethods"
+              density="compact"
+          ></v-autocomplete>
+
+          <v-autocomplete
+              v-model="selectedCategory"
+              class="pt-0"
+              label="Category"
+              :items="availableCategories"
+              :disabled="!entitySelected"
+              density="compact"
+          ></v-autocomplete>
+
+          <v-text-field
+              v-model="name"
+              class="pt-0"
+              label="Name"
+              :disabled="!entitySelected"
+          ></v-text-field>
+
+          <v-btn
+              class="ma-2 pa-3"
+              :disabled="!entitySelected"
+          >
+            <v-icon dark left>
+              mdi-checkbox-marked-circle
+            </v-icon>Apply Mappings
+          </v-btn>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+
+      <v-expansion-panel key="mappedElements">
+        <v-expansion-panel-header>
+          <div>
+            <v-icon>
+              {{ mappedEntityCount === 0 ? 'mdi-playlist-remove' : 'mdi-playlist-check' }}
+            </v-icon>
+            {{ `Mapped Elements (${mappedEntityCount})` }}
+          </div>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          {{"test"}}
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+
+    </v-expansion-panels>
   </v-container>
 </template>
 
@@ -28,8 +89,8 @@
 
 import {bus} from "@/main";
 
-global.entitySelected = function (mapperProperties) {
-  bus.$emit('entities-selected', mapperProperties)
+global.entitySelected = function (selectionParameters) {
+  bus.$emit('entities-selected', JSON.stringify(selectionParameters))
 }
 
 global.entitiesDeselected = function () {
@@ -41,29 +102,38 @@ export default {
   data() {
     return {
       entitySelected: false,
+      selectedEntityCount: 0,
+      selectedEntities: [],
       selectedMethod: null,
       selectedCategory: null,
-      selectedObjects: [],
-      selectedObjectCount: null,
       name: "",
       enabledMethods: [],
-      availableCategories: ["Floors", "Walls", "Windows"],
+      availableCategories: [],
+      mappedEntityCount: 0,
+      mappedEntities: [],
+      panel: [1]
     }
   },
   methods:{
     clearInputs(){
       this.enabledMethods = []
-      this.selectedObjects = []
+      this.availableCategories = []
+      this.selectedEntities = []
+      this.selectedEntityCount = 0
       this.name = ""
+      this.selectedMethod = null
+      this.selectedCategory = null
     }
   },
   mounted() {
-    bus.$on('entities-selected', async (mapperProperties) => {
+    bus.$on('entities-selected', async (selectionParameters) => {
       this.entitySelected = true
-      const mapperProps = JSON.parse(mapperProperties)
-      this.enabledMethods = mapperProps.enabledMethods
-      this.selectedObjects = mapperProps.selectedObjects
-      this.selectedObjectCount = this.selectedObjects.length
+      const selectionPars = JSON.parse(selectionParameters)
+      this.enabledMethods = selectionPars.mappingMethods
+      this.availableCategories = selectionPars.categories
+      this.selectedEntities = selectionPars.selection
+      this.selectedEntityCount = this.selectedEntities.length
+      this.entitySelected = this.selectedEntityCount !== 0
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false

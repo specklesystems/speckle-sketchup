@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../dictionary/speckle_schema_dictionary_handler'
 require_relative '../../speckle_entities/speckle_entity'
 require_relative '../../constants/dict_constants'
 
@@ -45,6 +46,11 @@ module SpeckleConnector
           return false if entity.attribute_dictionaries.to_a.empty?
 
           entity.attribute_dictionaries.to_a.any? { |dict| dict.name == SPECKLE_BASE_OBJECT }
+        end
+
+        # @param entity [Sketchup::Entity] sketchup entity to check whether mapped with speckle schema or not.
+        def self.mapped_with_schema?(entity)
+          !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
         end
       end
     end
