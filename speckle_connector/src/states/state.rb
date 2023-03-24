@@ -36,6 +36,15 @@ module SpeckleConnector
         with(:@speckle_state => new_speckle_state)
       end
 
+      def with_selection_queue(selection_parameters)
+        new_speckle_state = if selection_parameters.any?
+                              speckle_state.with_selection_queue(selection_parameters)
+                            else
+                              speckle_state.with_deselection_queue
+                            end
+        with(:@speckle_state => new_speckle_state)
+      end
+
       def with_empty_stream_queue
         new_speckle_state = speckle_state.with(:@stream_queue => {})
         with(:@speckle_state => new_speckle_state)

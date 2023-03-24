@@ -2,20 +2,27 @@
   <v-container fluid class="px-5 btn-container">
     <v-autocomplete
         label="Mapper Method"
+        :disabled="!entitySelected"
         :items="['Direct Shape']"
         density="compact"
     ></v-autocomplete>
 
     <v-autocomplete
         :items="availableCategories"
+        :disabled="!entitySelected"
         label="Category"
         density="compact"
     ></v-autocomplete>
 
-    <v-text-field v-model="name" label="Name"></v-text-field>
+    <v-text-field
+        v-model="name"
+        label="Name"
+        :disabled="!entitySelected"
+    ></v-text-field>
 
     <v-btn
         class="ma-2 pa-3"
+        :disabled="!entitySelected"
     >
       <v-icon dark left>
         mdi-checkbox-marked-circle
@@ -28,8 +35,8 @@
 
 import {bus} from "@/main";
 
-global.entitySelected = function (mapperProperties) {
-  bus.$emit('entities-selected', mapperProperties)
+global.entitySelected = function (selectionParameters) {
+  bus.$emit('entities-selected', selectionParameters)
 }
 
 global.entitiesDeselected = function () {
@@ -58,11 +65,11 @@ export default {
     }
   },
   mounted() {
-    bus.$on('entities-selected', async (mapperProperties) => {
+    bus.$on('entities-selected', async (selectionParameters) => {
       this.entitySelected = true
-      const mapperProps = JSON.parse(mapperProperties)
-      this.enabledMethods = mapperProps.enabledMethods
-      this.selectedObjects = mapperProps.selectedObjects
+      const selectionParams = JSON.parse(selectionParameters)
+      this.enabledMethods = selectionParams.enabledMethods
+      this.selectedObjects = selectionParams.selectedObjects
       this.selectedObjectCount = this.selectedObjects.length
     })
     bus.$on('entities-deselected', async () => {

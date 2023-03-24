@@ -42,8 +42,8 @@ module SpeckleConnector
       # @param sketchup_model [Sketchup::Model] the model to attach observers to
       # @param observers [Hash{Class=>}] the observer objects indexed by their class that will be attached
       def self.attach_observers(sketchup_model, observers)
-        # selection = sketchup_model.selection
-        # selection.add_observer(observers[SELECTION_OBSERVER_NAME])
+        selection = sketchup_model.selection
+        selection.add_observer(observers[SELECTION_OBSERVER])
         # layers = sketchup_model.layers
         # layers.add_observer(observers[LAYERS_OBSERVER_NAME])
         entities = sketchup_model.entities

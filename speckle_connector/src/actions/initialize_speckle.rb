@@ -23,6 +23,7 @@ module SpeckleConnector
         preferences = Preferences.read_preferences(sketchup_state.sketchup_model)
         user_state_with_preferences = state.user_state.with_preferences(preferences)
         state = States::State.new(user_state_with_preferences, speckle_state, sketchup_state, false)
+        # This is where we attach observers to related model objects like selection, entities..
         Actions::LoadSketchupModel.update_state(state, sketchup_state.sketchup_model)
       end
 
