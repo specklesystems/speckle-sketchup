@@ -59,11 +59,12 @@ module SpeckleConnector
           )
         end
 
+        # @param _state [States::State] state of the application.
         # @param line [Object] object represents Speckle line.
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
-        def self.to_native(line, layer, entities)
+        def self.to_native(state, line, layer, entities, &_convert_to_native)
           if line.key?('value')
             values = line['value']
             points = values.each_slice(3).to_a.map { |pt| Point.to_native(pt[0], pt[1], pt[2], line['units']) }
@@ -81,6 +82,7 @@ module SpeckleConnector
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
             end
           end
+          return state, edges
         end
         # rubocop:enable Metrics/AbcSize
 

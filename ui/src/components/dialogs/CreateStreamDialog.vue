@@ -246,6 +246,7 @@ export default {
           text: 'Stream Added by URL!\n',
         })
         bus.$emit('stream-added-by-id-or-url', stream.id)
+        this.$mixpanel.track('Connector Action', { name: 'Stream Add From URL' })
       }
       catch (e){
         this.$eventHub.$emit('error', {
@@ -276,7 +277,7 @@ export default {
       this.showCreateNewStream = false
       this.streamName = ""
       this.description = ""
-      this.$mixpanel.track('Connector Action', { name: 'Create Stream' })
+      this.$mixpanel.track('Connector Action', { name: 'Stream Create' })
       sketchup.exec({name: "save_stream", data: {stream_id: res["data"]["streamCreate"]}})
       this.refresh()
       return res

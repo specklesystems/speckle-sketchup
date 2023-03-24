@@ -18,6 +18,8 @@ module SpeckleConnector
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/MethodLength
       def update_state(state)
         # Init sqlite database
         db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
@@ -46,8 +48,19 @@ module SpeckleConnector
         user[@preference.to_sym] = @value
         new_preferences = state.user_state.preferences.put(:user, user)
         new_user_state = state.user_state.with_preferences(new_preferences)
+        # This is the place we can send information to UI for diffing check. It is a technical depth!
+        if @preference == 'diffing'
+          new_speckle_state = if @value
+                                state.speckle_state.with_invalid_streams_queue
+                              else
+                                state.speckle_state.with_empty_invalid_streams_queue
+                              end
+          state = state.with_speckle_state(new_speckle_state)
+        end
         state.with_user_state(new_user_state)
       end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

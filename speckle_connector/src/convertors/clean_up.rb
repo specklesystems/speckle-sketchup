@@ -17,6 +17,11 @@ module SpeckleConnector
         faces.each { |face| face.edges.each { |edge| edges << edge } }
         edges.uniq!
         edges.each { |edge| remove_edge_have_coplanar_faces(edge, faces, false) }
+        merged_faces(faces)
+      end
+
+      def self.merged_faces(faces)
+        faces.reject(&:deleted?)
       end
 
       # Detect edges to remove by checking following controls respectively;

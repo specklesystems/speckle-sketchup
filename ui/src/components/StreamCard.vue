@@ -5,7 +5,11 @@
     @mouseenter="hover = true"
     @mouseleave="hover = false"
   >
-    <v-toolbar flat height="70">
+    <v-toolbar flat height="70" :color="getColor(invalid)">
+      <v-btn v-tooptip="''" icon small outlined class="delta-btn" v-if="invalid" @click="activateDiffing">
+        <v-icon v-if="!diffing" class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-eye-off-outline</v-icon>
+        <v-icon v-else class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-eye</v-icon>
+      </v-btn>
       <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
         <v-btn
@@ -157,7 +161,7 @@ import gql from 'graphql-tag'
 import { bus } from '../main'
 import streamQuery from '../graphql/stream.gql'
 import ObjectLoader from '@speckle/objectloader'
-import { BaseObjectSerializer } from '../utils/serialization'
+import {HostApplications} from '@/utils/hostApplications'
 
 global.convertedFromSketchup = function (streamId, batches, commitId, totalChildrenCount) {
   bus.$emit(`sketchup-objects-${streamId}`, batches, commitId, totalChildrenCount)
@@ -198,7 +202,9 @@ export default {
       loadingStage: null,
       branchName: 'main',
       commitId: 'latest',
-      commitMessage: null
+      commitMessage: null,
+      invalid: false,
+      diffing: false
     }
   },
   apollo: {
@@ -280,6 +286,17 @@ export default {
     }
   },
   mounted() {
+    bus.$on(`deactivate-diffing-${this.streamId}`, () => {
+      this.diffing = false
+    })
+    bus.$on(`validate-stream-${this.streamId}`, () => {
+      this.invalid = false
+      console.log(`validate-stream-${this.streamId}`)
+    })
+    bus.$on(`invalidate-stream-${this.streamId}`, () => {
+      this.invalid = true
+      console.log(`invalidate-stream-${this.streamId}`)
+    })
     bus.$on(`refresh-stream-${this.streamId}`, () => {
       let oldBranchName = this.branchName
       let oldCommitId = this.commitId
@@ -315,6 +332,13 @@ export default {
     if (this.saved) sketchup.exec({name: "notify_connected", data: {stream_id: this.streamId}})
   },
   methods: {
+    getColor(invalid){
+      if(invalid){
+        return "#ffdfdf"
+      } else {
+        return ""
+      }
+    },
     sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms))
     },
@@ -331,6 +355,16 @@ export default {
       this.$mixpanel.track('Connector Action', { name: 'Commit Switch' })
       this.commitId = commitId
     },
+    activateDiffing(){
+      if (this.diffing){
+        this.diffing = false
+        sketchup.exec({name: "deactivate_diffing", data: {}})
+        return
+      }
+      this.diffing = true
+      bus.$emit("deactivate-diffing-except", (this.streamId))
+      sketchup.exec({name: "activate_diffing", data: {stream_id: this.streamId}})
+    },
     toggleSavedStream() {
       if (this.saved) {
         sketchup.exec({name: "remove_stream", data: {stream_id: this.streamId}})
@@ -343,7 +377,11 @@ export default {
     async receive() {
       this.loadingStage = 'requesting'
       this.loadingReceive = true
-      this.$mixpanel.track('Receive')
+      const selectedAccount = JSON.parse(localStorage.getItem('selectedAccount'))
+      const isMultiplayer = this.selectedCommit.authorId !== selectedAccount['userInfo']['id']
+      const sourceApp = this.selectedCommit.sourceApplication
+      const sourceAppSlug = HostApplications.GetHostAppFromString(sourceApp).slug
+      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer, sourceHostApp: sourceAppSlug, sourceHostAppVersion: sourceApp})
       const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
@@ -365,7 +403,8 @@ export default {
           stream_name: this.stream.name,
           stream_id: this.streamId,
           branch_name: this.selectedCommit.branchName,
-          branch_id: this.selectedCommit.id
+          branch_id: this.selectedCommit.id,
+          source_app: this.selectedCommit.sourceApplication
       }})
 
       await this.$apollo.mutate({
@@ -405,16 +444,6 @@ export default {
         })
         return
       }
-
-      // let s = new BaseObjectSerializer()
-      // let startTime = new Date()
-      // let { hash, serialized } = s.writeJson(objects)
-      // let endTime = new Date();
-      // let timeDiff = endTime - startTime; //in ms
-      // // strip the ms
-      // timeDiff /= 1000;
-      // // get seconds
-      // console.log(timeDiff + " seconds");
 
       try {
         this.loadingStage = 'uploading'
@@ -488,6 +517,22 @@ export default {
 </script>
 
 <style scoped>
+.delta-btn.v-btn--outlined {
+  border: 1px solid #474747;
+  background: white;
+  margin-left: -90px;
+  margin-top: -50px;
+  position: absolute;
+}
+
+.toggleUpDown {
+  transition: transform .3s ease-in-out !important;
+}
+
+.toggleUpDown.rotate {
+  transform: rotate(180deg);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease-in;

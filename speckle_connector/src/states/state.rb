@@ -45,6 +45,10 @@ module SpeckleConnector
         with(:@speckle_state => new_speckle_state)
       end
 
+      def with_sketchup_state(new_sketchup_state)
+        with(:@sketchup_state => new_sketchup_state)
+      end
+
       def with_user_state(new_user_state)
         with(:@user_state => new_user_state)
       end
