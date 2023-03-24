@@ -71,6 +71,7 @@ export default {
       this.enabledMethods = selectionParams.enabledMethods
       this.selectedObjects = selectionParams.selectedObjects
       this.selectedObjectCount = this.selectedObjects.length
+      this.entitySelected = this.selectedObjectCount !== 0
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false

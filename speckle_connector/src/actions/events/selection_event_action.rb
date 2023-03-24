@@ -12,9 +12,13 @@ module SpeckleConnector
         def self.update_state(state, event_data)
           return state unless event_data&.any?
 
+          selection = [
+            {a: 1},
+            {b: 1}
+          ]
+          selection = [] if state.sketchup_state.sketchup_model.selection.none?
+
           state.with_selection_queue(selection)
-          # Handle here message to UI according to selection!
-          state
         end
       end
     end
