@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'event_action'
+require_relative '../../mapping/category/revit_category'
 
 module SpeckleConnector
   module Actions
@@ -12,11 +13,17 @@ module SpeckleConnector
         def self.update_state(state, event_data)
           return state unless event_data&.any?
 
-          selection = [
-            {a: 1},
-            {b: 1}
-          ]
-          selection = [] if state.sketchup_state.sketchup_model.selection.none?
+          selection = {
+            selection: [
+              { a: 1 },
+              { b: 1 }
+            ],
+            mappingMethods: [
+              'Direct Shape'
+            ],
+            categories: Mapping::Category::RevitCategory.dictionary.keys.to_a
+          }
+          selection = { selection: [], mappingMethods: [], categories: [] } if state.sketchup_state.sketchup_model.selection.none?
 
           state.with_selection_queue(selection)
         end

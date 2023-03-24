@@ -37,7 +37,7 @@ module SpeckleConnector
       end
 
       def with_selection_queue(selection_parameters)
-        new_speckle_state = if selection_parameters.any?
+        new_speckle_state = if selection_parameters[:selection].any?
                               speckle_state.with_selection_queue(selection_parameters)
                             else
                               speckle_state.with_deselection_queue
