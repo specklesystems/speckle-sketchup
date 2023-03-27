@@ -52,6 +52,19 @@ module SpeckleConnector
         def self.mapped_with_schema?(entity)
           !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
         end
+
+        def self.get_schema(entity)
+          Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
+        end
+
+        def self.entity_details(entities)
+          entities.collect do |entity|
+            {
+              class: entity.class.name.split('::').last,
+              schema: get_schema(entity)
+            }
+          end
+        end
       end
     end
   end
