@@ -164,7 +164,7 @@
 </template>
 
 <script>
-
+/*global sketchup*/
 import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
 
@@ -288,7 +288,7 @@ export default {
         name: this.name,
         isDefinition: this.definitionSelected
       }
-      console.log(mapping)
+      sketchup.exec({name: "apply_mappings", data: mapping})
     }
   },
   mounted() {
