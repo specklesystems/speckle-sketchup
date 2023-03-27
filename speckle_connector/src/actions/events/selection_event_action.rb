@@ -20,7 +20,7 @@ module SpeckleConnector
             mappingMethods: [
               'Direct Shape'
             ],
-            categories: Mapping::Category::RevitCategory.dictionary.keys.to_a
+            categories: Mapping::Category::RevitCategory.dictionary.collect { |k, v| { key: k, value: v } }.to_a
           }
           selection = { selection: [], mappingMethods: [], categories: [] } if sketchup_selection.none?
 
