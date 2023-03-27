@@ -5,7 +5,6 @@
       v-model="panel"
       accordion
       multiple
-      expand
     >
       <v-expansion-panel key="selection">
         <v-expansion-panel-header>
@@ -17,7 +16,19 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          {{"test"}}
+
+          <v-data-table
+              disable-filtering
+              disable-pagination
+              :headers="selectionHeaders"
+              :items="selectionTableData"
+              dense
+              hide-default-footer
+              class="elevation-1"
+              :mobile-breakpoint="0"
+          >
+          </v-data-table>
+
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -88,6 +99,7 @@
 <script>
 
 import {bus} from "@/main";
+import {groupBy} from "@/utils/groupBy";
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
@@ -111,7 +123,12 @@ export default {
       availableCategories: [],
       mappedEntityCount: 0,
       mappedEntities: [],
-      panel: [1]
+      panel: [1],
+      selectionHeaders: [
+        { text: 'Type', sortable: false, value: 'class', fixed: true, width: "80px" },
+        { text: 'Count', sortable: false, value: 'count', fixed: true, width: "80px" },
+      ],
+      selectionTableData: []
     }
   },
   methods:{
@@ -119,10 +136,24 @@ export default {
       this.enabledMethods = []
       this.availableCategories = []
       this.selectedEntities = []
+      this.selectionTableData = []
       this.selectedEntityCount = 0
       this.name = ""
       this.selectedMethod = null
       this.selectedCategory = null
+    },
+    selectionTable(){
+      let groupByClass = groupBy('class')
+      let groupedByWithKey = groupByClass(this.selectedEntities)
+      this.selectionTableData = Object.entries(groupedByWithKey).map(
+          (entry) => {
+            const [className, entities] = entry
+            return {
+              'class': className,
+              'count': entities !== true ? entities.length : 0
+            }
+          }
+      )
     }
   },
   mounted() {
@@ -134,6 +165,7 @@ export default {
       this.selectedEntities = selectionPars.selection
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
+      this.selectionTable()
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
@@ -149,4 +181,5 @@ export default {
   display: flex;
   flex-wrap: wrap;
 }
+
 </style>
