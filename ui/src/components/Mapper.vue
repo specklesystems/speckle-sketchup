@@ -55,6 +55,14 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
+          <v-container v-if=entitySelected class="pa-0 pb-3">
+            <p class="text-h6 text-md-h5 text-lg-h4 pa-0 ma-0">
+              {{this.lastSelectedEntity["entity_type"]}}
+            </p>
+            <p class="text-caption">
+              Lastly selected object
+            </p>
+          </v-container>
           <v-autocomplete
               v-model="selectedMethod"
               class="pt-0"
@@ -129,6 +137,7 @@ export default {
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
+      lastSelectedEntity: null,
       selectedMethod: null,
       selectedCategory: null,
       name: "",
@@ -169,7 +178,6 @@ export default {
             }
           }
       )
-      console.log(this.selectedEntities)
     }
   },
   mounted() {
@@ -179,6 +187,7 @@ export default {
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
+      this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
       this.getSelectionTableData()
