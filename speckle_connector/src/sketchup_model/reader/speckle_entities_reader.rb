@@ -60,7 +60,8 @@ module SpeckleConnector
         def self.entity_details(entities)
           entities.collect do |entity|
             {
-              class: entity.class.name.split('::').last,
+              entity_id: entity.persistent_id,
+              entity_type: entity.class.name.split('::').last,
               schema: get_schema(entity)
             }
           end
