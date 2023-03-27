@@ -14,31 +14,45 @@
             {{ `Selection (${selectedEntityCount})` }}
           </div>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
-
+        <v-expansion-panel-content class="mx-n3">
           <v-data-table
+              class="elevation-1"
+              dense
+              expand
               disable-filtering
               disable-pagination
-              dense
-              class="elevation-1"
               hide-default-footer
-              :expand=true
-              item-key="name"
+              item-key="entityType"
+              :expanded.sync="expanded"
               :headers="selectionHeaders"
               :items="selectionTableData"
               :mobile-breakpoint="0"
           >
-            <template v-slot:items="props">
-              <tr @click="props.expanded = !props.expanded">
-                <td>{{ props.item.name }}</td>
-                <td>{{ props.item.count }}</td>
-              </tr>
-            </template>
+            <template v-slot:expanded-item="{ headers, item }">
+              <td :colspan="headers.length" class="pl-2 pr-0">
+                <v-data-table
+                    v-model="selectedRows"
+                    class="elevation-0 pa-0 ma-0"
+                    dense
+                    disable-filtering
+                    disable-pagination
+                    hide-default-footer
+                    item-key="entityId"
+                    :headers="subSelectionHeaders"
+                    :items="item.entities"
+                    :mobile-breakpoint="0"
+                >
+                  <template v-slot:item.isMapped="{ item }">
+                    <v-icon :color="item.isMapped ? 'green' : 'red'">
+                      {{ item.isMapped ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                    </v-icon>
+                  </template>
 
-            <template v-slot:expand="props">
-              <v-card flat>
-                <v-card-text>{{ props.item.name }}</v-card-text>
-              </v-card>
+                </v-data-table>
+              </td>
+            </template>
+            <template v-slot:item.entityType="slotData">
+              <div @click="clickColumn(slotData)">{{ slotData.item.entityType }}</div>
             </template>
           </v-data-table>
 
@@ -55,14 +69,45 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <v-container v-if=entitySelected class="pa-0 pb-3">
-            <p class="text-h6 text-md-h5 text-lg-h4 pa-0 ma-0">
-              {{this.lastSelectedEntity["entity_type"]}}
-            </p>
-            <p class="text-caption">
-              Lastly selected object
-            </p>
+          <v-container v-if="entitySelected" class="btn-container pa-0">
+            <v-card
+                variant="outlined"
+                class="pt-1 px-2 mb-6 mr-2"
+                :color="entityCardColor"
+                :width="entityCardWidth"
+                @click="definitionSelected = false"
+            >
+              <v-card-title class="pa-0 pb-4">
+                <v-icon class="mr-1">
+                  {{getLastSelectedEntityIcon}}
+                </v-icon>
+                {{this.lastSelectedEntity["entityType"]}}
+              </v-card-title>
+              <v-card-subtitle class="pb-1 pr-0">
+                Last selected entity
+              </v-card-subtitle>
+            </v-card>
+
+            <v-card
+                v-if=entityHasParent
+                variant="outlined"
+                class="pt-1 px-2 mb-6"
+                :color="definitionSelected ? 'mappingEntity' : 'background2'"
+                width="160px"
+                @click="definitionSelected = true"
+            >
+              <v-card-title class="pa-0 pb-4">
+                <v-icon class="mr-1">
+                  mdi-atom
+                </v-icon>
+                {{"Definition"}}
+              </v-card-title>
+              <v-card-subtitle class="pb-1 pr-0">
+                Instance definition
+              </v-card-subtitle>
+            </v-card>
           </v-container>
+
           <v-autocomplete
               v-model="selectedMethod"
               class="pt-0"
@@ -91,6 +136,7 @@
           <v-btn
               class="ma-2 pa-3"
               :disabled="!entitySelected"
+              @click="applyMappings"
           >
             <v-icon dark left>
               mdi-checkbox-marked-circle
@@ -134,6 +180,9 @@ export default {
   name: "Mapper",
   data() {
     return {
+      expanded: [],
+      selectedRows: [],
+      definitionSelected: false,
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
@@ -147,11 +196,47 @@ export default {
       mappedEntities: [],
       panel: [1],
       selectionHeaders: [
-        { text: 'Type', sortable: false, value: 'name' },
-        { text: 'Count', sortable: false, value: 'count' },
-        { text: 'Mapped', sortable: false, value: 'mappedCount' },
+        { text: 'Type', sortable: false, value: 'entityType', width: '60%' },
+        { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' },
+        { text: 'Mapped', sortable: false, align: 'center', value: 'mappedCount', width: '20%' },
+      ],
+      subSelectionHeaders: [
+        { text: 'Name/Id', sortable: false, value: 'nameOrId', width: '80%' },
+        { text: 'Mapped', sortable: false, align: 'center', value: 'isMapped', width: '20%' },
       ],
       selectionTableData: []
+    }
+  },
+  computed:{
+    entityHasParent(){
+      return this.lastSelectedEntity['entityType'] === 'Component' || this.lastSelectedEntity['entityType'] === 'Group'
+    },
+    entityCardWidth(){
+      if (this.entityHasParent){
+        return '160px'
+      } else {
+        return '330px'
+      }
+    },
+    entityCardColor(){
+      if (!this.entityHasParent){
+        return 'background2'
+      }
+      return this.definitionSelected ? 'background2' : 'mappingEntity'
+    },
+    getLastSelectedEntityIcon(){
+      const type = this.lastSelectedEntity['entityType']
+      if (type === 'Face'){
+        return 'mdi-vector-square'
+      } else if (type === 'Edge'){
+        return 'mdi-vector-polyline'
+      } else if (type === 'Group'){
+        return 'mdi-border-outside'
+      } else if (type === 'Component'){
+        return 'mdi-border-inside'
+      } else {
+        return 'mdi-close'
+      }
     }
   },
   methods:{
@@ -166,18 +251,44 @@ export default {
       this.selectedCategory = null
     },
     getSelectionTableData(){
-      let groupByClass = groupBy('entity_type')
+      let groupByClass = groupBy('entityType')
       let groupedByWithKey = groupByClass(this.selectedEntities)
       this.selectionTableData = Object.entries(groupedByWithKey).map(
           (entry) => {
             const [className, entities] = entry
             return {
-              'name': className,
+              'entityType': className,
+              'entityIds': entities.map(entity => entity['entityId']),
               'count': entities !== true ? entities.length : 0,
+              'entities': entities.map((entity) => {
+                return {
+                  'entityId': entity['entityId'],
+                  'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
+                  'isMapped': entity['schema']['category'] !== undefined
+                }
+              }),
               'mappedCount': entities.filter((entity) => entity['schema']['category'] !== undefined).length
             }
           }
       )
+    },
+    clickColumn(slotData) {
+      const indexExpanded = this.expanded.findIndex(i => i === slotData.item);
+      if (indexExpanded > -1) {
+        this.expanded.splice(indexExpanded, 1)
+      } else {
+        this.expanded.push(slotData.item);
+      }
+    },
+    applyMappings(){
+      const mapping = {
+        entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
+        method: this.selectedMethod,
+        category:  this.selectedCategory,
+        name: this.name,
+        isDefinition: this.definitionSelected
+      }
+      console.log(mapping)
     }
   },
   mounted() {
@@ -202,9 +313,11 @@ export default {
 
 <style scoped>
 .btn-container{
-  justify-content: center;
   display: flex;
   flex-wrap: wrap;
 }
 
+.active .entity {
+  border: 2px solid green;
+}
 </style>
