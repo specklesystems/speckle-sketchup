@@ -59,10 +59,13 @@ module SpeckleConnector
 
         def self.entity_details(entities)
           entities.collect do |entity|
+            speckle_schema = get_schema(entity)
             {
-              entity_id: entity.persistent_id,
-              entity_type: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' '),
-              schema: get_schema(entity)
+              name: speckle_schema['name'],
+              entityName: entity.respond_to?(:name) ? entity.name : '',
+              entityId: entity.persistent_id,
+              entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
+              schema: speckle_schema
             }
           end
         end
