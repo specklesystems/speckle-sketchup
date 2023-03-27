@@ -61,7 +61,7 @@ module SpeckleConnector
           entities.collect do |entity|
             {
               entity_id: entity.persistent_id,
-              entity_type: entity.class.name.split('::').last,
+              entity_type: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' '),
               schema: get_schema(entity)
             }
           end
