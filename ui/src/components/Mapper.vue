@@ -1,6 +1,5 @@
 <template>
-  <v-container fluid class="px-5 btn-container">
-
+  <v-container fluid class="px-3 btn-container">
     <v-expansion-panels
       v-model="panel"
       accordion
@@ -20,13 +19,27 @@
           <v-data-table
               disable-filtering
               disable-pagination
+              dense
+              class="elevation-1"
+              hide-default-footer
+              :expand=true
+              item-key="name"
               :headers="selectionHeaders"
               :items="selectionTableData"
-              dense
-              hide-default-footer
-              class="elevation-1"
               :mobile-breakpoint="0"
           >
+            <template v-slot:items="props">
+              <tr @click="props.expanded = !props.expanded">
+                <td>{{ props.item.name }}</td>
+                <td>{{ props.item.count }}</td>
+              </tr>
+            </template>
+
+            <template v-slot:expand="props">
+              <v-card flat>
+                <v-card-text>{{ props.item.name }}</v-card-text>
+              </v-card>
+            </template>
           </v-data-table>
 
         </v-expansion-panel-content>
@@ -125,8 +138,9 @@ export default {
       mappedEntities: [],
       panel: [1],
       selectionHeaders: [
-        { text: 'Type', sortable: false, value: 'class', fixed: true, width: "80px" },
-        { text: 'Count', sortable: false, value: 'count', fixed: true, width: "80px" },
+        { text: 'Type', sortable: false, value: 'name' },
+        { text: 'Count', sortable: false, value: 'count' },
+        { text: 'Mapped', sortable: false, value: 'mappedCount' },
       ],
       selectionTableData: []
     }
@@ -142,18 +156,20 @@ export default {
       this.selectedMethod = null
       this.selectedCategory = null
     },
-    selectionTable(){
-      let groupByClass = groupBy('class')
+    getSelectionTableData(){
+      let groupByClass = groupBy('entity_type')
       let groupedByWithKey = groupByClass(this.selectedEntities)
       this.selectionTableData = Object.entries(groupedByWithKey).map(
           (entry) => {
             const [className, entities] = entry
             return {
-              'class': className,
-              'count': entities !== true ? entities.length : 0
+              'name': className,
+              'count': entities !== true ? entities.length : 0,
+              'mappedCount': entities.filter((entity) => entity['schema']['category'] !== undefined).length
             }
           }
       )
+      console.log(this.selectedEntities)
     }
   },
   mounted() {
@@ -165,7 +181,7 @@ export default {
       this.selectedEntities = selectionPars.selection
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
-      this.selectionTable()
+      this.getSelectionTableData()
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
