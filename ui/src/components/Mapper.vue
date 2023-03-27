@@ -122,6 +122,8 @@
               class="pt-0"
               label="Category"
               :items="availableCategories"
+              item-value="value"
+              item-text="key"
               :disabled="!entitySelected"
               density="compact"
           ></v-autocomplete>
@@ -272,6 +274,26 @@ export default {
           }
       )
     },
+    setInputValuesFromSelection(){
+      if (!this.entitySelected){
+        this.name = ""
+        this.selectedMethod = null
+        this.selectedCategory = null
+        return
+      }
+      if (!this.isEntityMapped(this.lastSelectedEntity)){
+        this.name = ""
+        this.selectedMethod = null
+        this.selectedCategory = null
+        return
+      }
+      this.selectedMethod = this.lastSelectedEntity['schema']['method']
+      this.selectedCategory = this.lastSelectedEntity['schema']['category']
+      this.name = this.lastSelectedEntity['schema']['name']
+    },
+    isEntityMapped(entity){
+      return entity['schema']['category'] !== undefined
+    },
     clickColumn(slotData) {
       const indexExpanded = this.expanded.findIndex(i => i === slotData.item);
       if (indexExpanded > -1) {
@@ -302,6 +324,7 @@ export default {
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
       this.getSelectionTableData()
+      this.setInputValuesFromSelection()
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
