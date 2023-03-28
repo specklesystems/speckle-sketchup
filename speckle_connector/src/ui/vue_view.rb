@@ -14,6 +14,8 @@ require_relative '../commands/notify_connected'
 require_relative '../commands/user_preferences_updated'
 require_relative '../commands/model_preferences_updated'
 require_relative '../commands/activate_diffing'
+require_relative '../commands/apply_mappings'
+require_relative '../commands/clear_mappings'
 
 require_relative '../actions/reload_accounts'
 require_relative '../actions/load_saved_streams'
@@ -72,7 +74,9 @@ module SpeckleConnector
           user_preferences_updated: Commands::UserPreferencesUpdated.new(@app),
           model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app),
           activate_diffing: Commands::ActivateDiffing.new(@app),
-          deactivate_diffing: Commands::ActionCommand.new(@app, Actions::DeactivateDiffing)
+          deactivate_diffing: Commands::ActionCommand.new(@app, Actions::DeactivateDiffing),
+          apply_mappings: Commands::ApplyMappings.new(@app),
+          clear_mappings: Commands::ClearMappings.new(@app)
         }.freeze
       end
     end

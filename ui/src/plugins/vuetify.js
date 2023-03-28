@@ -11,6 +11,7 @@ export default new Vuetify({
         primary: '#0480FB', //speckle blue
         secondary: '#01D1FD', //spark blue
         accent: '#46B958', //data yellow
+        mappingEntity: '#B9d8b5',
         error: '#FF5555', //red
         warning: '#D8BF16', //lightning yellow
         info: '#2D2ADA', //majestic blue
@@ -24,6 +25,7 @@ export default new Vuetify({
         primary: '#0480FB', //speckle blue
         secondary: '#01D1FD', //spark blue
         accent: '#46B958', //data yellow
+        mappingEntity: '#46B958',
         error: '#FF5555', //red
         warning: '#D8BF16', //lightning yellow
         info: '#2D2ADA', //majestic blue

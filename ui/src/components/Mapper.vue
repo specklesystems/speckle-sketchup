@@ -1,11 +1,9 @@
 <template>
-  <v-container fluid class="px-5 btn-container">
-
+  <v-container fluid class="px-3 btn-container">
     <v-expansion-panels
       v-model="panel"
       accordion
       multiple
-      expand
     >
       <v-expansion-panel key="selection">
         <v-expansion-panel-header>
@@ -16,8 +14,48 @@
             {{ `Selection (${selectedEntityCount})` }}
           </div>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          {{"test"}}
+        <v-expansion-panel-content class="mx-n3">
+          <v-data-table
+              class="elevation-1"
+              dense
+              expand
+              disable-filtering
+              disable-pagination
+              hide-default-footer
+              item-key="entityType"
+              :expanded.sync="expanded"
+              :headers="selectionHeaders"
+              :items="selectionTableData"
+              :mobile-breakpoint="0"
+          >
+            <template v-slot:expanded-item="{ headers, item }">
+              <td :colspan="headers.length" class="pl-2 pr-0">
+                <v-data-table
+                    v-model="selectedRows"
+                    class="elevation-0 pa-0 ma-0"
+                    dense
+                    disable-filtering
+                    disable-pagination
+                    hide-default-footer
+                    item-key="entityId"
+                    :headers="subSelectionHeaders"
+                    :items="item.entities"
+                    :mobile-breakpoint="0"
+                >
+                  <template v-slot:item.isMapped="{ item }">
+                    <v-icon :color="item.isMapped ? 'green' : 'red'">
+                      {{ item.isMapped ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                    </v-icon>
+                  </template>
+
+                </v-data-table>
+              </td>
+            </template>
+            <template v-slot:item.entityType="slotData">
+              <div @click="clickColumn(slotData)">{{ slotData.item.entityType }}</div>
+            </template>
+          </v-data-table>
+
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -31,6 +69,47 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
+          <v-container v-if="entitySelected" class="btn-container pa-0 mb-5">
+            <v-card
+                variant="outlined"
+                class="pt-1 pl-2 mb-1 mr-2 v-alert--border flex"
+                :elevation="entityCardElevation"
+                :outlined="!definitionSelected"
+                :width="entityCardWidth"
+                @click="definitionSelectedHandler(false)"
+            >
+              <v-card-title class="pa-0 pb-3">
+                <v-icon class="mr-1">
+                  {{getLastSelectedEntityIcon}}
+                </v-icon>
+                {{this.lastSelectedEntity["entityType"]}}
+              </v-card-title>
+              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
+                Last selected entity
+              </v-card-subtitle>
+            </v-card>
+
+            <v-card
+                v-if=entityHasParent
+                variant="outlined"
+                :elevation="definitionSelected ? '6' : '1'"
+                :outlined="definitionSelected"
+                class="pt-1 pl-2 mb-1 mr-2 flex"
+                width="160px"
+                @click="definitionSelectedHandler(true)"
+            >
+              <v-card-title class="pa-0 pb-3">
+                <v-icon class="mr-1">
+                  mdi-atom
+                </v-icon>
+                {{"Definition"}}
+              </v-card-title>
+              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
+                Instance definition
+              </v-card-subtitle>
+            </v-card>
+          </v-container>
+
           <v-autocomplete
               v-model="selectedMethod"
               class="pt-0"
@@ -45,6 +124,8 @@
               class="pt-0"
               label="Category"
               :items="availableCategories"
+              item-value="value"
+              item-text="key"
               :disabled="!entitySelected"
               density="compact"
           ></v-autocomplete>
@@ -56,14 +137,36 @@
               :disabled="!entitySelected"
           ></v-text-field>
 
-          <v-btn
-              class="ma-2 pa-3"
-              :disabled="!entitySelected"
-          >
-            <v-icon dark left>
-              mdi-checkbox-marked-circle
-            </v-icon>Apply Mappings
-          </v-btn>
+          <v-container class="pa-0">
+            <v-row justify="center" align="center">
+              <v-col cols="auto" class="pa-1 pb-2">
+                <v-btn
+                    class="pt-1"
+                    :disabled="!entitySelected"
+                    @click="applyMapping"
+                >
+                  <v-icon dark left>
+                    mdi-checkbox-marked-circle
+                  </v-icon>Apply Mapping
+                </v-btn>
+              </v-col>
+              <v-col cols="auto" class="pa-1 pb-2">
+                <v-btn
+                    class="pt-1"
+                    :disabled="!entitySelected"
+                    @click="clearMapping"
+                >
+                  <v-icon dark left>
+                    mdi-close-circle
+                  </v-icon>Clear Mapping
+                </v-btn>
+              </v-col>
+            </v-row>
+
+
+          </v-container>
+
+
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -86,8 +189,9 @@
 </template>
 
 <script>
-
+/*global sketchup*/
 import {bus} from "@/main";
+import {groupBy} from "@/utils/groupBy";
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
@@ -101,9 +205,13 @@ export default {
   name: "Mapper",
   data() {
     return {
+      expanded: [],
+      selectedRows: [],
+      definitionSelected: false,
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
+      lastSelectedEntity: null,
       selectedMethod: null,
       selectedCategory: null,
       name: "",
@@ -111,7 +219,55 @@ export default {
       availableCategories: [],
       mappedEntityCount: 0,
       mappedEntities: [],
-      panel: [1]
+      panel: [1],
+      selectionHeaders: [
+        { text: 'Type', sortable: false, value: 'entityType', width: '60%' },
+        { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' },
+        { text: 'Mapped', sortable: false, align: 'center', value: 'mappedCount', width: '20%' },
+      ],
+      subSelectionHeaders: [
+        { text: 'Name/Id', sortable: false, value: 'nameOrId', width: '80%' },
+        { text: 'Mapped', sortable: false, align: 'center', value: 'isMapped', width: '20%' },
+      ],
+      selectionTableData: []
+    }
+  },
+  computed:{
+    entityHasParent(){
+      return this.lastSelectedEntity['entityType'] === 'Component' || this.lastSelectedEntity['entityType'] === 'Group'
+    },
+    entityCardWidth(){
+      if (this.entityHasParent){
+        return '160px'
+      } else {
+        return '330px'
+      }
+    },
+    entityCardElevation(){
+      if (!this.entityHasParent){
+        return '1'
+      }
+      return this.definitionSelected ? '1' : '6'
+    },
+    entityCardColor(){
+      if (!this.entityHasParent){
+        return 'background2'
+      }
+      return this.definitionSelected ? 'background2' : 'mappingEntity'
+    },
+    getLastSelectedEntityIcon(){
+      const type = this.lastSelectedEntity['entityType']
+      if (type === 'Face'){
+        return 'mdi-vector-square'
+      } else if (type === 'Edge'){
+        return 'mdi-vector-polyline'
+      } else if (type === 'Group'){
+        return 'mdi-border-outside'
+      } else if (type === 'Component'){
+        return 'mdi-border-inside'
+      } else {
+        return 'mdi-close'
+      }
     }
   },
   methods:{
@@ -119,10 +275,99 @@ export default {
       this.enabledMethods = []
       this.availableCategories = []
       this.selectedEntities = []
+      this.selectionTableData = []
       this.selectedEntityCount = 0
       this.name = ""
       this.selectedMethod = null
       this.selectedCategory = null
+    },
+    getSelectionTableData(){
+      let groupByClass = groupBy('entityType')
+      let groupedByWithKey = groupByClass(this.selectedEntities)
+      this.selectionTableData = Object.entries(groupedByWithKey).map(
+          (entry) => {
+            const [className, entities] = entry
+            return {
+              'entityType': className,
+              'entityIds': entities.map(entity => entity['entityId']),
+              'count': entities !== true ? entities.length : 0,
+              'entities': entities.map((entity) => {
+                return {
+                  'entityId': entity['entityId'],
+                  'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
+                  'isMapped': entity['schema']['category'] !== undefined
+                }
+              }),
+              'mappedCount': entities.filter((entity) => entity['schema']['category'] !== undefined).length
+            }
+          }
+      )
+    },
+    setInputValuesFromSelection(){
+      if (!this.entitySelected){
+        this.name = ""
+        this.selectedMethod = null
+        this.selectedCategory = null
+        return
+      }
+      if (this.definitionSelected) {
+        if (!this.isEntityDefinitionMapped(this.lastSelectedEntity)){
+          this.name = ""
+          this.selectedMethod = null
+          this.selectedCategory = null
+          return
+        }
+        this.selectedMethod = this.lastSelectedEntity['definitionSchema']['method']
+        this.selectedCategory = this.lastSelectedEntity['definitionSchema']['category']
+        this.name = this.lastSelectedEntity['definitionSchema']['name']
+      } else {
+        if (!this.isEntityMapped(this.lastSelectedEntity)){
+          this.name = ""
+          this.selectedMethod = null
+          this.selectedCategory = null
+          return
+        }
+        this.selectedMethod = this.lastSelectedEntity['schema']['method']
+        this.selectedCategory = this.lastSelectedEntity['schema']['category']
+        this.name = this.lastSelectedEntity['schema']['name']
+      }
+
+    },
+    isEntityMapped(entity){
+      return entity['schema']['category'] !== undefined
+    },
+    isEntityDefinitionMapped(entity){
+      return entity['definitionSchema']['category'] !== undefined
+    },
+    definitionSelectedHandler(state){
+      this.definitionSelected = state
+      this.setInputValuesFromSelection()
+    },
+    clickColumn(slotData) {
+      const indexExpanded = this.expanded.findIndex(i => i === slotData.item);
+      if (indexExpanded > -1) {
+        this.expanded.splice(indexExpanded, 1)
+      } else {
+        this.expanded.push(slotData.item);
+      }
+    },
+    applyMapping(){
+      const mapping = {
+        entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
+        method: this.selectedMethod,
+        category:  this.selectedCategory,
+        name: this.name,
+        isDefinition: this.definitionSelected
+      }
+      sketchup.exec({name: "apply_mappings", data: mapping})
+    },
+    clearMapping(){
+      const mapping = {
+        entitiesToClearMap: this.selectedEntities.map((entity) => entity['entityId']),
+        isDefinition: this.definitionSelected
+      }
+      sketchup.exec({name: "clear_mappings", data: mapping})
+      this.clearInputs()
     }
   },
   mounted() {
@@ -132,8 +377,11 @@ export default {
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
+      this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
+      this.getSelectionTableData()
+      this.setInputValuesFromSelection()
     })
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
@@ -145,8 +393,11 @@ export default {
 
 <style scoped>
 .btn-container{
-  justify-content: center;
   display: flex;
   flex-wrap: wrap;
+}
+
+.active .entity {
+  border: 2px solid green;
 }
 </style>

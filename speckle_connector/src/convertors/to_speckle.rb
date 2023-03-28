@@ -46,9 +46,18 @@ module SpeckleConnector
                                      sketchup_model.selection,
                                      [Sketchup::Face, Sketchup::ComponentInstance, Sketchup::Group], [sketchup_model]
                                    )
-        flat_selection_with_path.select do |entities|
-          SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entities[0])
+        mapped_selection = []
+        flat_selection_with_path.each do |entities|
+          entity = entities[0]
+          is_entity_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+          if entity.respond_to?(:definition)
+            is_definition_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity.definition)
+            mapped_selection.append(entities) if is_entity_mapped || is_definition_mapped
+            next
+          end
+          mapped_selection.append(entities) if is_entity_mapped
         end
+        mapped_selection
       end
 
       # Add views from pages.

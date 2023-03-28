@@ -2,6 +2,7 @@
 
 require_relative 'event_action'
 require_relative '../../mapping/category/revit_category'
+require_relative '../../sketchup_model/reader/speckle_entities_reader'
 
 module SpeckleConnector
   module Actions
@@ -13,17 +14,15 @@ module SpeckleConnector
         def self.update_state(state, event_data)
           return state unless event_data&.any?
 
+          sketchup_selection = state.sketchup_state.sketchup_model.selection
           selection = {
-            selection: [
-              { a: 1 },
-              { b: 1 }
-            ],
+            selection: SketchupModel::Reader::SpeckleEntitiesReader.entity_details(sketchup_selection),
             mappingMethods: [
               'Direct Shape'
             ],
-            categories: Mapping::Category::RevitCategory.dictionary.keys.to_a
+            categories: Mapping::Category::RevitCategory.dictionary.collect { |k, v| { key: k, value: v } }.to_a
           }
-          selection = { selection: [], mappingMethods: [], categories: [] } if state.sketchup_state.sketchup_model.selection.none?
+          selection = { selection: [], mappingMethods: [], categories: [] } if sketchup_selection.none?
 
           state.with_selection_queue(selection)
         end
