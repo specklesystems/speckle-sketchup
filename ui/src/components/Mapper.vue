@@ -69,21 +69,22 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <v-container v-if="entitySelected" class="btn-container pa-0">
+          <v-container v-if="entitySelected" class="btn-container pa-0 mb-5">
             <v-card
                 variant="outlined"
-                class="pt-1 px-2 mb-6 mr-2"
-                :color="entityCardColor"
+                class="pt-1 pl-2 mb-1 mr-2 v-alert--border flex"
+                :elevation="entityCardElevation"
+                :outlined="!definitionSelected"
                 :width="entityCardWidth"
-                @click="definitionSelected = false"
+                @click="definitionSelectedHandler(false)"
             >
-              <v-card-title class="pa-0 pb-4">
+              <v-card-title class="pa-0 pb-3">
                 <v-icon class="mr-1">
                   {{getLastSelectedEntityIcon}}
                 </v-icon>
                 {{this.lastSelectedEntity["entityType"]}}
               </v-card-title>
-              <v-card-subtitle class="pb-1 pr-0">
+              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Last selected entity
               </v-card-subtitle>
             </v-card>
@@ -91,18 +92,19 @@
             <v-card
                 v-if=entityHasParent
                 variant="outlined"
-                class="pt-1 px-2 mb-6"
-                :color="definitionSelected ? 'mappingEntity' : 'background2'"
+                :elevation="definitionSelected ? '6' : '1'"
+                :outlined="definitionSelected"
+                class="pt-1 pl-2 mb-1 mr-2 flex"
                 width="160px"
-                @click="definitionSelected = true"
+                @click="definitionSelectedHandler(true)"
             >
-              <v-card-title class="pa-0 pb-4">
+              <v-card-title class="pa-0 pb-3">
                 <v-icon class="mr-1">
                   mdi-atom
                 </v-icon>
                 {{"Definition"}}
               </v-card-title>
-              <v-card-subtitle class="pb-1 pr-0">
+              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Instance definition
               </v-card-subtitle>
             </v-card>
@@ -135,15 +137,36 @@
               :disabled="!entitySelected"
           ></v-text-field>
 
-          <v-btn
-              class="ma-2 pa-3"
-              :disabled="!entitySelected"
-              @click="applyMappings"
-          >
-            <v-icon dark left>
-              mdi-checkbox-marked-circle
-            </v-icon>Apply Mappings
-          </v-btn>
+          <v-container class="pa-0">
+            <v-row justify="center" align="center">
+              <v-col cols="auto" class="pa-1 pb-2">
+                <v-btn
+                    class="pt-1"
+                    :disabled="!entitySelected"
+                    @click="applyMapping"
+                >
+                  <v-icon dark left>
+                    mdi-checkbox-marked-circle
+                  </v-icon>Apply Mapping
+                </v-btn>
+              </v-col>
+              <v-col cols="auto" class="pa-1 pb-2">
+                <v-btn
+                    class="pt-1"
+                    :disabled="!entitySelected"
+                    @click="clearMapping"
+                >
+                  <v-icon dark left>
+                    mdi-close-circle
+                  </v-icon>Clear Mapping
+                </v-btn>
+              </v-col>
+            </v-row>
+
+
+          </v-container>
+
+
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -220,6 +243,12 @@ export default {
         return '330px'
       }
     },
+    entityCardElevation(){
+      if (!this.entityHasParent){
+        return '1'
+      }
+      return this.definitionSelected ? '1' : '6'
+    },
     entityCardColor(){
       if (!this.entityHasParent){
         return 'background2'
@@ -281,18 +310,38 @@ export default {
         this.selectedCategory = null
         return
       }
-      if (!this.isEntityMapped(this.lastSelectedEntity)){
-        this.name = ""
-        this.selectedMethod = null
-        this.selectedCategory = null
-        return
+      if (this.definitionSelected) {
+        if (!this.isEntityDefinitionMapped(this.lastSelectedEntity)){
+          this.name = ""
+          this.selectedMethod = null
+          this.selectedCategory = null
+          return
+        }
+        this.selectedMethod = this.lastSelectedEntity['definitionSchema']['method']
+        this.selectedCategory = this.lastSelectedEntity['definitionSchema']['category']
+        this.name = this.lastSelectedEntity['definitionSchema']['name']
+      } else {
+        if (!this.isEntityMapped(this.lastSelectedEntity)){
+          this.name = ""
+          this.selectedMethod = null
+          this.selectedCategory = null
+          return
+        }
+        this.selectedMethod = this.lastSelectedEntity['schema']['method']
+        this.selectedCategory = this.lastSelectedEntity['schema']['category']
+        this.name = this.lastSelectedEntity['schema']['name']
       }
-      this.selectedMethod = this.lastSelectedEntity['schema']['method']
-      this.selectedCategory = this.lastSelectedEntity['schema']['category']
-      this.name = this.lastSelectedEntity['schema']['name']
+
     },
     isEntityMapped(entity){
       return entity['schema']['category'] !== undefined
+    },
+    isEntityDefinitionMapped(entity){
+      return entity['definitionSchema']['category'] !== undefined
+    },
+    definitionSelectedHandler(state){
+      this.definitionSelected = state
+      this.setInputValuesFromSelection()
     },
     clickColumn(slotData) {
       const indexExpanded = this.expanded.findIndex(i => i === slotData.item);
