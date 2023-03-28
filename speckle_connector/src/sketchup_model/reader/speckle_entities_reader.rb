@@ -65,7 +65,8 @@ module SpeckleConnector
               entityName: entity.respond_to?(:name) ? entity.name : '',
               entityId: entity.persistent_id,
               entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
-              schema: speckle_schema
+              schema: speckle_schema,
+              definitionSchema: entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
             }
           end
         end
