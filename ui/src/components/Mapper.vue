@@ -302,7 +302,7 @@ export default {
         this.expanded.push(slotData.item);
       }
     },
-    applyMappings(){
+    applyMapping(){
       const mapping = {
         entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
         method: this.selectedMethod,
@@ -311,6 +311,14 @@ export default {
         isDefinition: this.definitionSelected
       }
       sketchup.exec({name: "apply_mappings", data: mapping})
+    },
+    clearMapping(){
+      const mapping = {
+        entitiesToClearMap: this.selectedEntities.map((entity) => entity['entityId']),
+        isDefinition: this.definitionSelected
+      }
+      sketchup.exec({name: "clear_mappings", data: mapping})
+      this.clearInputs()
     }
   },
   mounted() {
