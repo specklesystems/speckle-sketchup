@@ -13,6 +13,7 @@ module SpeckleConnector
       # Reader module for speckle entities.
       module SpeckleEntitiesReader
         # @param entities [Sketchup::Entities] entities to collect speckle entities.
+        # @return [Hash{String=>Sketchup::Entity}] speckle entities with persistent id.
         def self.read(entities)
           speckle_entities = {}
           entities.each do |entity|
@@ -26,6 +27,16 @@ module SpeckleConnector
             speckle_entities = speckle_entities.merge(definition_speckle_entities)
           end
           speckle_entities
+        end
+
+        # @param entities [Sketchup::Entities] entities to collect mapped entities.
+        # @return [Hash{String=>Sketchup::Entity}] mapped entities with persistent id.
+        def self.read_mapped_entities(entities)
+          mapped_entities = {}
+          Query::Entity.flat_entities(entities).each do |entity|
+            mapped_entities[entity.persistent_id] = entity if mapped_with_schema?(entity)
+          end
+          mapped_entities
         end
 
         # @param entity [Sketchup::Entity] sketchup entity to read from attribute dictionary.

@@ -28,6 +28,9 @@ module SpeckleConnector
         # Read speckle entities
         new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
         new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
+        # Read mapped entities
+        new_mapped_entities = SketchupModel::Reader::SpeckleEntitiesReader.read_mapped_entities(sketchup_model.entities)
+        new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
         new_state = new_state.with_speckle_state(new_speckle_state)
 
         # Read preferences from database and model.
