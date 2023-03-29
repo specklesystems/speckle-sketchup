@@ -185,6 +185,8 @@
       </v-expansion-panel>
 
     </v-expansion-panels>
+
+    <global-toast />
   </v-container>
 </template>
 
@@ -203,6 +205,9 @@ global.entitiesDeselected = function () {
 
 export default {
   name: "Mapper",
+  components: {
+    GlobalToast: () => import('@/components/GlobalToast')
+  },
   data() {
     return {
       expanded: [],
@@ -352,6 +357,12 @@ export default {
       }
     },
     applyMapping(){
+      if (this.selectedMethod === null || this.selectedCategory === null){
+        this.$eventHub.$emit('error', {
+          text: 'Method and category are not set.\n'
+        })
+        return
+      }
       const mapping = {
         entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
         method: this.selectedMethod,
@@ -360,6 +371,9 @@ export default {
         isDefinition: this.definitionSelected
       }
       sketchup.exec({name: "apply_mappings", data: mapping})
+      this.$eventHub.$emit('success', {
+        text: 'Mapping Applied.\n'
+      })
     },
     clearMapping(){
       const mapping = {
@@ -368,6 +382,9 @@ export default {
       }
       sketchup.exec({name: "clear_mappings", data: mapping})
       this.clearInputs()
+      this.$eventHub.$emit('error', {
+        text: 'Mapping Cleared.\n'
+      })
     }
   },
   mounted() {
