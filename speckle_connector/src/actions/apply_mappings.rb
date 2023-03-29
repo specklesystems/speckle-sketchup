@@ -20,7 +20,13 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        entity = state.sketchup_state.sketchup_model.entities.find { |e| e.persistent_id == @entities_to_map.first }
+        sketchup_model = state.sketchup_state.sketchup_model
+        entities = if sketchup_model.active_path.nil?
+                     sketchup_model.entities
+                   else
+                     sketchup_model.active_path.last.definition.entities
+                   end
+        entity = entities.find { |e| e.persistent_id == @entities_to_map.first }
         if @is_definition && (entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance))
           entity = entity.definition
         end
