@@ -27,7 +27,7 @@ module SpeckleConnector
 
           def self.from_entity(entity, path, units, preferences)
             schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
-            if entity.respond_to?(:definition)
+            if schema.nil? && entity.respond_to?(:definition)
               schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity.definition)
             end
             entities = []
