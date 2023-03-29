@@ -3,6 +3,7 @@
 require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
+require_relative '../../sketchup_model/query/entity'
 require_relative '../../convertors/clean_up'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
@@ -237,6 +238,41 @@ module SpeckleConnector
             points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
           end
           points
+        end
+
+        # Mesh group id helps to determine how to group faces into meshes.
+        # @param face [Sketchup::Face] face to get mesh group id.
+        def self.get_mesh_group_id(face, model_preferences, face_path = nil)
+          if model_preferences[:include_entity_attributes] &&
+             model_preferences[:include_face_entity_attributes] &&
+             attribute_dictionary?(face)
+            return face.persistent_id.to_s
+          end
+
+          material = face.material || face.back_material
+          return 'none' if material.nil? && face_path.nil?
+
+          material = SketchupModel::Query::Entity.parent_material(face_path) unless face_path.nil?
+          return 'none' if material.nil?
+
+          return material.entityID.to_s
+        end
+
+        def self.attribute_dictionary?(face)
+          any_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
+          return any_attribute_dictionary unless any_attribute_dictionary
+
+          # If there are any attribute dictionary, then make sure that they are not ignored ones.
+          all_attribute_dictionary_ignored = face.attribute_dictionaries.all? do |dict|
+            ignored_dictionaries.include?(dict.name)
+          end
+          !all_attribute_dictionary_ignored
+        end
+
+        def self.ignored_dictionaries
+          [
+            'Speckle_Base_Object'
+          ]
         end
       end
     end

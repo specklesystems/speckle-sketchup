@@ -26,10 +26,6 @@ module SpeckleConnector
             self[:baseGeometries] = base_geometries
           end
 
-          # rubocop:disable Metrics/AbcSize
-          # rubocop:disable Metrics/CyclomaticComplexity
-          # rubocop:disable Metrics/MethodLength
-          # rubocop:disable Metrics/PerceivedComplexity
           def self.from_entity(entity, path, units, preferences)
             schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
             if schema.nil? && entity.respond_to?(:definition)
@@ -39,38 +35,42 @@ module SpeckleConnector
             entities_with_path.append([entity] + path) if entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)
             # Collect here flat list
             if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
-              # entities.append(entity)
               entities_with_path += SketchupModel::Query::Entity
                                     .flat_entities_with_path(
-                                      entity.definition.entities,
-                                      [Sketchup::Face], path.append(entity)
+                                      entity.definition.entities, [Sketchup::Face], path.append(entity)
                                     )
             end
-            base_geometries = []
-            entities_with_path.each do |entity_with_path|
-              e = entity_with_path[0]
-              entity_path = entity_with_path[1..-1]
-              # next if entity.is_a?(Sketchup::Edge) && entity.faces.any?
-              next unless e.is_a?(Sketchup::Face)
-
-              mesh = SpeckleObjects::Geometry::Mesh
-                     .from_face(face: e, units: units, model_preferences: preferences[:model],
-                                global_transform: SketchupModel::Query::Entity.global_transformation(e, entity_path),
-                                parent_material: SketchupModel::Query::Entity.parent_material(entity_path))
-              base_geometries.append(mesh)
-            end
+            base_geometries = group_faces_under_mesh_by_material(entities_with_path, units, preferences)
             DirectShape.new(
-              name: schema[:name],
-              category: schema[:category],
-              units: units,
-              base_geometries: base_geometries,
-              application_id: entity.persistent_id
+              name: schema[:name], category: schema[:category], units: units,
+              base_geometries: base_geometries, application_id: entity.persistent_id
             )
           end
-          # rubocop:enable Metrics/AbcSize
-          # rubocop:enable Metrics/CyclomaticComplexity
-          # rubocop:enable Metrics/MethodLength
-          # rubocop:enable Metrics/PerceivedComplexity
+
+          def self.group_faces_under_mesh_by_material(faces_with_path, units, preferences)
+            mesh_groups = {}
+            faces_with_path.each do |face_with_path|
+              face = face_with_path[0]
+              entity_path = face_with_path[1..-1]
+              mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model], entity_path)
+
+              if mesh_groups.key?(mesh_group_id)
+                mesh_group = mesh_groups[mesh_group_id]
+                mesh_group[0].face_to_mesh(face, SketchupModel::Query::Entity.global_transformation(face, entity_path))
+                mesh_group[1].append(face)
+              else
+                mesh = Geometry::Mesh.from_face(
+                  face: face, units: units, model_preferences: preferences[:model],
+                  global_transform: SketchupModel::Query::Entity.global_transformation(face, entity_path),
+                  parent_material: SketchupModel::Query::Entity.parent_material(entity_path)
+                )
+                mesh_groups[mesh_group_id] = [mesh, [face]]
+              end
+            end
+            # Update mesh overwrites points and polygons into base object.
+            mesh_groups.each { |_, mesh| mesh.first.update_mesh }
+            mesh_groups.values
+          end
         end
       end
     end
