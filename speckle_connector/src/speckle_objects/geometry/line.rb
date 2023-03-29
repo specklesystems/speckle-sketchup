@@ -87,7 +87,6 @@ module SpeckleConnector
 
         def self.test_line(start_point, end_point, units)
           domain = Primitive::Interval.from_numeric(0, 5, units)
-          bbox = Geometry::BoundingBox.test_bounds(units)
           Line.new(
             start_pt: start_point,
             end_pt: end_point,

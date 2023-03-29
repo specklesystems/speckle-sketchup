@@ -26,6 +26,10 @@ module SpeckleConnector
             self[:baseGeometries] = base_geometries
           end
 
+          # rubocop:disable Metrics/AbcSize
+          # rubocop:disable Metrics/CyclomaticComplexity
+          # rubocop:disable Metrics/MethodLength
+          # rubocop:disable Metrics/PerceivedComplexity
           def self.from_entity(entity, path, units, preferences)
             schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
             if schema.nil? && entity.respond_to?(:definition)
@@ -63,6 +67,10 @@ module SpeckleConnector
               application_id: entity.persistent_id
             )
           end
+          # rubocop:enable Metrics/AbcSize
+          # rubocop:enable Metrics/CyclomaticComplexity
+          # rubocop:enable Metrics/MethodLength
+          # rubocop:enable Metrics/PerceivedComplexity
         end
       end
     end

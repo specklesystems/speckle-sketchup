@@ -3,6 +3,7 @@
 module SpeckleConnector
   module Mapping
     module Category
+      # Revit categories.
       class RevitCategory < Hash
         class << self
           # rubocop:disable Metrics/MethodLength
