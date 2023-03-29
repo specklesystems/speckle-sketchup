@@ -108,17 +108,17 @@ module SpeckleConnector
         # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
         #  into any component.
         # rubocop:disable Style/MultilineTernaryOperator
-        def self.from_face(face, units, model_preferences, global_transform = nil)
+        def self.from_face(face:, units:, model_preferences:, global_transform: nil, parent_material: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(face)
+          material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(
             units: units,
-            render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
-                                                          .from_material(face.material || face.back_material),
+            render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
             vertices: [],
             faces: [],
             sketchup_attributes: att,
