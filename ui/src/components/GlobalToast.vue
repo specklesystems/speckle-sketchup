@@ -34,6 +34,13 @@ export default {
     }
   },
   mounted() {
+    this.$eventHub.$on('success', (args) => {
+      this.snack = true
+      this.color = "green"
+      this.text = args.text
+      this.actionName = args.action ? args.action.name : null
+      this.url = args.action ? args.action.url : null
+    })
     this.$eventHub.$on('notification', (args) => {
       this.snack = true
       this.color = "primary"

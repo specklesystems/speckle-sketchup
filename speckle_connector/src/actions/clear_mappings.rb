@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'action'
+require_relative 'mapped_entities_updated'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
@@ -20,10 +21,9 @@ module SpeckleConnector
         if @is_definition && (entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance))
           entity = entity.definition
         end
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :category)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :name)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :method)
-        state
+        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.remove_dictionary(entity)
+        new_speckle_state = state.speckle_state.with_removed_mapped_entity(entity)
+        MappedEntitiesUpdated.update_state(state.with_speckle_state(new_speckle_state))
       end
     end
   end

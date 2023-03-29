@@ -121,6 +121,18 @@ module SpeckleConnector
             }.freeze
           end
           # rubocop:enable Metrics/MethodLength
+
+          def reverse_dictionary
+            dictionary.collect { |k, v| [v, k] }.to_h
+          end
+
+          def to_a
+            dictionary.collect { |k, v| { key: k, value: v } }.to_a
+          end
+
+          def reverse_to_a
+            dictionary.collect { |k, v| { key: v, value: k } }.to_a
+          end
         end
       end
     end

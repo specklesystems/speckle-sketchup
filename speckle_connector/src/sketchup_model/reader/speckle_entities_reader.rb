@@ -2,6 +2,7 @@
 
 require_relative '../dictionary/speckle_schema_dictionary_handler'
 require_relative '../../speckle_entities/speckle_entity'
+require_relative '../../mapping/category/revit_category'
 require_relative '../../constants/dict_constants'
 
 module SpeckleConnector
@@ -57,11 +58,29 @@ module SpeckleConnector
           Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
         end
 
-        def self.entity_details(entities)
+        def self.entity_schema_details(entities)
           entities.collect do |entity|
             speckle_schema = get_schema(entity)
             {
               name: speckle_schema['name'],
+              entityName: entity.respond_to?(:name) ? entity.name : '',
+              entityId: entity.persistent_id,
+              entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
+              schema: speckle_schema,
+              definitionSchema: entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
+            }
+          end
+        end
+
+        def self.mapped_entity_details(entities)
+          reverse_category_dictionary = Mapping::Category::RevitCategory.reverse_dictionary
+          entities.collect do |entity|
+            speckle_schema = get_schema(entity)
+            {
+              name: speckle_schema['name'],
+              category: speckle_schema['category'],
+              categoryName: reverse_category_dictionary[speckle_schema['category']],
+              method: speckle_schema['method'],
               entityName: entity.respond_to?(:name) ? entity.name : '',
               entityId: entity.persistent_id,
               entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,

@@ -53,6 +53,12 @@ module SpeckleConnector
           dictionary.delete_key(key)
         end
 
+        # @param entity [Sketchup::Entity] the sketchup entity of Speckle object
+        # @param dictionary_name [String, Symbol] the name of the attribute dictionary to remove
+        def self.remove_dictionary(entity, dictionary_name = self.dictionary_name)
+          entity.attribute_dictionaries.delete(dictionary_name)
+        end
+
         # @return [String] the name of the dictionary to read from
         def self.dictionary_name
           raise NotImplementedError 'Implement this in subclass'
