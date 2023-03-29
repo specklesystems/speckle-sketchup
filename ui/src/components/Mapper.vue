@@ -23,7 +23,7 @@
               disable-pagination
               hide-default-footer
               item-key="entityType"
-              :expanded.sync="expanded"
+              :expanded.sync="selectionExpandedIndexes"
               :headers="selectionHeaders"
               :items="selectionTableData"
               :mobile-breakpoint="0"
@@ -52,7 +52,7 @@
               </td>
             </template>
             <template v-slot:item.entityType="slotData">
-              <div @click="clickColumn(slotData)">{{ slotData.item.entityType }}</div>
+              <div @click="clickSelectionColumn(slotData)">{{ slotData.item.entityType }}</div>
             </template>
           </v-data-table>
 
@@ -180,7 +180,40 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          {{"test"}}
+          <v-data-table
+              class="elevation-1"
+              dense
+              expand
+              disable-filtering
+              disable-pagination
+              hide-default-footer
+              item-key="categoryName"
+              :expanded.sync="mappedElementsExpandedIndexes"
+              :headers="mappedElementsHeaders"
+              :items="mappedEntitiesTableData"
+              :mobile-breakpoint="0"
+          >
+            <template v-slot:expanded-item="{ headers, item }">
+              <td :colspan="headers.length" class="pl-2 pr-0">
+                <v-data-table
+                    v-model="selectedRows"
+                    class="elevation-0 pa-0 ma-0"
+                    dense
+                    disable-filtering
+                    disable-pagination
+                    hide-default-footer
+                    item-key="entityId"
+                    :headers="subMappedElementsHeaders"
+                    :items="item.entities"
+                    :mobile-breakpoint="0"
+                >
+                </v-data-table>
+              </td>
+            </template>
+            <template v-slot:item.categoryName="slotData">
+              <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
+            </template>
+          </v-data-table>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -203,6 +236,10 @@ global.entitiesDeselected = function () {
   bus.$emit('entities-deselected')
 }
 
+global.mappedEntitiesUpdated = function (mappedEntities) {
+  bus.$emit('mapped-entities-updated', mappedEntities)
+}
+
 export default {
   name: "Mapper",
   components: {
@@ -210,7 +247,8 @@ export default {
   },
   data() {
     return {
-      expanded: [],
+      selectionExpandedIndexes: [],
+      mappedElementsExpandedIndexes: [],
       selectedRows: [],
       definitionSelected: false,
       entitySelected: false,
@@ -234,7 +272,16 @@ export default {
         { text: 'Name/Id', sortable: false, value: 'nameOrId', width: '80%' },
         { text: 'Mapped', sortable: false, align: 'center', value: 'isMapped', width: '20%' },
       ],
-      selectionTableData: []
+      mappedElementsHeaders: [
+        { text: 'Category', sortable: false, value: 'categoryName', width: '80%' },
+        { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' }
+      ],
+      subMappedElementsHeaders: [
+        { text: 'Type', sortable: false, value: 'entityType', width: '80%' },
+        { text: 'Name/Id', sortable: false, align: 'center', value: 'nameOrId', width: '20%' },
+      ],
+      selectionTableData: [],
+      mappedEntitiesTableData: [],
     }
   },
   computed:{
@@ -285,6 +332,26 @@ export default {
       this.name = ""
       this.selectedMethod = null
       this.selectedCategory = null
+    },
+    getMappedElementsTableData(){
+      let groupByCategoryName = groupBy('categoryName')
+      let groupedByCategoryName = groupByCategoryName(this.mappedEntities)
+      this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
+          (entry) => {
+            const [categoryName, entities] = entry
+            return {
+              'categoryName': categoryName,
+              'count': entities !== true ? entities.length : 0,
+              'entities': entities.map((entity) => {
+                return {
+                  'entityId': entity['entityId'],
+                  'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
+                  'entityType': entity['entityType']
+                }
+              })
+            }
+          }
+      )
     },
     getSelectionTableData(){
       let groupByClass = groupBy('entityType')
@@ -348,12 +415,20 @@ export default {
       this.definitionSelected = state
       this.setInputValuesFromSelection()
     },
-    clickColumn(slotData) {
-      const indexExpanded = this.expanded.findIndex(i => i === slotData.item);
+    clickSelectionColumn(slotData) {
+      const indexExpanded = this.selectionExpandedIndexes.findIndex(i => i === slotData.item);
       if (indexExpanded > -1) {
-        this.expanded.splice(indexExpanded, 1)
+        this.selectionExpandedIndexes.splice(indexExpanded, 1)
       } else {
-        this.expanded.push(slotData.item);
+        this.selectionExpandedIndexes.push(slotData.item);
+      }
+    },
+    clickMappedElementsColumn(slotData) {
+      const indexExpanded = this.mappedElementsExpandedIndexes.findIndex(i => i === slotData.item);
+      if (indexExpanded > -1) {
+        this.mappedElementsExpandedIndexes.splice(indexExpanded, 1)
+      } else {
+        this.mappedElementsExpandedIndexes.push(slotData.item);
       }
     },
     applyMapping(){
@@ -403,6 +478,11 @@ export default {
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
       this.clearInputs()
+    })
+    bus.$on('mapped-entities-updated', async (mappedEntities) => {
+      this.mappedEntityCount = mappedEntities.length
+      this.mappedEntities = mappedEntities
+      this.getMappedElementsTableData()
     })
   }
 }
