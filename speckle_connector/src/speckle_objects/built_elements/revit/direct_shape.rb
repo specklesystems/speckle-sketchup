@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../base'
+require_relative '../../other/render_material'
 require_relative '../../../constants/type_constants'
 require_relative '../../../sketchup_model/query/entity'
 
@@ -30,21 +31,28 @@ module SpeckleConnector
             if schema.nil? && entity.respond_to?(:definition)
               schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity.definition)
             end
-            entities = []
-            entities.append(entity) if entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)
+            entities_with_path = []
+            entities_with_path.append([entity] + path) if entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)
             # Collect here flat list
             if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
               # entities.append(entity)
-              entities += SketchupModel::Query::Entity.flat_entities(entity.definition.entities, [Sketchup::Face])
+              entities_with_path += SketchupModel::Query::Entity
+                                    .flat_entities_with_path(
+                                      entity.definition.entities,
+                                      [Sketchup::Face], path.append(entity)
+                                    )
             end
             base_geometries = []
-            entities.each do |e|
+            entities_with_path.each do |entity_with_path|
+              e = entity_with_path[0]
+              entity_path = entity_with_path[1..-1]
               # next if entity.is_a?(Sketchup::Edge) && entity.faces.any?
               next unless e.is_a?(Sketchup::Face)
 
               mesh = SpeckleObjects::Geometry::Mesh
-                     .from_face(e, units, preferences[:model],
-                                SketchupModel::Query::Entity.global_transformation(entity, path))
+                     .from_face(face: e, units: units, model_preferences: preferences[:model],
+                                global_transform: SketchupModel::Query::Entity.global_transformation(e, entity_path),
+                                parent_material: SketchupModel::Query::Entity.parent_material(entity_path))
               base_geometries.append(mesh)
             end
             DirectShape.new(
