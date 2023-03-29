@@ -56,7 +56,7 @@ module SpeckleConnector
           # TODO: Solve logic
           geometry = if definition.entities[0].is_a?(Sketchup::Edge) || definition.entities[0].is_a?(Sketchup::Face)
                        new_speckle_state, geo = group_entities_to_speckle(
-                         definition, preferences, speckle_state, parent, &convert
+                         definition.entities, preferences, speckle_state, parent, &convert
                        )
                        speckle_state = new_speckle_state
                        geo
@@ -144,21 +144,21 @@ module SpeckleConnector
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
-        def self.group_entities_to_speckle(definition, preferences, speckle_state, parent, &convert)
-          orphan_edges = definition.entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
+        def self.group_entities_to_speckle(entities, preferences, speckle_state, parent, &convert)
+          orphan_edges = entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
             new_speckle_state, converted = convert.call(orphan_edge, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
           end
 
-          nested_blocks = definition.entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
+          nested_blocks = entities.grep(Sketchup::ComponentInstance).collect do |component_instance|
             new_speckle_state, converted = convert.call(component_instance, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
           end
 
-          nested_groups = definition.entities.grep(Sketchup::Group).collect do |group|
+          nested_groups = entities.grep(Sketchup::Group).collect do |group|
             new_speckle_state, converted = convert.call(group, preferences, speckle_state, parent)
             speckle_state = new_speckle_state
             converted
@@ -166,7 +166,7 @@ module SpeckleConnector
 
           if preferences[:model][:combine_faces_by_material]
             mesh_groups = {}
-            definition.entities.grep(Sketchup::Face).collect do |face|
+            entities.grep(Sketchup::Face).collect do |face|
               next unless SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(face).nil?
 
               new_speckle_state = group_meshes_by_material(
@@ -180,7 +180,7 @@ module SpeckleConnector
             return speckle_state, lines + nested_blocks + nested_groups + mesh_groups.values
           else
             meshes = []
-            definition.entities.grep(Sketchup::Face).collect do |face|
+            entities.grep(Sketchup::Face).collect do |face|
               new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
               meshes.append(converted)
               speckle_state = new_speckle_state
@@ -197,7 +197,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/ParameterLists
         def self.group_meshes_by_material(face, mesh_groups, speckle_state, preferences, parent, &convert)
           # convert material
-          mesh_group_id = get_mesh_group_id(face, preferences[:model])
+          mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model])
           new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
           mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
           mesh_group = mesh_groups[mesh_group_id]
@@ -207,37 +207,7 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
-        # Mesh group id helps to determine how to group faces into meshes.
-        # @param face [Sketchup::Face] face to get mesh group id.
-        def self.get_mesh_group_id(face, model_preferences)
-          if model_preferences[:include_entity_attributes] &&
-             model_preferences[:include_face_entity_attributes] &&
-             attribute_dictionary?(face)
-            return face.persistent_id.to_s
-          end
 
-          material = face.material || face.back_material
-          return 'none' if material.nil?
-
-          return material.entityID.to_s
-        end
-
-        def self.attribute_dictionary?(face)
-          any_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
-          return any_attribute_dictionary unless any_attribute_dictionary
-
-          # If there are any attribute dictionary, then make sure that they are not ignored ones.
-          all_attribute_dictionary_ignored = face.attribute_dictionaries.all? do |dict|
-            ignored_dictionaries.include?(dict.name)
-          end
-          !all_attribute_dictionary_ignored
-        end
-
-        def self.ignored_dictionaries
-          [
-            'Speckle_Base_Object'
-          ]
-        end
       end
     end
   end
