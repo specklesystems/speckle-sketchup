@@ -147,7 +147,7 @@
                 >
                   <v-icon dark left>
                     mdi-checkbox-marked-circle
-                  </v-icon>Apply Mapping
+                  </v-icon>Apply
                 </v-btn>
               </v-col>
               <v-col cols="auto" class="pa-1 pb-2">
@@ -158,7 +158,7 @@
                 >
                   <v-icon dark left>
                     mdi-close-circle
-                  </v-icon>Clear Mapping
+                  </v-icon>Clear
                 </v-btn>
               </v-col>
             </v-row>
