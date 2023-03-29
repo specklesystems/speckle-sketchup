@@ -23,6 +23,7 @@ require_relative '../actions/init_local_accounts'
 require_relative '../actions/collect_preferences'
 require_relative '../actions/deactivate_diffing'
 require_relative '../actions/collect_versions'
+require_relative '../actions/mapped_entities_updated'
 
 module SpeckleConnector
   module Ui
@@ -76,7 +77,8 @@ module SpeckleConnector
           activate_diffing: Commands::ActivateDiffing.new(@app),
           deactivate_diffing: Commands::ActionCommand.new(@app, Actions::DeactivateDiffing),
           apply_mappings: Commands::ApplyMappings.new(@app),
-          clear_mappings: Commands::ClearMappings.new(@app)
+          clear_mappings: Commands::ClearMappings.new(@app),
+          collect_mapped_entities: Commands::ActionCommand.new(@app, Actions::MappedEntitiesUpdated)
         }.freeze
       end
     end
