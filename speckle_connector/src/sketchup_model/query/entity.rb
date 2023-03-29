@@ -91,6 +91,16 @@ module SpeckleConnector
             end
             instances.first
           end
+
+          # Finds first material of parents from bottom to top.
+          def parent_material(path)
+            material = nil
+            path.reverse.each do |local|
+              material = local.material if local.respond_to?(:material)
+              return material unless material.nil?
+            end
+            material
+          end
         end
       end
     end

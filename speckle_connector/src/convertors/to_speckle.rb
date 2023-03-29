@@ -144,7 +144,8 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::Face)
-          mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: @units,
+                                                          model_preferences: preferences[:model])
           return speckle_state, [mesh, [entity]]
         end
 
