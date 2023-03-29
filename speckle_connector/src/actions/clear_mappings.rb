@@ -20,9 +20,8 @@ module SpeckleConnector
         if @is_definition && (entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance))
           entity = entity.definition
         end
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :category)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :name)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.delete_key(entity, :method)
+        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.remove_dictionary(entity)
+
         state
       end
     end
