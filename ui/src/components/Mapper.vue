@@ -31,7 +31,6 @@
             <template v-slot:expanded-item="{ headers, item }">
               <td :colspan="headers.length" class="pl-2 pr-0">
                 <v-data-table
-                    v-model="selectedRows"
                     class="elevation-0 pa-0 ma-0"
                     dense
                     disable-filtering
@@ -79,14 +78,19 @@
                 @click="definitionSelectedHandler(false)"
             >
               <v-card-title class="pa-0 pb-3">
-                <v-icon class="mr-1">
+                <v-icon class="mr-1 v-bottom-navigation--absolute">
                   {{getLastSelectedEntityIcon}}
                 </v-icon>
                 {{this.lastSelectedEntity["entityType"]}}
+                <v-spacer></v-spacer>
+                <v-icon v-if="entityMapped" class="mr-n2 mt-n6" color="green">
+                  mdi-checkbox-marked-circle
+                </v-icon>
               </v-card-title>
               <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Last selected entity
               </v-card-subtitle>
+
             </v-card>
 
             <v-card
@@ -103,6 +107,10 @@
                   mdi-atom
                 </v-icon>
                 {{"Definition"}}
+                <v-spacer></v-spacer>
+                <v-icon v-if="definitionMapped" class="mr-n2 mt-n6" color="green">
+                  mdi-checkbox-marked-circle
+                </v-icon>
               </v-card-title>
               <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Instance definition
@@ -117,6 +125,7 @@
               :disabled="!entitySelected"
               :items="enabledMethods"
               density="compact"
+              clearable
           ></v-autocomplete>
 
           <v-autocomplete
@@ -128,6 +137,7 @@
               item-text="key"
               :disabled="!entitySelected"
               density="compact"
+              clearable
           ></v-autocomplete>
 
           <v-text-field
@@ -135,6 +145,7 @@
               class="pt-0"
               label="Name"
               :disabled="!entitySelected"
+              clearable
           ></v-text-field>
 
           <v-container class="pa-0">
@@ -196,7 +207,6 @@
             <template v-slot:expanded-item="{ headers, item }">
               <td :colspan="headers.length" class="pl-2 pr-0">
                 <v-data-table
-                    v-model="selectedRows"
                     class="elevation-0 pa-0 ma-0"
                     dense
                     disable-filtering
@@ -247,10 +257,17 @@ export default {
   },
   data() {
     return {
+      // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
+      // Expanded indexes for mapped element table (Categories)
       mappedElementsExpandedIndexes: [],
-      selectedRows: [],
+      // Whether definition card is selected to map or not.
       definitionSelected: false,
+      // Initial entity (Group, Instance, Face, Edge) that mapped or not
+      entityMapped: false,
+      // Definition of entity is mapped, it will be available for only Instances.
+      definitionMapped: false,
+      // Whether an entity is selected or not.
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
@@ -286,7 +303,7 @@ export default {
   },
   computed:{
     entityHasParent(){
-      return this.lastSelectedEntity['entityType'] === 'Component' || this.lastSelectedEntity['entityType'] === 'Group'
+      return this.lastSelectedEntity['entityType'] === 'Component'
     },
     entityCardWidth(){
       if (this.entityHasParent){
@@ -332,6 +349,8 @@ export default {
       this.name = ""
       this.selectedMethod = null
       this.selectedCategory = null
+      this.entityMapped = false
+      this.definitionMapped = false
     },
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
@@ -345,7 +364,7 @@ export default {
               'entities': entities.map((entity) => {
                 return {
                   'entityId': entity['entityId'],
-                  'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
+                  'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
                   'entityType': entity['entityType']
                 }
               })
@@ -367,7 +386,7 @@ export default {
                 return {
                   'entityId': entity['entityId'],
                   'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
-                  'isMapped': entity['schema']['category'] !== undefined
+                  'isMapped': this.isEntityMapped(entity) || this.isEntityDefinitionMapped(entity)
                 }
               }),
               'mappedCount': entities.filter((entity) => entity['schema']['category'] !== undefined).length
@@ -383,20 +402,20 @@ export default {
         return
       }
       if (this.definitionSelected) {
-        if (!this.isEntityDefinitionMapped(this.lastSelectedEntity)){
-          this.name = ""
-          this.selectedMethod = null
-          this.selectedCategory = null
+        if (!this.definitionMapped){
+          this.name = this.lastSelectedEntity['definition']['entityName']
+          this.selectedMethod = 'Direct Shape'
+          this.selectedCategory = 49
           return
         }
-        this.selectedMethod = this.lastSelectedEntity['definitionSchema']['method']
-        this.selectedCategory = this.lastSelectedEntity['definitionSchema']['category']
-        this.name = this.lastSelectedEntity['definitionSchema']['name']
+        this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
+        this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
+        this.name = this.lastSelectedEntity['definition']['schema']['name']
       } else {
-        if (!this.isEntityMapped(this.lastSelectedEntity)){
-          this.name = ""
-          this.selectedMethod = null
-          this.selectedCategory = null
+        if (!this.entityMapped){
+          this.name = this.lastSelectedEntity['entityName']
+          this.selectedMethod = 'Direct Shape'
+          this.selectedCategory = 49
           return
         }
         this.selectedMethod = this.lastSelectedEntity['schema']['method']
@@ -409,7 +428,10 @@ export default {
       return entity['schema']['category'] !== undefined
     },
     isEntityDefinitionMapped(entity){
-      return entity['definitionSchema']['category'] !== undefined
+      if (entity['definition'] === undefined){
+        return false
+      }
+      return entity['definition']['schema']['category'] !== undefined
     },
     definitionSelectedHandler(state){
       this.definitionSelected = state
@@ -466,12 +488,14 @@ export default {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
 
     bus.$on('entities-selected', async (selectionParameters) => {
-      this.entitySelected = true
       const selectionPars = JSON.parse(selectionParameters)
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
+      this.entityMapped = this.isEntityMapped(this.lastSelectedEntity)
+      this.definitionMapped = this.isEntityDefinitionMapped(this.lastSelectedEntity)
+      this.definitionSelected = !this.entityMapped && this.definitionMapped
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
       this.getSelectionTableData()
@@ -499,4 +523,5 @@ export default {
 .active .entity {
   border: 2px solid green;
 }
+
 </style>

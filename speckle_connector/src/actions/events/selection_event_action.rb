@@ -17,7 +17,7 @@ module SpeckleConnector
 
           sketchup_selection = state.sketchup_state.sketchup_model.selection
           selection = {
-            selection: SketchupModel::Reader::SpeckleEntitiesReader.entity_schema_details(sketchup_selection),
+            selection: SketchupModel::Reader::SpeckleEntitiesReader.entities_schema_details(sketchup_selection),
             mappingMethods: [
               'Direct Shape'
             ],

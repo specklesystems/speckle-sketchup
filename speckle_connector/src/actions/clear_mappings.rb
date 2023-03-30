@@ -2,6 +2,7 @@
 
 require_relative 'action'
 require_relative 'mapped_entities_updated'
+require_relative 'events/selection_event_action'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
@@ -29,7 +30,8 @@ module SpeckleConnector
         end
         SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.remove_dictionary(entity)
         new_speckle_state = state.speckle_state.with_removed_mapped_entity(entity)
-        MappedEntitiesUpdated.update_state(state.with_speckle_state(new_speckle_state))
+        new_state = MappedEntitiesUpdated.update_state(state.with_speckle_state(new_speckle_state))
+        Events::SelectionEventAction.update_state(new_state, { clear: true })
       end
     end
   end
