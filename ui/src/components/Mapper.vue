@@ -463,7 +463,6 @@ export default {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
 
     bus.$on('entities-selected', async (selectionParameters) => {
-      this.entitySelected = true
       const selectionPars = JSON.parse(selectionParameters)
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
