@@ -83,7 +83,7 @@
                 </v-icon>
                 {{this.lastSelectedEntity["entityType"]}}
                 <v-spacer></v-spacer>
-                <v-icon v-if="entityMapped" class="mr-n2 mt-n6">
+                <v-icon v-if="entityMapped" class="mr-n2 mt-n6" color="green">
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
@@ -108,7 +108,7 @@
                 </v-icon>
                 {{"Definition"}}
                 <v-spacer></v-spacer>
-                <v-icon v-if="definitionMapped" class="mr-n2 mt-n6">
+                <v-icon v-if="definitionMapped" class="mr-n2 mt-n6" color="green">
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
@@ -125,6 +125,7 @@
               :disabled="!entitySelected"
               :items="enabledMethods"
               density="compact"
+              clearable
           ></v-autocomplete>
 
           <v-autocomplete
@@ -136,6 +137,7 @@
               item-text="key"
               :disabled="!entitySelected"
               density="compact"
+              clearable
           ></v-autocomplete>
 
           <v-text-field
@@ -143,6 +145,7 @@
               class="pt-0"
               label="Name"
               :disabled="!entitySelected"
+              clearable
           ></v-text-field>
 
           <v-container class="pa-0">
@@ -361,7 +364,7 @@ export default {
               'entities': entities.map((entity) => {
                 return {
                   'entityId': entity['entityId'],
-                  'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
+                  'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
                   'entityType': entity['entityType']
                 }
               })
@@ -383,7 +386,7 @@ export default {
                 return {
                   'entityId': entity['entityId'],
                   'nameOrId': entity['name'] !== null ? entity['name'] : entity['entityId'],
-                  'isMapped': entity['schema']['category'] !== undefined
+                  'isMapped': this.isEntityMapped(entity) || this.isEntityDefinitionMapped(entity)
                 }
               }),
               'mappedCount': entities.filter((entity) => entity['schema']['category'] !== undefined).length
@@ -400,9 +403,9 @@ export default {
       }
       if (this.definitionSelected) {
         if (!this.definitionMapped){
-          this.name = ""
-          this.selectedMethod = null
-          this.selectedCategory = null
+          this.name = this.lastSelectedEntity['definition']['entityName']
+          this.selectedMethod = 'Direct Shape'
+          this.selectedCategory = 49
           return
         }
         this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
@@ -410,9 +413,9 @@ export default {
         this.name = this.lastSelectedEntity['definition']['schema']['name']
       } else {
         if (!this.entityMapped){
-          this.name = ""
-          this.selectedMethod = null
-          this.selectedCategory = null
+          this.name = this.lastSelectedEntity['entityName']
+          this.selectedMethod = 'Direct Shape'
+          this.selectedCategory = 49
           return
         }
         this.selectedMethod = this.lastSelectedEntity['schema']['method']
@@ -520,4 +523,5 @@ export default {
 .active .entity {
   border: 2px solid green;
 }
+
 </style>
