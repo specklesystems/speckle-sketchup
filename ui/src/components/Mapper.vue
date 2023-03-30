@@ -286,7 +286,7 @@ export default {
   },
   computed:{
     entityHasParent(){
-      return this.lastSelectedEntity['entityType'] === 'Component' || this.lastSelectedEntity['entityType'] === 'Group'
+      return this.lastSelectedEntity['entityType'] === 'Component'
     },
     entityCardWidth(){
       if (this.entityHasParent){
