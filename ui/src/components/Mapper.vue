@@ -31,7 +31,6 @@
             <template v-slot:expanded-item="{ headers, item }">
               <td :colspan="headers.length" class="pl-2 pr-0">
                 <v-data-table
-                    v-model="selectedRows"
                     class="elevation-0 pa-0 ma-0"
                     dense
                     disable-filtering
@@ -196,7 +195,6 @@
             <template v-slot:expanded-item="{ headers, item }">
               <td :colspan="headers.length" class="pl-2 pr-0">
                 <v-data-table
-                    v-model="selectedRows"
                     class="elevation-0 pa-0 ma-0"
                     dense
                     disable-filtering
@@ -249,7 +247,6 @@ export default {
     return {
       selectionExpandedIndexes: [],
       mappedElementsExpandedIndexes: [],
-      selectedRows: [],
       definitionSelected: false,
       entitySelected: false,
       selectedEntityCount: 0,
