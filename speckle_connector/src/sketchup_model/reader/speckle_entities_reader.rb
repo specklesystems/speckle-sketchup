@@ -69,18 +69,25 @@ module SpeckleConnector
           Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
         end
 
-        def self.entity_schema_details(entities)
+        def self.entities_schema_details(entities)
           entities.collect do |entity|
-            speckle_schema = get_schema(entity)
-            {
-              name: speckle_schema['name'],
-              entityName: entity.respond_to?(:name) ? entity.name : '',
-              entityId: entity.persistent_id,
-              entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
-              schema: speckle_schema,
-              definitionSchema: entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
-            }
+            entity_selection_details = entity_selection_details(entity)
+            if entity.is_a?(Sketchup::ComponentInstance)
+              entity_selection_details = entity_selection_details.merge({ definition: entity_selection_details(entity.definition) })
+            end
+            entity_selection_details
           end
+        end
+
+        def self.entity_selection_details(entity)
+          speckle_schema = get_schema(entity)
+          {
+            name: speckle_schema['name'],
+            entityName: entity.respond_to?(:name) ? entity.name : '',
+            entityId: entity.persistent_id,
+            entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
+            schema: speckle_schema
+          }
         end
 
         def self.mapped_entity_details(entities)

@@ -78,14 +78,19 @@
                 @click="definitionSelectedHandler(false)"
             >
               <v-card-title class="pa-0 pb-3">
-                <v-icon class="mr-1">
+                <v-icon class="mr-1 v-bottom-navigation--absolute">
                   {{getLastSelectedEntityIcon}}
                 </v-icon>
                 {{this.lastSelectedEntity["entityType"]}}
+                <v-spacer></v-spacer>
+                <v-icon v-if="entityMapped" class="mr-n2 mt-n6">
+                  mdi-checkbox-marked-circle
+                </v-icon>
               </v-card-title>
               <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Last selected entity
               </v-card-subtitle>
+
             </v-card>
 
             <v-card
@@ -102,6 +107,10 @@
                   mdi-atom
                 </v-icon>
                 {{"Definition"}}
+                <v-spacer></v-spacer>
+                <v-icon v-if="definitionMapped" class="mr-n2 mt-n6">
+                  mdi-checkbox-marked-circle
+                </v-icon>
               </v-card-title>
               <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
                 Instance definition
@@ -245,9 +254,17 @@ export default {
   },
   data() {
     return {
+      // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
+      // Expanded indexes for mapped element table (Categories)
       mappedElementsExpandedIndexes: [],
+      // Whether definition card is selected to map or not.
       definitionSelected: false,
+      // Initial entity (Group, Instance, Face, Edge) that mapped or not
+      entityMapped: false,
+      // Definition of entity is mapped, it will be available for only Instances.
+      definitionMapped: false,
+      // Whether an entity is selected or not.
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
@@ -329,6 +346,8 @@ export default {
       this.name = ""
       this.selectedMethod = null
       this.selectedCategory = null
+      this.entityMapped = false
+      this.definitionMapped = false
     },
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
@@ -380,17 +399,17 @@ export default {
         return
       }
       if (this.definitionSelected) {
-        if (!this.isEntityDefinitionMapped(this.lastSelectedEntity)){
+        if (!this.definitionMapped){
           this.name = ""
           this.selectedMethod = null
           this.selectedCategory = null
           return
         }
-        this.selectedMethod = this.lastSelectedEntity['definitionSchema']['method']
-        this.selectedCategory = this.lastSelectedEntity['definitionSchema']['category']
-        this.name = this.lastSelectedEntity['definitionSchema']['name']
+        this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
+        this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
+        this.name = this.lastSelectedEntity['definition']['schema']['name']
       } else {
-        if (!this.isEntityMapped(this.lastSelectedEntity)){
+        if (!this.entityMapped){
           this.name = ""
           this.selectedMethod = null
           this.selectedCategory = null
@@ -406,7 +425,10 @@ export default {
       return entity['schema']['category'] !== undefined
     },
     isEntityDefinitionMapped(entity){
-      return entity['definitionSchema']['category'] !== undefined
+      if (entity['definition'] === undefined){
+        return false
+      }
+      return entity['definition']['schema']['category'] !== undefined
     },
     definitionSelectedHandler(state){
       this.definitionSelected = state
@@ -468,6 +490,9 @@ export default {
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
+      this.entityMapped = this.isEntityMapped(this.lastSelectedEntity)
+      this.definitionMapped = this.isEntityDefinitionMapped(this.lastSelectedEntity)
+      this.definitionSelected = !this.entityMapped && this.definitionMapped
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
       this.getSelectionTableData()
