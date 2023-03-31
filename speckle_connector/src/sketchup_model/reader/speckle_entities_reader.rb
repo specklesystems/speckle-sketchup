@@ -84,13 +84,17 @@ module SpeckleConnector
         end
 
         def self.entity_selection_details(entity)
+          sanitized_type = entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split
+          is_definition = entity.is_a?(Sketchup::ComponentDefinition)
+          entity_type = is_definition ? sanitized_type.last : sanitized_type.first
           speckle_schema = get_schema(entity)
           {
             name: speckle_schema['name'],
             entityName: entity.respond_to?(:name) ? entity.name : '',
             entityId: entity.persistent_id,
-            entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.last,
-            schema: speckle_schema
+            entityType: entity_type,
+            schema: speckle_schema,
+            numberOfInstances: is_definition ? entity.instances.length : 1
           }
         end
 
