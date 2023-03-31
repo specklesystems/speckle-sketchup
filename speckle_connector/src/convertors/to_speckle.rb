@@ -30,7 +30,7 @@ module SpeckleConnector
           layer_name = entity_layer_path(entity)
           layers[layer_name].push(converted_object_with_entity)
         end
-        layers['DirectShape'] = direct_shapes.collect do |entities|
+        layers['@DirectShape'] = direct_shapes.collect do |entities|
           from_mapped_to_speckle(entities[0], entities[1..-1], preferences)
         end
         # send only+ layers that have any object
