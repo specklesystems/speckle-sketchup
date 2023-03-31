@@ -242,17 +242,14 @@ module SpeckleConnector
 
         # Mesh group id helps to determine how to group faces into meshes.
         # @param face [Sketchup::Face] face to get mesh group id.
-        def self.get_mesh_group_id(face, model_preferences, face_path = nil)
+        def self.get_mesh_group_id(face, model_preferences, parent_material = nil)
           if model_preferences[:include_entity_attributes] &&
              model_preferences[:include_face_entity_attributes] &&
              attribute_dictionary?(face)
             return face.persistent_id.to_s
           end
 
-          material = face.material || face.back_material
-          return 'none' if material.nil? && face_path.nil?
-
-          material = SketchupModel::Query::Entity.parent_material(face_path) unless face_path.nil?
+          material = face.material || face.back_material || parent_material
           return 'none' if material.nil?
 
           return material.entityID.to_s

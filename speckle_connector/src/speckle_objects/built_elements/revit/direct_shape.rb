@@ -52,7 +52,8 @@ module SpeckleConnector
             faces_with_path.each do |face_with_path|
               face = face_with_path[0]
               entity_path = face_with_path[1..-1]
-              mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model], entity_path)
+              parent_material = SketchupModel::Query::Entity.parent_material(entity_path)
+              mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model], parent_material)
 
               if mesh_groups.key?(mesh_group_id)
                 mesh_group = mesh_groups[mesh_group_id]
@@ -62,7 +63,7 @@ module SpeckleConnector
                 mesh = Geometry::Mesh.from_face(
                   face: face, units: units, model_preferences: preferences[:model],
                   global_transform: SketchupModel::Query::Entity.global_transformation(face, entity_path),
-                  parent_material: SketchupModel::Query::Entity.parent_material(entity_path)
+                  parent_material: parent_material
                 )
                 mesh_groups[mesh_group_id] = [mesh, [face]]
               end
