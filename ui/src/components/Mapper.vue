@@ -79,22 +79,22 @@
             >
               <v-card-title class="pa-0 pb-3">
                 <v-icon class="mr-1 v-bottom-navigation--absolute">
-                  {{getLastSelectedEntityIcon}}
+                  {{ getSelectedEntityIcon }}
                 </v-icon>
-                {{this.lastSelectedEntity["entityType"]}}
+                {{getSelectedEntityText}}
                 <v-spacer></v-spacer>
                 <v-icon v-if="entityMapped" class="mr-n2 mt-n6" color="green">
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
               <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
-                Last selected entity
+                {{getSelectedEntitySubText}}
               </v-card-subtitle>
 
             </v-card>
 
             <v-card
-                v-if=entityHasParent
+                v-if=selectedEntitiesHasParent
                 variant="outlined"
                 :elevation="definitionSelected ? '6' : '1'"
                 :outlined="definitionSelected"
@@ -106,7 +106,7 @@
                 <v-icon class="mr-1">
                   mdi-atom
                 </v-icon>
-                {{"Definition"}}
+                {{ getSelectedDefinitionText }}
                 <v-spacer></v-spacer>
                 <v-icon v-if="definitionMapped" class="mr-n2 mt-n6" color="green">
                   mdi-checkbox-marked-circle
@@ -302,40 +302,71 @@ export default {
     }
   },
   computed:{
-    entityHasParent(){
-      return this.lastSelectedEntity['entityType'] === 'Component'
+    lastSelectedEntityHasParent(){
+      return this.lastSelectedEntity['entityType'] === 'Instance'
+    },
+    selectedEntitiesHasParent(){
+      return this.selectedEntities.every((entity) => entity['entityType'] === 'Instance')
     },
     entityCardWidth(){
-      if (this.entityHasParent){
+      if (this.lastSelectedEntityHasParent){
         return '160px'
       } else {
         return '330px'
       }
     },
     entityCardElevation(){
-      if (!this.entityHasParent){
+      if (!this.lastSelectedEntityHasParent){
         return '1'
       }
       return this.definitionSelected ? '1' : '6'
     },
     entityCardColor(){
-      if (!this.entityHasParent){
+      if (!this.lastSelectedEntityHasParent){
         return 'background2'
       }
       return this.definitionSelected ? 'background2' : 'mappingEntity'
     },
-    getLastSelectedEntityIcon(){
-      const type = this.lastSelectedEntity['entityType']
-      if (type === 'Face'){
-        return 'mdi-vector-square'
-      } else if (type === 'Edge'){
-        return 'mdi-vector-polyline'
-      } else if (type === 'Group'){
-        return 'mdi-border-outside'
-      } else if (type === 'Component'){
-        return 'mdi-border-inside'
-      } else {
-        return 'mdi-close'
+    getSelectedEntityIcon(){
+      if (this.selectedEntities.length > 1){
+        return 'mdi-webpack'
+      }else{
+        const type = this.lastSelectedEntity['entityType']
+        if (type === 'Face'){
+          return 'mdi-vector-square'
+        } else if (type === 'Edge'){
+          return 'mdi-vector-polyline'
+        } else if (type === 'Group'){
+          return 'mdi-border-outside'
+        } else if (type === 'Instance'){
+          return 'mdi-border-inside'
+        } else {
+          return 'mdi-close'
+        }
+      }
+    },
+    getSelectedEntityText(){
+      if (this.selectedEntities.length > 1){
+        if (this.selectedEntitiesHasParent){
+          return 'Instances'
+        }
+        return 'Multiple Selection'
+      }else{
+        return this.lastSelectedEntity["entityType"]
+      }
+    },
+    getSelectedDefinitionText(){
+      if (this.selectedEntities.length > 1 && this.selectedEntitiesHasParent){
+        return 'Definitions'
+      }else{
+        return 'Definition'
+      }
+    },
+    getSelectedEntitySubText(){
+      if (this.selectedEntities.length > 1){
+        return this.getSelectionSummary()
+      }else{
+        return 'Last selected entity'
       }
     }
   },
@@ -394,6 +425,19 @@ export default {
           }
       )
     },
+    getSelectionSummary(){
+      let groupByClass = groupBy('entityType')
+      let groupedByWithKey = groupByClass(this.selectedEntities)
+      let summary = ''
+      Object.entries(groupedByWithKey).forEach((entry, index) => {
+        const [className, entities] = entry
+        summary += `${className} (${entities.length})`
+        if (index !== Object.entries(groupedByWithKey).length - 1){
+          summary += ' - '
+        }
+      })
+      return summary
+    },
     setInputValuesFromSelection(){
       if (!this.entitySelected){
         this.name = ""
@@ -427,11 +471,17 @@ export default {
     isEntityMapped(entity){
       return entity['schema']['category'] !== undefined
     },
+    isEntitiesMapped(entities){
+      return entities.every((entity) => this.isEntityMapped(entity))
+    },
     isEntityDefinitionMapped(entity){
       if (entity['definition'] === undefined){
         return false
       }
       return entity['definition']['schema']['category'] !== undefined
+    },
+    isEntityDefinitionsMapped(entities){
+      return entities.every((entity) => this.isEntityDefinitionMapped(entity))
     },
     definitionSelectedHandler(state){
       this.definitionSelected = state
@@ -493,8 +543,8 @@ export default {
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
-      this.entityMapped = this.isEntityMapped(this.lastSelectedEntity)
-      this.definitionMapped = this.isEntityDefinitionMapped(this.lastSelectedEntity)
+      this.entityMapped = this.isEntitiesMapped(this.selectedEntities)
+      this.definitionMapped = this.isEntityDefinitionsMapped(this.selectedEntities)
       this.definitionSelected = !this.entityMapped && this.definitionMapped
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0

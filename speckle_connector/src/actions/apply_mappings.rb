@@ -27,15 +27,25 @@ module SpeckleConnector
                    else
                      sketchup_model.active_path.last.definition.entities
                    end
-        entity = entities.find { |e| e.persistent_id == @entities_to_map.first }
-        if @is_definition && (entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance))
-          entity = entity.definition
+
+        # Collect entities from entity ids that comes from UI as list
+        entities_to_map = entities.select { |e| @entities_to_map.include?(e.persistent_id) }
+
+        # Switch to definitions if all entities are component instance and UI flag shows that
+        if entities_to_map.all? { |e| e.is_a?(Sketchup::ComponentInstance) } && @is_definition
+          entities_to_map = entities_to_map.collect(&:definition).uniq
         end
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :category, @category)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :name, @name)
-        SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :method, @method)
-        new_speckle_state = state.speckle_state.with_mapped_entity(entity)
-        new_state = MappedEntitiesUpdated.update_state(state.with_speckle_state(new_speckle_state))
+
+        # Store speckle state to update with mapped entities.
+        speckle_state = state.speckle_state
+        entities_to_map.each do |entity|
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :category, @category)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :name, @name)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :method, @method)
+          speckle_state = speckle_state.with_mapped_entity(entity)
+        end
+
+        new_state = MappedEntitiesUpdated.update_state(state.with_speckle_state(speckle_state))
         Events::SelectionEventAction.update_state(new_state, { apply: true })
       end
     end
