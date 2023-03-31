@@ -71,13 +71,14 @@
           <v-container v-if="entitySelected" class="btn-container pa-0 mb-5">
             <v-card
                 variant="outlined"
-                class="pt-1 pl-2 mb-1 mr-2 v-alert--border flex"
+                class="pt-0 pl-2 mb-1 mr-2 v-alert--border flex"
                 :elevation="entityCardElevation"
                 :outlined="!definitionSelected"
                 :width="entityCardWidth"
+                min-width="150px"
                 @click="definitionSelectedHandler(false)"
             >
-              <v-card-title class="pa-0 pb-3">
+              <v-card-title class="pa-0 pb-2">
                 <v-icon class="mr-1 v-bottom-navigation--absolute">
                   {{ getSelectedEntityIcon }}
                 </v-icon>
@@ -87,10 +88,9 @@
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
-              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
+              <v-card-subtitle class="pb-0 pr-0 font-weight-light">
                 {{getSelectedEntitySubText}}
               </v-card-subtitle>
-
             </v-card>
 
             <v-card
@@ -98,11 +98,11 @@
                 variant="outlined"
                 :elevation="definitionSelected ? '6' : '1'"
                 :outlined="definitionSelected"
-                class="pt-1 pl-2 mb-1 mr-2 flex"
-                width="160px"
+                class="pt-0 pl-2 mb-1 mr-2 flex"
+                min-width="150px"
                 @click="definitionSelectedHandler(true)"
             >
-              <v-card-title class="pa-0 pb-3">
+              <v-card-title class="pa-0 pb-2">
                 <v-icon class="mr-1">
                   mdi-atom
                 </v-icon>
@@ -112,8 +112,8 @@
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
-              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
-                Instance definition
+              <v-card-subtitle class="pb-0 pr-0 font-weight-light">
+                {{getSelectedDefinitionSubText}}
               </v-card-subtitle>
             </v-card>
           </v-container>
@@ -263,9 +263,9 @@ export default {
       mappedElementsExpandedIndexes: [],
       // Whether definition card is selected to map or not.
       definitionSelected: false,
-      // Initial entity (Group, Instance, Face, Edge) that mapped or not
+      // Initial entity (Group, Component, Face, Edge) that mapped or not
       entityMapped: false,
-      // Definition of entity is mapped, it will be available for only Instances.
+      // Definition of entity is mapped, it will be available for only Components.
       definitionMapped: false,
       // Whether an entity is selected or not.
       entitySelected: false,
@@ -303,16 +303,16 @@ export default {
   },
   computed:{
     lastSelectedEntityHasParent(){
-      return this.lastSelectedEntity['entityType'] === 'Instance'
+      return this.lastSelectedEntity['entityType'] === 'Component'
     },
     selectedEntitiesHasParent(){
-      return this.selectedEntities.every((entity) => entity['entityType'] === 'Instance')
+      return this.selectedEntities.every((entity) => entity['entityType'] === 'Component')
     },
     entityCardWidth(){
       if (this.lastSelectedEntityHasParent){
-        return '160px'
+        return '150px'
       } else {
-        return '330px'
+        return '310px'
       }
     },
     entityCardElevation(){
@@ -338,7 +338,7 @@ export default {
           return 'mdi-vector-polyline'
         } else if (type === 'Group'){
           return 'mdi-border-outside'
-        } else if (type === 'Instance'){
+        } else if (type === 'Component'){
           return 'mdi-border-inside'
         } else {
           return 'mdi-close'
@@ -348,7 +348,7 @@ export default {
     getSelectedEntityText(){
       if (this.selectedEntities.length > 1){
         if (this.selectedEntitiesHasParent){
-          return 'Instances'
+          return 'Component'
         }
         return 'Multiple Selection'
       }else{
@@ -357,7 +357,7 @@ export default {
     },
     getSelectedDefinitionText(){
       if (this.selectedEntities.length > 1 && this.selectedEntitiesHasParent){
-        return 'Definitions'
+        return 'Definition'
       }else{
         return 'Definition'
       }
@@ -366,8 +366,23 @@ export default {
       if (this.selectedEntities.length > 1){
         return this.getSelectionSummary()
       }else{
-        return 'Last selected entity'
+        return 'Single selected entity'
       }
+    },
+    getSelectedDefinitionSubText(){
+        if (this.selectedEntities.length > 1){
+            let instances = 0
+            let registeredDefinitions = []
+            this.selectedEntities.forEach((entity) => {
+                if (!registeredDefinitions.includes(entity['definition']['entityId'])){
+                    instances += entity['definition']['numberOfInstances']
+                    registeredDefinitions.push(entity['definition']['entityId'])
+                }
+            })
+            return `Instances (${instances})`
+        }else{
+            return `Instances (${this.lastSelectedEntity['definition']['numberOfInstances']})`
+        }
     }
   },
   methods:{
@@ -431,7 +446,8 @@ export default {
       let summary = ''
       Object.entries(groupedByWithKey).forEach((entry, index) => {
         const [className, entities] = entry
-        summary += `${className} (${entities.length})`
+          const entityType = className === 'Component' ? 'Instance' : className
+        summary += `${entityType}s (${entities.length})`
         if (index !== Object.entries(groupedByWithKey).length - 1){
           summary += ' - '
         }
@@ -572,6 +588,23 @@ export default {
 
 .active .entity {
   border: 2px solid green;
+}
+
+.v-card__title{
+    font-size: 1.02rem;
+}
+
+.v-card__subtitle{
+    font-size: 0.78rem;
+}
+
+.v-expansion-panel--active > .v-expansion-panel-header{
+    min-height: 32px;
+}
+
+.v-expansion-panel-header{
+    min-height: 32px;
+    padding: 12px 16px;
 }
 
 </style>
