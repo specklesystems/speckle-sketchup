@@ -62,7 +62,11 @@ module SpeckleConnector
 
         # @param entity [Sketchup::Entity] sketchup entity to check whether mapped with speckle schema or not.
         def self.mapped_with_schema?(entity)
-          !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
+          is_entity_mapped = !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
+          return is_entity_mapped if is_entity_mapped
+          return is_entity_mapped unless entity.is_a?(Sketchup::ComponentInstance)
+
+          !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity.definition).nil?
         end
 
         def self.get_schema(entity)

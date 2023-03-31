@@ -28,7 +28,7 @@ module SpeckleConnector
           new_speckle_state, converted_object_with_entity = convert(entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(entity)
-          layers[layer_name].push(converted_object_with_entity)
+          layers[layer_name].push(converted_object_with_entity) unless converted_object_with_entity.nil?
         end
         layers['@DirectShape'] = direct_shapes.collect do |entities|
           from_mapped_to_speckle(entities[0], entities[1..-1], preferences)
