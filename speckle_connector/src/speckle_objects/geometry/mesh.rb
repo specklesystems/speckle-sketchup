@@ -32,7 +32,7 @@ module SpeckleConnector
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
         def initialize(units:, render_material:, vertices:, faces:,
-                       sketchup_attributes:, speckle_schema: {}, application_id: nil)
+                       sketchup_attributes:, layer:, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -43,6 +43,7 @@ module SpeckleConnector
           @polygons = []
           @units = units
           self[:units] = units
+          self[:layer] = layer
           self[:renderMaterial] = render_material
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
@@ -123,6 +124,7 @@ module SpeckleConnector
             vertices: [],
             faces: [],
             sketchup_attributes: att,
+            layer: face.layer.display_name,
             speckle_schema: speckle_schema,
             application_id: face.persistent_id
           )

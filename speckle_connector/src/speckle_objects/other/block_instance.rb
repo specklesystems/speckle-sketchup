@@ -24,7 +24,7 @@ module SpeckleConnector
         # @param sketchup_attributes [Hash{Symbol=>Object}] sketchup attributes of the block instance.
         # @param application_id [String] application id of the block instance.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:,
+        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:, layer:,
                        sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -34,6 +34,7 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:name] = name
+          self[:layer] = layer
           self[:is_sketchup_group] = is_sketchup_group
           self[:renderMaterial] = render_material
           self[:transform] = transform
@@ -60,6 +61,7 @@ module SpeckleConnector
             render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: block_definition,
+            layer: group.layer.display_name,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: group.guid
@@ -95,6 +97,7 @@ module SpeckleConnector
                              end,
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: block_definition,
+            layer: component_instance.layer.display_name,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: component_instance.persistent_id.to_s

@@ -11,6 +11,8 @@ require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/revit/direct_shape'
+require_relative '../speckle_objects/relations/layers'
+require_relative '../speckle_objects/relations/layer'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/query/entity'
@@ -35,6 +37,7 @@ module SpeckleConnector
         end
         # send only+ layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
+        base_object_properties[:layers_relation] = create_relation_from_layers
         add_views(base_object_properties) if sketchup_model.pages.any?
         return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
@@ -191,6 +194,31 @@ module SpeckleConnector
         # add layers from folders
         add_layers_from_folders(sketchup_model.layers.folders, layer_objects)
         layer_objects
+      end
+
+      def convert_layers(layers)
+        layers.collect do |layer|
+          SpeckleObjects::Relations::Layer.new(
+            name: layer.display_name,
+            color: SpeckleObjects::Others::Color.to_speckle(layer.color),
+            visible: layer.visible?,
+            application_id: layer.persistent_id
+          )
+        end
+      end
+
+      def create_relation_from_layers
+        # init with headless layers
+        layers_and_folders = [convert_layers(sketchup_model.layers.layers)]
+
+        # TODO: collect layers from folders
+        # sketchup_model.layers.folders.each do |layer_folder|
+        #
+        # end
+        SpeckleObjects::Relations::Layers.new(
+          active: sketchup_model.active_layer.display_name,
+          layers: layers_and_folders
+        )
       end
 
       # @param layers [Array<Sketchup::Layer>] layers in sketchup model

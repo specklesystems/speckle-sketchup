@@ -206,8 +206,6 @@ module SpeckleConnector
           new_speckle_state
         end
         # rubocop:enable Metrics/ParameterLists
-
-
       end
     end
   end
