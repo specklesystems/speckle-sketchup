@@ -463,26 +463,41 @@ export default {
       }
       if (this.definitionSelected) {
         if (!this.definitionMapped){
-          this.name = this.lastSelectedEntity['definition']['entityName']
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['definition']['entityName']
+          }
           this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
-          return
+        } else {
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['definition']['schema']['name']
+          }
+          this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
+          this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
         }
-        this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
-        this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
-        this.name = this.lastSelectedEntity['definition']['schema']['name']
       } else {
         if (!this.entityMapped){
-          this.name = this.lastSelectedEntity['entityName']
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['entityName']
+          }
           this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
-          return
+        } else {
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['schema']['name']
+          }
+          this.selectedMethod = this.lastSelectedEntity['schema']['method']
+          this.selectedCategory = this.lastSelectedEntity['schema']['category']
         }
-        this.selectedMethod = this.lastSelectedEntity['schema']['method']
-        this.selectedCategory = this.lastSelectedEntity['schema']['category']
-        this.name = this.lastSelectedEntity['schema']['name']
       }
-
     },
     isEntityMapped(entity){
       return entity['schema']['category'] !== undefined
