@@ -191,39 +191,7 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <v-data-table
-              class="elevation-1"
-              dense
-              expand
-              disable-filtering
-              disable-pagination
-              hide-default-footer
-              item-key="categoryName"
-              :expanded.sync="mappedElementsExpandedIndexes"
-              :headers="mappedElementsHeaders"
-              :items="mappedEntitiesTableData"
-              :mobile-breakpoint="0"
-          >
-            <template v-slot:expanded-item="{ headers, item }">
-              <td :colspan="headers.length" class="pl-2 pr-0">
-                <v-data-table
-                    class="elevation-0 pa-0 ma-0"
-                    dense
-                    disable-filtering
-                    disable-pagination
-                    hide-default-footer
-                    item-key="entityId"
-                    :headers="subMappedElementsHeaders"
-                    :items="item.entities"
-                    :mobile-breakpoint="0"
-                >
-                </v-data-table>
-              </td>
-            </template>
-            <template v-slot:item.categoryName="slotData">
-              <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
-            </template>
-          </v-data-table>
+          <mapped-elements/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -253,7 +221,8 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 export default {
   name: "Mapper",
   components: {
-    GlobalToast: () => import('@/components/GlobalToast')
+    GlobalToast: () => import('@/components/GlobalToast'),
+    MappedElements: () => import('@/components/MappedElements.vue')
   },
   data() {
     return {
@@ -397,26 +366,6 @@ export default {
       this.selectedCategory = null
       this.entityMapped = false
       this.definitionMapped = false
-    },
-    getMappedElementsTableData(){
-      let groupByCategoryName = groupBy('categoryName')
-      let groupedByCategoryName = groupByCategoryName(this.mappedEntities)
-      this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
-          (entry) => {
-            const [categoryName, entities] = entry
-            return {
-              'categoryName': categoryName,
-              'count': entities !== true ? entities.length : 0,
-              'entities': entities.map((entity) => {
-                return {
-                  'entityId': entity['entityId'],
-                  'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
-                  'entityType': entity['entityType']
-                }
-              })
-            }
-          }
-      )
     },
     getSelectionTableData(){
       let groupByClass = groupBy('entityType')
@@ -588,8 +537,6 @@ export default {
     })
     bus.$on('mapped-entities-updated', async (mappedEntities) => {
       this.mappedEntityCount = mappedEntities.length
-      this.mappedEntities = mappedEntities
-      this.getMappedElementsTableData()
     })
   }
 }
