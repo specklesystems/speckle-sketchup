@@ -190,7 +190,7 @@
             {{ `Mapped Elements (${mappedEntityCount})` }}
           </div>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
+        <v-expansion-panel-content class="mx-n3">
           <mapped-elements/>
         </v-expansion-panel-content>
       </v-expansion-panel>

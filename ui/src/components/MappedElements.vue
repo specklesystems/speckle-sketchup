@@ -1,37 +1,44 @@
 <template>
-  <v-data-table
-      class="elevation-1"
-      dense
-      expand
-      disable-filtering
-      disable-pagination
-      hide-default-footer
-      item-key="categoryName"
-      :expanded.sync="mappedElementsExpandedIndexes"
-      :headers="mappedElementsHeaders"
-      :items="mappedEntitiesTableData"
-      :mobile-breakpoint="0"
-  >
-    <template v-slot:expanded-item="{ headers, item }">
-      <td :colspan="headers.length" class="pl-2 pr-0">
-        <v-data-table
-            class="elevation-0 pa-0 ma-0"
-            dense
-            disable-filtering
-            disable-pagination
-            hide-default-footer
-            item-key="entityId"
-            :headers="subMappedElementsHeaders"
-            :items="item.entities"
-            :mobile-breakpoint="0"
-        >
-        </v-data-table>
-      </td>
-    </template>
-    <template v-slot:item.categoryName="slotData">
-      <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
-    </template>
-  </v-data-table>
+  <v-container class="pa-0">
+    <v-data-table
+        class="elevation-1 mb-5"
+        dense
+        expand
+        disable-filtering
+        disable-pagination
+        hide-default-footer
+        item-key="categoryName"
+        :expanded.sync="mappedElementsExpandedIndexes"
+        :headers="mappedElementsHeaders"
+        :items="mappedEntitiesTableData"
+        :mobile-breakpoint="0"
+        show-select
+    >
+      <template v-slot:expanded-item="{ headers, item }">
+        <td :colspan="headers.length" class="pl-2 pr-0">
+          <v-data-table
+              class="elevation-0 pa-0 ma-0"
+              dense
+              disable-filtering
+              disable-pagination
+              hide-default-footer
+              item-key="entityId"
+              :headers="subMappedElementsHeaders"
+              :items="item.entities"
+              :mobile-breakpoint="0"
+          >
+          </v-data-table>
+        </td>
+      </template>
+      <template v-slot:item.categoryName="slotData">
+        <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
+      </template>
+    </v-data-table>
+
+    <v-btn>
+      test
+    </v-btn>
+  </v-container>
 </template>
 
 <script>
@@ -101,5 +108,12 @@ export default {
 </script>
 
 <style scoped>
+.btn-container{
+  display: flex;
+  flex-wrap: wrap;
+}
 
+.v-input--selection-controls__input{
+  margin-right: 0px;
+}
 </style>
