@@ -1,6 +1,7 @@
 <template>
   <v-container class="pa-0">
     <v-data-table
+        v-model="categorySelection"
         class="elevation-1 mb-5"
         dense
         expand
@@ -15,29 +16,106 @@
         show-select
     >
       <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length" class="pl-2 pr-0">
+        <td :colspan="headers.length" class="pl-2 pr-0 lighten-3 grey">
           <v-data-table
+              v-model="elementSelection"
               class="elevation-0 pa-0 ma-0"
               dense
               disable-filtering
               disable-pagination
               hide-default-footer
+              hide-default-header
               item-key="entityId"
               :headers="subMappedElementsHeaders"
               :items="item.entities"
               :mobile-breakpoint="0"
+              show-select
           >
+            <template #[`item.data-table-select`]="slotData">
+                <td class="mapped-elements-check-box-row">
+                    <v-checkbox
+                            class="shrink ma-0"
+                            hide-details
+                            :value="slotData.isSelected"
+                            @click="slotData.select(clickMappedElements(slotData, item.categoryName))"
+                    />
+                </td>
+            </template>
           </v-data-table>
         </td>
       </template>
-      <template v-slot:item.categoryName="slotData">
-        <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
-      </template>
-    </v-data-table>
 
-    <v-btn>
-      test
-    </v-btn>
+      <template #[`header.name`]="{ header }">
+          <th class="header-text-color">{{ header.text.toUpperCase() }}</th>
+      </template>
+
+      <template #[`item.categoryName`]="slotData">
+        <div @click="clickMappedElementsCategory(slotData)">{{ slotData.item.categoryName }}</div>
+      </template>
+
+      <template #[`item.data-table-select`]="slotData">
+        <v-checkbox
+                class="shrink ma-0"
+                hide-details
+                :value="slotData.isSelected"
+                @click="slotData.select(clickMappedCategory(slotData))"
+        />
+      </template>
+
+    </v-data-table>
+      <v-container class="btn-container">
+        <v-btn
+          v-tooltip="'Clear Mappings'"
+          x-small
+          min-width="30px"
+          min-height="30px"
+          @click="clearMappingsFromTableSelection"
+        >
+          <v-icon small dark>
+              mdi-delete
+          </v-icon>
+        </v-btn>
+
+        <v-spacer></v-spacer>
+
+        <v-btn
+          v-tooltip="'Isolate Mapped Elements'"
+          x-small
+          min-width="30px"
+          min-height="30px"
+          class="mr-2"
+          @click="isolateMappedElementsOnSketchup"
+        >
+          <v-icon small dark>
+            mdi-cube-outline
+          </v-icon>
+        </v-btn>
+
+        <v-btn
+          v-tooltip="'Show Mapped Elements'"
+          x-small
+          min-width="30px"
+          min-height="30px"
+          class="mr-2"
+          @click="showMappedElementsOnSketchup"
+        >
+          <v-icon small dark>
+            mdi-eye
+          </v-icon>
+        </v-btn>
+
+        <v-btn
+          v-tooltip="'Select Mapped Elements'"
+          x-small
+          min-width="30px"
+          min-height="30px"
+          @click="selectMappedElementsOnSketchup"
+        >
+          <v-icon small dark>
+            mdi-cursor-default
+          </v-icon>
+        </v-btn>
+      </v-container>
   </v-container>
 </template>
 
@@ -50,17 +128,19 @@ export default {
   name: "MappedElements",
   data(){
     return {
+      categorySelection: [],
+      elementSelection: [],
       mappedEntities: [],
       mappedEntityCount: 0,
       // Expanded indexes for mapped element table (Categories)
       mappedElementsExpandedIndexes: [],
       mappedElementsHeaders: [
-        { text: 'Category', sortable: false, value: 'categoryName', width: '80%' },
-        { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' }
+        { text: 'Category', sortable: false, value: 'categoryName', width: '70%' },
+        { text: 'Count', sortable: false, align: 'center', value: 'count', width: '30%' }
       ],
       subMappedElementsHeaders: [
-        { text: 'Type', sortable: false, value: 'entityType', width: '80%' },
-        { text: 'Name/Id', sortable: false, align: 'center', value: 'nameOrId', width: '20%' },
+        { text: 'Type', sortable: false, value: 'entityType', width: '70%' },
+        { text: 'Name/Id', sortable: false, align: 'center', value: 'nameOrId', width: '30%' },
       ],
       mappedEntitiesTableData: [],
     }
@@ -75,7 +155,7 @@ export default {
     })
   },
   methods: {
-    clickMappedElementsColumn(slotData) {
+    clickMappedElementsCategory(slotData) {
       const indexExpanded = this.mappedElementsExpandedIndexes.findIndex(i => i === slotData.item);
       if (indexExpanded > -1) {
         this.mappedElementsExpandedIndexes.splice(indexExpanded, 1)
@@ -83,24 +163,56 @@ export default {
         this.mappedElementsExpandedIndexes.push(slotData.item);
       }
     },
+    clickMappedElements(slotData, category){
+        const indexSelection = this.elementSelection.findIndex(i => i === slotData.item);
+        if (indexSelection > -1) {
+            this.elementSelection.splice(indexSelection, 1)
+        } else {
+            this.elementSelection.push(slotData.item);
+        }
+        console.log(category)
+        console.log(slotData)
+        console.log(this.elementSelection)
+    },
+    clickMappedCategory(slotData){
+        const indexSelection = this.categorySelection.findIndex(i => i === slotData.item);
+        if (indexSelection > -1) {
+            this.categorySelection.splice(indexSelection, 1)
+        } else {
+            this.categorySelection.push(slotData.item);
+        }
+        console.log(this.categorySelection)
+    },
+    clearMappingsFromTableSelection(){
+
+    },
+    isolateMappedElementsOnSketchup(){
+
+    },
+    showMappedElementsOnSketchup(){
+
+    },
+    selectMappedElementsOnSketchup(){
+
+    },
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
       let groupedByCategoryName = groupByCategoryName(this.mappedEntities)
       this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
-          (entry) => {
-            const [categoryName, entities] = entry
-            return {
-              'categoryName': categoryName,
-              'count': entities !== true ? entities.length : 0,
-              'entities': entities.map((entity) => {
-                return {
-                  'entityId': entity['entityId'],
-                  'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
-                  'entityType': entity['entityType']
-                }
-              })
-            }
+        (entry) => {
+          const [categoryName, entities] = entry
+          return {
+            'categoryName': categoryName,
+            'count': entities !== true ? entities.length : 0,
+            'entities': entities.map((entity) => {
+              return {
+                'entityId': entity['entityId'],
+                'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
+                'entityType': entity['entityType']
+              }
+            })
           }
+        }
       )
     },
   }
@@ -113,7 +225,16 @@ export default {
   flex-wrap: wrap;
 }
 
-.v-input--selection-controls__input{
-  margin-right: 0px;
+.v-application--is-ltr .v-input--selection-controls__input{
+  margin-right: 0;
 }
+
+.header-text-color{
+    color: red;
+}
+
+.mapped-elements-check-box-row {
+    width: 20px;
+}
+
 </style>
