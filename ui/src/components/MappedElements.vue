@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0">
     <v-data-table
-        v-model="categorySelection"
+        :v-model="categorySelection()"
         class="elevation-1 mb-5"
         dense
         expand
@@ -18,7 +18,7 @@
       <template v-slot:expanded-item="{ headers, item }">
         <td :colspan="headers.length" class="pl-2 pr-0 lighten-3 grey">
           <v-data-table
-              v-model="elementSelection"
+              v-model="elementSelection[item.categoryName]['selectedElements']"
               class="elevation-0 pa-0 ma-0"
               dense
               disable-filtering
@@ -128,8 +128,7 @@ export default {
   name: "MappedElements",
   data(){
     return {
-      categorySelection: [],
-      elementSelection: [],
+      elementSelection: {},
       mappedEntities: [],
       mappedEntityCount: 0,
       // Expanded indexes for mapped element table (Categories)
@@ -145,6 +144,11 @@ export default {
       mappedEntitiesTableData: [],
     }
   },
+  computed: {
+    // categorySelection() {
+    //     return Object.keys(this.elementSelection)
+    // },
+  },
   mounted() {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
 
@@ -155,6 +159,9 @@ export default {
     })
   },
   methods: {
+    categorySelection() {
+        return Object.keys(this.elementSelection)
+    },
     clickMappedElementsCategory(slotData) {
       const indexExpanded = this.mappedElementsExpandedIndexes.findIndex(i => i === slotData.item);
       if (indexExpanded > -1) {
@@ -163,25 +170,27 @@ export default {
         this.mappedElementsExpandedIndexes.push(slotData.item);
       }
     },
-    clickMappedElements(slotData, category){
-        const indexSelection = this.elementSelection.findIndex(i => i === slotData.item);
-        if (indexSelection > -1) {
-            this.elementSelection.splice(indexSelection, 1)
+    clickMappedCategory(slotData){
+        const category = this.elementSelection[slotData.item.categoryName]
+        if (category['allSelected'] || category['selectedElements'].length === category['entityCount']) {
+            this.elementSelection[slotData.item.categoryName]['allSelected'] = false
+            this.elementSelection[slotData.item.categoryName]['selectedElements'] = []
         } else {
-            this.elementSelection.push(slotData.item);
+            this.elementSelection[slotData.item.categoryName]['allSelected'] = true
+            this.elementSelection[slotData.item.categoryName]['selectedElements'] = slotData.item.entities
         }
-        console.log(category)
-        console.log(slotData)
         console.log(this.elementSelection)
     },
-    clickMappedCategory(slotData){
-        const indexSelection = this.categorySelection.findIndex(i => i === slotData.item);
+    clickMappedElements(slotData, category){
+        const elements = this.elementSelection[category]['selectedElements'] === undefined ? [] : this.elementSelection[category]['selectedElements']
+        const indexSelection = elements.findIndex(i => i === slotData.item);
         if (indexSelection > -1) {
-            this.categorySelection.splice(indexSelection, 1)
+            elements.splice(indexSelection, 1)
         } else {
-            this.categorySelection.push(slotData.item);
+            elements.push(slotData.item);
         }
-        console.log(this.categorySelection)
+        this.elementSelection[category]['selectedElements'] = elements
+        console.log(this.elementSelection)
     },
     clearMappingsFromTableSelection(){
 
@@ -201,6 +210,7 @@ export default {
       this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
         (entry) => {
           const [categoryName, entities] = entry
+            this.elementSelection[categoryName] = { allSelected: false, entityCount: entities.length, selectedElements: [] }
           return {
             'categoryName': categoryName,
             'count': entities !== true ? entities.length : 0,
