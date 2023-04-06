@@ -16,10 +16,10 @@
         show-select
     >
       <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length" class="pl-2 pr-0 lighten-3 grey">
+        <td :colspan="headers.length" class="pl-2 pr-0">
           <v-data-table
               v-model="elementSelection[item.categoryName]['selectedElements']"
-              class="elevation-0 pa-0 ma-0"
+              class="elevation-0 pa-0 ma-0 mb-2"
               dense
               disable-filtering
               disable-pagination
@@ -31,6 +31,21 @@
               :mobile-breakpoint="0"
               show-select
           >
+              <template #header="{ props: { headers } }">
+                  <thead class="v-data-table-header">
+                  <tr>
+                      <th
+                              v-for="header in headers"
+                              :key="header.value"
+                              :width="header.width"
+                              scope="col"
+                              class="text-center"
+                      >
+                          {{ header.text }}
+                      </th>
+                  </tr>
+                  </thead>
+              </template>
             <template #[`item.data-table-select`]="slotData">
                 <td class="mapped-elements-check-box-row">
                     <v-checkbox
@@ -134,11 +149,11 @@ export default {
       // Expanded indexes for mapped element table (Categories)
       mappedElementsExpandedIndexes: [],
       mappedElementsHeaders: [
-        { text: 'Category', sortable: false, value: 'categoryName', width: '70%' },
+        { text: 'Category', sortable: false, align: 'center', value: 'categoryName', width: '70%' },
         { text: 'Count', sortable: false, align: 'center', value: 'count', width: '30%' }
       ],
       subMappedElementsHeaders: [
-        { text: 'Type', sortable: false, value: 'entityType', width: '70%' },
+        { text: 'Type', sortable: false, align: 'center', value: 'entityType', width: '70%' },
         { text: 'Name/Id', sortable: false, align: 'center', value: 'nameOrId', width: '30%' },
       ],
       mappedEntitiesTableData: [],
@@ -235,16 +250,13 @@ export default {
   flex-wrap: wrap;
 }
 
-.v-application--is-ltr .v-input--selection-controls__input{
-  margin-right: 0;
-}
-
-.header-text-color{
-    color: red;
-}
-
 .mapped-elements-check-box-row {
     width: 20px;
+}
+
+/* This is the header styles of child table */
+.v-data-table--dense > .v-data-table__wrapper > table > thead > tr > th {
+    height: 32px;
 }
 
 </style>
