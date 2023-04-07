@@ -71,7 +71,7 @@
           <v-container v-if="entitySelected" class="btn-container pa-0 mb-5">
             <v-card
                 variant="outlined"
-                class="pt-0 pl-2 mb-1 mr-2 v-alert--border flex"
+                class="pt-0 pl-2 mb-1 mr-2 flex"
                 :elevation="entityCardElevation"
                 :outlined="!definitionSelected"
                 :width="entityCardWidth"
@@ -96,9 +96,10 @@
             <v-card
                 v-if=selectedEntitiesHasParent
                 variant="outlined"
+                class="pt-0 pl-2 mb-1 mr-2 flex"
                 :elevation="definitionSelected ? '6' : '1'"
                 :outlined="definitionSelected"
-                class="pt-0 pl-2 mb-1 mr-2 flex"
+                :width="entityCardWidth"
                 min-width="150px"
                 @click="definitionSelectedHandler(true)"
             >
@@ -152,7 +153,6 @@
             <v-row justify="center" align="center">
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
-                    class="pt-1"
                     :disabled="!entitySelected"
                     @click="applyMapping"
                 >
@@ -163,7 +163,6 @@
               </v-col>
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
-                    class="pt-1"
                     :disabled="!entitySelected"
                     @click="clearMapping"
                 >

@@ -33,7 +33,10 @@ module SpeckleConnector
           # @example
           #   path[0] is entity itself
           #   path[1..-1] rest as path from top to bottom
-          def flat_entities_with_path(entities_to_flat, classes, path = [])
+          def flat_entities_with_path(entities_to_flat,
+                                      classes = [Sketchup::Edge, Sketchup::Face, Sketchup::ComponentInstance,
+                                                 Sketchup::Group, Sketchup::ComponentDefinition],
+                                      path = [])
             entities = []
             entities_to_flat.each do |entity|
               # Collect object itself

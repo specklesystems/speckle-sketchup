@@ -24,6 +24,10 @@ require_relative '../actions/collect_preferences'
 require_relative '../actions/deactivate_diffing'
 require_relative '../actions/collect_versions'
 require_relative '../actions/mapped_entities_updated'
+require_relative '../actions/clear_mappings_from_table'
+require_relative '../actions/isolate_mappings_from_table'
+require_relative '../actions/hide_mappings_from_table'
+require_relative '../actions/select_mappings_from_table'
 
 module SpeckleConnector
   module Ui
@@ -76,9 +80,13 @@ module SpeckleConnector
           model_preferences_updated: Commands::ModelPreferencesUpdated.new(@app),
           activate_diffing: Commands::ActivateDiffing.new(@app),
           deactivate_diffing: Commands::ActionCommand.new(@app, Actions::DeactivateDiffing),
+          collect_mapped_entities: Commands::ActionCommand.new(@app, Actions::MappedEntitiesUpdated),
           apply_mappings: Commands::ApplyMappings.new(@app),
           clear_mappings: Commands::ClearMappings.new(@app),
-          collect_mapped_entities: Commands::ActionCommand.new(@app, Actions::MappedEntitiesUpdated)
+          clear_mappings_from_table: Commands::ActionCommand.new(@app, Actions::ClearMappingsFromTable),
+          isolate_mappings_from_table: Commands::ActionCommand.new(@app, Actions::IsolateMappingsFromTable),
+          hide_mappings_from_table: Commands::ActionCommand.new(@app, Actions::HideMappingsFromTable),
+          select_mappings_from_table: Commands::ActionCommand.new(@app, Actions::SelectMappingsFromTable)
         }.freeze
       end
     end

@@ -1,8 +1,8 @@
 <template>
   <v-container class="pa-0">
     <v-data-table
-        :v-model="categorySelection()"
-        class="elevation-1 mb-5"
+        v-model="categorySelection"
+        class="elevation-1 mb-2"
         dense
         expand
         disable-filtering
@@ -94,7 +94,7 @@
       </template>
 
     </v-data-table>
-      <v-container class="btn-container">
+      <v-container class="btn-container px-0">
         <v-btn
           v-tooltip="'Clear Mappings'"
           x-small
@@ -102,9 +102,10 @@
           min-height="30px"
           @click="clearMappingsFromTableSelection"
         >
-          <v-icon small dark>
+          <v-icon left dark>
               mdi-delete
           </v-icon>
+            Clear
         </v-btn>
 
         <v-spacer></v-spacer>
@@ -117,22 +118,24 @@
           class="mr-2"
           @click="isolateMappedElementsOnSketchup"
         >
-          <v-icon small dark>
-            mdi-cube-outline
+          <v-icon left dark>
+              mdi-arrange-bring-forward
           </v-icon>
+            Isolate
         </v-btn>
 
         <v-btn
-          v-tooltip="'Show Mapped Elements'"
+          v-tooltip="'Hide Mapped Elements'"
           x-small
           min-width="30px"
           min-height="30px"
           class="mr-2"
-          @click="showMappedElementsOnSketchup"
+          @click="hideMappedElementsOnSketchup"
         >
-          <v-icon small dark>
-            mdi-eye
+          <v-icon left dark>
+            mdi-eye-off
           </v-icon>
+            Hide
         </v-btn>
 
         <v-btn
@@ -142,9 +145,10 @@
           min-height="30px"
           @click="selectMappedElementsOnSketchup"
         >
-          <v-icon small dark>
-            mdi-cursor-default
+          <v-icon left dark>
+              mdi-select-all
           </v-icon>
+            Select
         </v-btn>
       </v-container>
   </v-container>
@@ -176,9 +180,9 @@ export default {
     }
   },
   computed: {
-    // categorySelection() {
-    //     return Object.keys(this.elementSelection)
-    // },
+    categorySelection() {
+        return Object.keys(this.elementSelection)
+    },
   },
   mounted() {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
@@ -190,9 +194,9 @@ export default {
     })
   },
   methods: {
-    categorySelection() {
-        return Object.keys(this.elementSelection)
-    },
+    // categorySelection() {
+    //     return Object.keys(this.elementSelection)
+    // },
     clickMappedElementsCategory(slotData) {
       const indexExpanded = this.mappedElementsExpandedIndexes.findIndex(i => i === slotData.item);
       if (indexExpanded > -1) {
@@ -226,16 +230,16 @@ export default {
         // }
     },
     clearMappingsFromTableSelection(){
-        sketchup.exec({ name: "clearMappingsFromTable", data: this.elementSelection })
+        sketchup.exec({ name: "clear_mappings_from_table", data: this.elementSelection })
     },
     isolateMappedElementsOnSketchup(){
-        sketchup.exec({ name: "isolateMappingsFromTable", data: this.elementSelection })
+        sketchup.exec({ name: "isolate_mappings_from_table", data: this.elementSelection })
     },
-    showMappedElementsOnSketchup(){
-        sketchup.exec({ name: "showMappingsFromTable", data: this.elementSelection })
+    hideMappedElementsOnSketchup(){
+        sketchup.exec({ name: "hide_mappings_from_table", data: this.elementSelection })
     },
     selectMappedElementsOnSketchup(){
-        sketchup.exec({ name: "selectMappingsFromTable", data: this.elementSelection })
+        sketchup.exec({ name: "select_mappings_from_table", data: this.elementSelection })
     },
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
