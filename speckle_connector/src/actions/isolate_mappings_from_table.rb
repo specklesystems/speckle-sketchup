@@ -12,11 +12,17 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, data)
         sketchup_model = state.sketchup_state.sketchup_model
-        # Flat entities to clear mappings
-        comp_flat_entities = SketchupModel::Query::Entity.flat_entities(
-          sketchup_model.entities, [Sketchup::ComponentInstance, Sketchup::Group]
-        )
+
+        # Hide all entities first
+        sketchup_model.entities.each do |ent|
+          ent.hidden = true
+        end
+
+        # Flat entities to isolate mappings
         flat_entities = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
+
+        comp_flat_entities = flat_entities.grep(Sketchup::ComponentInstance) + flat_entities.grep(Sketchup::Group)
+        face_edge_flat_entities = flat_entities.grep(Sketchup::Face) + flat_entities.grep(Sketchup::Edge)
 
         # Collect entity ids to clear mappings
         selected_elements = data.collect { |_, entities| entities['selectedElements'] }.flatten
@@ -25,19 +31,16 @@ module SpeckleConnector
           e['entityType'] == 'Component' || e['entityType'] == 'Group'
         end
 
-        entity_ids = faces_or_edges.collect { |e| e['entityId'] }
+        faces_or_edges_ids = faces_or_edges.collect { |e| e['entityId'] }
 
-        comps_or_groups.each do |e|
-          entity = comp_flat_entities.find { |flat_e| flat_e.persistent_id == e['entityId'] }
-          entities_for_definition = SketchupModel::Query::Entity.flat_entities(entity.definition.entities)
-          entity_ids += entities_for_definition.collect(&:persistent_id) + [entity.persistent_id]
+        face_edge_flat_entities.select { |e| faces_or_edges_ids.include?(e.persistent_id) }.each do |entity|
+          entity.hidden = false
         end
 
-        # Store speckle state to update with mapped entities.
-        flat_entities.each do |entity|
-          next if entity_ids.include?(entity.persistent_id)
+        comps_or_groups_ids = comps_or_groups.collect { |e| e['entityId'] }
 
-          entity.hidden = true
+        comp_flat_entities.select { |e| comps_or_groups_ids.include?(e.persistent_id) }.each do |entity|
+          entity.hidden = false
         end
 
         Events::SelectionEventAction.update_state(state, { clear: true })
