@@ -8,6 +8,7 @@
         disable-filtering
         disable-pagination
         hide-default-footer
+        hide-default-header
         item-key="categoryName"
         :expanded.sync="mappedElementsExpandedIndexes"
         :headers="mappedElementsHeaders"
@@ -15,6 +16,21 @@
         :mobile-breakpoint="0"
         show-select
     >
+        <template #header="{ props: { headers } }">
+            <thead class="v-data-table-header">
+            <tr>
+                <th
+                        v-for="header in headers"
+                        :key="header.value"
+                        :width="header.width"
+                        scope="col"
+                        class="text-center"
+                >
+                    {{ header.text }}
+                </th>
+            </tr>
+            </thead>
+        </template>
       <template v-slot:expanded-item="{ headers, item }">
         <td :colspan="headers.length" class="pl-2 pr-0">
           <v-data-table
@@ -27,34 +43,34 @@
               hide-default-header
               item-key="entityId"
               :headers="subMappedElementsHeaders"
-              :items="item.entities"
+              :items="elementSelection[item.categoryName]['allElements']"
               :mobile-breakpoint="0"
               show-select
           >
-              <template #header="{ props: { headers } }">
-                  <thead class="v-data-table-header">
-                  <tr>
-                      <th
-                              v-for="header in headers"
-                              :key="header.value"
-                              :width="header.width"
-                              scope="col"
-                              class="text-center"
-                      >
-                          {{ header.text }}
-                      </th>
-                  </tr>
-                  </thead>
-              </template>
+            <template #header="{ props: { headers } }">
+              <thead class="v-data-table-header">
+                <tr>
+                  <th
+                          v-for="header in headers"
+                          :key="header.value"
+                          :width="header.width"
+                          scope="col"
+                          class="text-center"
+                  >
+                      {{ header.text }}
+                  </th>
+                </tr>
+              </thead>
+            </template>
             <template #[`item.data-table-select`]="slotData">
-                <td class="mapped-elements-check-box-row">
-                    <v-checkbox
-                            class="shrink ma-0"
-                            hide-details
-                            :value="slotData.isSelected"
-                            @click="slotData.select(clickMappedElements(slotData, item.categoryName))"
-                    />
-                </td>
+              <td class="mapped-elements-check-box-row">
+                <v-checkbox
+                        class="shrink ma-0"
+                        hide-details
+                        :input-value="slotData.isSelected"
+                        @click="slotData.select(clickMappedElements(slotData, item.categoryName))"
+                />
+              </td>
             </template>
           </v-data-table>
         </td>
@@ -72,7 +88,7 @@
         <v-checkbox
                 class="shrink ma-0"
                 hide-details
-                :value="slotData.isSelected"
+                :input-value="slotData.isSelected"
                 @click="slotData.select(clickMappedCategory(slotData))"
         />
       </template>
@@ -194,30 +210,32 @@ export default {
             this.elementSelection[slotData.item.categoryName]['allSelected'] = true
             this.elementSelection[slotData.item.categoryName]['selectedElements'] = slotData.item.entities
         }
-        console.log(this.elementSelection)
     },
     clickMappedElements(slotData, category){
         const elements = this.elementSelection[category]['selectedElements'] === undefined ? [] : this.elementSelection[category]['selectedElements']
-        const indexSelection = elements.findIndex(i => i === slotData.item);
+        const indexSelection = elements.findIndex(i => i['entityId'] === slotData.item['entityId']);
         if (indexSelection > -1) {
             elements.splice(indexSelection, 1)
         } else {
             elements.push(slotData.item);
         }
         this.elementSelection[category]['selectedElements'] = elements
-        console.log(this.elementSelection)
+        // FIXME: This should be the ideal UX, but there is a problem with states currently.. Need to be fixed
+        // if (elements.length === 0){
+        //     this.elementSelection[category]['allSelected'] = false
+        // }
     },
     clearMappingsFromTableSelection(){
-
+        sketchup.exec({ name: "clearMappingsFromTable", data: this.elementSelection })
     },
     isolateMappedElementsOnSketchup(){
-
+        sketchup.exec({ name: "isolateMappingsFromTable", data: this.elementSelection })
     },
     showMappedElementsOnSketchup(){
-
+        sketchup.exec({ name: "showMappingsFromTable", data: this.elementSelection })
     },
     selectMappedElementsOnSketchup(){
-
+        sketchup.exec({ name: "selectMappingsFromTable", data: this.elementSelection })
     },
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
@@ -225,7 +243,18 @@ export default {
       this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
         (entry) => {
           const [categoryName, entities] = entry
-            this.elementSelection[categoryName] = { allSelected: false, entityCount: entities.length, selectedElements: [] }
+          this.elementSelection[categoryName] = {
+              allSelected: false,
+              entityCount: entities.length,
+              selectedElements: [],
+              allElements: entities.map((entity) => {
+                  return {
+                      'entityId': entity['entityId'],
+                      'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
+                      'entityType': entity['entityType']
+                  }
+              })
+          }
           return {
             'categoryName': categoryName,
             'count': entities !== true ? entities.length : 0,
