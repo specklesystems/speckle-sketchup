@@ -39,8 +39,13 @@ module SpeckleConnector
         # Store speckle state to update with mapped entities.
         speckle_state = state.speckle_state
         entities_to_map.each do |entity|
+          name = if @name == '<Mixed>'
+                   entity.respond_to?(:name) ? entity.name : ''
+                 else
+                   @name
+                 end
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :category, @category)
-          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :name, @name)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :name, name)
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :method, @method)
           speckle_state = speckle_state.with_mapped_entity(entity)
         end

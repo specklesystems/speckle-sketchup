@@ -71,13 +71,14 @@
           <v-container v-if="entitySelected" class="btn-container pa-0 mb-5">
             <v-card
                 variant="outlined"
-                class="pt-1 pl-2 mb-1 mr-2 v-alert--border flex"
+                class="pt-0 pl-2 mb-1 mr-2 flex"
                 :elevation="entityCardElevation"
                 :outlined="!definitionSelected"
                 :width="entityCardWidth"
+                min-width="150px"
                 @click="definitionSelectedHandler(false)"
             >
-              <v-card-title class="pa-0 pb-3">
+              <v-card-title class="pa-0 pb-2">
                 <v-icon class="mr-1 v-bottom-navigation--absolute">
                   {{ getSelectedEntityIcon }}
                 </v-icon>
@@ -87,22 +88,22 @@
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
-              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
+              <v-card-subtitle class="pb-0 pr-0 font-weight-light">
                 {{getSelectedEntitySubText}}
               </v-card-subtitle>
-
             </v-card>
 
             <v-card
                 v-if=selectedEntitiesHasParent
                 variant="outlined"
+                class="pt-0 pl-2 mb-1 mr-2 flex"
                 :elevation="definitionSelected ? '6' : '1'"
                 :outlined="definitionSelected"
-                class="pt-1 pl-2 mb-1 mr-2 flex"
-                width="160px"
+                :width="entityCardWidth"
+                min-width="150px"
                 @click="definitionSelectedHandler(true)"
             >
-              <v-card-title class="pa-0 pb-3">
+              <v-card-title class="pa-0 pb-2">
                 <v-icon class="mr-1">
                   mdi-atom
                 </v-icon>
@@ -112,8 +113,8 @@
                   mdi-checkbox-marked-circle
                 </v-icon>
               </v-card-title>
-              <v-card-subtitle class="text-sm-subtitle-2 pb-1 pr-0 font-weight-light">
-                Instance definition
+              <v-card-subtitle class="pb-0 pr-0 font-weight-light">
+                {{getSelectedDefinitionSubText}}
               </v-card-subtitle>
             </v-card>
           </v-container>
@@ -152,7 +153,6 @@
             <v-row justify="center" align="center">
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
-                    class="pt-1"
                     :disabled="!entitySelected"
                     @click="applyMapping"
                 >
@@ -163,7 +163,6 @@
               </v-col>
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
-                    class="pt-1"
                     :disabled="!entitySelected"
                     @click="clearMapping"
                 >
@@ -190,40 +189,8 @@
             {{ `Mapped Elements (${mappedEntityCount})` }}
           </div>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <v-data-table
-              class="elevation-1"
-              dense
-              expand
-              disable-filtering
-              disable-pagination
-              hide-default-footer
-              item-key="categoryName"
-              :expanded.sync="mappedElementsExpandedIndexes"
-              :headers="mappedElementsHeaders"
-              :items="mappedEntitiesTableData"
-              :mobile-breakpoint="0"
-          >
-            <template v-slot:expanded-item="{ headers, item }">
-              <td :colspan="headers.length" class="pl-2 pr-0">
-                <v-data-table
-                    class="elevation-0 pa-0 ma-0"
-                    dense
-                    disable-filtering
-                    disable-pagination
-                    hide-default-footer
-                    item-key="entityId"
-                    :headers="subMappedElementsHeaders"
-                    :items="item.entities"
-                    :mobile-breakpoint="0"
-                >
-                </v-data-table>
-              </td>
-            </template>
-            <template v-slot:item.categoryName="slotData">
-              <div @click="clickMappedElementsColumn(slotData)">{{ slotData.item.categoryName }}</div>
-            </template>
-          </v-data-table>
+        <v-expansion-panel-content class="mx-n3">
+          <mapped-elements/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -253,7 +220,8 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 export default {
   name: "Mapper",
   components: {
-    GlobalToast: () => import('@/components/GlobalToast')
+    GlobalToast: () => import('@/components/GlobalToast'),
+    MappedElements: () => import('@/components/MappedElements.vue')
   },
   data() {
     return {
@@ -263,9 +231,9 @@ export default {
       mappedElementsExpandedIndexes: [],
       // Whether definition card is selected to map or not.
       definitionSelected: false,
-      // Initial entity (Group, Instance, Face, Edge) that mapped or not
+      // Initial entity (Group, Component, Face, Edge) that mapped or not
       entityMapped: false,
-      // Definition of entity is mapped, it will be available for only Instances.
+      // Definition of entity is mapped, it will be available for only Components.
       definitionMapped: false,
       // Whether an entity is selected or not.
       entitySelected: false,
@@ -303,16 +271,16 @@ export default {
   },
   computed:{
     lastSelectedEntityHasParent(){
-      return this.lastSelectedEntity['entityType'] === 'Instance'
+      return this.lastSelectedEntity['entityType'] === 'Component'
     },
     selectedEntitiesHasParent(){
-      return this.selectedEntities.every((entity) => entity['entityType'] === 'Instance')
+      return this.selectedEntities.every((entity) => entity['entityType'] === 'Component')
     },
     entityCardWidth(){
       if (this.lastSelectedEntityHasParent){
-        return '160px'
+        return '150px'
       } else {
-        return '330px'
+        return '310px'
       }
     },
     entityCardElevation(){
@@ -338,7 +306,7 @@ export default {
           return 'mdi-vector-polyline'
         } else if (type === 'Group'){
           return 'mdi-border-outside'
-        } else if (type === 'Instance'){
+        } else if (type === 'Component'){
           return 'mdi-border-inside'
         } else {
           return 'mdi-close'
@@ -348,7 +316,7 @@ export default {
     getSelectedEntityText(){
       if (this.selectedEntities.length > 1){
         if (this.selectedEntitiesHasParent){
-          return 'Instances'
+          return 'Component'
         }
         return 'Multiple Selection'
       }else{
@@ -357,7 +325,7 @@ export default {
     },
     getSelectedDefinitionText(){
       if (this.selectedEntities.length > 1 && this.selectedEntitiesHasParent){
-        return 'Definitions'
+        return 'Definition'
       }else{
         return 'Definition'
       }
@@ -366,8 +334,23 @@ export default {
       if (this.selectedEntities.length > 1){
         return this.getSelectionSummary()
       }else{
-        return 'Last selected entity'
+        return 'Single selected entity'
       }
+    },
+    getSelectedDefinitionSubText(){
+        if (this.selectedEntities.length > 1){
+            let instances = 0
+            let registeredDefinitions = []
+            this.selectedEntities.forEach((entity) => {
+                if (!registeredDefinitions.includes(entity['definition']['entityId'])){
+                    instances += entity['definition']['numberOfInstances']
+                    registeredDefinitions.push(entity['definition']['entityId'])
+                }
+            })
+            return `Instances (${instances})`
+        }else{
+            return `Instances (${this.lastSelectedEntity['definition']['numberOfInstances']})`
+        }
     }
   },
   methods:{
@@ -382,26 +365,6 @@ export default {
       this.selectedCategory = null
       this.entityMapped = false
       this.definitionMapped = false
-    },
-    getMappedElementsTableData(){
-      let groupByCategoryName = groupBy('categoryName')
-      let groupedByCategoryName = groupByCategoryName(this.mappedEntities)
-      this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
-          (entry) => {
-            const [categoryName, entities] = entry
-            return {
-              'categoryName': categoryName,
-              'count': entities !== true ? entities.length : 0,
-              'entities': entities.map((entity) => {
-                return {
-                  'entityId': entity['entityId'],
-                  'nameOrId': entity['name'] !== "" ? entity['name'] : entity['entityId'],
-                  'entityType': entity['entityType']
-                }
-              })
-            }
-          }
-      )
     },
     getSelectionTableData(){
       let groupByClass = groupBy('entityType')
@@ -431,7 +394,8 @@ export default {
       let summary = ''
       Object.entries(groupedByWithKey).forEach((entry, index) => {
         const [className, entities] = entry
-        summary += `${className} (${entities.length})`
+          const entityType = className === 'Component' ? 'Instance' : className
+        summary += `${entityType}s (${entities.length})`
         if (index !== Object.entries(groupedByWithKey).length - 1){
           summary += ' - '
         }
@@ -447,26 +411,41 @@ export default {
       }
       if (this.definitionSelected) {
         if (!this.definitionMapped){
-          this.name = this.lastSelectedEntity['definition']['entityName']
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['definition']['entityName']
+          }
           this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
-          return
+        } else {
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['definition']['schema']['name']
+          }
+          this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
+          this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
         }
-        this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
-        this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
-        this.name = this.lastSelectedEntity['definition']['schema']['name']
       } else {
         if (!this.entityMapped){
-          this.name = this.lastSelectedEntity['entityName']
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['entityName']
+          }
           this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
-          return
+        } else {
+          if (this.selectedEntityCount > 1){
+            this.name = '<Mixed>'
+          }else{
+            this.name = this.lastSelectedEntity['schema']['name']
+          }
+          this.selectedMethod = this.lastSelectedEntity['schema']['method']
+          this.selectedCategory = this.lastSelectedEntity['schema']['category']
         }
-        this.selectedMethod = this.lastSelectedEntity['schema']['method']
-        this.selectedCategory = this.lastSelectedEntity['schema']['category']
-        this.name = this.lastSelectedEntity['schema']['name']
       }
-
     },
     isEntityMapped(entity){
       return entity['schema']['category'] !== undefined
@@ -557,8 +536,6 @@ export default {
     })
     bus.$on('mapped-entities-updated', async (mappedEntities) => {
       this.mappedEntityCount = mappedEntities.length
-      this.mappedEntities = mappedEntities
-      this.getMappedElementsTableData()
     })
   }
 }
@@ -572,6 +549,23 @@ export default {
 
 .active .entity {
   border: 2px solid green;
+}
+
+.v-card__title{
+    font-size: 1.02rem;
+}
+
+.v-card__subtitle{
+    font-size: 0.78rem;
+}
+
+.v-expansion-panel--active > .v-expansion-panel-header{
+    min-height: 32px;
+}
+
+.v-expansion-panel-header{
+    min-height: 32px;
+    padding: 12px 16px;
 }
 
 </style>
