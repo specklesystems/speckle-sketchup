@@ -11,6 +11,13 @@ module SpeckleConnector
   INCLUDE_COMPONENT_ENTITY_ATTRIBUTES = :include_component_entity_attributes
   MERGE_COPLANAR_FACES = :merge_coplanar_faces
 
+  ENTITY_KEYS_FOR_INCLUDING_ATTRIBUTES = {
+    Sketchup::ComponentInstance => INCLUDE_COMPONENT_ENTITY_ATTRIBUTES,
+    Sketchup::Group => INCLUDE_GROUP_ENTITY_ATTRIBUTES,
+    Sketchup::Face => INCLUDE_FACE_ENTITY_ATTRIBUTES,
+    Sketchup::Face => INCLUDE_EDGE_ENTITY_ATTRIBUTES
+  }.freeze
+
   LEVEL_SHIFT_VALUE = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
 
   DEFAULT_MODEL_PREFERENCES = {

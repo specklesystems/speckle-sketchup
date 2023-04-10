@@ -51,9 +51,9 @@ module SpeckleConnector
         @sketchup_entity = sketchup_entity
         @application_id = application_id
         @id = speckle_id
-        @total_children_count = children.length
+        @total_children_count = children.nil? ? 0 : children.length
         @speckle_type = speckle_type
-        @speckle_children_objects = children
+        @speckle_children_objects = children.nil? ? [] : children
       end
       # rubocop:enable Metrics/ParameterLists
 

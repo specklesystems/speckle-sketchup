@@ -1,25 +1,26 @@
 <template>
   <v-app>
     <v-main>
-      <v-app-bar app flat>
+      <v-app-bar app flat height="50">
         <v-img
-          class="mx-auto"
+          class="mx-auto px-0"
           max-width="45"
           src="@/assets/logo.svg"
           style="display: inline-block"
         />
-        <v-text-field
-          v-model="streamSearchQuery"
-          prepend-inner-icon="mdi-magnify"
-          label="Search streams"
-          hide-details
-          clearable
-          rounded
-          filled
-          dense
-          flat
-          solo
-        />
+        <v-tabs
+            v-model="tab"
+            align-tabs="title"
+            class="mx-sm-1"
+        >
+          <v-tabs-slider class="mx-sm-1"></v-tabs-slider>
+          <v-tab href="#streams">
+            {{"Streams"}}
+          </v-tab>
+          <v-tab href="#mapper">
+            {{"Mapper"}}
+          </v-tab>
+        </v-tabs>
         <v-spacer />
         <v-btn icon small class="mx-1" @click="requestRefresh">
           <v-icon>mdi-refresh</v-icon>
@@ -80,19 +81,44 @@
         </v-menu>
       </v-app-bar>
 
-      <create-stream-dialog
-          v-if="accounts().length !== 0"
-          :account-id="activeAccount().userInfo.id"
-          :server-url="activeAccount().serverInfo.url"
-      />
-
-      <v-container v-if="accounts().length !== 0" fluid>
-        <router-view :stream-search-query="streamSearchQuery" />
-      </v-container>
-      <v-container v-else>
-        <login/>
-      </v-container>
-      <global-toast />
+      <v-tabs-items v-model="tab">
+        <v-tab-item :key="1" value="streams">
+          <v-container class="ma-0 pa-0">
+            <v-container>
+              <v-text-field
+                  v-model="streamSearchQuery"
+                  prepend-inner-icon="mdi-magnify"
+                  label="Search streams"
+                  background-color="background"
+                  hide-details
+                  clearable
+                  rounded
+                  filled
+                  dense
+                  flat
+                  solo
+              />
+            </v-container>
+            <create-stream-dialog
+                v-if="accounts().length !== 0"
+                :account-id="activeAccount().userInfo.id"
+                :server-url="activeAccount().serverInfo.url"
+            />
+            <v-container v-if="accounts().length !== 0" fluid>
+              <router-view :stream-search-query="streamSearchQuery" />
+            </v-container>
+            <v-container v-else>
+              <login/>
+            </v-container>
+            <global-toast />
+          </v-container>
+        </v-tab-item>
+        <v-tab-item :key="2" value="mapper">
+          <v-card flat>
+            <mapper></mapper>
+          </v-card>
+        </v-tab-item>
+      </v-tabs-items>
     </v-main>
   </v-app>
 </template>
@@ -141,7 +167,8 @@ export default {
     Login,
     CreateStreamDialog: () => import('@/components/dialogs/CreateStreamDialog'),
     SettingsDialog: () => import('@/components/dialogs/SettingsDialog'),
-    GlobalToast: () => import('@/components/GlobalToast')
+    GlobalToast: () => import('@/components/GlobalToast'),
+    Mapper: () => import('@/components/Mapper')
   },
   props: {
     size: {
@@ -155,7 +182,8 @@ export default {
       createNewStreamDialog: false,
       createStreamByIdDialog: false,
       createStreamByIdText: "",
-      preferences: {}
+      preferences: {},
+      tab: "streams"
     }
   },
   computed: {
@@ -219,3 +247,11 @@ export default {
   }
 }
 </script>
+
+<style>
+
+/deep/ .v-toolbar__content {
+  padding: 0px !important;
+}
+
+</style>

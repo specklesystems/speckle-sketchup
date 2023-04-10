@@ -228,6 +228,8 @@ module SpeckleConnector
 
         return false unless is_array && value.length == 2
 
+        return false if value[1].nil?
+
         value[1].all? { |v| v.is_a?(Sketchup::Entity) }
       end
 

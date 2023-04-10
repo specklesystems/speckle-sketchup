@@ -10,7 +10,10 @@ require_relative '../speckle_objects/other/block_instance'
 require_relative '../speckle_objects/other/block_definition'
 require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../speckle_objects/built_elements/revit/direct_shape'
 require_relative '../constants/path_constants'
+require_relative '../sketchup_model/reader/speckle_entities_reader'
+require_relative '../sketchup_model/query/entity'
 
 module SpeckleConnector
   module Converters
@@ -25,12 +28,36 @@ module SpeckleConnector
           new_speckle_state, converted_object_with_entity = convert(entity, preferences, state)
           state = new_speckle_state
           layer_name = entity_layer_path(entity)
-          layers[layer_name].push(converted_object_with_entity)
+          layers[layer_name].push(converted_object_with_entity) unless converted_object_with_entity.nil?
+        end
+        layers['@DirectShape'] = direct_shapes.collect do |entities|
+          from_mapped_to_speckle(entities[0], entities[1..-1], preferences)
         end
         # send only+ layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
         add_views(base_object_properties) if sketchup_model.pages.any?
         return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
+      end
+
+      # Find flatten direct shapes by calculating their path to find global transformation later.
+      def direct_shapes
+        flat_selection_with_path = SketchupModel::Query::Entity
+                                   .flat_entities_with_path(
+                                     sketchup_model.selection,
+                                     [Sketchup::Face, Sketchup::ComponentInstance, Sketchup::Group], [sketchup_model]
+                                   )
+        mapped_selection = []
+        flat_selection_with_path.each do |entities|
+          entity = entities[0]
+          is_entity_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+          if entity.respond_to?(:definition)
+            is_definition_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity.definition)
+            mapped_selection.append(entities) if is_entity_mapped || is_definition_mapped
+            next
+          end
+          mapped_selection.append(entities) if is_entity_mapped
+        end
+        mapped_selection
       end
 
       # Add views from pages.
@@ -93,17 +120,32 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
-      # rubocop:disable Metrics/MethodLength
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
+        unless SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+          return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
+        end
+
+        return speckle_state, nil
+      end
+
+      def from_mapped_to_speckle(entity, path, preferences)
+        direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
+                       .from_entity(entity, path, @units, preferences)
+        return [direct_shape, [entity]]
+      end
+
+      # rubocop:disable Metrics/MethodLength
+      def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
           return speckle_state, [line, [entity]]
         end
 
         if entity.is_a?(Sketchup::Face)
-          mesh = SpeckleObjects::Geometry::Mesh.from_face(entity, @units, preferences[:model])
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: @units,
+                                                          model_preferences: preferences[:model])
           return speckle_state, [mesh, [entity]]
         end
 
@@ -124,9 +166,13 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::ComponentDefinition)
+          # Local caching
+          return speckle_state, [definitions[entity.guid], [entity]] if definitions.key?(entity.guid)
+
           new_speckle_state, block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(
-            entity, @units, @definitions, preferences, speckle_state, parent, &convert
+            entity, @units, preferences, speckle_state, parent, &convert
           )
+          definitions[entity.guid] = block_definition
           speckle_state = new_speckle_state
           return speckle_state, [block_definition, [entity]]
         end

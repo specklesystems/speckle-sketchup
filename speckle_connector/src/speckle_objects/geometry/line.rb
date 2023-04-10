@@ -5,7 +5,8 @@ require_relative 'point'
 require_relative 'bounding_box'
 require_relative '../base'
 require_relative '../primitive/interval'
-require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -17,11 +18,11 @@ module SpeckleConnector
         # @param start_pt [Geometry::Point] start point speckle object of the speckle line.
         # @param end_pt [Geometry::Point] end point speckle object of the speckle line.
         # @param domain [Primitive::Interval] interval speckle object of the speckle line -represents domain.
-        # @param bbox [Geometry::BoundingBox] bounding box speckle object of the speckle line.
         # @param units [String] units of the speckle line.
         # @param application_id [String, nil] entity id of the {Sketchup::Edge} that represents to the speckle line.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(start_pt:, end_pt:, domain:, bbox:, units:, sketchup_attributes: {}, application_id: nil)
+        def initialize(start_pt:, end_pt:, domain:, units:,
+                       sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
               speckle_type: 'Objects.Geometry.Line',
               total_children_count: 0,
@@ -31,30 +32,28 @@ module SpeckleConnector
           self[:start] = start_pt
           self[:end] = end_pt
           self[:domain] = domain
-          self[:bbox] = bbox
           self[:units] = units
+          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
         # @param edge [Sketchup::Edge] edge to convert line.
         def self.from_edge(edge, units, model_preferences)
-          dictionaries = {}
-          if model_preferences[:include_entity_attributes] && model_preferences[:include_edge_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(edge)
-          end
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(edge, model_preferences)
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(edge)
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
           end_pt = Geometry::Point.from_vertex(edge.end.position, units)
           domain = Primitive::Interval.from_numeric(0, Float(edge.length), units)
-          bbox = Geometry::BoundingBox.from_bounds(edge.bounds, units)
           Line.new(
             start_pt: start_pt,
             end_pt: end_pt,
             domain: domain,
-            bbox: bbox,
             units: units,
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: edge.persistent_id.to_s
           )
         end
@@ -78,7 +77,7 @@ module SpeckleConnector
           edges.each do |edge|
             edge.layer = layer
             unless line['sketchup_attributes'].nil?
-              SketchupModel::Dictionary::DictionaryHandler
+              SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
             end
           end
@@ -88,12 +87,10 @@ module SpeckleConnector
 
         def self.test_line(start_point, end_point, units)
           domain = Primitive::Interval.from_numeric(0, 5, units)
-          bbox = Geometry::BoundingBox.test_bounds(units)
           Line.new(
             start_pt: start_point,
             end_pt: end_point,
             domain: domain,
-            bbox: bbox,
             application_id: '',
             units: units
           )

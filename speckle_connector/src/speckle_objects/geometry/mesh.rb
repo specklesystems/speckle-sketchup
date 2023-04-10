@@ -3,8 +3,10 @@
 require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
+require_relative '../../sketchup_model/query/entity'
 require_relative '../../convertors/clean_up'
-require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -29,7 +31,8 @@ module SpeckleConnector
         # @param faces [Array] faces of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, render_material:, vertices:, faces:, sketchup_attributes:, application_id: nil)
+        def initialize(units:, render_material:, vertices:, faces:,
+                       sketchup_attributes:, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -41,10 +44,10 @@ module SpeckleConnector
           @units = units
           self[:units] = units
           self[:renderMaterial] = render_material
-          # self[:bbox] = bbox
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
@@ -85,7 +88,7 @@ module SpeckleConnector
           added_faces.each do |face|
             face.layer = layer
             unless mesh['sketchup_attributes'].nil?
-              SketchupModel::Dictionary::DictionaryHandler
+              SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
             end
           end
@@ -101,37 +104,46 @@ module SpeckleConnector
         # rubocop:enable Metrics/PerceivedComplexity:
 
         # @param face [Sketchup::Face] face to convert mesh
+        # @param units [String] model units to send Speckle.
+        # @param model_preferences [Hash{Symbol=>Boolean}] model preferences to check include attributes or not.
+        # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
+        #  into any component.
         # rubocop:disable Style/MultilineTernaryOperator
-        # rubocop:disable Metrics/CyclomaticComplexity
-        def self.from_face(face, units, model_preferences)
-          dictionaries = {}
-          if model_preferences[:include_entity_attributes] && model_preferences[:include_face_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(face)
-          end
+        def self.from_face(face:, units:, model_preferences:, global_transform: nil, parent_material: nil)
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(face)
+          material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(
             units: units,
-            render_material: face.material.nil? && face.back_material.nil? ? nil : Other::RenderMaterial
-                                                          .from_material(face.material || face.back_material),
-            # bbox: Geometry::BoundingBox.from_bounds(face.bounds, units),
+            render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
             vertices: [],
             faces: [],
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: face.persistent_id
           )
-          speckle_mesh.face_to_mesh(face)
+          speckle_mesh.face_to_mesh(face, global_transform)
           speckle_mesh.update_mesh
           speckle_mesh
         end
         # rubocop:enable Style/MultilineTernaryOperator
-        # rubocop:enable Metrics/CyclomaticComplexity
 
-        def face_to_mesh(face)
+        # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
+        #  into any component. So it's mesh will be transformed into global coordinates to represent it correctly in
+        #  Speckle viewer or other connectors.
+        def face_to_mesh(face, global_transform = nil)
           mesh = face.loops.count > 1 ? face.mesh : nil
-          mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh)
-          mesh.nil? ? face_indices_to_array(face) : mesh_faces_to_array(mesh)
+          if global_transform.nil?
+            mesh.nil? ? face_vertices_to_array(face) : mesh_points_to_array(mesh)
+            mesh.nil? ? face_indices_to_array(face) : mesh_faces_to_array(mesh)
+          else
+            mesh_points_to_array(face.mesh, global_transform)
+            mesh_faces_to_array(face.mesh, global_transform)
+          end
         end
 
         # Collects indexed Sketchup vertices into flat array for Speckle use.
@@ -176,7 +188,8 @@ module SpeckleConnector
 
         # Get a flat array of vertices from a sketchup polygon mesh
         # @param mesh [Geom::PolygonMesh] mesh to get points.
-        def mesh_points_to_array(mesh)
+        def mesh_points_to_array(mesh, global_transform = nil)
+          mesh.transform!(global_transform) unless global_transform.nil?
           mesh.points.each do |pt|
             # FIXME: Enable previous line when viewer supports shared vertices
             # vertices.push(pt) unless vertices.any? { |point| point == pt }
@@ -186,7 +199,8 @@ module SpeckleConnector
 
         # Get an array of face indices from a sketchup polygon mesh
         # @param mesh [Geom::PolygonMesh] mesh to convert into polygons.
-        def mesh_faces_to_array(mesh)
+        def mesh_faces_to_array(mesh, global_transform = nil)
+          mesh.transform!(global_transform) unless global_transform.nil?
           mesh.polygons.each do |poly|
             global_polygon_array = [poly.count]
             poly.each do |index|
@@ -224,6 +238,38 @@ module SpeckleConnector
             points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
           end
           points
+        end
+
+        # Mesh group id helps to determine how to group faces into meshes.
+        # @param face [Sketchup::Face] face to get mesh group id.
+        def self.get_mesh_group_id(face, model_preferences, parent_material = nil)
+          if model_preferences[:include_entity_attributes] &&
+             model_preferences[:include_face_entity_attributes] &&
+             attribute_dictionary?(face)
+            return face.persistent_id.to_s
+          end
+
+          material = face.material || face.back_material || parent_material
+          return 'none' if material.nil?
+
+          return material.entityID.to_s
+        end
+
+        def self.attribute_dictionary?(face)
+          any_attribute_dictionary = !(face.attribute_dictionaries.nil? || face.attribute_dictionaries.first.nil?)
+          return any_attribute_dictionary unless any_attribute_dictionary
+
+          # If there are any attribute dictionary, then make sure that they are not ignored ones.
+          all_attribute_dictionary_ignored = face.attribute_dictionaries.all? do |dict|
+            ignored_dictionaries.include?(dict.name)
+          end
+          !all_attribute_dictionary_ignored
+        end
+
+        def self.ignored_dictionaries
+          [
+            'Speckle_Base_Object'
+          ]
         end
       end
     end

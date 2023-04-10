@@ -28,6 +28,9 @@ module SpeckleConnector
         # Read speckle entities
         new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
         new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
+        # Read mapped entities
+        new_mapped_entities = SketchupModel::Reader::SpeckleEntitiesReader.read_mapped_entities(sketchup_model.entities)
+        new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
         new_state = new_state.with_speckle_state(new_speckle_state)
 
         # Read preferences from database and model.
@@ -42,8 +45,8 @@ module SpeckleConnector
       # @param sketchup_model [Sketchup::Model] the model to attach observers to
       # @param observers [Hash{Class=>}] the observer objects indexed by their class that will be attached
       def self.attach_observers(sketchup_model, observers)
-        # selection = sketchup_model.selection
-        # selection.add_observer(observers[SELECTION_OBSERVER_NAME])
+        selection = sketchup_model.selection
+        selection.add_observer(observers[SELECTION_OBSERVER])
         # layers = sketchup_model.layers
         # layers.add_observer(observers[LAYERS_OBSERVER_NAME])
         entities = sketchup_model.entities

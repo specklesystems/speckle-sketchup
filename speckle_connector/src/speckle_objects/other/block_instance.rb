@@ -5,7 +5,8 @@ require_relative 'transform'
 require_relative 'block_definition'
 require_relative '../base'
 require_relative '../geometry/bounding_box'
-require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -24,7 +25,7 @@ module SpeckleConnector
         # @param application_id [String] application id of the block instance.
         # rubocop:disable Metrics/ParameterLists
         def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:,
-                       sketchup_attributes: {}, application_id: nil)
+                       sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -37,6 +38,7 @@ module SpeckleConnector
           self[:renderMaterial] = render_material
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
           # FIXME: Since blockDefinition sends with @ as detached, block basePlane renders on viewer.
           self['@@definition'] = block_definition
         end
@@ -47,12 +49,10 @@ module SpeckleConnector
           new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state,
                                                              group.persistent_id)
           speckle_state = new_speckle_state
-          dictionaries = {}
-          if preferences[:model][:include_entity_attributes] && preferences[:model][:include_group_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler.attribute_dictionaries_to_speckle(group)
-          end
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(group, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
-
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(group)
           block_instance = BlockInstance.new(
             units: units,
             is_sketchup_group: true,
@@ -61,6 +61,7 @@ module SpeckleConnector
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: block_definition,
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: group.guid
           )
           return speckle_state, block_instance
@@ -77,13 +78,11 @@ module SpeckleConnector
           )
           speckle_state = new_speckle_state
 
-          dictionaries = {}
-          if preferences[:model][:include_entity_attributes] &&
-             preferences[:model][:include_component_entity_attributes]
-            dictionaries = SketchupModel::Dictionary::DictionaryHandler
-                           .attribute_dictionaries_to_speckle(component_instance)
-          end
+          dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                         .attribute_dictionaries_to_speckle(component_instance, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
+                           .speckle_schema_to_speckle(component_instance)
 
           block_instance = BlockInstance.new(
             units: units,
@@ -97,6 +96,7 @@ module SpeckleConnector
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: block_definition,
             sketchup_attributes: att,
+            speckle_schema: speckle_schema,
             application_id: component_instance.persistent_id.to_s
           )
           return speckle_state, block_instance
@@ -196,7 +196,7 @@ module SpeckleConnector
 
           instance.name = block['name'] unless block['name'].nil?
           unless block['sketchup_attributes'].nil?
-            SketchupModel::Dictionary::DictionaryHandler
+            SketchupModel::Dictionary::BaseDictionaryHandler
               .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
           end
           return state, [instance, definition]

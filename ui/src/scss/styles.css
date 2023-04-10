@@ -119,3 +119,23 @@
   opacity: 1;
   transition: opacity 0.15s;
 }
+
+/* SCROOL BAR */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f3f3;
+  border-left: 1px solid #dadada;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b0b0b0;
+  border: solid 3px #e6e6e6;
+  border-radius: 7px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: black;
+}
