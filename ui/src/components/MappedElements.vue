@@ -111,7 +111,7 @@
         <v-spacer></v-spacer>
 
         <v-btn
-          v-tooltip="'Isolate Mapped Elements'"
+          v-tooltip=" isIsolated ? 'Show All Elements' : 'Isolate Mapped Elements'"
           x-small
           min-width="30px"
           min-height="30px"
@@ -119,9 +119,9 @@
           @click="isolateMappedElementsOnSketchup"
         >
           <v-icon left dark>
-              mdi-arrange-bring-forward
+              {{ isIsolated ? 'mdi-crop-rotate' : 'mdi-crop'}}
           </v-icon>
-            Isolate
+          {{ isIsolated ? 'Show All' : 'Isolate'}}
         </v-btn>
 
         <v-btn
@@ -163,6 +163,7 @@ export default {
   name: "MappedElements",
   data(){
     return {
+      isIsolated: false,
       elementSelection: {},
       mappedEntities: [],
       mappedEntityCount: 0,
@@ -233,7 +234,13 @@ export default {
         sketchup.exec({ name: "clear_mappings_from_table", data: this.elementSelection })
     },
     isolateMappedElementsOnSketchup(){
+      if (this.isIsolated){
+        this.isIsolated = false
+        sketchup.exec({ name: "show_all_entities", data: {} })
+      } else {
+        this.isIsolated = true
         sketchup.exec({ name: "isolate_mappings_from_table", data: this.elementSelection })
+      }
     },
     hideMappedElementsOnSketchup(){
         sketchup.exec({ name: "hide_mappings_from_table", data: this.elementSelection })

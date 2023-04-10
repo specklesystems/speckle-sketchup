@@ -28,6 +28,7 @@ require_relative '../actions/clear_mappings_from_table'
 require_relative '../actions/isolate_mappings_from_table'
 require_relative '../actions/hide_mappings_from_table'
 require_relative '../actions/select_mappings_from_table'
+require_relative '../actions/show_all_entities'
 
 module SpeckleConnector
   module Ui
@@ -86,7 +87,8 @@ module SpeckleConnector
           clear_mappings_from_table: Commands::ActionCommand.new(@app, Actions::ClearMappingsFromTable),
           isolate_mappings_from_table: Commands::ActionCommand.new(@app, Actions::IsolateMappingsFromTable),
           hide_mappings_from_table: Commands::ActionCommand.new(@app, Actions::HideMappingsFromTable),
-          select_mappings_from_table: Commands::ActionCommand.new(@app, Actions::SelectMappingsFromTable)
+          select_mappings_from_table: Commands::ActionCommand.new(@app, Actions::SelectMappingsFromTable),
+          show_all_entities: Commands::ActionCommand.new(@app, Actions::ShowAllEntities)
         }.freeze
       end
     end
