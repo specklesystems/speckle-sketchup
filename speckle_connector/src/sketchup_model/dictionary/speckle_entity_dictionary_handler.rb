@@ -9,6 +9,8 @@ module SpeckleConnector
     module Dictionary
       # Dictionary handler of the speckle entity.
       class SpeckleEntityDictionaryHandler < DictionaryHandler
+        DICTIONARY_NAME = SPECKLE_BASE_OBJECT
+
         # Writes initial data while speckle entity is creating first time.
         # @param sketchup_entity [Sketchup::Entity] Sketchup entity to write data into it's attribute dictionary.
         # rubocop:disable Metrics/ParameterLists
@@ -26,6 +28,11 @@ module SpeckleConnector
           set_hash(sketchup_entity, initial_dict_data)
         end
         # rubocop:enable Metrics/ParameterLists
+
+        # @return [String] the name of the dictionary to read from
+        def self.dictionary_name
+          DICTIONARY_NAME
+        end
       end
     end
   end

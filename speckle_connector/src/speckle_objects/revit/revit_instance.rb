@@ -30,8 +30,9 @@ module SpeckleConnector
             definition = state.sketchup_state.sketchup_model
                               .definitions[RevitDefinition.get_definition_name(block_definition)]
 
-            return BlockInstance.add_instance_from_definition(state, block, layer, entities,
-                                                              definition, false, &convert_to_native)
+            return SpeckleObjects::Other::BlockInstance.add_instance_from_definition(
+              state, block, layer, entities, definition, false, &convert_to_native
+            )
           end
         end
       end
