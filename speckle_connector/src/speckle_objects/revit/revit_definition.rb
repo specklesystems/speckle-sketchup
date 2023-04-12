@@ -23,7 +23,7 @@ module SpeckleConnector
             definition_name = get_definition_name(definition)
             definition['name'] = definition_name
             definition['displayValue'] += definition['elements'] unless definition['elements'].nil?
-            BlockDefinition.to_native(state, definition, layer, entities, &convert_to_native)
+            SpeckleObjects::Other::BlockDefinition.to_native(state, definition, layer, entities, &convert_to_native)
           end
         end
       end
