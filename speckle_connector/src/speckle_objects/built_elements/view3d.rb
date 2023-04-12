@@ -2,6 +2,7 @@
 
 require_relative '../base'
 require_relative '../../constants/type_constants'
+require_relative '../../speckle_objects/geometry/length'
 require_relative '../../speckle_objects/geometry/point'
 require_relative '../../speckle_objects/geometry/vector'
 
@@ -44,6 +45,20 @@ module SpeckleConnector
           self[:rendering_options] = rendering_options
         end
         # rubocop:enable Metrics/ParameterLists
+
+        # @param page [Sketchup::Page] page to convert speckle view.
+        def self.from_page(page, units)
+          cam = page.camera
+          origin = get_camera_origin(cam, units)
+          target = get_camera_target(cam, units)
+          direction = get_camera_direction(cam, units)
+          update_properties = get_scene_update_properties(page)
+          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
+          View3d.new(
+            page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
+            cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
+          )
+        end
 
         # @param obj [Hash] commit object.
         # @param sketchup_model [Sketchup::Model] active sketchup model.
@@ -112,6 +127,49 @@ module SpeckleConnector
             end
           end
           views.flatten.select { |view| view['speckle_type'] == OBJECTS_BUILTELEMENTS_VIEW3D }
+        end
+
+        # Get scene properties
+        # @param page [Sketchup::Page] page on sketchup.
+        def self.get_scene_update_properties(page)
+          {
+            use_axes: page.use_axes?,
+            use_camera: page.use_camera?,
+            use_hidden_geometry: page.use_hidden_geometry?,
+            use_hidden_layers: page.use_hidden_layers?,
+            use_hidden_objects: page.use_hidden_objects?,
+            use_rendering_options: page.use_rendering_options?,
+            use_section_planes: page.use_section_planes?,
+            use_shadow_info: page.use_shadow_info?,
+            use_style: page.use_style?
+          }
+        end
+
+        def self.get_camera_direction(camera, units)
+          SpeckleObjects::Geometry::Vector.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[2], units),
+            @units
+          )
+        end
+
+        def self.get_camera_target(camera, units)
+          SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[2], units),
+            @units
+          )
+        end
+
+        def self.get_camera_origin(camera, units)
+          SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], units),
+            @units
+          )
         end
       end
     end

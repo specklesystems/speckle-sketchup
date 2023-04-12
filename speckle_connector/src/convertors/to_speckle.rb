@@ -35,10 +35,10 @@ module SpeckleConnector
         layers['@DirectShape'] = direct_shapes.collect do |entities|
           from_mapped_to_speckle(entities[0], entities[1..-1], preferences)
         end
-        # send only+ layers that have any object
+        # send only layers that have any object
         base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
         base_object_properties[:layers_relation] = create_relation_from_layers
-        add_views(base_object_properties) if sketchup_model.pages.any?
+        base_object_properties['@Named Views'] = collect_views if sketchup_model.pages.any?
         return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
       end
 
@@ -63,40 +63,11 @@ module SpeckleConnector
         mapped_selection
       end
 
-      # Add views from pages.
-      # @param base_object_properties [Hash] dynamically attached base object properties.
-      def add_views(base_object_properties)
-        views = []
-        sketchup_model.pages.each do |page|
-          cam = page.camera
-          origin = get_camera_origin(cam)
-          target = get_camera_target(cam)
-          direction = get_camera_direction(cam)
-          update_properties = get_scene_update_properties(page)
-          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
-          view = SpeckleObjects::BuiltElements::View3d.new(
-            page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, @units),
-            cam.perspective?, cam.fov, @units, page.name, update_properties, rendering_options
-          )
-          views.append(view)
+      # Collect views from pages.
+      def collect_views
+        sketchup_model.pages.collect do |page|
+          SpeckleObjects::BuiltElements::View3d.from_page(page, @units)
         end
-        base_object_properties['@Named Views'] = views
-      end
-
-      # Get scene properties
-      # @param page [Sketchup::Page] page on sketchup.
-      def get_scene_update_properties(page)
-        {
-          use_axes: page.use_axes?,
-          use_camera: page.use_camera?,
-          use_hidden_geometry: page.use_hidden_geometry?,
-          use_hidden_layers: page.use_hidden_layers?,
-          use_hidden_objects: page.use_hidden_objects?,
-          use_rendering_options: page.use_rendering_options?,
-          use_section_planes: page.use_section_planes?,
-          use_shadow_info: page.use_shadow_info?,
-          use_style: page.use_style?
-        }
       end
 
       # Serialized and traversed information to send batches.
@@ -269,35 +240,6 @@ module SpeckleConnector
         else
           folder_name(folder.folder, folders.push(folder.display_name))
         end
-      end
-
-      private
-
-      def get_camera_direction(cam)
-        SpeckleObjects::Geometry::Vector.new(
-          SpeckleObjects::Geometry.length_to_speckle(cam.direction[0], @units),
-          SpeckleObjects::Geometry.length_to_speckle(cam.direction[1], @units),
-          SpeckleObjects::Geometry.length_to_speckle(cam.direction[2], @units),
-          @units
-        )
-      end
-
-      def get_camera_target(cam)
-        SpeckleObjects::Geometry::Point.new(
-          SpeckleObjects::Geometry.length_to_speckle(cam.target[0], @units),
-          SpeckleObjects::Geometry.length_to_speckle(cam.target[1], @units),
-          SpeckleObjects::Geometry.length_to_speckle(cam.target[2], @units),
-          @units
-        )
-      end
-
-      def get_camera_origin(camera)
-        SpeckleObjects::Geometry::Point.new(
-          SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], @units),
-          SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], @units),
-          SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], @units),
-          @units
-        )
       end
     end
   end
