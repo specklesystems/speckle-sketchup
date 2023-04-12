@@ -95,6 +95,7 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/MethodLength
 
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
