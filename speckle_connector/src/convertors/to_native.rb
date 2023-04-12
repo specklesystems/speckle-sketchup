@@ -185,26 +185,6 @@ module SpeckleConnector
         create_folder_layers(folder_layer_arrays, folder)
       end
 
-      # @param page [Sketchup::Page] scene to update -update properties-
-      def set_page_update_properties(page, update_properties)
-        update_properties.each do |prop, value|
-          page.instance_variable_set(:"@#{prop}", value)
-        end
-      end
-
-      # @param rendering_options [Sketchup::RenderingOptions] rendering options of scene (page)
-      def set_rendering_options(rendering_options, speckle_rendering_options)
-        speckle_rendering_options.each do |prop, value|
-          next if rendering_options[prop].nil?
-
-          rendering_options[prop] = if value.is_a?(Hash)
-                                      SpeckleObjects::Others::Color.to_native(value)
-                                    else
-                                      value
-                                    end
-        end
-      end
-
       # @param headless_layers [Array<String>] headless layer names.
       # @param folder [Sketchup::Layers, Sketchup::LayerFolder] layer folder to create commit layers under it.
       def create_headless_layers(headless_layers, folder)
