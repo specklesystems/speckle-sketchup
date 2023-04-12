@@ -50,6 +50,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/MethodLength
         def self.to_native(obj, sketchup_model)
           views = collect_views(obj)
           return if views.empty?
@@ -80,6 +81,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/MethodLength
 
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
