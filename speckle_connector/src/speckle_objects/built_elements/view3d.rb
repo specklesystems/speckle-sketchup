@@ -50,6 +50,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/MethodLength
         def self.to_native(obj, sketchup_model)
           views = collect_views(obj)
           return if views.empty?
@@ -72,11 +73,35 @@ module SpeckleConnector
             page = sketchup_model.pages[name]
             set_page_update_properties(page, view['update_properties']) if view['update_properties']
             set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
+          rescue StandardError => e
+            puts("Failed to convert view (name: #{name})")
+            puts(e)
           end
         end
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/MethodLength
+
+        # @param page [Sketchup::Page] scene to update -update properties-
+        def self.set_page_update_properties(page, update_properties)
+          update_properties.each do |prop, value|
+            page.instance_variable_set(:"@#{prop}", value)
+          end
+        end
+
+        # @param rendering_options [Sketchup::RenderingOptions] rendering options of scene (page)
+        def self.set_rendering_options(rendering_options, speckle_rendering_options)
+          speckle_rendering_options.each do |prop, value|
+            next if rendering_options[prop].nil?
+
+            rendering_options[prop] = if value.is_a?(Hash)
+                                        SpeckleObjects::Others::Color.to_native(value)
+                                      else
+                                        value
+                                      end
+          end
+        end
 
         def self.collect_views(obj)
           views = []
