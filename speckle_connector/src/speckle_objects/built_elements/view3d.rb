@@ -46,6 +46,13 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
+        # Collects scenes as views from sketchup model.
+        # @param sketchup_model [Sketchup::Model] sketchup model to collect views from pages.
+        # @param units [String] units of the model.
+        def self.from_model(sketchup_model, units)
+          sketchup_model.pages.collect { |page| from_page(page, units) }
+        end
+
         # @param page [Sketchup::Page] page to convert speckle view.
         def self.from_page(page, units)
           cam = page.camera
