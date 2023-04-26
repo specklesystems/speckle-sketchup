@@ -13,6 +13,7 @@ require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/revit/direct_shape'
 require_relative '../speckle_objects/relations/layers'
 require_relative '../speckle_objects/relations/layer'
+require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/query/entity'
@@ -21,53 +22,20 @@ module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
     class ToSpeckle < Converter
+      COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
+      DIRECT_SHAPE = SpeckleObjects::BuiltElements::Revit::DirectShape
+      SPECKLE_ENTITIES_READER = SketchupModel::Reader::SpeckleEntitiesReader
+      VIEW3D = SpeckleObjects::BuiltElements::View3d
+
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
-        layers = add_all_layers
-        state = speckle_state
-        sketchup_model.selection.each do |entity|
-          new_speckle_state, converted_object_with_entity = convert(entity, preferences, state)
-          state = new_speckle_state
-          layer_name = entity_layer_path(entity)
-          layers[layer_name].push(converted_object_with_entity) unless converted_object_with_entity.nil?
-        end
-        layers['@DirectShape'] = direct_shapes.collect do |entities|
-          from_mapped_to_speckle(entities[0], entities[1..-1], preferences)
-        end
+        convert = method(:convert)
+        new_speckle_state, model_collection = COLLECTION.layers(sketchup_model, speckle_state, @units, preferences, &convert)
+
         # send only layers that have any object
-        base_object_properties = layers.reject { |_layer_name, objects| objects.empty? }
-        base_object_properties[:layers_relation] = create_relation_from_layers
-        base_object_properties['@Named Views'] = collect_views if sketchup_model.pages.any?
-        return state, SpeckleObjects::Base.with_detached_layers(base_object_properties)
-      end
-
-      # Find flatten direct shapes by calculating their path to find global transformation later.
-      def direct_shapes
-        flat_selection_with_path = SketchupModel::Query::Entity
-                                   .flat_entities_with_path(
-                                     sketchup_model.selection,
-                                     [Sketchup::Face, Sketchup::ComponentInstance, Sketchup::Group], [sketchup_model]
-                                   )
-        mapped_selection = []
-        flat_selection_with_path.each do |entities|
-          entity = entities[0]
-          is_entity_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
-          if entity.respond_to?(:definition)
-            is_definition_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity.definition)
-            mapped_selection.append(entities) if is_entity_mapped || is_definition_mapped
-            next
-          end
-          mapped_selection.append(entities) if is_entity_mapped
-        end
-        mapped_selection
-      end
-
-      # Collect views from pages.
-      def collect_views
-        sketchup_model.pages.collect do |page|
-          SpeckleObjects::BuiltElements::View3d.from_page(page, @units)
-        end
+        model_collection[:layers_relation] = create_relation_from_layers
+        return new_speckle_state, model_collection
       end
 
       # Serialized and traversed information to send batches.
@@ -167,31 +135,6 @@ module SpeckleConnector
         layer_objects
       end
 
-      def convert_layers(layers)
-        layers.collect do |layer|
-          SpeckleObjects::Relations::Layer.new(
-            name: layer.display_name,
-            color: SpeckleObjects::Others::Color.to_speckle(layer.color),
-            visible: layer.visible?,
-            application_id: layer.persistent_id
-          )
-        end
-      end
-
-      def create_relation_from_layers
-        # init with headless layers
-        layers_and_folders = [convert_layers(sketchup_model.layers.layers)]
-
-        # TODO: collect layers from folders
-        # sketchup_model.layers.folders.each do |layer_folder|
-        #
-        # end
-        SpeckleObjects::Relations::Layers.new(
-          active: sketchup_model.active_layer.display_name,
-          layers: layers_and_folders
-        )
-      end
-
       # @param layers [Array<Sketchup::Layer>] layers in sketchup model
       # @return [Hash{Symbol=>Array}] layers with empty array value.
       def add_layers(layers, layer_objects = {}, parent_name = '')
@@ -240,6 +183,31 @@ module SpeckleConnector
         else
           folder_name(folder.folder, folders.push(folder.display_name))
         end
+      end
+
+      def convert_layers(layers)
+        layers.collect do |layer|
+          SpeckleObjects::Relations::Layer.new(
+            name: layer.display_name,
+            color: SpeckleObjects::Others::Color.to_speckle(layer.color),
+            visible: layer.visible?,
+            application_id: layer.persistent_id
+          )
+        end
+      end
+
+      def create_relation_from_layers
+        # init with headless layers
+        layers_and_folders = [convert_layers(sketchup_model.layers.layers)]
+
+        # TODO: collect layers from folders
+        # sketchup_model.layers.folders.each do |layer_folder|
+        #
+        # end
+        SpeckleObjects::Relations::Layers.new(
+          active: sketchup_model.active_layer.display_name,
+          layers: layers_and_folders
+        )
       end
     end
   end
