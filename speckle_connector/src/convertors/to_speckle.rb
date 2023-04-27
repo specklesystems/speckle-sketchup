@@ -12,7 +12,6 @@ require_relative '../speckle_objects/other/rendering_options'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/revit/direct_shape'
 require_relative '../speckle_objects/relations/layers'
-require_relative '../speckle_objects/relations/layer'
 require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
@@ -31,10 +30,11 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
         convert = method(:convert)
-        new_speckle_state, model_collection = COLLECTION.layers(sketchup_model, speckle_state, @units, preferences, &convert)
+        new_speckle_state, model_collection = COLLECTION.layers(sketchup_model, speckle_state, @units, preferences,
+                                                                &convert)
 
         # send only layers that have any object
-        model_collection[:layers_relation] = create_relation_from_layers
+        model_collection[:layers_relation] = SpeckleObjects::Relations::Layers.from_model(sketchup_model)
         return new_speckle_state, model_collection
       end
 
@@ -183,31 +183,6 @@ module SpeckleConnector
         else
           folder_name(folder.folder, folders.push(folder.display_name))
         end
-      end
-
-      def convert_layers(layers)
-        layers.collect do |layer|
-          SpeckleObjects::Relations::Layer.new(
-            name: layer.display_name,
-            color: SpeckleObjects::Others::Color.to_speckle(layer.color),
-            visible: layer.visible?,
-            application_id: layer.persistent_id
-          )
-        end
-      end
-
-      def create_relation_from_layers
-        # init with headless layers
-        layers_and_folders = [convert_layers(sketchup_model.layers.layers)]
-
-        # TODO: collect layers from folders
-        # sketchup_model.layers.folders.each do |layer_folder|
-        #
-        # end
-        SpeckleObjects::Relations::Layers.new(
-          active: sketchup_model.active_layer.display_name,
-          layers: layers_and_folders
-        )
       end
     end
   end

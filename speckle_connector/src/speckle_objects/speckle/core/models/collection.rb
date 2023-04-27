@@ -47,7 +47,9 @@ module SpeckleConnector
                 layer_collection = get_or_create_layer_collection(entity, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state
-                layer_collection[:elements].append(converted_object_with_entity) unless converted_object_with_entity.nil?
+                unless converted_object_with_entity.nil?
+                  layer_collection[:elements].append(converted_object_with_entity)
+                end
               end
 
               return speckle_state, model_collection

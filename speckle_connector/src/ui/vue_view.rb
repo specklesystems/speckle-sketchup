@@ -64,6 +64,7 @@ module SpeckleConnector
 
       private
 
+      # rubocop:disable Metrics/MethodLength
       def commands
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app),
@@ -91,6 +92,7 @@ module SpeckleConnector
           show_all_entities: Commands::ActionCommand.new(@app, Actions::ShowAllEntities)
         }.freeze
       end
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

@@ -71,6 +71,7 @@ module SpeckleConnector
             )
           end
 
+          # rubocop:disable Metrics/MethodLength
           def self.group_faces_under_mesh_by_material(faces_with_path, units, preferences)
             mesh_groups = {}
             faces_with_path.each do |face_with_path|
@@ -96,6 +97,7 @@ module SpeckleConnector
             mesh_groups.each { |_, mesh| mesh.first.update_mesh }
             mesh_groups.values
           end
+          # rubocop:enable Metrics/MethodLength
         end
       end
     end

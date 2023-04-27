@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require_relative 'layer'
 require_relative '../base'
 
 module SpeckleConnector
   module SpeckleObjects
     module Relations
+      # Sketchup layers (tag) tree relation. The difference between Layer is, this is the top object that holds
+      # properties for all layers or folders, i.e. active layer.
       class Layers < Base
         SPECKLE_TYPE = 'Objects.Relations.Layers'
 
@@ -17,6 +20,22 @@ module SpeckleConnector
           )
           self[:active] = active
           self[:layers] = layers
+        end
+
+        def self.from_model(sketchup_model)
+          # init with headless layers
+          headless_layers = sketchup_model.layers.layers.collect do |layer|
+            SpeckleObjects::Relations::Layer.from_layer(layer)
+          end
+
+          folders = sketchup_model.layers.folders.collect do |folder|
+            SpeckleObjects::Relations::Layer.from_folder(folder)
+          end
+
+          Layers.new(
+            active: sketchup_model.active_layer.display_name,
+            layers: headless_layers + folders
+          )
         end
       end
     end

@@ -77,7 +77,9 @@ module SpeckleConnector
           entities.collect do |entity|
             entity_selection_details = entity_selection_details(entity)
             if entity.is_a?(Sketchup::ComponentInstance)
-              entity_selection_details = entity_selection_details.merge({ definition: entity_selection_details(entity.definition) })
+              entity_selection_details = entity_selection_details.merge(
+                { definition: entity_selection_details(entity.definition) }
+              )
             end
             entity_selection_details
           end
