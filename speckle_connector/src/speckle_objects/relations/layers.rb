@@ -22,6 +22,15 @@ module SpeckleConnector
           self[:layers] = layers
         end
 
+        def self.to_native(layers_relation, sketchup_model)
+          folder = sketchup_model.layers
+
+          SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, folder, sketchup_model)
+
+          active_layer = folder.to_a.find { |layer| layer.display_name == layers_relation['active'] }
+          sketchup_model.active_layer = active_layer unless active_layer.nil?
+        end
+
         def self.from_model(sketchup_model)
           # init with headless layers
           headless_layers = sketchup_model.layers.layers.collect do |layer|

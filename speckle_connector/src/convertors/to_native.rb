@@ -77,9 +77,12 @@ module SpeckleConnector
       def receive_commit_object(obj)
         # First create layers on the sketchup before starting traversing
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
-        filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
+        layers_relation = obj['layers_relation']
 
-        create_layers(filtered_layer_containers, sketchup_model.layers) unless from_revit
+        # Create layers and it's folders from layers relation on the model collection.
+        SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation
+
+        # create_layers(layers_relation, sketchup_model.layers) unless from_revit
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         @entities_to_fill = entities_to_fill(obj)

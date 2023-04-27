@@ -22,6 +22,31 @@ module SpeckleConnector
           self[:layers] = layers_and_folders if layers_and_folders.any?
         end
 
+        # @param speckle_layer [Object] speckle layer object.
+        # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
+        def self.to_native_layer(speckle_layer, folder, sketchup_model)
+          layer = sketchup_model.layers.add_layer(speckle_layer['name'])
+          layer.visible = speckle_layer['visible'] unless speckle_layer['visible'].nil?
+          layer.color = SpeckleObjects::Others::Color.to_native(speckle_layer['color']) if speckle_layer['color']
+          folder.add_layer(layer) if folder.is_a?(Sketchup::LayerFolder)
+        end
+
+        def self.to_native_layer_folder(speckle_layer_folder, folder, sketchup_model)
+          speckle_layers = speckle_layer_folder['layers'].select { |layer_or_folder| layer_or_folder['layers'].nil? }
+
+          speckle_layers.each do |speckle_layer|
+            to_native_layer(speckle_layer, folder, sketchup_model)
+          end
+
+          speckle_folders = speckle_layer_folder['layers'].reject { |layer_or_folder| layer_or_folder['layers'].nil? }
+
+          speckle_folders.each do |speckle_folder|
+            sub_folder = folder.add_folder(speckle_folder['name'])
+            sub_folder.visible = speckle_folder['visible'] unless speckle_folder['visible'].nil?
+            to_native_layer_folder(speckle_folder, sub_folder, sketchup_model)
+          end
+        end
+
         # @param folder [Sketchup::LayerFolder] sketchup layer folder that might contains other folders and layers.
         def self.from_folder(folder)
           layers = folder.layers.collect { |layer| from_layer(layer) }
