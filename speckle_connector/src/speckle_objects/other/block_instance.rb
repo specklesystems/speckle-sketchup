@@ -131,6 +131,8 @@ module SpeckleConnector
           definition = state.sketchup_state.sketchup_model
                             .definitions[BlockDefinition.get_definition_name(block_definition)]
 
+          block_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == block['layer'] }
+          layer = block_layer || layer
           return add_instance_from_definition(state, block, layer, entities, definition, is_group, &convert_to_native)
         end
 

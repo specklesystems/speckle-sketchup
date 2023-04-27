@@ -86,8 +86,9 @@ module SpeckleConnector
           # Add faces from mesh with material and smooth setting
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
+          mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh['layer'] }
           added_faces.each do |face|
-            face.layer = layer
+            face.layer = mesh_layer || layer
             unless mesh['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])

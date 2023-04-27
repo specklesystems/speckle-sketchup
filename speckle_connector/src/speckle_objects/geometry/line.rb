@@ -21,7 +21,7 @@ module SpeckleConnector
         # @param units [String] units of the speckle line.
         # @param application_id [String, nil] entity id of the {Sketchup::Edge} that represents to the speckle line.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(start_pt:, end_pt:, domain:, units:,
+        def initialize(start_pt:, end_pt:, domain:, units:, layer:,
                        sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
               speckle_type: 'Objects.Geometry.Line',
@@ -33,6 +33,7 @@ module SpeckleConnector
           self[:end] = end_pt
           self[:domain] = domain
           self[:units] = units
+          self[:layer] = layer unless layer.nil?
           self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
@@ -52,6 +53,7 @@ module SpeckleConnector
             end_pt: end_pt,
             domain: domain,
             units: units,
+            layer: edge.layer.display_name,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: edge.persistent_id.to_s
@@ -74,8 +76,9 @@ module SpeckleConnector
             end_pt = Point.to_native(line['end']['x'], line['end']['y'], line['end']['z'], line['units'])
             edges = entities.add_edges(start_pt, end_pt)
           end
+          line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line['layer'] }
           edges.each do |edge|
-            edge.layer = layer
+            edge.layer = line_layer || layer
             unless line['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
