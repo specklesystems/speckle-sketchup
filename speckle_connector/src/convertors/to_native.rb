@@ -80,8 +80,6 @@ module SpeckleConnector
         filtered_layer_containers = obj.keys.filter_map { |key| key if key.start_with?('@') && key != '@Named Views' }
 
         create_layers(filtered_layer_containers, sketchup_model.layers) unless from_revit
-        # Convert views to sketchup scenes
-        # SpeckleObjects::BuiltElements::View3d.to_native(obj, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         @entities_to_fill = entities_to_fill(obj)
@@ -367,6 +365,8 @@ module SpeckleConnector
       end
 
       # @param state [States::State] state of the application
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
       def convert_to_speckle_entities(state, speckle_object, entities)
         return state if entities.empty?
 
@@ -387,6 +387,8 @@ module SpeckleConnector
         end
         state.with_speckle_state(speckle_state)
       end
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
     end
     # rubocop:enable Metrics/ClassLength
   end

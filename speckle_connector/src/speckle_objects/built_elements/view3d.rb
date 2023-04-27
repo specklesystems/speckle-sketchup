@@ -70,7 +70,6 @@ module SpeckleConnector
         # @param state [States::State] state of the speckle app.
         # @param obj [Hash] commit object.
         # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
         def self.to_native(state, view, _layer, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
@@ -95,7 +94,6 @@ module SpeckleConnector
           return state, [page]
         end
         # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/CyclomaticComplexity
 
         # @param page [Sketchup::Page] scene to update -update properties-
@@ -116,17 +114,6 @@ module SpeckleConnector
                                         value
                                       end
           end
-        end
-
-        def self.collect_views(obj)
-          views = []
-          views += obj.filter_map do |_key, value|
-            if value.is_a?(Array) &&
-               value.any? { |v| v['speckle_type'] == OBJECTS_BUILTELEMENTS_VIEW3D }
-              value
-            end
-          end
-          views.flatten.select { |view| view['speckle_type'] == OBJECTS_BUILTELEMENTS_VIEW3D }
         end
 
         # Get scene properties
