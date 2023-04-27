@@ -57,7 +57,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity:
-        def self.to_native(state, mesh, layer, entities, &convert_to_native)
+        def self.to_native(state, mesh, entities, &convert_to_native)
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
@@ -75,7 +75,7 @@ module SpeckleConnector
             native_mesh.add_polygon(indices.map { |index| points[index] })
           end
           state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
-                                                              layer, entities, &convert_to_native)
+                                                              entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
             material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id']
@@ -88,7 +88,7 @@ module SpeckleConnector
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh['layer'] }
           added_faces.each do |face|
-            face.layer = mesh_layer || layer
+            face.layer = mesh_layer unless mesh_layer.nil?
             unless mesh['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])

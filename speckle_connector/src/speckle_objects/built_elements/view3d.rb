@@ -71,7 +71,7 @@ module SpeckleConnector
         # @param obj [Hash] commit object.
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(state, view, _layer, _entities, &_convert_to_native)
+        def self.to_native(state, view, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
           return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'

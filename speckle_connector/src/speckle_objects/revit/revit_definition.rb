@@ -19,11 +19,11 @@ module SpeckleConnector
             return "#{family}-#{type}-#{category}-#{def_obj['id']}"
           end
 
-          def self.to_native(state, definition, layer, entities, &convert_to_native)
+          def self.to_native(state, definition, entities, &convert_to_native)
             definition_name = get_definition_name(definition)
             definition['name'] = definition_name
             definition['displayValue'] += definition['elements'] unless definition['elements'].nil?
-            SpeckleObjects::Other::BlockDefinition.to_native(state, definition, layer, entities, &convert_to_native)
+            SpeckleObjects::Other::BlockDefinition.to_native(state, definition, entities, &convert_to_native)
           end
         end
       end

@@ -41,7 +41,7 @@ module SpeckleConnector
 
         # Creates a component definition and instance from a speckle object with a display value
         # @param state [States::State] state of the application.
-        def self.to_native(state, obj, layer, entities, &convert_to_native)
+        def self.to_native(state, obj, entities, &convert_to_native)
           # Switch displayValue with geometry
           obj = collect_definition_geometries(obj)
           obj['name'] = get_definition_name(obj)
@@ -49,7 +49,6 @@ module SpeckleConnector
           state, _definitions = BlockDefinition.to_native(
             state,
             obj,
-            layer,
             entities,
             &convert_to_native
           )

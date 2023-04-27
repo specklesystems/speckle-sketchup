@@ -65,7 +65,7 @@ module SpeckleConnector
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
-        def self.to_native(state, line, layer, entities, &_convert_to_native)
+        def self.to_native(state, line, entities, &_convert_to_native)
           if line.key?('value')
             values = line['value']
             points = values.each_slice(3).to_a.map { |pt| Point.to_native(pt[0], pt[1], pt[2], line['units']) }
@@ -78,7 +78,7 @@ module SpeckleConnector
           end
           line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line['layer'] }
           edges.each do |edge|
-            edge.layer = line_layer || layer
+            edge.layer = line_layer unless line_layer.nil?
             unless line['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])

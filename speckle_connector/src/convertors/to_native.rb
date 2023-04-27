@@ -80,13 +80,13 @@ module SpeckleConnector
         layers_relation = obj['layers_relation']
 
         # Create layers and it's folders from layers relation on the model collection.
-        SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation
+        SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation && !from_revit
 
         # create_layers(layers_relation, sketchup_model.layers) unless from_revit
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         @entities_to_fill = entities_to_fill(obj)
-        traverse_commit_object(obj, sketchup_model.layers, default_commit_layer, @entities_to_fill)
+        traverse_commit_object(obj, @entities_to_fill)
         create_levels_from_section_planes
         check_hiding_layers_needed
         @state
@@ -175,62 +175,14 @@ module SpeckleConnector
         ['Objects.BuiltElements.Revit.Parameter'].include?(obj['speckle_type'])
       end
 
-      # Create actual Sketchup layers from layer_paths that taken from Speckle base object.
-      # @param layer_paths [Array<String>] layer paths to decompose it to folders and it's layers.
-      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create folders and layers under it.
-      def create_layers(layer_paths, folder)
-        # Strip leading '@'
-        layers_with_folders = layer_paths.map { |layer| layer[1..-1] }
-        # Split layer_paths according to having parent folder or not.
-        layers_with_head_folder, headless_layers = layers_with_folders.partition { |layer| layer.include?('::') }
-        # Create array of array that split with '::'
-        folder_layer_arrays = layers_with_head_folder.collect { |folder_layer| folder_layer.split('::') }
-        # Add headless layers into `Sketchup.active_model.layers`
-        create_headless_layers(headless_layers, folder)
-        # Create layers that have parent folder(s)- this method is recursive until all tree is created.
-        create_folder_layers(folder_layer_arrays, folder)
-      end
-
-      # @param headless_layers [Array<String>] headless layer names.
-      # @param folder [Sketchup::Layers, Sketchup::LayerFolder] layer folder to create commit layers under it.
-      def create_headless_layers(headless_layers, folder)
-        headless_layers.each do |layer_name|
-          # Add layer first to the layers object of sketchup model.
-          layer = sketchup_model.layers.add(layer_name)
-          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer_name }
-        end
-      end
-
-      # Create layers with it's parent folders.
-      # @param folder [Sketchup::LayerFolder] layer folder to create commit layers under it.
-      def create_folder_layers(folder_layer_arrays, folder)
-        folder_layer_arrays.each do |folder_layer_array|
-          create_folder_layer(folder_layer_array, folder)
-        end
-      end
-
-      # Create layers that have parent folder(s)- this method is recursive (self-caller) until all tree is created.
-      def create_folder_layer(folder_array, folder)
-        if folder_array.length > 1
-          # add folder if it is not exist.
-          folder.add_folder(folder_array[0]) unless folder.folders.any? { |f| f.display_name == folder_array[0] }
-          new_folder = folder.folders.find { |f| f.display_name == folder_array[0] }
-          create_folder_layer(folder_array[1..-1], new_folder)
-        else
-          # Add layer first to the layers object of sketchup model.
-          layer = sketchup_model.layers.add(folder_array[0])
-          folder.add_layer(layer) unless folder.layers.any? { |l| l.display_name == layer }
-        end
-      end
-
       # Traversal method to create Sketchup objects from upcoming base object.
       # @param obj [Hash, Array] object might be source base object or it's sub objects, because this method is a
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, commit_folder, layer, entities)
+      def traverse_commit_object(obj, entities)
         if convertible_to_native?(obj)
-          @state = convert_to_native(@state, obj, layer, entities)
+          @state = convert_to_native(@state, obj, entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -238,54 +190,20 @@ module SpeckleConnector
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
             props = obj.keys.filter_map { |key| key unless key.start_with?('_') }
             props.each do |prop|
-              layer_path = prop if prop.start_with?('@') && obj[prop].is_a?(Array)
-              layer = find_layer(layer_path, commit_folder, layer)
-              traverse_commit_object(obj[prop], commit_folder, layer, entities)
+              traverse_commit_object(obj[prop], entities)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            @state = convert_to_native(@state, obj, layer, entities)
+            @state = convert_to_native(@state, obj, entities)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, commit_folder, layer, entities) }
+          obj.each_value { |value| traverse_commit_object(value, entities) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, commit_folder, layer, entities) }
+          obj.each { |value| traverse_commit_object(value, entities) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
-
-      # Find layer of the Speckle object by checking iteratively into folder.
-      # @param layer_path [String] complete layer_path to retrieve
-      # @param folder [Sketchup::LayerFolder, Sketchup::Layers] entry folder to search layer
-      # @param fallback_layer [Sketchup::Layer] fallback layer to assign object later if any error occur.
-      # @return [Sketchup::Layer] layer according to path
-      # @example
-      #   "@folder_1::folder_2::layer_1"
-      #   # it will return the layer object which has display name as `layer_1`.
-      def find_layer(layer_path, folder, fallback_layer)
-        begin
-          # Split folders and it's tail layer (last one is layer, others are folders.)
-          layer_path_array = layer_path[1..-1].split('::')
-          # Get sub folders as array, might be empty if `layer_path_array` has only 1 entry
-          sub_folders = layer_path_array.length > 1 ? layer_path_array[0..-2] : []
-          # Get exact layer name from last entry
-          layer_name = layer_path_array.last
-          # Iterate sub folders to find new sub folder to switch it.
-          # It help to search in the tree by switching the target search folder.
-          # Finally we can reach the layer name.
-          sub_folders.each do |sub_folder|
-            # Try to find sub folder into source folder passes by argument
-            s_f = folder.folders.find { |f| f.display_name == sub_folder }
-            # Switch source folder if any exist
-            folder = s_f unless s_f.nil?
-          end
-          # Find finally the layer into related folder
-          folder.layers.find { |l| l.display_name == layer_name }
-        rescue StandardError
-          return fallback_layer
-        end
-      end
 
       def speckle_object_to_native(obj)
         return DISPLAY_VALUE.method(:to_native) unless obj['displayValue'].nil?
@@ -307,14 +225,14 @@ module SpeckleConnector
       }.freeze
 
       # @param state [States::State] state of the speckle application
-      def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
+      def convert_to_native(state, obj, entities = sketchup_model.entities)
         # store this method as parameter to re-call it inner callstack
         convert_to_native = method(:convert_to_native)
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
-        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        state, converted_entities = to_native_method.call(state, obj, entities, &convert_to_native)
         if from_revit
           # Create levels as section planes if they exists
           create_levels(state, obj)
