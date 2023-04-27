@@ -67,43 +67,36 @@ module SpeckleConnector
           )
         end
 
+        # @param state [States::State] state of the speckle app.
         # @param obj [Hash] commit object.
-        # @param sketchup_model [Sketchup::Model] active sketchup model.
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/MethodLength
-        def self.to_native(obj, sketchup_model)
-          views = collect_views(obj)
-          return if views.empty?
+        def self.to_native(state, view, _layer, _entities, &_convert_to_native)
+          sketchup_model = state.sketchup_state.sketchup_model
 
-          views.each do |view|
-            next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
+          return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
-            name = view['name'] || view['id']
-            next if sketchup_model.pages.any? { |page| page.name == name }
+          name = view['name'] || view['id']
+          return state, [] if sketchup_model.pages.any? { |page| page.name == name }
 
-            origin = view['origin']
-            target = view['target']
-            lens = view['lens'] || 50
-            origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
-            target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
-            # Set camera position before creating scene on it.
-            my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
-            sketchup_model.active_view.camera = my_camera
-            sketchup_model.pages.add(name)
-            page = sketchup_model.pages[name]
-            set_page_update_properties(page, view['update_properties']) if view['update_properties']
-            set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
-          rescue StandardError => e
-            puts("Failed to convert view (name: #{name})")
-            puts(e)
-          end
+          origin = view['origin']
+          target = view['target']
+          lens = view['lens'] || 50
+          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
+          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
+          # Set camera position before creating scene on it.
+          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
+          sketchup_model.active_view.camera = my_camera
+          sketchup_model.pages.add(name)
+          page = sketchup_model.pages[name]
+          set_page_update_properties(page, view['update_properties']) if view['update_properties']
+          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
+          return state, [page]
         end
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/MethodLength
 
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
@@ -157,7 +150,7 @@ module SpeckleConnector
             SpeckleObjects::Geometry.length_to_speckle(camera.direction[0], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.direction[1], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.direction[2], units),
-            @units
+            units
           )
         end
 
@@ -166,7 +159,7 @@ module SpeckleConnector
             SpeckleObjects::Geometry.length_to_speckle(camera.target[0], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.target[1], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.target[2], units),
-            @units
+            units
           )
         end
 
@@ -175,7 +168,7 @@ module SpeckleConnector
             SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], units),
             SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], units),
-            @units
+            units
           )
         end
       end

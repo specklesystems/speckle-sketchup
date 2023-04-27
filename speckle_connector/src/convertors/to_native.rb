@@ -35,6 +35,7 @@ module SpeckleConnector
       GEOMETRY = SpeckleObjects::Geometry
       OTHER = SpeckleObjects::Other
       REVIT = SpeckleObjects::Revit
+      BUILTELEMENTS = SpeckleObjects::BuiltElements
 
       # Class aliases
       POINT = GEOMETRY::Point
@@ -45,6 +46,7 @@ module SpeckleConnector
       REVIT_INSTANCE = REVIT::Other::RevitInstance
       RENDER_MATERIAL = OTHER::RenderMaterial
       DISPLAY_VALUE = OTHER::DisplayValue
+      VIEW3D = BUILTELEMENTS::View3d
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -57,6 +59,7 @@ module SpeckleConnector
         Objects.Other.BlockDefinition
         Objects.Other.RenderMaterial
         Objects.Other.Instance:Objects.Other.BlockInstance
+        Objects.BuiltElements.View:Objects.BuiltElements.View3D
       ].freeze
 
       def from_revit
@@ -78,7 +81,7 @@ module SpeckleConnector
 
         create_layers(filtered_layer_containers, sketchup_model.layers) unless from_revit
         # Convert views to sketchup scenes
-        SpeckleObjects::BuiltElements::View3d.to_native(obj, sketchup_model)
+        # SpeckleObjects::BuiltElements::View3d.to_native(obj, sketchup_model)
         # Get default commit layer from sketchup model which will be used as fallback
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
         @entities_to_fill = entities_to_fill(obj)
@@ -298,7 +301,8 @@ module SpeckleConnector
         OBJECTS_OTHER_BLOCKINSTANCE => BLOCK_INSTANCE.method(:to_native),
         OBJECTS_OTHER_BLOCKINSTANCE_FULL => BLOCK_INSTANCE.method(:to_native),
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
-        OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native)
+        OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
+        OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native)
       }.freeze
 
       # @param state [States::State] state of the speckle application
@@ -364,13 +368,15 @@ module SpeckleConnector
 
       # @param state [States::State] state of the application
       def convert_to_speckle_entities(state, speckle_object, entities)
+        return state if entities.empty?
+
         speckle_id = speckle_object['id']
         application_id = speckle_object['applicationId']
         speckle_type = speckle_object['speckle_type']
         children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
         speckle_state = state.speckle_state
         entities.each do |entity|
-          next if entity.is_a?(Sketchup::Material)
+          next if entity.is_a?(Sketchup::Material) || entity.is_a?(Sketchup::Page)
           next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
                   !state.user_state.user_preferences[:register_speckle_entity]
 
