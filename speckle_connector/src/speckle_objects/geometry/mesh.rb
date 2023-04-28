@@ -48,6 +48,12 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
+        def self.check_4_points_planar(points)
+          
+
+          false
+        end
+
         # @param entities [Sketchup::Entities] entities to add
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
@@ -68,7 +74,19 @@ module SpeckleConnector
             # 0 -> 3, 1 -> 4 to preserve backwards compatibility
             num_pts += 3 if num_pts < 3
             indices = faces.shift(num_pts)
-            native_mesh.add_polygon(indices.map { |index| points[index] })
+            polygon_points = indices.map { |index| points[index] }
+            # Quad mesh
+            if num_pts == 4
+              is_planar = check_4_points_planar(polygon_points)
+              if is_planar
+                native_mesh.add_polygon(polygon_points)
+              else
+                native_mesh.add_polygon([polygon_points[0], polygon_points[1], polygon_points[2]])
+                native_mesh.add_polygon([polygon_points[0], polygon_points[2], polygon_points[3]])
+              end
+            else
+              native_mesh.add_polygon(polygon_points)
+            end
           end
           state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
                                                               layer, entities, &convert_to_native)
@@ -84,6 +102,8 @@ module SpeckleConnector
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           added_faces.each do |face|
             face.layer = layer
+            # Smooth edges if they already soft
+            face.edges.each { |edge| edge.smooth = true if edge.soft? }
             unless mesh['sketchup_attributes'].nil?
               SketchupModel::Dictionary::DictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
