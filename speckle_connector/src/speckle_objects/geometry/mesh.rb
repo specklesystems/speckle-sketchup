@@ -5,6 +5,7 @@ require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
 require_relative '../../convertors/clean_up'
 require_relative '../../sketchup_model/dictionary/dictionary_handler'
+require_relative '../../sketchup_model/utils/plane_utils'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -48,10 +49,23 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
+        # Checks 4 points are planar or not.
         def self.check_4_points_planar(points)
-          
+          plane = SketchupModel::Utils::Plane.from_points(points[0], points[1], points[2])
+          plane.on_plane?(points[3])
+        end
 
-          false
+        # Add quad mesh to sketchup native mesh by checking planarity.
+        # @param native_mesh [Geom::Mesh] sketchup mesh to convert them later faces.
+        # @param polygon_points [Array<Geom::Point3d>] sketchup points to add them with polygon to mesh.
+        def self.add_quad_mesh(native_mesh, polygon_points)
+          is_planar = check_4_points_planar(polygon_points)
+          if is_planar
+            native_mesh.add_polygon(polygon_points)
+          else
+            native_mesh.add_polygon([polygon_points[0], polygon_points[1], polygon_points[2]])
+            native_mesh.add_polygon([polygon_points[0], polygon_points[2], polygon_points[3]])
+          end
         end
 
         # @param entities [Sketchup::Entities] entities to add
@@ -77,13 +91,7 @@ module SpeckleConnector
             polygon_points = indices.map { |index| points[index] }
             # Quad mesh
             if num_pts == 4
-              is_planar = check_4_points_planar(polygon_points)
-              if is_planar
-                native_mesh.add_polygon(polygon_points)
-              else
-                native_mesh.add_polygon([polygon_points[0], polygon_points[1], polygon_points[2]])
-                native_mesh.add_polygon([polygon_points[0], polygon_points[2], polygon_points[3]])
-              end
+              add_quad_mesh(native_mesh, polygon_points)
             else
               native_mesh.add_polygon(polygon_points)
             end
