@@ -7,7 +7,6 @@ module SpeckleConnector
     module Utils
       # Static methods to do plane calculations with sketchup geom objects like Point3d and Vector3d.
       class Plane
-        ORTHOGONAL_TOLERANCE = 1e-5
         LENGTH_TOLERANCE = 1e-8
 
         # Create plane from 3 points
@@ -37,10 +36,6 @@ module SpeckleConnector
         # @param direction_v [Geom::Vector3d] the direction of the y-axis
         def initialize(origin:, direction_u:, direction_v:)
           @origin = origin
-          raise ArgumentError, 'directions must me orthogonal' if direction_u.dot(direction_v) > ORTHOGONAL_TOLERANCE
-          raise ArgumentError, 'directions must be of length 1' if (direction_u.length - 1).abs > LENGTH_TOLERANCE
-          raise ArgumentError, 'directions must be of length 1' if (direction_v.length - 1).abs > LENGTH_TOLERANCE
-
           @direction_u = direction_u
           @direction_v = direction_v
         end
