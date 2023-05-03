@@ -209,6 +209,20 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
+
+        # Instances that created from display value that has no any transform value.
+        # Because of this reason their definition created with origin axis. We basically create transformation
+        # vector between bounds min to origin, to move definition axis to bounds min. Otherwise they looks weird in
+        # sketchup and might be cumbersome when we want to add new entities into definition.
+        # @param instance [Sketchup::ComponentInstance] instance to align axis to it's bounds
+        def self.align_instance_axes(instance)
+          bounds = instance.bounds
+          transform = Geom::Transformation.translation(bounds.min.vector_to(Geom::Point3d.new(0, 0, 0)))
+          entities = instance.definition.entities
+          entities.transform_entities(transform, entities.to_a)
+          instance_transform = instance.transformation
+          instance.transform!(instance_transform * transform.inverse * instance_transform.inverse)
+        end
       end
     end
   end

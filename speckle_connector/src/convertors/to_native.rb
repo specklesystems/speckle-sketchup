@@ -82,13 +82,23 @@ module SpeckleConnector
         # Create layers and it's folders from layers relation on the model collection.
         SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation && !from_revit
 
-        # create_layers(layers_relation, sketchup_model.layers) unless from_revit
-        # Get default commit layer from sketchup model which will be used as fallback
-        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
-        @entities_to_fill = entities_to_fill(obj)
+        # By default entities to fill is sketchup model's entities.
+        @entities_to_fill = sketchup_model.entities
+
+        # Navigate to branch entities if commit doesn't come from sketchup
+        unless from_sketchup
+          @branch_definition = branch_definition
+          @entities_to_fill = @branch_definition.entities
+        end
+
         traverse_commit_object(obj, @entities_to_fill)
         create_levels_from_section_planes
         check_hiding_layers_needed
+
+        unless from_sketchup
+          instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+          BLOCK_INSTANCE.align_instance_axes(instance)
+        end
         @state
       end
 
@@ -128,8 +138,16 @@ module SpeckleConnector
       # rubocop:enable Metrics/AbcSize
       # rubocop:enable Metrics/MethodLength
 
+      # @return [Sketchup::ComponentDefinition] branch definition to fill objects in it.
+      def branch_definition
+        @definition_name = "#{@branch_name}-#{@stream_name}"
+        definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
+        definition = sketchup_model.definitions.add(@definition_name) if definition.nil?
+        definition
+      end
+
       def entities_to_fill(_obj)
-        return sketchup_model.entities if from_sketchup
+        return sketchup_model.entities unless from_revit
 
         @definition_name = "#{@branch_name}-#{@stream_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
@@ -137,7 +155,7 @@ module SpeckleConnector
           definition = sketchup_model.definitions.add(@definition_name)
           sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
         end
-        definition.entities
+        definition
       end
 
       LAYERS_WILL_BE_HIDDEN = [
