@@ -272,13 +272,13 @@ module SpeckleConnector
 
         layer = sketchup_model.layers.find { |l| l.display_name == speckle_object['category'] }
         unless layer.nil?
-          entities.each { |entity| entity.layer = layer } if layer
+          entities.each { |entity| entity.layer = layer if entity.respond_to?(:layer) } if layer
           return state
         end
 
         layer = sketchup_model.layers.add(speckle_object['category'])
         unless layer.nil?
-          entities.each { |entity| entity.layer = layer } if layer
+          entities.each { |entity| entity.layer = layer if entity.respond_to?(:layer) } if layer
           state
         end
         state
