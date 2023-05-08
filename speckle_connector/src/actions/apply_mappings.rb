@@ -20,6 +20,10 @@ module SpeckleConnector
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/MethodLength
       def update_state(state)
         sketchup_model = state.sketchup_state.sketchup_model
         entities = if sketchup_model.active_path.nil?
@@ -53,6 +57,10 @@ module SpeckleConnector
         new_state = MappedEntitiesUpdated.update_state(state.with_speckle_state(speckle_state))
         Events::SelectionEventAction.update_state(new_state, { apply: true })
       end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

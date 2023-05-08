@@ -10,6 +10,9 @@ module SpeckleConnector
     class IsolateMappingsFromTable < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
+      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
       def self.update_state(state, data)
         sketchup_model = state.sketchup_state.sketchup_model
 
@@ -45,6 +48,9 @@ module SpeckleConnector
 
         Events::SelectionEventAction.update_state(state, { clear: true })
       end
+      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
     end
   end
 end

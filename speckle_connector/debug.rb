@@ -15,7 +15,9 @@ module SpeckleConnector
   def self.reload
     load(__FILE__)
     pattern = File.join(__dir__, '**/*.rb')
-    Dir.glob(pattern).each { |file| load(file) }
+    # TODO: Here is a opportunity to improve reloading process.
+    #  We can cache last edited time of the each file later to check which file need to be reloaded.
+    Dir.glob(pattern).each { |file| load(file) unless file.include?('bootstrap') }
        .size
   end
   # rubocop:enable SketchupSuggestions/FileEncoding

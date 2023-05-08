@@ -24,7 +24,7 @@ module SpeckleConnector
         # @param sketchup_attributes [Hash{Symbol=>Object}] sketchup attributes of the block instance.
         # @param application_id [String] application id of the block instance.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:,
+        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:, layer:,
                        sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -34,6 +34,7 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:name] = name
+          self[:layer] = layer
           self[:is_sketchup_group] = is_sketchup_group
           self[:renderMaterial] = render_material
           self[:transform] = transform
@@ -60,6 +61,7 @@ module SpeckleConnector
             render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: block_definition,
+            layer: group.layer.display_name,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: group.guid
@@ -95,6 +97,7 @@ module SpeckleConnector
                              end,
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: block_definition,
+            layer: component_instance.layer.display_name,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: component_instance.persistent_id.to_s
@@ -108,7 +111,7 @@ module SpeckleConnector
         # @param block [Object] block object that represents Speckle block.
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
-        def self.to_native(state, block, layer, entities, &convert_to_native)
+        def self.to_native(state, block, entities, &convert_to_native)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
           # so this is set to false always until I can figure this out
@@ -120,7 +123,6 @@ module SpeckleConnector
           state, _definitions = BlockDefinition.to_native(
             state,
             block_definition,
-            layer,
             entities,
             &convert_to_native
           )
@@ -128,7 +130,8 @@ module SpeckleConnector
           definition = state.sketchup_state.sketchup_model
                             .definitions[BlockDefinition.get_definition_name(block_definition)]
 
-          return add_instance_from_definition(state, block, layer, entities, definition, is_group, &convert_to_native)
+          block_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == block['layer'] }
+          return add_instance_from_definition(state, block, block_layer, entities, definition, is_group, &convert_to_native)
         end
 
         def self.get_transform_matrix(block)
@@ -169,12 +172,12 @@ module SpeckleConnector
           instance = if is_group
                        # rubocop:disable SketchupSuggestions/AddGroup
                        group = entities.add_group(definition.entities.to_a)
-                       group.layer = layer
+                       group.layer = layer unless layer.nil?
                        group
                        # rubocop:enable SketchupSuggestions/AddGroup
                      else
                        instance = entities.add_instance(definition, transform)
-                       instance.layer = layer
+                       instance.layer = layer unless layer.nil?
                        instance
                      end
 
@@ -185,7 +188,7 @@ module SpeckleConnector
           # Transform already applied to instance unless is group
           instance.transformation = transform if is_group
           state, _materials = Other::RenderMaterial.to_native(state, block['renderMaterial'],
-                                                              layer, entities, &convert_to_native)
+                                                              entities, &convert_to_native)
 
           # Retrieve material from state
           unless block['renderMaterial'].nil?
@@ -206,6 +209,20 @@ module SpeckleConnector
         # rubocop:enable Metrics/CyclomaticComplexity
         # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/ParameterLists
+
+        # Instances that created from display value that has no any transform value.
+        # Because of this reason their definition created with origin axis. We basically create transformation
+        # vector between bounds min to origin, to move definition axis to bounds min. Otherwise they looks weird in
+        # sketchup and might be cumbersome when we want to add new entities into definition.
+        # @param instance [Sketchup::ComponentInstance] instance to align axis to it's bounds
+        def self.align_instance_axes(instance)
+          bounds = instance.bounds
+          transform = Geom::Transformation.translation(bounds.min.vector_to(Geom::Point3d.new(0, 0, 0)))
+          entities = instance.definition.entities
+          entities.transform_entities(transform, entities.to_a)
+          instance_transform = instance.transformation
+          instance.transform!(instance_transform * transform.inverse * instance_transform.inverse)
+        end
       end
     end
   end

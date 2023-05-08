@@ -2,6 +2,7 @@
 
 require_relative '../base'
 require_relative '../../constants/type_constants'
+require_relative '../../speckle_objects/geometry/length'
 require_relative '../../speckle_objects/geometry/point'
 require_relative '../../speckle_objects/geometry/vector'
 
@@ -45,48 +46,117 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
+        # Collects scenes as views from sketchup model.
+        # @param sketchup_model [Sketchup::Model] sketchup model to collect views from pages.
+        # @param units [String] units of the model.
+        def self.from_model(sketchup_model, units)
+          sketchup_model.pages.collect { |page| from_page(page, units) }
+        end
+
+        # @param page [Sketchup::Page] page to convert speckle view.
+        def self.from_page(page, units)
+          cam = page.camera
+          origin = get_camera_origin(cam, units)
+          target = get_camera_target(cam, units)
+          direction = get_camera_direction(cam, units)
+          update_properties = get_scene_update_properties(page)
+          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
+          View3d.new(
+            page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
+            cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
+          )
+        end
+
+        # @param state [States::State] state of the speckle app.
         # @param obj [Hash] commit object.
-        # @param sketchup_model [Sketchup::Model] active sketchup model.
         # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(obj, sketchup_model)
-          views = collect_views(obj)
-          return if views.empty?
+        def self.to_native(state, view, _entities, &_convert_to_native)
+          sketchup_model = state.sketchup_state.sketchup_model
 
-          views.each do |view|
-            next unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
+          return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
-            name = view['name'] || view['id']
-            next if sketchup_model.pages.any? { |page| page.name == name }
+          name = view['name'] || view['id']
+          return state, [] if sketchup_model.pages.any? { |page| page.name == name }
 
-            origin = view['origin']
-            target = view['target']
-            lens = view['lens'] || 50
-            origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
-            target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
-            # Set camera position before creating scene on it.
-            my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
-            sketchup_model.active_view.camera = my_camera
-            sketchup_model.pages.add(name)
-            page = sketchup_model.pages[name]
-            set_page_update_properties(page, view['update_properties']) if view['update_properties']
-            set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
-          end
+          origin = view['origin']
+          target = view['target']
+          lens = view['lens'] || 50
+          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
+          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
+          # Set camera position before creating scene on it.
+          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
+          sketchup_model.active_view.camera = my_camera
+          sketchup_model.pages.add(name)
+          page = sketchup_model.pages[name]
+          set_page_update_properties(page, view['update_properties']) if view['update_properties']
+          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
+          return state, [page]
         end
         # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/PerceivedComplexity
         # rubocop:enable Metrics/CyclomaticComplexity
 
-        def self.collect_views(obj)
-          views = []
-          views += obj.filter_map do |_key, value|
-            if value.is_a?(Array) &&
-               value.any? { |v| v['speckle_type'] == OBJECTS_BUILTELEMENTS_VIEW3D }
-              value
-            end
+        # @param page [Sketchup::Page] scene to update -update properties-
+        def self.set_page_update_properties(page, update_properties)
+          update_properties.each do |prop, value|
+            page.instance_variable_set(:"@#{prop}", value)
           end
-          views.flatten.select { |view| view['speckle_type'] == OBJECTS_BUILTELEMENTS_VIEW3D }
+        end
+
+        # @param rendering_options [Sketchup::RenderingOptions] rendering options of scene (page)
+        def self.set_rendering_options(rendering_options, speckle_rendering_options)
+          speckle_rendering_options.each do |prop, value|
+            next if rendering_options[prop].nil?
+
+            rendering_options[prop] = if value.is_a?(Hash)
+                                        SpeckleObjects::Others::Color.to_native(value)
+                                      else
+                                        value
+                                      end
+          end
+        end
+
+        # Get scene properties
+        # @param page [Sketchup::Page] page on sketchup.
+        def self.get_scene_update_properties(page)
+          {
+            use_axes: page.use_axes?,
+            use_camera: page.use_camera?,
+            use_hidden_geometry: page.use_hidden_geometry?,
+            use_hidden_layers: page.use_hidden_layers?,
+            use_hidden_objects: page.use_hidden_objects?,
+            use_rendering_options: page.use_rendering_options?,
+            use_section_planes: page.use_section_planes?,
+            use_shadow_info: page.use_shadow_info?,
+            use_style: page.use_style?
+          }
+        end
+
+        def self.get_camera_direction(camera, units)
+          SpeckleObjects::Geometry::Vector.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.direction[2], units),
+            units
+          )
+        end
+
+        def self.get_camera_target(camera, units)
+          SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.target[2], units),
+            units
+          )
+        end
+
+        def self.get_camera_origin(camera, units)
+          SpeckleObjects::Geometry::Point.new(
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[0], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[1], units),
+            SpeckleObjects::Geometry.length_to_speckle(camera.eye[2], units),
+            units
+          )
         end
       end
     end
