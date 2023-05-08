@@ -8,9 +8,9 @@ module SpeckleConnector
     module Relations
       # Sketchup layer (tag) tree relation.
       class Layer < Base
-        SPECKLE_TYPE = 'Objects.Relations.Layer'
+        SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
-        def initialize(name:, visible:, color: nil, layers_and_folders: [], application_id: nil)
+        def initialize(name:, visible:, is_folder:, color: nil, layers_and_folders: [], application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -20,7 +20,9 @@ module SpeckleConnector
           self[:name] = name
           self[:color] = color
           self[:visible] = visible
-          self[:layers] = layers_and_folders if layers_and_folders.any?
+          self[:is_folder] =  is_folder
+          self[:collectionType] = 'layer'
+          self[:elements] = layers_and_folders if layers_and_folders.any?
         end
 
         # @param speckle_layer [Object] speckle layer object.
@@ -33,13 +35,13 @@ module SpeckleConnector
         end
 
         def self.to_native_layer_folder(speckle_layer_folder, folder, sketchup_model)
-          speckle_layers = speckle_layer_folder['layers'].select { |layer_or_folder| layer_or_folder['layers'].nil? }
+          speckle_layers = speckle_layer_folder['elements'].select { |layer_or_fol| layer_or_fol['elements'].nil? }
 
           speckle_layers.each do |speckle_layer|
             to_native_layer(speckle_layer, folder, sketchup_model)
           end
 
-          speckle_folders = speckle_layer_folder['layers'].reject { |layer_or_folder| layer_or_folder['layers'].nil? }
+          speckle_folders = speckle_layer_folder['elements'].reject { |layer_or_fol| layer_or_fol['elements'].nil? }
 
           speckle_folders.each do |speckle_folder|
             sub_folder = folder.add_folder(speckle_folder['name'])
@@ -55,6 +57,7 @@ module SpeckleConnector
           Layer.new(
             name: folder.display_name,
             visible: folder.visible?,
+            is_folder: true,
             layers_and_folders: layers + sub_folders,
             application_id: folder.persistent_id
           )
@@ -65,6 +68,7 @@ module SpeckleConnector
           Layer.new(
             name: layer.display_name,
             visible: layer.visible?,
+            is_folder: false,
             color: SpeckleObjects::Others::Color.to_speckle(layer.color),
             application_id: layer.persistent_id
           )

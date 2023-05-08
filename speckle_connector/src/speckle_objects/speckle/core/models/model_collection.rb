@@ -36,11 +36,15 @@ module SpeckleConnector
               # Views will pass directly to elements since they don't have any relation with layers and geometries.
               model_collection[:elements] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
 
+              # Add layer collections.
+              model_collection[:elements] += LayerCollection.create_layer_collections(sketchup_model)
+
               sketchup_model.selection.each do |entity|
-                layer_collection = LayerCollection.get_or_create_layer_collection(entity, model_collection)
+                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
+                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
                   layer_collection[:elements].append(converted_object_with_entity)
                 end
               end
