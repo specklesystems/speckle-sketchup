@@ -63,7 +63,7 @@ module SpeckleConnector
           instance = entities.add_instance(definition, transform)
           instance.name = obj['name'] unless obj['name'].nil?
           # Align instance axes that created from display value. (without any transform)
-          BlockInstance.align_instance_axes(instance)
+          # BlockInstance.align_instance_axes(instance)
           return state, [instance, definition]
         end
 
