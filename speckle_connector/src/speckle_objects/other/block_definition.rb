@@ -106,7 +106,18 @@ module SpeckleConnector
           definition_name = get_definition_name(definition_obj)
           application_id = definition_obj['applicationId']
           definition = sketchup_model.definitions[definition_name]
-          if definition && (definition.name == definition_name || definition.guid == application_id)
+
+          # It is important check for hosted elements that wrapped into component in sketchup.
+          # Their definition name might be stay same but their speckle ids should be checked
+          # to compare they updated or not.
+          children_changed = false
+          unless definition.nil?
+            previous_speckle_id = definition.get_attribute(SPECKLE_BASE_OBJECT, 'speckle_id')
+            children_changed = previous_speckle_id != definition_obj['id']
+          end
+
+          if definition && !children_changed &&
+             (definition.name == definition_name || definition.guid == application_id)
             return state, [definition]
           end
 

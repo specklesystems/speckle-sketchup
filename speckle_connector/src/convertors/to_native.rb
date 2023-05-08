@@ -12,6 +12,7 @@ require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
 module SpeckleConnector
   module Converters
@@ -95,9 +96,8 @@ module SpeckleConnector
         create_levels_from_section_planes
         check_hiding_layers_needed
 
-        unless from_sketchup
-          instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
-          BLOCK_INSTANCE.align_instance_axes(instance)
+        if !from_sketchup && !@is_update_commit
+          sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
         end
         @state
       end
@@ -106,10 +106,21 @@ module SpeckleConnector
         @levels_layer ||= sketchup_model.layers.add('Levels')
       end
 
+      def clear_levels
+        instances = @entities_to_fill.grep(Sketchup::ComponentInstance)
+        instances.each do |instance|
+          speckle_type = instance.get_attribute(SPECKLE_BASE_OBJECT, 'speckle_type')
+          next if speckle_type.nil?
+
+          sketchup_model.definitions.remove(instance.definition) if speckle_type == OBJECTS_BUILTELEMENTS_REVIT_LEVEL
+        end
+      end
+
       # Create levels from section planes that already created for this commit object.
       # rubocop:disable Metrics/AbcSize
       # rubocop:disable Metrics/MethodLength
       def create_levels_from_section_planes
+        clear_levels if @is_update_commit
         return unless from_revit
 
         section_planes = @entities_to_fill.grep(Sketchup::SectionPlane)
@@ -121,7 +132,9 @@ module SpeckleConnector
         section_planes.each do |section_plane|
           level_name = "#{@definition_name}-#{section_plane.name}"
           definition = sketchup_model.definitions.add(level_name)
-          @entities_to_fill.add_instance(definition, Geom::Transformation.new)
+          instance = @entities_to_fill.add_instance(definition, Geom::Transformation.new)
+          att = section_plane.attribute_dictionary(SPECKLE_BASE_OBJECT).to_h
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.set_hash(instance, att)
           elevation = section_plane.bounds.center.z
           c1_e = Geom::Point3d.new(c_1.x, c_1.y, elevation - LEVEL_SHIFT_VALUE)
           c2_e = Geom::Point3d.new(c_2.x, c_2.y, elevation - LEVEL_SHIFT_VALUE)
@@ -142,6 +155,7 @@ module SpeckleConnector
       def branch_definition
         @definition_name = "#{@branch_name}-#{@stream_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
+        @is_update_commit = !definition.nil?
         definition = sketchup_model.definitions.add(@definition_name) if definition.nil?
         definition
       end
@@ -288,18 +302,21 @@ module SpeckleConnector
 
       # @param state [States::State] state of the speckle application
       def create_levels(state, speckle_object)
-        return state if speckle_object['level'].nil?
-        return state unless speckle_object['level']['speckle_type'].include?('Objects.BuiltElements.Level')
+        level = speckle_object['level']
+        return state if level.nil?
+        return state unless level['speckle_type'].include?('Objects.BuiltElements.Level')
 
-        level_name = speckle_object['level']['name'] || speckle_object['level']['id']
+        level_name = level['name'] || level['id']
         is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
         return state if is_exist
 
-        elevation = SpeckleObjects::Geometry.length_to_native(speckle_object['level']['elevation'],
-                                                              speckle_object['level']['units'])
+        elevation = SpeckleObjects::Geometry.length_to_native(level['elevation'], level['units'])
 
         section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
         section_plane.name = level_name
+        SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
+          section_plane, level['applicationId'], level['id'], level['speckle_type'], [], @stream_id
+        )
         state
       end
 

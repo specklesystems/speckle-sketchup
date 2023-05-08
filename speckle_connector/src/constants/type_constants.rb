@@ -5,6 +5,7 @@ module SpeckleConnector
 
   OBJECTS_BUILTELEMENTS_VIEW3D = 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
   OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE = 'Objects.BuiltElements.Revit.DirectShape'
+  OBJECTS_BUILTELEMENTS_REVIT_LEVEL = 'Objects.BuiltElements.Level:Objects.BuiltElements.Revit.RevitLevel'
 
   OBJECTS_GEOMETRY_LINE = 'Objects.Geometry.Line'
   OBJECTS_GEOMETRY_POLYLINE = 'Objects.Geometry.Polyline'
