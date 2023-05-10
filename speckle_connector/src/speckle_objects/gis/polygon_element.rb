@@ -59,9 +59,25 @@ module SpeckleConnector
 
         def self.collect_definition_geometries(obj)
           geometries = []
-          obj['geometry'].each do |geometry|
-            geometries += geometry['displayValue']
+
+          # FIXME: This type check needed because of QGIS. It can send geometries both way, object or array..
+          #  This is something need to be fixed by QGIS.
+          if obj['geometry'].is_a?(Array)
+            obj['geometry'].each do |geometry|
+              display_value = geometry['displayValue']
+
+              geometries += display_value
+            end
+          else
+            geometries += obj['geometry']['displayValue']
           end
+
+          geometries.each do |geo|
+            if geo['speckle_type'] && geo['speckle_type'] == OBJECTS_GEOMETRY_MESH
+              geo['sketchup_attributes'] = { 'is_soften' => false }
+            end
+          end
+
           obj['geometry'] = geometries
           obj
         end
