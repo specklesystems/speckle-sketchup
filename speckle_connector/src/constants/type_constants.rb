@@ -3,6 +3,8 @@
 module SpeckleConnector
   BASE_OBJECT = 'Base'
 
+  OBJECTS_GIS_POLYGONELEMENT = 'Objects.GIS.PolygonElement'
+
   OBJECTS_BUILTELEMENTS_VIEW3D = 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
   OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE = 'Objects.BuiltElements.Revit.DirectShape'
   OBJECTS_BUILTELEMENTS_REVIT_LEVEL = 'Objects.BuiltElements.Level:Objects.BuiltElements.Revit.RevitLevel'

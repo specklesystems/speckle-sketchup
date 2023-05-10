@@ -1,0 +1,62 @@
+# frozen_string_literal: true
+
+require_relative '../base'
+require_relative '../other/transform'
+require_relative '../other/block_definition'
+require_relative '../other/block_instance'
+require_relative '../../constants/type_constants'
+
+module SpeckleConnector
+  module SpeckleObjects
+    module GIS
+      # BoundingBox object definition for Speckle.
+      class PolygonElement < Base
+        SPECKLE_TYPE = OBJECTS_GIS_POLYGONELEMENT
+
+        def self.get_definition_name(obj, attributes)
+          return obj['name'] unless obj['name'].nil?
+
+          return attributes['name'] unless attributes['name'].nil?
+
+          return "def::#{obj['id']}"
+        end
+
+        # Handles polygon element differently from display value.
+        def self.to_native(state, obj, entities, &convert_to_native)
+          attributes = obj['attributes']
+          obj = collect_definition_geometries(obj)
+          obj['name'] = get_definition_name(obj, attributes)
+
+          state, _definitions = Other::BlockDefinition.to_native(
+            state,
+            obj,
+            entities,
+            &convert_to_native
+          )
+
+          definition = state.sketchup_state.sketchup_model
+                            .definitions[Other::BlockDefinition.get_definition_name(obj)]
+
+          Other::BlockInstance.find_and_erase_existing_instance(definition, obj['id'], obj['applicationId'])
+          t_arr = obj['transform']
+          transform = t_arr.nil? ? Geom::Transformation.new : Other::Transform.to_native(t_arr, obj['units'])
+          instance = entities.add_instance(definition, transform)
+          instance.name = obj['name'] unless obj['name'].nil?
+          # Align instance axes that created from display value. (without any transform)
+          Other::BlockInstance.align_instance_axes(instance)
+          return state, [instance, definition]
+        end
+
+        def self.collect_definition_geometries(obj)
+          geometries = []
+          obj['geometry'].each do |geometry|
+            geometries += geometry['displayValue']
+          end
+          obj['geometry'] = geometries
+          obj
+        end
+      end
+    end
+  end
+end
+

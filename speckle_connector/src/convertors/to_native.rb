@@ -2,6 +2,7 @@
 
 require_relative 'converter'
 require_relative '../constants/type_constants'
+require_relative '../speckle_objects/gis/polygon_element'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
@@ -37,6 +38,7 @@ module SpeckleConnector
       OTHER = SpeckleObjects::Other
       REVIT = SpeckleObjects::Revit
       BUILTELEMENTS = SpeckleObjects::BuiltElements
+      GIS = SpeckleObjects::GIS
 
       # Class aliases
       POINT = GEOMETRY::Point
@@ -48,6 +50,7 @@ module SpeckleConnector
       RENDER_MATERIAL = OTHER::RenderMaterial
       DISPLAY_VALUE = OTHER::DisplayValue
       VIEW3D = BUILTELEMENTS::View3d
+      POLYGON_ELEMENT = GIS::PolygonElement
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -61,6 +64,7 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
         Objects.Other.Instance:Objects.Other.BlockInstance
         Objects.BuiltElements.View:Objects.BuiltElements.View3D
+        Objects.GIS.PolygonElement
       ].freeze
 
       def from_revit
@@ -69,6 +73,10 @@ module SpeckleConnector
 
       def from_sketchup
         @from_sketchup ||= source_app.include?('sketchup')
+      end
+
+      def from_qgis
+        @from_qgis ||= source_app.include?('qgis')
       end
 
       # ReceiveObjects action call this method by giving everything that comes from server.
@@ -97,7 +105,8 @@ module SpeckleConnector
         check_hiding_layers_needed
 
         if !from_sketchup && !@is_update_commit
-          sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+          instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+          BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
         @state
       end
@@ -253,7 +262,8 @@ module SpeckleConnector
         OBJECTS_OTHER_BLOCKINSTANCE_FULL => BLOCK_INSTANCE.method(:to_native),
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
-        OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native)
+        OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native),
+        OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native)
       }.freeze
 
       # @param state [States::State] state of the speckle application
