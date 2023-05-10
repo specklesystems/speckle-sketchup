@@ -5,6 +5,7 @@ require_relative '../other/transform'
 require_relative '../other/block_definition'
 require_relative '../other/block_instance'
 require_relative '../../constants/type_constants'
+require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -21,9 +22,16 @@ module SpeckleConnector
           return "def::#{obj['id']}"
         end
 
+        def self.get_qgis_attributes(obj)
+          attributes = obj['attributes'].to_h
+          speckle_properties = %w[id speckle_type totalChildrenCount units applicationId]
+          speckle_properties.each { |key| attributes.delete(key) }
+          attributes
+        end
+
         # Handles polygon element differently from display value.
         def self.to_native(state, obj, entities, &convert_to_native)
-          attributes = obj['attributes']
+          attributes = get_qgis_attributes(obj)
           obj = collect_definition_geometries(obj)
           obj['name'] = get_definition_name(obj, attributes)
 
@@ -42,6 +50,8 @@ module SpeckleConnector
           transform = t_arr.nil? ? Geom::Transformation.new : Other::Transform.to_native(t_arr, obj['units'])
           instance = entities.add_instance(definition, transform)
           instance.name = obj['name'] unless obj['name'].nil?
+          SketchupModel::Dictionary::DictionaryHandler.set_hash(instance, attributes, 'qgis')
+          SketchupModel::Dictionary::DictionaryHandler.set_hash(definition, attributes, 'qgis')
           # Align instance axes that created from display value. (without any transform)
           Other::BlockInstance.align_instance_axes(instance)
           return state, [instance, definition]
