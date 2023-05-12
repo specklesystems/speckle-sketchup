@@ -113,7 +113,7 @@ module SpeckleConnector
       # If this is the case we can add instance by checking number of instances.
       # rubocop:disable Style/GuardClause
       def try_create_instance
-        if !from_sketchup && (@is_update_commit || @branch_definition.instances.empty?)
+        if !from_sketchup && (!@is_update_commit || @branch_definition.instances.empty?)
           instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
