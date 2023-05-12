@@ -103,13 +103,22 @@ module SpeckleConnector
         traverse_commit_object(obj, @entities_to_fill)
         create_levels_from_section_planes
         check_hiding_layers_needed
+        try_create_instance
+        @state
+      end
 
-        if !from_sketchup && !@is_update_commit
+      # Creating instance from @branch_definition only available for non-sketchup commits since we wrap commits
+      # under instance.
+      # There is also another use case that maybe definition is exist in file but user might be deleted it before.
+      # If this is the case we can add instance by checking number of instances.
+      # rubocop:disable Style/GuardClause
+      def try_create_instance
+        if !from_sketchup && (@is_update_commit || @branch_definition.instances.empty?)
           instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
-        @state
       end
+      # rubocop:enable Style/GuardClause
 
       def levels_layer
         @levels_layer ||= sketchup_model.layers.add('Levels')
