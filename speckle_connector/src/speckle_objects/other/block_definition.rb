@@ -107,16 +107,10 @@ module SpeckleConnector
           application_id = definition_obj['applicationId']
           definition = sketchup_model.definitions[definition_name]
 
-          # It is important check for hosted elements that wrapped into component in sketchup.
-          # Their definition name might be stay same but their speckle ids should be checked
-          # to compare they updated or not.
-          children_changed = false
-          unless definition.nil?
-            previous_speckle_id = definition.get_attribute(SPECKLE_BASE_OBJECT, 'speckle_id')
-            children_changed = previous_speckle_id != definition_obj['id']
-          end
+          # Check any entities of definition changed
+          entities_updated = entities_updated?(definition, definition_obj)
 
-          if definition && !children_changed &&
+          if definition && !entities_updated &&
              (definition.name == definition_name || definition.guid == application_id)
             return state, [definition]
           end
@@ -216,6 +210,19 @@ module SpeckleConnector
           new_speckle_state
         end
         # rubocop:enable Metrics/ParameterLists
+
+        # It is important check for hosted elements that wrapped into component in sketchup.
+        # Their definition name might be stay same but their speckle ids should be checked
+        # to compare they updated or not.
+        def self.entities_updated?(definition, speckle_definition)
+          children_changed = false
+          unless definition.nil?
+            # TODO: Here we need to check later if definition invalid or not.
+            previous_speckle_id = definition.get_attribute(SPECKLE_BASE_OBJECT, 'speckle_id')
+            children_changed = previous_speckle_id != speckle_definition['id']
+          end
+          children_changed
+        end
       end
     end
   end
