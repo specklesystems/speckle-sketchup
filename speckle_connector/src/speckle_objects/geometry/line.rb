@@ -65,6 +65,8 @@ module SpeckleConnector
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
         # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/PerceivedComplexity
+        # rubocop:disable Metrics/CyclomaticComplexity
         def self.to_native(state, line, entities, &_convert_to_native)
           if line.key?('value')
             values = line['value']
@@ -87,6 +89,8 @@ module SpeckleConnector
           return state, edges
         end
         # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/PerceivedComplexity
+        # rubocop:enable Metrics/CyclomaticComplexity
 
         def self.test_line(start_point, end_point, units)
           domain = Primitive::Interval.from_numeric(0, 5, units)
@@ -94,6 +98,7 @@ module SpeckleConnector
             start_pt: start_point,
             end_pt: end_point,
             domain: domain,
+            layer: 'test',
             application_id: '',
             units: units
           )

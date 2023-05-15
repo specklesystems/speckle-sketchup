@@ -12,6 +12,7 @@ module SpeckleConnector
           # LayerCollection object that collect other speckle objects under it's elements.
           class LayerCollection < Collection
             SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
+            # rubocop:disable Metrics/ParameterLists
             def initialize(name:, visible:, is_folder:, color: nil, elements: [], application_id: nil)
               super(
                 name: name,
@@ -23,6 +24,7 @@ module SpeckleConnector
               self[:is_folder] =  is_folder
               self[:color] = color unless color.nil?
             end
+            # rubocop:enable Metrics/ParameterLists
 
             def self.create_layer_collections(sketchup_model)
               headless_layers = sketchup_model.layers.layers.collect do |layer|
@@ -62,6 +64,7 @@ module SpeckleConnector
 
             # @param entity_layer [Sketchup::Layer] entity layer.
             # @param collection [Array] collection to search elements for entity's layer.
+            # rubocop:disable Metrics/CyclomaticComplexity
             def self.get_or_create_layer_collection(entity_layer, collection)
               folder_path = SpeckleConnector::SketchupModel::Query::Layer.path(entity_layer)
               entity_layer_path = folder_path + [entity_layer]
@@ -75,10 +78,8 @@ module SpeckleConnector
                 if collection_candidate.nil?
                   color = folder.respond_to?(:color) ? SpeckleObjects::Others::Color.to_speckle(folder.color) : nil
                   collection_candidate = LayerCollection.new(
-                    name: folder.display_name,
-                    visible: folder.visible?,
-                    is_folder: folder.is_a?(Sketchup::LayerFolder),
-                    color: color
+                    name: folder.display_name, visible: folder.visible?,
+                    is_folder: folder.is_a?(Sketchup::LayerFolder), color: color
                   )
                   # Before switching collection with the new one, we should add it to current collection's elements
                   collection[:elements].append(collection_candidate)
@@ -88,6 +89,7 @@ module SpeckleConnector
 
               collection
             end
+            # rubocop:enable Metrics/CyclomaticComplexity
           end
         end
       end

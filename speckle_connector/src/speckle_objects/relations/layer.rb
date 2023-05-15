@@ -10,6 +10,7 @@ module SpeckleConnector
       class Layer < Base
         SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
+        # rubocop:disable Metrics/ParameterLists
         def initialize(name:, visible:, is_folder:, color: nil, layers_and_folders: [], application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -24,6 +25,7 @@ module SpeckleConnector
           self[:collectionType] = 'layer'
           self[:elements] = layers_and_folders if layers_and_folders.any?
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param speckle_layer [Object] speckle layer object.
         # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
