@@ -93,9 +93,9 @@ module SpeckleConnector
           set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
           return state, [page]
         end
+
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
-
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
           update_properties.each do |prop, value|

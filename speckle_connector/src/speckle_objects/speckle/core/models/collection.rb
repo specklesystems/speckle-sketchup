@@ -2,7 +2,6 @@
 
 require_relative '../../../base'
 
-
 module SpeckleConnector
   module SpeckleObjects
     module Speckle

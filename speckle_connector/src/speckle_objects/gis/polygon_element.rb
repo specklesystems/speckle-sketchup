@@ -85,4 +85,3 @@ module SpeckleConnector
     end
   end
 end
-
