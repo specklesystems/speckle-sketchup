@@ -71,6 +71,7 @@ module SpeckleConnector
             native_mesh.add_polygon([polygon_points[0], polygon_points[1], polygon_points[2]])
             native_mesh.add_polygon([polygon_points[0], polygon_points[2], polygon_points[3]])
           end
+          is_planar
         end
 
         # @param entities [Sketchup::Entities] entities to add
@@ -88,6 +89,7 @@ module SpeckleConnector
           # Initialize native PolygonMesh object later to add polygon inside it.
           native_mesh = Geom::PolygonMesh.new(mesh['vertices'].count / 3)
           faces = mesh['faces']
+          has_any_non_planar_quad_mesh = false
           while faces.count > 0
             num_pts = faces.shift
             # 0 -> 3, 1 -> 4 to preserve backwards compatibility
@@ -96,7 +98,8 @@ module SpeckleConnector
             polygon_points = indices.map { |index| points[index] }
             # Quad mesh
             if num_pts == 4
-              add_quad_mesh(native_mesh, polygon_points)
+              is_planar = add_quad_mesh(native_mesh, polygon_points)
+              has_any_non_planar_quad_mesh = true unless is_planar
             else
               native_mesh.add_polygon(polygon_points)
             end
@@ -117,7 +120,8 @@ module SpeckleConnector
           added_faces.each do |face|
             face.layer = mesh_layer unless mesh_layer.nil?
             # Smooth edges if they already soft
-            face.edges.each { |edge| edge.smooth = true if edge.soft? }
+            # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
+            face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
             unless mesh['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
