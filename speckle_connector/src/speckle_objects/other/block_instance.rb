@@ -7,6 +7,7 @@ require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
+require_relative '../../sketchup_model/query/layer'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -61,7 +62,7 @@ module SpeckleConnector
             render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: block_definition,
-            layer: group.layer.display_name,
+            layer: SketchupModel::Query::Layer.entity_path(group),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: group.guid
@@ -97,7 +98,7 @@ module SpeckleConnector
                              end,
             transform: Other::Transform.from_transformation(component_instance.transformation, units),
             block_definition: block_definition,
-            layer: component_instance.layer.display_name,
+            layer: SketchupModel::Query::Layer.entity_path(component_instance),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: component_instance.persistent_id.to_s
@@ -130,7 +131,8 @@ module SpeckleConnector
           definition = state.sketchup_state.sketchup_model
                             .definitions[BlockDefinition.get_definition_name(block_definition)]
 
-          block_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == block['layer'] }
+          block_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(block['layer'])
+          block_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == block_layer_name }
           return add_instance_from_definition(state, block, block_layer, entities, definition, is_group,
                                               &convert_to_native)
         end

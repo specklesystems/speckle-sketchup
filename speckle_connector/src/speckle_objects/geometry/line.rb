@@ -53,7 +53,7 @@ module SpeckleConnector
             end_pt: end_pt,
             domain: domain,
             units: units,
-            layer: edge.layer.display_name,
+            layer: SketchupModel::Query::Layer.entity_path(edge),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: edge.persistent_id.to_s
@@ -78,7 +78,8 @@ module SpeckleConnector
             end_pt = Point.to_native(line['end']['x'], line['end']['y'], line['end']['z'], line['units'])
             edges = entities.add_edges(start_pt, end_pt)
           end
-          line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line['layer'] }
+          line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
+          line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
           edges.each do |edge|
             edge.layer = line_layer unless line_layer.nil?
             unless line['sketchup_attributes'].nil?
