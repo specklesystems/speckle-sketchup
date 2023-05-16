@@ -24,6 +24,9 @@ module SpeckleConnector
         flat_entities.each do |entity|
           next unless entity_ids.include?(entity.persistent_id)
 
+          if entity.is_a?(Sketchup::ComponentDefinition)
+            state.sketchup_state.sketchup_model.selection.add(entity.instances)
+          end
           state.sketchup_state.sketchup_model.selection.add(entity)
         end
 

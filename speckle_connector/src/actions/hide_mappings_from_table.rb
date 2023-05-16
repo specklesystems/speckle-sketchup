@@ -21,6 +21,11 @@ module SpeckleConnector
         flat_entities.each do |entity|
           next unless entity_ids.include?(entity.persistent_id)
 
+          if entity.is_a?(Sketchup::ComponentDefinition)
+            entity.instances.each do |instance|
+              instance.hidden = true
+            end
+          end
           entity.hidden = true
         end
 

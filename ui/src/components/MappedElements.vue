@@ -165,6 +165,7 @@ export default {
     return {
       isIsolated: false,
       elementSelection: {},
+      categorySelection: [],
       mappedEntities: [],
       mappedEntityCount: 0,
       // Expanded indexes for mapped element table (Categories)
@@ -181,9 +182,9 @@ export default {
     }
   },
   computed: {
-    categorySelection() {
-        return Object.keys(this.elementSelection)
-    },
+    // categorySelection() {
+    //     return Object.keys(this.elementSelection)
+    // },
   },
   mounted() {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
@@ -248,9 +249,14 @@ export default {
     selectMappedElementsOnSketchup(){
         sketchup.exec({ name: "select_mappings_from_table", data: this.elementSelection })
     },
+    // Update mapped elements table whenever mapped elements has changed.
     getMappedElementsTableData(){
       let groupByCategoryName = groupBy('categoryName')
       let groupedByCategoryName = groupByCategoryName(this.mappedEntities)
+      // Reset selected categories and elements whenever mapped elements states has changed
+      this.elementSelection = {}
+      this.categorySelection = []
+      this.mappedElementsExpandedIndexes = []
       this.mappedEntitiesTableData = Object.entries(groupedByCategoryName).map(
         (entry) => {
           const [categoryName, entities] = entry

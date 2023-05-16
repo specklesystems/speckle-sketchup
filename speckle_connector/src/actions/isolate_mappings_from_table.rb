@@ -24,14 +24,15 @@ module SpeckleConnector
         # Flat entities to isolate mappings
         flat_entities = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
 
-        comp_flat_entities = flat_entities.grep(Sketchup::ComponentInstance) + flat_entities.grep(Sketchup::Group)
+        comp_flat_entities = flat_entities.grep(Sketchup::ComponentInstance) + flat_entities.grep(Sketchup::Group) +
+          flat_entities.grep(Sketchup::ComponentDefinition)
         face_edge_flat_entities = flat_entities.grep(Sketchup::Face) + flat_entities.grep(Sketchup::Edge)
 
         # Collect entity ids to clear mappings
         selected_elements = data.collect { |_, entities| entities['selectedElements'] }.flatten
 
         comps_or_groups, faces_or_edges = selected_elements.partition do |e|
-          e['entityType'] == 'Component' || e['entityType'] == 'Group'
+          e['entityType'] == 'Component' || e['entityType'] == 'Definition' || e['entityType'] == 'Group'
         end
 
         faces_or_edges_ids = faces_or_edges.collect { |e| e['entityId'] }
@@ -43,6 +44,11 @@ module SpeckleConnector
         comps_or_groups_ids = comps_or_groups.collect { |e| e['entityId'] }
 
         comp_flat_entities.select { |e| comps_or_groups_ids.include?(e.persistent_id) }.each do |entity|
+          if entity.is_a?(Sketchup::ComponentDefinition)
+            entity.instances.each do |instance|
+              instance.hidden = false
+            end
+          end
           entity.hidden = false
         end
 
