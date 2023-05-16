@@ -100,23 +100,30 @@ module SpeckleConnector
           }
         end
 
+        # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.mapped_entity_details(entities)
           reverse_category_dictionary = Mapping::Category::RevitCategory.reverse_dictionary
           entities.collect do |entity|
             speckle_schema = get_schema(entity)
+            speckle_schema_definition = entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
+            entity_type = entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first
             {
-              name: speckle_schema['name'],
-              category: speckle_schema['category'],
-              categoryName: reverse_category_dictionary[speckle_schema['category']],
-              method: speckle_schema['method'],
+              name: speckle_schema['name'] || speckle_schema_definition['name'],
+              category: speckle_schema['category'] || speckle_schema_definition['category'],
+              categoryName: reverse_category_dictionary[speckle_schema['category']] ||
+                reverse_category_dictionary[speckle_schema_definition['category']],
+              method: speckle_schema['method'] || speckle_schema_definition['method'],
               entityName: entity.respond_to?(:name) ? entity.name : '',
               entityId: entity.persistent_id,
-              entityType: entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first,
+              entityType: entity.is_a?(Sketchup::ComponentDefinition) ? 'Definition' : entity_type,
               schema: speckle_schema,
-              definitionSchema: entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
+              definitionSchema: speckle_schema_definition
             }
           end
         end
+        # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
       end
     end
   end
