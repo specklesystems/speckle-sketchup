@@ -18,6 +18,23 @@ module SpeckleConnector
             end
             parent_folders.reverse
           end
+
+          # @param entity [Sketchup::Entity] entity to find path.
+          def entity_path(entity, separation = '::')
+            path = path(entity.layer)
+            full_path = path.append(entity.layer)
+            full_path_string = ''
+            full_path.each_with_index do |layer, i|
+              full_path_string += layer.display_name
+              full_path_string += separation unless i == full_path.length - 1
+            end
+            full_path_string
+          end
+
+          # @param string_layer_path [String] string layer path to split.
+          def entity_layer_from_path(string_layer_path, separation = '::')
+            string_layer_path.split(separation).last
+          end
         end
       end
     end

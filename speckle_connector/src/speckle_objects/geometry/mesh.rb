@@ -9,6 +9,7 @@ require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/dictionary_handler'
 require_relative '../../sketchup_model/utils/plane_utils'
+require_relative '../../sketchup_model/query/layer'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -116,7 +117,8 @@ module SpeckleConnector
           # Add faces from mesh with material and smooth setting
           entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
-          mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh['layer'] }
+          mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
+          mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
           added_faces.each do |face|
             face.layer = mesh_layer unless mesh_layer.nil?
             # Smooth edges if they already soft
@@ -158,7 +160,7 @@ module SpeckleConnector
             vertices: [],
             faces: [],
             sketchup_attributes: att,
-            layer: face.layer.display_name,
+            layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
             application_id: face.persistent_id
           )
