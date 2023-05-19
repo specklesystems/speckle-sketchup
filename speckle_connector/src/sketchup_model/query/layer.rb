@@ -33,6 +33,8 @@ module SpeckleConnector
 
           # @param string_layer_path [String] string layer path to split.
           def entity_layer_from_path(string_layer_path, separation = '::')
+            return string_layer_path if string_layer_path.nil?
+
             string_layer_path.split(separation).last
           end
         end
