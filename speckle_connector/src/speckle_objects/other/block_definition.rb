@@ -75,7 +75,7 @@ module SpeckleConnector
           block_definition = BlockDefinition.new(
             units: units,
             name: definition.name,
-            geometry: geometry,
+            geometry: geometry.compact,
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
