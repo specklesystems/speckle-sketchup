@@ -11,7 +11,7 @@ module SpeckleConnector
         SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
         # rubocop:disable Metrics/ParameterLists
-        def initialize(name:, visible:, is_folder:, color: nil, layers_and_folders: [], application_id: nil)
+        def initialize(name:, visible:, is_folder:, line_style: nil, color: nil, layers_and_folders: [], application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -22,6 +22,7 @@ module SpeckleConnector
           self[:color] = color
           self[:visible] = visible
           self[:is_folder] =  is_folder
+          self[:line_style] = line_style unless line_style.nil?
           self[:collectionType] = 'layer'
           self[:elements] = layers_and_folders if layers_and_folders.any?
         end
@@ -29,10 +30,15 @@ module SpeckleConnector
 
         # @param speckle_layer [Object] speckle layer object.
         # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
+        # @param sketchup_model [Sketchup::Model] sketchup active model.
         def self.to_native_layer(speckle_layer, folder, sketchup_model)
           layer = sketchup_model.layers.add_layer(speckle_layer['name'])
           layer.visible = speckle_layer['visible'] unless speckle_layer['visible'].nil?
           layer.color = SpeckleObjects::Others::Color.to_native(speckle_layer['color']) if speckle_layer['color']
+          if speckle_layer['line_style']
+            line_style = sketchup_model.line_styles.find { |ls| ls.name == speckle_layer['line_style'] }
+            layer.line_style = line_style unless line_style.nil?
+          end
           folder.add_layer(layer) if folder.is_a?(Sketchup::LayerFolder)
         end
 
@@ -71,6 +77,7 @@ module SpeckleConnector
             name: layer.display_name,
             visible: layer.visible?,
             is_folder: false,
+            line_style: layer.line_style.name,
             color: SpeckleObjects::Others::Color.to_speckle(layer.color),
             application_id: layer.persistent_id
           )
