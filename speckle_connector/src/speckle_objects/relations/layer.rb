@@ -77,7 +77,7 @@ module SpeckleConnector
             name: layer.display_name,
             visible: layer.visible?,
             is_folder: false,
-            line_style: layer.line_style.name,
+            line_style: layer.line_style.nil? ? nil : layer.line_style.name,
             color: SpeckleObjects::Others::Color.to_speckle(layer.color),
             application_id: layer.persistent_id
           )
