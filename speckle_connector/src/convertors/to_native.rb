@@ -294,10 +294,10 @@ module SpeckleConnector
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
         convert_to_speckle_entities(state, obj, converted_entities)
-      # rescue StandardError => e
-      #   puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
-      #   puts(e)
-      #   return state
+      rescue StandardError => e
+        puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
+        puts(e)
+        return state
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity
