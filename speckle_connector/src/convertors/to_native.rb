@@ -93,10 +93,11 @@ module SpeckleConnector
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
         # layers_relation = obj['layers_relation']
 
-        layers_relation = SpeckleObjects::Relations::Layers.extract_relations(obj)
-
-        # Create layers and it's folders from layers relation on the model collection.
-        SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation && !from_revit
+        unless from_revit
+          layers_relation = SpeckleObjects::Relations::Layers.extract_relations(obj)
+          # Create layers and it's folders from layers relation on the model collection.
+          SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation
+        end
 
         # By default entities to fill is sketchup model's entities.
         @entities_to_fill = sketchup_model.entities
