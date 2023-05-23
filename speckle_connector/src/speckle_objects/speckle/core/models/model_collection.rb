@@ -61,6 +61,20 @@ module SpeckleConnector
                 [direct_shape, [entity]]
               end
             end
+
+            def self.to_native(state, model_collection, layer, entities, &convert_to_native)
+              elements = model_collection['elements']
+
+              elements.each do |element|
+                new_state = convert_to_native.call(state, element, layer, entities)
+                state = new_state
+              end
+
+              active_layer = model_collection['active_layer']
+              state.sketchup_state.sketchup_model.active_layer = active_layer unless active_layer.nil?
+
+              return state, []
+            end
           end
         end
       end

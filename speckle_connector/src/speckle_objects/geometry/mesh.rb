@@ -157,9 +157,7 @@ module SpeckleConnector
           speckle_mesh = Mesh.new(
             units: units,
             render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
-            vertices: [],
-            faces: [],
-            sketchup_attributes: att,
+            vertices: [], faces: [], sketchup_attributes: att,
             layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
             application_id: face.persistent_id

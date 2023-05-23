@@ -13,6 +13,7 @@ require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
 module SpeckleConnector
@@ -51,6 +52,7 @@ module SpeckleConnector
       DISPLAY_VALUE = OTHER::DisplayValue
       VIEW3D = BUILTELEMENTS::View3d
       POLYGON_ELEMENT = GIS::PolygonElement
+      COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -65,6 +67,7 @@ module SpeckleConnector
         Objects.Other.Instance:Objects.Other.BlockInstance
         Objects.BuiltElements.View:Objects.BuiltElements.View3D
         Objects.GIS.PolygonElement
+        Speckle.Core.Models.Collection
       ].freeze
 
       def from_revit
@@ -86,7 +89,9 @@ module SpeckleConnector
       def receive_commit_object(obj)
         # First create layers on the sketchup before starting traversing
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
-        layers_relation = obj['layers_relation']
+        # layers_relation = obj['layers_relation']
+
+        layers_relation = SpeckleObjects::Relations::Layers.extract_relations(obj)
 
         # Create layers and it's folders from layers relation on the model collection.
         SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation && !from_revit
@@ -274,7 +279,9 @@ module SpeckleConnector
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
         OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native),
-        OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native)
+        OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
+        OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
+        SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native)
       }.freeze
 
       # @param state [States::State] state of the speckle application
@@ -295,9 +302,9 @@ module SpeckleConnector
         # Create speckle entities from sketchup entities to achieve continuous traversal.
         convert_to_speckle_entities(state, obj, converted_entities)
       rescue StandardError => e
-        puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
-        puts(e)
-        return state
+          puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
+          puts(e)
+          return state
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity

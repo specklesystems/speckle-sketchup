@@ -33,8 +33,6 @@ module SpeckleConnector
         new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, speckle_state,
                                                                                    @units, preferences, &convert)
 
-        # send only layers that have any object
-        model_collection[:layers_relation] = SpeckleObjects::Relations::Layers.from_model(sketchup_model)
         return new_speckle_state, model_collection
       end
 

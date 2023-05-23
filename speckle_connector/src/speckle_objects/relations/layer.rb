@@ -11,7 +11,8 @@ module SpeckleConnector
         SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
         # rubocop:disable Metrics/ParameterLists
-        def initialize(name:, visible:, is_folder:, line_style: nil, color: nil, layers_and_folders: [], application_id: nil)
+        def initialize(name:, visible:, is_folder:, line_style: nil, color: nil, layers_and_folders: [],
+                       application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -32,28 +33,28 @@ module SpeckleConnector
         # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
         # @param sketchup_model [Sketchup::Model] sketchup active model.
         def self.to_native_layer(speckle_layer, folder, sketchup_model)
-          layer = sketchup_model.layers.add_layer(speckle_layer['name'])
-          layer.visible = speckle_layer['visible'] unless speckle_layer['visible'].nil?
-          layer.color = SpeckleObjects::Others::Color.to_native(speckle_layer['color']) if speckle_layer['color']
-          if speckle_layer['line_style']
-            line_style = sketchup_model.line_styles.find { |ls| ls.name == speckle_layer['line_style'] }
+          layer = sketchup_model.layers.add_layer(speckle_layer[:name])
+          layer.visible = speckle_layer[:visible] unless speckle_layer[:visible].nil?
+          layer.color = SpeckleObjects::Other::Color.to_native(speckle_layer[:color]) if speckle_layer[:color]
+          if speckle_layer[:line_style]
+            line_style = sketchup_model.line_styles.find { |ls| ls.name == speckle_layer[:line_style] }
             layer.line_style = line_style unless line_style.nil?
           end
           folder.add_layer(layer) if folder.is_a?(Sketchup::LayerFolder)
         end
 
         def self.to_native_layer_folder(speckle_layer_folder, folder, sketchup_model)
-          speckle_layers = speckle_layer_folder['elements'].select { |layer_or_fol| layer_or_fol['elements'].nil? }
+          speckle_layers = speckle_layer_folder[:elements].select { |layer_or_fol| layer_or_fol[:elements].nil? }
 
           speckle_layers.each do |speckle_layer|
             to_native_layer(speckle_layer, folder, sketchup_model)
           end
 
-          speckle_folders = speckle_layer_folder['elements'].reject { |layer_or_fol| layer_or_fol['elements'].nil? }
+          speckle_folders = speckle_layer_folder[:elements].reject { |layer_or_fol| layer_or_fol[:elements].nil? }
 
           speckle_folders.each do |speckle_folder|
-            sub_folder = folder.add_folder(speckle_folder['name'])
-            sub_folder.visible = speckle_folder['visible'] unless speckle_folder['visible'].nil?
+            sub_folder = folder.add_folder(speckle_folder[:name])
+            sub_folder.visible = speckle_folder[:visible] unless speckle_folder[:visible].nil?
             to_native_layer_folder(speckle_folder, sub_folder, sketchup_model)
           end
         end
@@ -78,7 +79,7 @@ module SpeckleConnector
             visible: layer.visible?,
             is_folder: false,
             line_style: layer.line_style.nil? ? nil : layer.line_style.name,
-            color: SpeckleObjects::Others::Color.to_speckle(layer.color),
+            color: SpeckleObjects::Other::Color.to_speckle(layer.color),
             application_id: layer.persistent_id
           )
         end

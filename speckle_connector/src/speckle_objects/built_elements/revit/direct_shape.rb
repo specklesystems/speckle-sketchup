@@ -2,9 +2,13 @@
 
 require_relative '../../base'
 require_relative '../../other/render_material'
+require_relative '../../other/block_instance'
+require_relative '../../other/block_definition'
+require_relative '../../other/transform'
 require_relative '../../../constants/type_constants'
 require_relative '../../../sketchup_model/query/entity'
 require_relative '../../../sketchup_model/reader/speckle_entities_reader'
+require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -28,6 +32,41 @@ module SpeckleConnector
             self[:category] = category
             self[:units] = units
             self[:baseGeometries] = base_geometries
+          end
+
+          def self.get_direct_shape_name(direct_shape)
+            if direct_shape['name'] == ''
+              direct_shape['applicationId'].to_s
+            else
+              "#{direct_shape['name']}::#{direct_shape['applicationId']}"
+            end
+          end
+
+          # @param state [States::State] state of the application.
+          def self.to_native(state, direct_shape, layer, entities, &convert_to_native)
+            direct_shape['geometry'] = direct_shape['baseGeometries']
+            direct_shape['name'] = get_direct_shape_name(direct_shape)
+
+            state, _definitions = Other::BlockDefinition.to_native(
+              state, direct_shape, layer, entities, &convert_to_native
+            )
+
+            definition = state.sketchup_state.sketchup_model
+                              .definitions[Other::BlockDefinition.get_definition_name(direct_shape)]
+
+            instance = entities.add_instance(definition, Geom::Transformation.new)
+            instance.name = direct_shape['name'] unless direct_shape['name'].nil?
+            DICTIONARY::SpeckleSchemaDictionaryHandler.set_hash(
+              instance,
+              {
+                name: direct_shape['name'], category: direct_shape['category'], method: 'Direct Shape'
+              }
+            )
+            new_speckle_state = state.speckle_state.with_mapped_entity(instance)
+            state = state.with_speckle_state(new_speckle_state)
+            instance.layer = layer unless layer.nil?
+
+            return state, [instance, definition]
           end
 
           # Collects direct shapes on selection as flat list.

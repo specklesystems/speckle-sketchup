@@ -170,7 +170,8 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.add_instance_from_definition(state, block, block_layer, layer, entities, definition, is_group, &convert_to_native)
+        def self.add_instance_from_definition(state, block, block_layer, layer, entities, definition, is_group,
+                                              &convert_to_native)
           t_arr = get_transform_matrix(block)
           transform = Other::Transform.to_native(t_arr, block['units'])
           instance = if is_group

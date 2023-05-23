@@ -60,7 +60,7 @@ module SpeckleConnector
 
           BlockInstance.find_and_erase_existing_instance(definition, obj['id'], obj['applicationId'])
           t_arr = obj['transform']
-          transform = t_arr.nil? ? Geom::Transformation.new : OTHER::Transform.to_native(t_arr, obj['units'])
+          transform = t_arr.nil? ? Geom::Transformation.new : Other::Transform.to_native(t_arr, obj['units'])
           instance = entities.add_instance(definition, transform)
           instance.name = obj['name'] unless obj['name'].nil?
           instance.layer = layer unless layer.nil?

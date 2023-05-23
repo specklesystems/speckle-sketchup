@@ -60,7 +60,7 @@ module SpeckleConnector
           target = get_camera_target(cam, units)
           direction = get_camera_direction(cam, units)
           update_properties = get_scene_update_properties(page)
-          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
+          rendering_options = SpeckleObjects::Other::RenderingOptions.to_speckle(page.rendering_options)
           View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
             cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
@@ -71,6 +71,7 @@ module SpeckleConnector
         # @param obj [Hash] commit object.
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
+        # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(state, view, _layer, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
@@ -95,9 +96,10 @@ module SpeckleConnector
           set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
           return state, [page]
         end
-
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
+
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
           update_properties.each do |prop, value|
@@ -111,7 +113,7 @@ module SpeckleConnector
             next if rendering_options[prop].nil?
 
             rendering_options[prop] = if value.is_a?(Hash)
-                                        SpeckleObjects::Others::Color.to_native(value)
+                                        SpeckleObjects::Other::Color.to_native(value)
                                       else
                                         value
                                       end

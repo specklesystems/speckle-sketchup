@@ -36,11 +36,7 @@ module SpeckleConnector
           obj['name'] = get_definition_name(obj, attributes)
 
           state, _definitions = Other::BlockDefinition.to_native(
-            state,
-            obj,
-            layer,
-            entities,
-            &convert_to_native
+            state, obj, layer, entities, &convert_to_native
           )
 
           definition = state.sketchup_state.sketchup_model

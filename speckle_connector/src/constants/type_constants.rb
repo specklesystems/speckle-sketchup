@@ -20,4 +20,7 @@ module SpeckleConnector
   OBJECTS_OTHER_REVIT_REVITINSTANCE = 'Objects.Other.Revit.RevitInstance'
   OBJECTS_OTHER_BLOCKDEFINITION = 'Objects.Other.BlockDefinition'
   OBJECTS_OTHER_RENDERMATERIAL = 'Objects.Other.RenderMaterial'
+  OBJECTS_OTHER_DISPLAYSTYLE = 'Objects.Other.DisplayStyle'
+
+  SPECKLE_CORE_MODELS_COLLECTION = 'Speckle.Core.Models.Collection'
 end
