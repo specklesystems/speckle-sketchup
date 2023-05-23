@@ -112,7 +112,7 @@ module SpeckleConnector
         # @param block [Object] block object that represents Speckle block.
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
-        def self.to_native(state, block, entities, &convert_to_native)
+        def self.to_native(state, block, layer, entities, &convert_to_native)
           # is_group = block.key?("is_sketchup_group") && block["is_sketchup_group"]
           # something about this conversion is freaking out if nested block geo is a group
           # so this is set to false always until I can figure this out
@@ -124,6 +124,7 @@ module SpeckleConnector
           state, _definitions = BlockDefinition.to_native(
             state,
             block_definition,
+            layer,
             entities,
             &convert_to_native
           )
@@ -133,7 +134,7 @@ module SpeckleConnector
 
           block_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(block['layer'])
           block_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == block_layer_name }
-          return add_instance_from_definition(state, block, block_layer, entities, definition, is_group,
+          return add_instance_from_definition(state, block, block_layer, layer, entities, definition, is_group,
                                               &convert_to_native)
         end
 
@@ -169,18 +170,18 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/ParameterLists
-        def self.add_instance_from_definition(state, block, layer, entities, definition, is_group, &convert_to_native)
+        def self.add_instance_from_definition(state, block, block_layer, layer, entities, definition, is_group, &convert_to_native)
           t_arr = get_transform_matrix(block)
           transform = Other::Transform.to_native(t_arr, block['units'])
           instance = if is_group
                        # rubocop:disable SketchupSuggestions/AddGroup
                        group = entities.add_group(definition.entities.to_a)
-                       group.layer = layer unless layer.nil?
+                       group.layer = block_layer.nil? ? layer : block_layer
                        group
                        # rubocop:enable SketchupSuggestions/AddGroup
                      else
                        instance = entities.add_instance(definition, transform)
-                       instance.layer = layer unless layer.nil?
+                       instance.layer = block_layer.nil? ? layer : block_layer
                        instance
                      end
 
@@ -190,7 +191,7 @@ module SpeckleConnector
           puts("Failed to create instance for speckle block instance #{block['id']}") if instance.nil?
           # Transform already applied to instance unless is group
           instance.transformation = transform if is_group
-          state, _materials = Other::RenderMaterial.to_native(state, block['renderMaterial'],
+          state, _materials = Other::RenderMaterial.to_native(state, block['renderMaterial'], layer,
                                                               entities, &convert_to_native)
 
           # Retrieve material from state

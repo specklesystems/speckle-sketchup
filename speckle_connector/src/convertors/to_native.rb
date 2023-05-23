@@ -100,7 +100,9 @@ module SpeckleConnector
           @entities_to_fill = @branch_definition.entities
         end
 
-        traverse_commit_object(obj, @entities_to_fill)
+        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
+
+        traverse_commit_object(obj, default_commit_layer, @entities_to_fill)
         create_levels_from_section_planes
         check_hiding_layers_needed
         try_create_instance
@@ -230,9 +232,9 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, entities)
+      def traverse_commit_object(obj, layer, entities)
         if convertible_to_native?(obj)
-          @state = convert_to_native(@state, obj, entities)
+          @state = convert_to_native(@state, obj, layer, entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -240,16 +242,16 @@ module SpeckleConnector
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
             props = obj.keys.filter_map { |key| key unless key.start_with?('_') }
             props.each do |prop|
-              traverse_commit_object(obj[prop], entities)
+              traverse_commit_object(obj[prop], layer, entities)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            @state = convert_to_native(@state, obj, entities)
+            @state = convert_to_native(@state, obj, layer, entities)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, entities) }
+          obj.each_value { |value| traverse_commit_object(value, layer, entities) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, entities) }
+          obj.each { |value| traverse_commit_object(value, layer, entities) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
@@ -276,14 +278,14 @@ module SpeckleConnector
       }.freeze
 
       # @param state [States::State] state of the speckle application
-      def convert_to_native(state, obj, entities = sketchup_model.entities)
+      def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
         # store this method as parameter to re-call it inner callstack
         convert_to_native = method(:convert_to_native)
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
-        state, converted_entities = to_native_method.call(state, obj, entities, &convert_to_native)
+        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
         if from_revit
           # Create levels as section planes if they exists
           create_levels(state, obj)
@@ -292,10 +294,10 @@ module SpeckleConnector
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
         convert_to_speckle_entities(state, obj, converted_entities)
-      rescue StandardError => e
-        puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
-        puts(e)
-        return state
+      # rescue StandardError => e
+      #   puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
+      #   puts(e)
+      #   return state
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity

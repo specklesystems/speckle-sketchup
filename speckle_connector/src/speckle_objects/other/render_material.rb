@@ -50,7 +50,7 @@ module SpeckleConnector
         end
 
         # @param state [States::State] state of the application.
-        def self.to_native(state, render_material, _entities, &_convert_to_native)
+        def self.to_native(state, render_material, _layer, _entities, &_convert_to_native)
           return state, [] if render_material.nil?
 
           sketchup_model = state.sketchup_state.sketchup_model

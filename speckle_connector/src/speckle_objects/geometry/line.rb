@@ -67,7 +67,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(state, line, entities, &_convert_to_native)
+        def self.to_native(state, line, layer, entities, &_convert_to_native)
           if line.key?('value')
             values = line['value']
             points = values.each_slice(3).to_a.map { |pt| Point.to_native(pt[0], pt[1], pt[2], line['units']) }
@@ -81,7 +81,7 @@ module SpeckleConnector
           line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
           line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
           edges.each do |edge|
-            edge.layer = line_layer unless line_layer.nil?
+            edge.layer = line_layer.nil? ? layer : line_layer
             unless line['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])

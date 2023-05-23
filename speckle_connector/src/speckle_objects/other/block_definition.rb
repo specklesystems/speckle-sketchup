@@ -98,7 +98,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/PerceivedComplexity
         # rubocop:disable Metrics/MethodLength
         # rubocop:disable Metrics/AbcSize
-        def self.to_native(state, definition_obj, _entities, &convert_to_native)
+        def self.to_native(state, definition_obj, layer, _entities, &convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
           # FIXME: Check later this is a valid check or not. Maybe unnecessary? If necessary document it!
@@ -124,11 +124,11 @@ module SpeckleConnector
 
           if geometry.is_a?(Array)
             geometry.each do |obj|
-              state = convert_to_native.call(state, obj, definition.entities)
+              state = convert_to_native.call(state, obj, layer, definition.entities)
             end
           end
           if geometry.is_a?(Hash) && !definition_obj['speckle_type'].nil?
-            state = convert_to_native.call(state, geometry, definition.entities)
+            state = convert_to_native.call(state, geometry, layer, definition.entities)
           end
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")

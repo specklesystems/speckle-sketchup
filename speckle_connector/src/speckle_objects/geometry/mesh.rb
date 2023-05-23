@@ -80,7 +80,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity:
-        def self.to_native(state, mesh, entities, &convert_to_native)
+        def self.to_native(state, mesh, layer, entities, &convert_to_native)
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
@@ -105,7 +105,7 @@ module SpeckleConnector
               native_mesh.add_polygon(polygon_points)
             end
           end
-          state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
+          state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'], layer,
                                                               entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
@@ -120,7 +120,7 @@ module SpeckleConnector
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
           added_faces.each do |face|
-            face.layer = mesh_layer unless mesh_layer.nil?
+            face.layer = mesh_layer.nil? ? layer : mesh_layer
             # Smooth edges if they already soft
             # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
             face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
