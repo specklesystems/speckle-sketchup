@@ -13,6 +13,7 @@ require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../speckle_objects/built_elements/network'
 require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
@@ -66,6 +67,7 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
         Objects.Other.Instance:Objects.Other.BlockInstance
         Objects.BuiltElements.View:Objects.BuiltElements.View3D
+        Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
         Speckle.Core.Models.Collection
       ].freeze
@@ -280,6 +282,7 @@ module SpeckleConnector
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
         OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native),
         OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
+        OBJECTS_BUILTELEMENTS_NETWORK => BUILTELEMENTS::Network.method(:to_native),
         OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native)
       }.freeze
@@ -302,9 +305,9 @@ module SpeckleConnector
         # Create speckle entities from sketchup entities to achieve continuous traversal.
         convert_to_speckle_entities(state, obj, converted_entities)
       rescue StandardError => e
-          puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
-          puts(e)
-          return state
+        puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
+        puts(e)
+        return state
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity
