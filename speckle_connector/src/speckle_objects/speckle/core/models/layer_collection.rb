@@ -3,6 +3,7 @@
 require_relative 'collection'
 require_relative '../../../../sketchup_model/query/layer'
 require_relative '../../../other/color'
+require_relative '../../../other/display_style'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -13,7 +14,8 @@ module SpeckleConnector
           class LayerCollection < Collection
             SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
             # rubocop:disable Metrics/ParameterLists
-            def initialize(name:, visible:, is_folder:, color: nil, elements: [], application_id: nil)
+            def initialize(name:, visible:, is_folder:, display_style: nil, color: nil, elements: [],
+                           application_id: nil)
               super(
                 name: name,
                 collection_type: 'layer',
@@ -23,6 +25,7 @@ module SpeckleConnector
               self[:visible] = visible
               self[:is_folder] =  is_folder
               self[:color] = color unless color.nil?
+              self[:displayStyle] = display_style unless display_style.nil?
             end
             # rubocop:enable Metrics/ParameterLists
 
@@ -57,7 +60,7 @@ module SpeckleConnector
                 name: layer.display_name,
                 visible: layer.visible?,
                 is_folder: false,
-                color: SpeckleObjects::Others::Color.to_speckle(layer.color),
+                display_style: Other::DisplayStyle.from_layer(layer),
                 application_id: layer.persistent_id
               )
             end
@@ -76,7 +79,7 @@ module SpeckleConnector
                     el[:name] == folder.display_name
                 end
                 if collection_candidate.nil?
-                  color = folder.respond_to?(:color) ? SpeckleObjects::Others::Color.to_speckle(folder.color) : nil
+                  color = folder.respond_to?(:color) ? SpeckleObjects::Other::Color.to_speckle(folder.color) : nil
                   collection_candidate = LayerCollection.new(
                     name: folder.display_name, visible: folder.visible?,
                     is_folder: folder.is_a?(Sketchup::LayerFolder), color: color
@@ -90,6 +93,23 @@ module SpeckleConnector
               collection
             end
             # rubocop:enable Metrics/CyclomaticComplexity
+
+            # @param state [States::State] state of the Speckle application.
+            def self.to_native(state, layer_collection, layer_or_folder, entities, &convert_to_native)
+              sketchup_model = state.sketchup_state.sketchup_model
+              elements = layer_collection['elements']
+              name = layer_collection['name']
+
+              layer = sketchup_model.layers.find { |l| l.display_name == name }
+              layer_or_folder = layer if layer
+
+              elements.each do |element|
+                new_state = convert_to_native.call(state, element, layer_or_folder, entities)
+                state = new_state
+              end
+
+              return state, []
+            end
           end
         end
       end

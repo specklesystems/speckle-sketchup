@@ -6,6 +6,7 @@ module SpeckleConnector
   OBJECTS_GIS_POLYGONELEMENT = 'Objects.GIS.PolygonElement'
 
   OBJECTS_BUILTELEMENTS_VIEW3D = 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
+  OBJECTS_BUILTELEMENTS_NETWORK = 'Objects.BuiltElements.Network'
   OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE = 'Objects.BuiltElements.Revit.DirectShape'
   OBJECTS_BUILTELEMENTS_REVIT_LEVEL = 'Objects.BuiltElements.Level:Objects.BuiltElements.Revit.RevitLevel'
 
@@ -20,4 +21,7 @@ module SpeckleConnector
   OBJECTS_OTHER_REVIT_REVITINSTANCE = 'Objects.Other.Revit.RevitInstance'
   OBJECTS_OTHER_BLOCKDEFINITION = 'Objects.Other.BlockDefinition'
   OBJECTS_OTHER_RENDERMATERIAL = 'Objects.Other.RenderMaterial'
+  OBJECTS_OTHER_DISPLAYSTYLE = 'Objects.Other.DisplayStyle'
+
+  SPECKLE_CORE_MODELS_COLLECTION = 'Speckle.Core.Models.Collection'
 end

@@ -60,7 +60,7 @@ module SpeckleConnector
           target = get_camera_target(cam, units)
           direction = get_camera_direction(cam, units)
           update_properties = get_scene_update_properties(page)
-          rendering_options = SpeckleObjects::Others::RenderingOptions.to_speckle(page.rendering_options)
+          rendering_options = SpeckleObjects::Other::RenderingOptions.to_speckle(page.rendering_options)
           View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
             cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
@@ -71,7 +71,8 @@ module SpeckleConnector
         # @param obj [Hash] commit object.
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
-        def self.to_native(state, view, _entities, &_convert_to_native)
+        # rubocop:disable Metrics/PerceivedComplexity
+        def self.to_native(state, view, _layer, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
 
           return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
@@ -84,8 +85,10 @@ module SpeckleConnector
           lens = view['lens'] || 50
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
+          view_direction = (origin - target).normalize
+          up = view_direction.parallel?([0, 0, 1]) ? [0, 1, 0] : [0, 0, 1]
           # Set camera position before creating scene on it.
-          my_camera = Sketchup::Camera.new(origin, target, [0, 0, 1], !view['isOrthogonal'], lens)
+          my_camera = Sketchup::Camera.new(origin, target, up, !view['isOrthogonal'], lens)
           sketchup_model.active_view.camera = my_camera
           sketchup_model.pages.add(name)
           page = sketchup_model.pages[name]
@@ -93,9 +96,10 @@ module SpeckleConnector
           set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
           return state, [page]
         end
-
         # rubocop:enable Metrics/AbcSize
         # rubocop:enable Metrics/CyclomaticComplexity
+        # rubocop:enable Metrics/PerceivedComplexity
+
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
           update_properties.each do |prop, value|
@@ -109,7 +113,7 @@ module SpeckleConnector
             next if rendering_options[prop].nil?
 
             rendering_options[prop] = if value.is_a?(Hash)
-                                        SpeckleObjects::Others::Color.to_native(value)
+                                        SpeckleObjects::Other::Color.to_native(value)
                                       else
                                         value
                                       end

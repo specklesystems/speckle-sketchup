@@ -30,16 +30,13 @@ module SpeckleConnector
         end
 
         # Handles polygon element differently from display value.
-        def self.to_native(state, obj, entities, &convert_to_native)
+        def self.to_native(state, obj, layer, entities, &convert_to_native)
           attributes = get_qgis_attributes(obj)
           obj = collect_definition_geometries(obj)
           obj['name'] = get_definition_name(obj, attributes)
 
           state, _definitions = Other::BlockDefinition.to_native(
-            state,
-            obj,
-            entities,
-            &convert_to_native
+            state, obj, layer, entities, &convert_to_native
           )
 
           definition = state.sketchup_state.sketchup_model

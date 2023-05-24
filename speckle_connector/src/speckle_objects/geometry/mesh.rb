@@ -80,7 +80,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/AbcSize
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity:
-        def self.to_native(state, mesh, entities, &convert_to_native)
+        def self.to_native(state, mesh, layer, entities, &convert_to_native)
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
@@ -105,7 +105,7 @@ module SpeckleConnector
               native_mesh.add_polygon(polygon_points)
             end
           end
-          state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'],
+          state, _materials = Other::RenderMaterial.to_native(state, mesh['renderMaterial'], layer,
                                                               entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
@@ -157,9 +157,7 @@ module SpeckleConnector
           speckle_mesh = Mesh.new(
             units: units,
             render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
-            vertices: [],
-            faces: [],
-            sketchup_attributes: att,
+            vertices: [], faces: [], sketchup_attributes: att,
             layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
             application_id: face.persistent_id

@@ -4,7 +4,7 @@ require_relative 'color'
 
 module SpeckleConnector
   module SpeckleObjects
-    module Others
+    module Other
       # Rendering options for scenes.
       class RenderingOptions
         # @param options [Sketchup::RenderingOptions] rendering options to convert speckle object

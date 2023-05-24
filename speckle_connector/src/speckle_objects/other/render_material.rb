@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'color'
 require_relative '../base'
 
 module SpeckleConnector
@@ -38,10 +39,9 @@ module SpeckleConnector
 
         # @param material [Sketchup::Material] material on the Sketchup.
         def self.from_material(material)
-          rgba = material.color.to_a
           RenderMaterial.new(
             name: material.name,
-            diffuse: [rgba[3] << 24 | rgba[0] << 16 | rgba[1] << 8 | rgba[2]].pack('l').unpack1('l'),
+            diffuse: Other::Color.to_int(material.color),
             opacity: material.alpha,
             emissive: -16_777_216,
             metalness: 0,
@@ -50,7 +50,7 @@ module SpeckleConnector
         end
 
         # @param state [States::State] state of the application.
-        def self.to_native(state, render_material, _entities, &_convert_to_native)
+        def self.to_native(state, render_material, _layer, _entities, &_convert_to_native)
           return state, [] if render_material.nil?
 
           sketchup_model = state.sketchup_state.sketchup_model
@@ -65,7 +65,7 @@ module SpeckleConnector
           material = sketchup_model.materials.add(name)
           material.alpha = render_material['opacity']
           argb = render_material['diffuse']
-          material.color = Sketchup::Color.new((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >> 24) & 255)
+          material.color = Color.from_int(argb)
           new_sketchup_state = state.sketchup_state.with_materials(materials.add_material(name, material))
           return state.with_sketchup_state(new_sketchup_state), [material]
         end

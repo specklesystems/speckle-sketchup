@@ -13,6 +13,8 @@ require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
+require_relative '../speckle_objects/built_elements/network'
+require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
 module SpeckleConnector
@@ -51,6 +53,7 @@ module SpeckleConnector
       DISPLAY_VALUE = OTHER::DisplayValue
       VIEW3D = BUILTELEMENTS::View3d
       POLYGON_ELEMENT = GIS::PolygonElement
+      COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -64,7 +67,9 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
         Objects.Other.Instance:Objects.Other.BlockInstance
         Objects.BuiltElements.View:Objects.BuiltElements.View3D
+        Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
+        Speckle.Core.Models.Collection
       ].freeze
 
       def from_revit
@@ -86,10 +91,13 @@ module SpeckleConnector
       def receive_commit_object(obj)
         # First create layers on the sketchup before starting traversing
         # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
-        layers_relation = obj['layers_relation']
+        # layers_relation = obj['layers_relation']
 
-        # Create layers and it's folders from layers relation on the model collection.
-        SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation && !from_revit
+        unless from_revit
+          layers_relation = SpeckleObjects::Relations::Layers.extract_relations(obj)
+          # Create layers and it's folders from layers relation on the model collection.
+          SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation
+        end
 
         # By default entities to fill is sketchup model's entities.
         @entities_to_fill = sketchup_model.entities
@@ -100,7 +108,9 @@ module SpeckleConnector
           @entities_to_fill = @branch_definition.entities
         end
 
-        traverse_commit_object(obj, @entities_to_fill)
+        default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
+
+        traverse_commit_object(obj, default_commit_layer, @entities_to_fill)
         create_levels_from_section_planes
         check_hiding_layers_needed
         try_create_instance
@@ -230,9 +240,9 @@ module SpeckleConnector
       #   self-caller method means that call itself according to conditions inside of it.
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
-      def traverse_commit_object(obj, entities)
+      def traverse_commit_object(obj, layer, entities)
         if convertible_to_native?(obj)
-          @state = convert_to_native(@state, obj, entities)
+          @state = convert_to_native(@state, obj, layer, entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -240,16 +250,16 @@ module SpeckleConnector
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']}. Continuing traversal.")
             props = obj.keys.filter_map { |key| key unless key.start_with?('_') }
             props.each do |prop|
-              traverse_commit_object(obj[prop], entities)
+              traverse_commit_object(obj[prop], layer, entities)
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            @state = convert_to_native(@state, obj, entities)
+            @state = convert_to_native(@state, obj, layer, entities)
           end
         elsif obj.is_a?(Hash)
-          obj.each_value { |value| traverse_commit_object(value, entities) }
+          obj.each_value { |value| traverse_commit_object(value, layer, entities) }
         elsif obj.is_a?(Array)
-          obj.each { |value| traverse_commit_object(value, entities) }
+          obj.each { |value| traverse_commit_object(value, layer, entities) }
         end
       end
       # rubocop:enable Metrics/CyclomaticComplexity
@@ -272,18 +282,21 @@ module SpeckleConnector
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
         OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native),
-        OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native)
+        OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
+        OBJECTS_BUILTELEMENTS_NETWORK => BUILTELEMENTS::Network.method(:to_native),
+        OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
+        SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native)
       }.freeze
 
       # @param state [States::State] state of the speckle application
-      def convert_to_native(state, obj, entities = sketchup_model.entities)
+      def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
         # store this method as parameter to re-call it inner callstack
         convert_to_native = method(:convert_to_native)
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
-        state, converted_entities = to_native_method.call(state, obj, entities, &convert_to_native)
+        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
         if from_revit
           # Create levels as section planes if they exists
           create_levels(state, obj)

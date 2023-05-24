@@ -22,6 +22,33 @@ module SpeckleConnector
           self[:elements] = layers
         end
 
+        def self.element_to_relation(elements)
+          elements.collect do |element|
+            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
+
+            is_folder = element['elements'].any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
+            color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
+            Layer.new(
+              name: element['name'],
+              visible: element['visible'],
+              is_folder: is_folder,
+              color: color,
+              layers_and_folders: element_to_relation(element['elements'])
+            )
+          end.compact
+        end
+
+        def self.extract_relations(commit_obj)
+          return nil unless commit_obj['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
+
+          elements = element_to_relation(commit_obj['elements'])
+
+          Layers.new(
+            active: commit_obj['active_layer'],
+            layers: elements
+          )
+        end
+
         def self.to_native(layers_relation, sketchup_model)
           folder = sketchup_model.layers
 

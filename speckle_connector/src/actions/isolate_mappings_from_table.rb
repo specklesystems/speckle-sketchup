@@ -11,6 +11,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Metrics/CyclomaticComplexity
       def self.update_state(state, data)
@@ -25,7 +26,7 @@ module SpeckleConnector
         flat_entities = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
 
         comp_flat_entities = flat_entities.grep(Sketchup::ComponentInstance) + flat_entities.grep(Sketchup::Group) +
-          flat_entities.grep(Sketchup::ComponentDefinition)
+                             flat_entities.grep(Sketchup::ComponentDefinition)
         face_edge_flat_entities = flat_entities.grep(Sketchup::Face) + flat_entities.grep(Sketchup::Edge)
 
         # Collect entity ids to clear mappings
@@ -55,6 +56,7 @@ module SpeckleConnector
         Events::SelectionEventAction.update_state(state, { clear: true })
       end
       # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength
       # rubocop:enable Metrics/PerceivedComplexity
       # rubocop:enable Metrics/CyclomaticComplexity
     end
