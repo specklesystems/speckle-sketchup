@@ -120,7 +120,7 @@ module SpeckleConnector
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
           added_faces.each do |face|
-            face.layer = mesh_layer.nil? ? layer : mesh_layer
+            face.layer = mesh_layer unless mesh_layer.nil?
             # Smooth edges if they already soft
             # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
             face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
