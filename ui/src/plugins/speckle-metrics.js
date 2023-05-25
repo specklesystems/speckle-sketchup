@@ -26,9 +26,11 @@ const SpeckleMetrics = {
           .digest('hex')
           .toUpperCase()
 
+      let serverUrl = new URL(localStorage.getItem('serverUrl'))
+
       let serverId = crypto
         .createHash('md5')
-        .update(localStorage.getItem('serverUrl').toLowerCase())
+        .update(serverUrl.hostname.toLowerCase())
         .digest('hex')
         .toUpperCase()
 
