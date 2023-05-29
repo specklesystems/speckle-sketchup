@@ -29,7 +29,7 @@ module SpeckleConnector
             def self.to_native(state, collection, layer, entities, &convert_to_native)
               collection_type = collection['collectionType']
 
-              if ['model'].include?(collection_type)
+              if collection_type.include?('model')
                 ModelCollection.to_native(state, collection, layer, entities, &convert_to_native)
               else
                 LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
