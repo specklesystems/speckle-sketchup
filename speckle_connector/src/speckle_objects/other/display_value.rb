@@ -70,10 +70,12 @@ module SpeckleConnector
         end
 
         def self.collect_definition_geometries(obj)
-          obj['geometry'] = obj['displayValue']
+          obj['geometry'] = obj['displayValue'] || obj['@displayValue']
 
-          if !obj['elements'].nil? && obj['elements'].is_a?(Array)
-            obj['elements'].each do |element|
+          elements = obj['elements'] || obj['@elements']
+
+          if !elements.nil? && elements.is_a?(Array)
+            elements.each do |element|
               # Mullions is a special case here, they are extracted as base object with @displayValue from revit..
               if element['@displayValue'].nil?
                 obj['geometry'].append(element)

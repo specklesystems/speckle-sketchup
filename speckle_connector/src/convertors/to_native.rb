@@ -266,7 +266,7 @@ module SpeckleConnector
       # rubocop:enable Metrics/PerceivedComplexity
 
       def speckle_object_to_native(obj)
-        return DISPLAY_VALUE.method(:to_native) unless obj['displayValue'].nil?
+        return DISPLAY_VALUE.method(:to_native) unless obj['displayValue'].nil? && obj['@displayValue'].nil?
 
         SPECKLE_OBJECT_TO_NATIVE[obj['speckle_type']]
       end

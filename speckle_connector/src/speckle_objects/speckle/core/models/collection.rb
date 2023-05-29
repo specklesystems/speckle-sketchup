@@ -31,10 +31,8 @@ module SpeckleConnector
 
               if collection_type.include?('model')
                 ModelCollection.to_native(state, collection, layer, entities, &convert_to_native)
-              elsif ['layer', 'Revit Category'].include?(collection_type)
-                LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
               else
-                return state, []
+                LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
               end
             end
           end
