@@ -355,8 +355,6 @@ module SpeckleConnector
       # @param state [States::State] state of the application
       def convert_to_speckle_entities(state, speckle_objects_with_entities)
         return state if speckle_objects_with_entities.empty?
-
-
       end
     end
     # rubocop:enable Metrics/ClassLength

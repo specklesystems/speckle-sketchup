@@ -44,12 +44,14 @@ module SpeckleConnector
           folder.add_layer(layer) if folder.is_a?(Sketchup::LayerFolder)
         end
 
+        # Flat layer conversion.
         def self.to_native_flat_layers(layers_relation, sketchup_model)
           speckle_layers = layers_relation[:elements]
 
           elements_to_layers(speckle_layers, sketchup_model)
         end
 
+        # Converts elements to layers with it's full path.
         def self.elements_to_layers(elements, sketchup_model)
           elements.each do |element|
             element[:name] = element[:full_path]
@@ -58,6 +60,7 @@ module SpeckleConnector
           end
         end
 
+        # Nested layer conversion with folders.
         def self.to_native_layer_folder(layers_relation, folder, sketchup_model)
           speckle_layers = layers_relation[:elements].select { |layer_or_fol| layer_or_fol[:elements].nil? }
 
