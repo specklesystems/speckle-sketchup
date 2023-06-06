@@ -2,6 +2,7 @@
 
 require_relative 'converter'
 require_relative '../constants/type_constants'
+require_relative '../speckle_entities/speckle_entity'
 require_relative '../speckle_objects/gis/polygon_element'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
@@ -304,7 +305,7 @@ module SpeckleConnector
           create_layers_from_categories(state, obj, converted_entities)
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
-        convert_to_speckle_entities(state, obj, converted_entities)
+        SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, stream_id)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
@@ -353,30 +354,11 @@ module SpeckleConnector
       end
 
       # @param state [States::State] state of the application
-      # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Metrics/CyclomaticComplexity
-      def convert_to_speckle_entities(state, speckle_object, entities)
-        return state if entities.empty?
+      def convert_to_speckle_entities(state, speckle_objects_with_entities)
+        return state if speckle_objects_with_entities.empty?
 
-        speckle_id = speckle_object['id']
-        application_id = speckle_object['applicationId']
-        speckle_type = speckle_object['speckle_type']
-        children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
-        speckle_state = state.speckle_state
-        entities.each do |entity|
-          next if entity.is_a?(Sketchup::Material) || entity.is_a?(Sketchup::Page)
-          next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
-                  !state.user_state.user_preferences[:register_speckle_entity]
 
-          ent = SpeckleEntities::SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children,
-                                                   [stream_id])
-          ent.write_initial_base_data
-          speckle_state = speckle_state.with_speckle_entity(ent)
-        end
-        state.with_speckle_state(speckle_state)
       end
-      # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Metrics/CyclomaticComplexity
     end
     # rubocop:enable Metrics/ClassLength
   end

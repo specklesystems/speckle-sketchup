@@ -119,6 +119,31 @@ module SpeckleConnector
       def valid?
         sketchup_entity.valid?
       end
+
+      # @param state [States::State] state of the application
+      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
+      def self.from_speckle_object(state, speckle_object, entities, stream_id)
+        return state if entities.empty?
+
+        speckle_id = speckle_object['id']
+        application_id = speckle_object['applicationId']
+        speckle_type = speckle_object['speckle_type']
+        children = speckle_object['__closure'].nil? ? [] : speckle_object['__closure']
+        speckle_state = state.speckle_state
+        entities.each do |entity|
+          next if entity.is_a?(Sketchup::Material) || entity.is_a?(Sketchup::Page)
+          next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
+                  !state.user_state.user_preferences[:register_speckle_entity]
+
+          ent = SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children, [stream_id])
+          ent.write_initial_base_data
+          speckle_state = speckle_state.with_speckle_entity(ent)
+        end
+        state.with_speckle_state(speckle_state)
+      end
+      # rubocop:enable Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
     end
   end
 end
