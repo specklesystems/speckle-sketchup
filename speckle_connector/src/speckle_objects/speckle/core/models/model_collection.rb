@@ -66,7 +66,7 @@ module SpeckleConnector
               elements = model_collection['elements']
 
               elements.each do |element|
-                new_state = convert_to_native.call(state, element, layer, entities)
+                new_state, _converted_entities = convert_to_native.call(state, element, layer, entities)
                 state = new_state
               end
 
