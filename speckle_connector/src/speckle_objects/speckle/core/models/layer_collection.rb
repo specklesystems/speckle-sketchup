@@ -99,6 +99,7 @@ module SpeckleConnector
               sketchup_model = state.sketchup_state.sketchup_model
               elements = layer_collection['elements']
               name = layer_collection['name']
+              name = layer_collection['full_path'] if layer_collection['full_path']
 
               layer = sketchup_model.layers.find { |l| l.display_name == name }
               layer_or_folder = layer if layer

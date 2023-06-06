@@ -11,7 +11,7 @@ module SpeckleConnector
         SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
         # rubocop:disable Metrics/ParameterLists
-        def initialize(name:, visible:, is_folder:, line_style: nil, color: nil, layers_and_folders: [],
+        def initialize(name:, visible:, is_folder:, full_path: nil, line_style: nil, color: nil, layers_and_folders: [],
                        application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -23,6 +23,7 @@ module SpeckleConnector
           self[:color] = color
           self[:visible] = visible
           self[:is_folder] =  is_folder
+          self[:full_path] =  full_path unless full_path.nil?
           self[:line_style] = line_style unless line_style.nil?
           self[:collectionType] = 'layer'
           self[:elements] = layers_and_folders if layers_and_folders.any?
@@ -43,14 +44,31 @@ module SpeckleConnector
           folder.add_layer(layer) if folder.is_a?(Sketchup::LayerFolder)
         end
 
-        def self.to_native_layer_folder(speckle_layer_folder, folder, sketchup_model)
-          speckle_layers = speckle_layer_folder[:elements].select { |layer_or_fol| layer_or_fol[:elements].nil? }
+        # Flat layer conversion.
+        def self.to_native_flat_layers(layers_relation, sketchup_model)
+          speckle_layers = layers_relation[:elements]
+
+          elements_to_layers(speckle_layers, sketchup_model)
+        end
+
+        # Converts elements to layers with it's full path.
+        def self.elements_to_layers(elements, sketchup_model)
+          elements.each do |element|
+            element[:name] = element[:full_path]
+            to_native_layer(element, sketchup_model.layers, sketchup_model)
+            elements_to_layers(element[:elements], sketchup_model) unless element[:elements].nil?
+          end
+        end
+
+        # Nested layer conversion with folders.
+        def self.to_native_layer_folder(layers_relation, folder, sketchup_model)
+          speckle_layers = layers_relation[:elements].select { |layer_or_fol| layer_or_fol[:elements].nil? }
 
           speckle_layers.each do |speckle_layer|
             to_native_layer(speckle_layer, folder, sketchup_model)
           end
 
-          speckle_folders = speckle_layer_folder[:elements].reject { |layer_or_fol| layer_or_fol[:elements].nil? }
+          speckle_folders = layers_relation[:elements].reject { |layer_or_fol| layer_or_fol[:elements].nil? }
 
           speckle_folders.each do |speckle_folder|
             sub_folder = folder.add_folder(speckle_folder[:name])

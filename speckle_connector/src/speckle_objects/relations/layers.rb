@@ -22,26 +22,18 @@ module SpeckleConnector
           self[:elements] = layers
         end
 
-        def self.element_to_relation(elements)
-          elements.collect do |element|
-            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
-
-            is_folder = element['elements'].any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
-            color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
-            Layer.new(
-              name: element['name'],
-              visible: element['visible'],
-              is_folder: is_folder,
-              color: color,
-              layers_and_folders: element_to_relation(element['elements'])
-            )
-          end.compact
-        end
-
-        def self.extract_relations(commit_obj)
+        # Extract relations from commit obj to create layers in advance.
+        # By doing this, also checks layers will be created as flat list or nested structure according to source app.
+        # @param commit_obj [Hash] commit object to extract layer relations.
+        # @param source_app [String] source application to decide layer creation strategy.
+        # Currently for
+        # - Revit: we don't create layers in advance because we create layers according to categories.
+        # - SketchUp: we create layers in advance as nested.
+        # - Rhino: we create layers in advance as flat list with it's full path.
+        def self.extract_relations(commit_obj, source_app)
           return nil unless commit_obj['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
-          elements = element_to_relation(commit_obj['elements'])
+          elements = element_to_relation(commit_obj['elements'], source_app, [])
 
           Layers.new(
             active: commit_obj['active_layer'],
@@ -49,10 +41,41 @@ module SpeckleConnector
           )
         end
 
-        def self.to_native(layers_relation, sketchup_model)
-          folder = sketchup_model.layers
+        # rubocop:disable Metrics/CyclomaticComplexity
+        def self.element_to_relation(elements, source_app, parent_layers)
+          elements.collect do |element|
+            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
-          SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, folder, sketchup_model)
+            layers_tree = parent_layers.dup.append(element['name'])
+            full_path = ''
+            parent_layers.each { |parent| full_path += "#{parent}::" }
+            full_path += element['name']
+            # Add this info to commit object to check later layer_collection conversion
+            element['full_path'] = full_path if source_app.include?('rhino')
+
+            is_folder = element['elements'].any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
+            color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
+            Layer.new(
+              name: element['name'], visible: element['visible'], is_folder: is_folder,
+              color: color, full_path: full_path,
+              layers_and_folders: element_to_relation(element['elements'], source_app, layers_tree)
+            )
+          end.compact
+        end
+        # rubocop:enable Metrics/CyclomaticComplexity
+
+        def self.to_native(obj, source_app, sketchup_model)
+          layers_relation = extract_relations(obj, source_app)
+          return if layers_relation.nil?
+
+          folder = sketchup_model.layers
+          is_flat = source_app.include?('rhino')
+
+          if is_flat
+            SpeckleObjects::Relations::Layer.to_native_flat_layers(layers_relation, sketchup_model)
+          else
+            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, folder, sketchup_model)
+          end
 
           active_layer = folder.to_a.find { |layer| layer.display_name == layers_relation['active_layer'] }
           sketchup_model.active_layer = active_layer unless active_layer.nil?
