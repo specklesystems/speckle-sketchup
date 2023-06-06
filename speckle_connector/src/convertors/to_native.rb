@@ -77,6 +77,10 @@ module SpeckleConnector
         @from_revit ||= source_app.include?('revit')
       end
 
+      def from_rhino
+        @from_rhino ||= source_app.include?('rhino')
+      end
+
       def from_sketchup
         @from_sketchup ||= source_app.include?('sketchup')
       end
@@ -90,14 +94,9 @@ module SpeckleConnector
       # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
       # @param obj [Object] speckle commit object.
       def receive_commit_object(obj)
-        # First create layers on the sketchup before starting traversing
-        # @Named Views are exception here. It does not mean a layer. But it is anti-pattern for now.
-        # layers_relation = obj['layers_relation']
-
         unless from_revit
-          layers_relation = SpeckleObjects::Relations::Layers.extract_relations(obj)
           # Create layers and it's folders from layers relation on the model collection.
-          SpeckleObjects::Relations::Layers.to_native(layers_relation, sketchup_model) if layers_relation
+          SpeckleObjects::Relations::Layers.to_native(obj, source_app, sketchup_model)
         end
 
         # By default entities to fill is sketchup model's entities.

@@ -22,9 +22,28 @@ module SpeckleConnector
           self[:elements] = layers
         end
 
-        def self.element_to_relation(elements)
+        LAYER_FUNCTIONS = {
+          # 'rhino' => RhinoLayers.method(:to_native),
+          # 'revit' => RevitLayers.method(:to_native),
+          # 'sketchup' => SketchupLayers.method(:to_native),
+          # 'qgis' => QgisLayers.method(:to_native)
+        }.freeze
+
+        def self.element_to_relation(elements, source_app, parent_layers)
           elements.collect do |element|
             next unless element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
+
+            layers_tree = parent_layers.dup.append(element['name'])
+            full_path = ''
+            layers_tree.each_with_index do |parent, i|
+              full_path += if i == layers_tree.length - 1
+                             parent
+                           else
+                             "#{parent}::"
+                           end
+            end
+            # Add this info to commit object to check later layer_collection conversion
+            element['full_path'] = full_path if source_app.include?('rhino')
 
             is_folder = element['elements'].any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
             color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
@@ -33,15 +52,16 @@ module SpeckleConnector
               visible: element['visible'],
               is_folder: is_folder,
               color: color,
-              layers_and_folders: element_to_relation(element['elements'])
+              full_path: full_path,
+              layers_and_folders: element_to_relation(element['elements'], source_app, layers_tree)
             )
           end.compact
         end
 
-        def self.extract_relations(commit_obj)
+        def self.extract_relations(commit_obj, source_app)
           return nil unless commit_obj['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
-          elements = element_to_relation(commit_obj['elements'])
+          elements = element_to_relation(commit_obj['elements'], source_app, [])
 
           Layers.new(
             active: commit_obj['active_layer'],
@@ -49,10 +69,18 @@ module SpeckleConnector
           )
         end
 
-        def self.to_native(layers_relation, sketchup_model)
-          folder = sketchup_model.layers
+        def self.to_native(obj, source_app, sketchup_model)
+          layers_relation = extract_relations(obj, source_app)
+          return if layers_relation.nil?
 
-          SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, folder, sketchup_model)
+          folder = sketchup_model.layers
+          is_flat = source_app.include?('rhino')
+
+          if is_flat
+            SpeckleObjects::Relations::Layer.to_native_flat_layers(layers_relation, sketchup_model)
+          else
+            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, folder, sketchup_model)
+          end
 
           active_layer = folder.to_a.find { |layer| layer.display_name == layers_relation['active_layer'] }
           sketchup_model.active_layer = active_layer unless active_layer.nil?
@@ -73,6 +101,7 @@ module SpeckleConnector
             layers: headless_layers + folders
           )
         end
+
       end
     end
   end
