@@ -131,7 +131,12 @@ module SpeckleConnector
               end
             end
           end
-          faces_to_make_hard_edge.each { |f| f.edges.each { |e| e.soft = false } }
+          faces_to_make_hard_edge.each do |f|
+            f.edges.each do |e|
+              e.soft = false
+              e.smooth = false
+            end
+          end
           if geometry.is_a?(Hash) && !definition_obj['speckle_type'].nil?
             state, _converted_entities = convert_to_native.call(state, geometry, layer, definition.entities)
           end
