@@ -22,9 +22,10 @@ module SpeckleConnector
 
           return format_naming_convention([family, type, category, element_id]) unless element_id.nil?
 
-          return "def::#{def_obj['applicationId']}" unless def_obj['applicationId'].nil?
+          speckle_type = def_obj['speckle_type'].split('.').last
+          return "#{speckle_type}::#{def_obj['applicationId']}" unless def_obj['applicationId'].nil?
 
-          return "def::#{def_obj['id']}"
+          return "#{speckle_type}::#{def_obj['id']}"
         end
 
         def self.format_naming_convention(entries)
