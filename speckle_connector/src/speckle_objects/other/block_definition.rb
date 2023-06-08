@@ -122,16 +122,16 @@ module SpeckleConnector
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(definition_name)
 
-          faces_to_make_hard_edge = []
+          ngon_faces = []
           if geometry.is_a?(Array)
             geometry.each do |obj|
               state, added_entities = convert_to_native.call(state, obj, layer, definition.entities)
               if added_entities.length == 1 && added_entities.first.is_a?(Sketchup::Face)
-                faces_to_make_hard_edge.append(added_entities.first)
+                ngon_faces.append(added_entities.first)
               end
             end
           end
-          faces_to_make_hard_edge.each do |f|
+          ngon_faces.each do |f|
             f.edges.each do |e|
               e.soft = false
               e.smooth = false
