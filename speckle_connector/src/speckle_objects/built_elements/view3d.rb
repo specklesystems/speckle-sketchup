@@ -19,7 +19,7 @@ module SpeckleConnector
         # @param direction [SpeckleObjects::Geometry::Vector] direction of the view from eye to target.
         # @param up_direction [SpeckleObjects::Geometry::Vector] up direction of the view.
         # @param is_perspective [Boolean] whether view is perspective or not.
-        # @param lens [Boolean] fov value of the view camera.
+        # @param lens [Numeric] focal length value of the view camera.
         # @param units [String] units of the camera.
         # @param application_id [String] application_id of the view.
         # @param update_properties [Hash{Symbol=>boolean}] properties of the view.
@@ -63,42 +63,44 @@ module SpeckleConnector
           rendering_options = SpeckleObjects::Other::RenderingOptions.to_speckle(page.rendering_options)
           View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
-            cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
+            cam.perspective?, cam.perspective? ? cam.focal_length : 35, units, page.name,
+            update_properties, rendering_options
           )
         end
 
         # @param state [States::State] state of the speckle app.
         # @param obj [Hash] commit object.
-        # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(state, view, _layer, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
-
           return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
           name = view['name'] || view['id']
           return state, [] if sketchup_model.pages.any? { |page| page.name == name }
 
-          origin = view['origin']
-          target = view['target']
-          lens = view['lens'] || 50
-          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
-          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
-          view_direction = (origin - target).normalize
-          up = view_direction.parallel?([0, 0, 1]) ? [0, 1, 0] : [0, 0, 1]
-          # Set camera position before creating scene on it.
-          my_camera = Sketchup::Camera.new(origin, target, up, !view['isOrthogonal'], lens)
-          sketchup_model.active_view.camera = my_camera
+          camera = create_camera(view)
+          sketchup_model.active_view.camera = camera
           sketchup_model.pages.add(name)
           page = sketchup_model.pages[name]
           set_page_update_properties(page, view['update_properties']) if view['update_properties']
           set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
           return state, [page]
         end
-        # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
+
+        def self.create_camera(view)
+          origin = view['origin']
+          target = view['target']
+          focal_length = view['lens'] || 35
+          origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
+          target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
+          view_direction = (origin - target).normalize
+          up = view_direction.parallel?([0, 0, 1]) ? [0, 1, 0] : [0, 0, 1]
+          # Set camera position before creating scene on it.
+          is_perspective = !view['isOrthogonal']
+          camera = Sketchup::Camera.new(origin, target, up, is_perspective)
+          camera.focal_length = focal_length if is_perspective
+          camera.height = (origin - target).length * 2 unless is_perspective
+          camera
+        end
 
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
