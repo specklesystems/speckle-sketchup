@@ -41,6 +41,14 @@
             <v-img v-else src="@/assets/Sender.png" max-width="30" />
           </v-btn>
           <v-btn
+              v-tooltip="'Stop'"
+              icon
+              class="mr-3 elevation-2"
+              @click="cancel"
+          >
+            STOP
+          </v-btn>
+          <v-btn
             v-tooltip="'Receive'"
             icon
             class="elevation-2"
@@ -162,6 +170,10 @@ import { bus } from '../main'
 import streamQuery from '../graphql/stream.gql'
 import ObjectLoader from '@speckle/objectloader'
 import {HostApplications} from '@/utils/hostApplications'
+
+global.sendOperationCancelled = function (streamId) {
+  bus.$emit(`send-operation-cancelled-${streamId}`)
+}
 
 global.convertedFromSketchup = function (streamId, batches, commitId, totalChildrenCount) {
   bus.$emit(`sketchup-objects-${streamId}`, batches, commitId, totalChildrenCount)
@@ -314,6 +326,9 @@ export default {
 
       await this.createCommit(batches, commitId, totalChildrenCount)
     })
+    bus.$on(`send-operation-cancelled-${this.streamId}`, () => {
+      this.loadingSend = false
+    })
     bus.$on(`sketchup-received-${this.streamId}`, () => {
       console.log('>>> SpeckleSketchUp: Finished receiving in sketchup', this.streamId)
       this.loadingReceive = false
@@ -434,6 +449,9 @@ export default {
       sketchup.exec({name:"send_selection" , data: {stream_id: this.streamId}})
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
+    },
+    cancel(){
+      sketchup.exec({name:"cancel_operation" , data: {}})
     },
     async createCommit(batches, commitId, totalChildrenCount) {
       if (batches.length === 0) {

@@ -29,6 +29,7 @@ require_relative '../actions/isolate_mappings_from_table'
 require_relative '../actions/hide_mappings_from_table'
 require_relative '../actions/select_mappings_from_table'
 require_relative '../actions/show_all_entities'
+require_relative '../actions/cancel_operation'
 
 module SpeckleConnector
   module Ui
@@ -89,7 +90,8 @@ module SpeckleConnector
           isolate_mappings_from_table: Commands::ActionCommand.new(@app, Actions::IsolateMappingsFromTable),
           hide_mappings_from_table: Commands::ActionCommand.new(@app, Actions::HideMappingsFromTable),
           select_mappings_from_table: Commands::ActionCommand.new(@app, Actions::SelectMappingsFromTable),
-          show_all_entities: Commands::ActionCommand.new(@app, Actions::ShowAllEntities)
+          show_all_entities: Commands::ActionCommand.new(@app, Actions::ShowAllEntities),
+          cancel_operation: Commands::ActionCommand.new(@app, Actions::CancelOperation)
         }.freeze
       end
       # rubocop:enable Metrics/MethodLength

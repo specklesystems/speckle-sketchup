@@ -61,6 +61,11 @@ module SpeckleConnector
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
       def convert(entity, preferences, speckle_state, parent = :base)
+        unless state.ready
+          puts 'Terminating..'
+          return speckle_state, nil
+        end
+
         convert = method(:convert)
 
         unless SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)

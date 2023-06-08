@@ -8,6 +8,9 @@ module SpeckleConnector
     class State < InitialState
       include Immutable::ImmutableUtils
 
+      # @return [Boolean] is state ready for updating.
+      attr_accessor :ready
+
       # @return [States::SketchupState] the state of the Sketchup Application
       attr_reader :sketchup_state
 
@@ -18,6 +21,7 @@ module SpeckleConnector
       attr_reader :user_state
 
       def initialize(user_state, speckle_state, sketchup_state, is_connected)
+        @ready = true
         @speckle_state = speckle_state
         @is_connected = is_connected
         @sketchup_state = sketchup_state
