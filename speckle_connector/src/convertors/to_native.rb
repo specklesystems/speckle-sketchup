@@ -242,8 +242,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/PerceivedComplexity
       def traverse_commit_object(obj, layer, entities)
         if convertible_to_native?(obj)
-          state, _ = convert_to_native(@state, obj, layer, entities)
-          @state = state
+          @state, _converted_entities = convert_to_native(@state, obj, layer, entities)
         elsif obj.is_a?(Hash) && obj.key?('speckle_type')
           return if ignored_speckle_type?(obj)
 
@@ -255,8 +254,7 @@ module SpeckleConnector
             end
           else
             # puts(">>> Found #{obj['speckle_type']}: #{obj['id']} with displayValue.")
-            state, _ = convert_to_native(@state, obj, layer, entities)
-            @state = state
+            @state, _converted_entities = convert_to_native(@state, obj, layer, entities)
           end
         elsif obj.is_a?(Hash)
           obj.each_value { |value| traverse_commit_object(value, layer, entities) }
