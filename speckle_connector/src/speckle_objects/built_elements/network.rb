@@ -12,7 +12,7 @@ module SpeckleConnector
 
         def self.to_native(state, network, layer, entities, &convert_to_native)
           network['elements'].each do |element|
-            state = convert_to_native.call(state, element['elements'], layer, entities)
+            state, _converted_entities = convert_to_native.call(state, element['elements'], layer, entities)
           end
 
           return state, []

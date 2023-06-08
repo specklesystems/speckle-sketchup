@@ -122,13 +122,23 @@ module SpeckleConnector
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(definition_name)
 
+          ngon_faces = []
           if geometry.is_a?(Array)
             geometry.each do |obj|
-              state = convert_to_native.call(state, obj, layer, definition.entities)
+              state, added_entities = convert_to_native.call(state, obj, layer, definition.entities)
+              if added_entities.length == 1 && added_entities.first.is_a?(Sketchup::Face)
+                ngon_faces.append(added_entities.first)
+              end
+            end
+          end
+          ngon_faces.each do |f|
+            f.edges.each do |e|
+              e.soft = false
+              e.smooth = false
             end
           end
           if geometry.is_a?(Hash) && !definition_obj['speckle_type'].nil?
-            state = convert_to_native.call(state, geometry, layer, definition.entities)
+            state, _converted_entities = convert_to_native.call(state, geometry, layer, definition.entities)
           end
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")

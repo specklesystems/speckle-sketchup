@@ -105,7 +105,7 @@ module SpeckleConnector
               layer_or_folder = layer if layer
 
               elements.each do |element|
-                new_state = convert_to_native.call(state, element, layer_or_folder, entities)
+                new_state, _converted_entities = convert_to_native.call(state, element, layer_or_folder, entities)
                 state = new_state
               end
 

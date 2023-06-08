@@ -119,6 +119,10 @@ module SpeckleConnector
           added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
+          # Merge only added faces in this scope
+          if model_preferences[:merge_coplanar_faces]
+            added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
+          end
           added_faces.each do |face|
             face.layer = mesh_layer unless mesh_layer.nil?
             # Smooth edges if they already soft
@@ -129,10 +133,7 @@ module SpeckleConnector
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
             end
           end
-          # Merge only added faces in this scope
-          if model_preferences[:merge_coplanar_faces]
-            added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
-          end
+
           return state, added_faces
         end
         # rubocop:enable Metrics/MethodLength

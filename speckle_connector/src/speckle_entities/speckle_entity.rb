@@ -124,7 +124,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Metrics/CyclomaticComplexity
       def self.from_speckle_object(state, speckle_object, entities, stream_id)
-        return state if entities.empty?
+        return state, [] if entities.empty?
 
         speckle_id = speckle_object['id']
         application_id = speckle_object['applicationId']
@@ -140,7 +140,8 @@ module SpeckleConnector
           ent.write_initial_base_data
           speckle_state = speckle_state.with_speckle_entity(ent)
         end
-        state.with_speckle_state(speckle_state)
+        new_state = state.with_speckle_state(speckle_state)
+        return new_state, entities
       end
       # rubocop:enable Metrics/PerceivedComplexity
       # rubocop:enable Metrics/CyclomaticComplexity
