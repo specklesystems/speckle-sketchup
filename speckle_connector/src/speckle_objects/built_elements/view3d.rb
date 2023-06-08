@@ -63,7 +63,7 @@ module SpeckleConnector
           rendering_options = SpeckleObjects::Other::RenderingOptions.to_speckle(page.rendering_options)
           View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
-            cam.perspective?, cam.fov, units, page.name, update_properties, rendering_options
+            cam.perspective?, page.focal_length, units, page.name, update_properties, rendering_options
           )
         end
 
@@ -82,13 +82,16 @@ module SpeckleConnector
 
           origin = view['origin']
           target = view['target']
-          lens = view['lens'] || 50
+          focal_length = view['lens'] || 50
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
           view_direction = (origin - target).normalize
           up = view_direction.parallel?([0, 0, 1]) ? [0, 1, 0] : [0, 0, 1]
           # Set camera position before creating scene on it.
-          my_camera = Sketchup::Camera.new(origin, target, up, !view['isOrthogonal'], lens)
+          is_perspective = !view['isOrthogonal']
+          my_camera = Sketchup::Camera.new(origin, target, up, is_perspective)
+          my_camera.focal_length = focal_length if is_perspective
+          my_camera.height = (origin - target).length unless is_perspective
           sketchup_model.active_view.camera = my_camera
           sketchup_model.pages.add(name)
           page = sketchup_model.pages[name]
