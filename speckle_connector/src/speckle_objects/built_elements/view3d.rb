@@ -70,17 +70,23 @@ module SpeckleConnector
 
         # @param state [States::State] state of the speckle app.
         # @param obj [Hash] commit object.
-        # rubocop:disable Metrics/AbcSize
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         def self.to_native(state, view, _layer, _entities, &_convert_to_native)
           sketchup_model = state.sketchup_state.sketchup_model
-
           return state, [] unless view['speckle_type'] == 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
 
           name = view['name'] || view['id']
           return state, [] if sketchup_model.pages.any? { |page| page.name == name }
 
+          camera = create_camera(view)
+          sketchup_model.active_view.camera = camera
+          sketchup_model.pages.add(name)
+          page = sketchup_model.pages[name]
+          set_page_update_properties(page, view['update_properties']) if view['update_properties']
+          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
+          return state, [page]
+        end
+
+        def self.create_camera(view)
           origin = view['origin']
           target = view['target']
           focal_length = view['lens'] || 35
@@ -90,19 +96,11 @@ module SpeckleConnector
           up = view_direction.parallel?([0, 0, 1]) ? [0, 1, 0] : [0, 0, 1]
           # Set camera position before creating scene on it.
           is_perspective = !view['isOrthogonal']
-          my_camera = Sketchup::Camera.new(origin, target, up, is_perspective)
-          my_camera.focal_length = focal_length if is_perspective
-          my_camera.height = (origin - target).length * 2 unless is_perspective
-          sketchup_model.active_view.camera = my_camera
-          sketchup_model.pages.add(name)
-          page = sketchup_model.pages[name]
-          set_page_update_properties(page, view['update_properties']) if view['update_properties']
-          set_rendering_options(page.rendering_options, view['rendering_options']) if view['rendering_options']
-          return state, [page]
+          camera = Sketchup::Camera.new(origin, target, up, is_perspective)
+          camera.focal_length = focal_length if is_perspective
+          camera.height = (origin - target).length * 2 unless is_perspective
+          camera
         end
-        # rubocop:enable Metrics/AbcSize
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
 
         # @param page [Sketchup::Page] scene to update -update properties-
         def self.set_page_update_properties(page, update_properties)
