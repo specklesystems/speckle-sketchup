@@ -42,6 +42,13 @@ module SpeckleConnector
           name
         end
 
+        # Get instance name as speckle_type if it is structured as `speckle_type::application_id`
+        def self.get_instance_name(definition_name)
+          return definition_name unless definition_name.include?('::')
+
+          definition_name.split('::').first
+        end
+
         # Creates a component definition and instance from a speckle object with a display value
         # @param state [States::State] state of the application.
         def self.to_native(state, obj, layer, entities, &convert_to_native)
@@ -50,11 +57,7 @@ module SpeckleConnector
           obj['name'] = get_definition_name(obj)
 
           state, _definitions = BlockDefinition.to_native(
-            state,
-            obj,
-            layer,
-            entities,
-            &convert_to_native
+            state, obj, layer, entities, &convert_to_native
           )
 
           definition = state.sketchup_state.sketchup_model.definitions[BlockDefinition.get_definition_name(obj)]
@@ -63,7 +66,7 @@ module SpeckleConnector
           t_arr = obj['transform']
           transform = t_arr.nil? ? Geom::Transformation.new : Other::Transform.to_native(t_arr, obj['units'])
           instance = entities.add_instance(definition, transform)
-          instance.name = obj['name'] unless obj['name'].nil?
+          instance.name = get_instance_name(obj['name']) unless obj['name'].nil?
           instance.layer = layer unless layer.nil?
           # Align instance axes that created from display value. (without any transform)
           # BlockInstance.align_instance_axes(instance)
