@@ -19,7 +19,7 @@ module SpeckleConnector
         # @param direction [SpeckleObjects::Geometry::Vector] direction of the view from eye to target.
         # @param up_direction [SpeckleObjects::Geometry::Vector] up direction of the view.
         # @param is_perspective [Boolean] whether view is perspective or not.
-        # @param lens [Boolean] fov value of the view camera.
+        # @param lens [Numeric] focal length value of the view camera.
         # @param units [String] units of the camera.
         # @param application_id [String] application_id of the view.
         # @param update_properties [Hash{Symbol=>boolean}] properties of the view.
@@ -63,7 +63,8 @@ module SpeckleConnector
           rendering_options = SpeckleObjects::Other::RenderingOptions.to_speckle(page.rendering_options)
           View3d.new(
             page.name, origin, target, direction, SpeckleObjects::Geometry::Vector.new(0, 0, 1, units),
-            cam.perspective?, page.focal_length, units, page.name, update_properties, rendering_options
+            cam.perspective?, cam.perspective? ? cam.focal_length : 35, units, page.name,
+            update_properties, rendering_options
           )
         end
 
@@ -82,7 +83,7 @@ module SpeckleConnector
 
           origin = view['origin']
           target = view['target']
-          focal_length = view['lens'] || 50
+          focal_length = view['lens'] || 35
           origin = SpeckleObjects::Geometry::Point.to_native(origin['x'], origin['y'], origin['z'], origin['units'])
           target = SpeckleObjects::Geometry::Point.to_native(target['x'], target['y'], target['z'], target['units'])
           view_direction = (origin - target).normalize
@@ -91,7 +92,7 @@ module SpeckleConnector
           is_perspective = !view['isOrthogonal']
           my_camera = Sketchup::Camera.new(origin, target, up, is_perspective)
           my_camera.focal_length = focal_length if is_perspective
-          my_camera.height = (origin - target).length unless is_perspective
+          my_camera.height = (origin - target).length * 2 unless is_perspective
           sketchup_model.active_view.camera = my_camera
           sketchup_model.pages.add(name)
           page = sketchup_model.pages[name]
