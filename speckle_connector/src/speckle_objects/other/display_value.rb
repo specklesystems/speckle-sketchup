@@ -22,6 +22,11 @@ module SpeckleConnector
 
           return format_naming_convention([family, type, category, element_id]) unless element_id.nil?
 
+          name = def_obj['name']
+          return "#{name}::#{def_obj['applicationId']}" if !name.nil? && !def_obj['applicationId'].nil?
+
+          return "#{name}::#{def_obj['id']}" unless name.nil?
+
           speckle_type = def_obj['speckle_type'].split('.').last
           return "#{speckle_type}::#{def_obj['applicationId']}" unless def_obj['applicationId'].nil?
 
