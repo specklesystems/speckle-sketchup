@@ -9,7 +9,6 @@ module SpeckleConnector
     module Other
       # DisplayStyle object for layer.
       class DisplayStyle < Base
-
         def initialize(name:, color:, line_type:)
           super(
             speckle_type: OBJECTS_OTHER_DISPLAYSTYLE,
