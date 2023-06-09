@@ -60,7 +60,7 @@ module SpeckleConnector
           )
         end
 
-        # @param _state [States::State] state of the application.
+        # @param state [States::State] state of the application.
         # @param line [Object] object represents Speckle line.
         # @param layer [Sketchup::Layer] layer to add {Sketchup::Edge} into it.
         # @param entities [Sketchup::Entities] entities collection to add {Sketchup::Edge} into it.
