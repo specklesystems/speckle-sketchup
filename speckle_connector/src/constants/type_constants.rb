@@ -12,6 +12,9 @@ module SpeckleConnector
 
   OBJECTS_GEOMETRY_LINE = 'Objects.Geometry.Line'
   OBJECTS_GEOMETRY_POLYLINE = 'Objects.Geometry.Polyline'
+  OBJECTS_GEOMETRY_POLYCURVE = 'Objects.Geometry.Polycurve'
+  OBJECTS_GEOMETRY_ARC = 'Objects.Geometry.Arc'
+  OBJECTS_GEOMETRY_CIRCLE = 'Objects.Geometry.Circle'
   OBJECTS_GEOMETRY_MESH = 'Objects.Geometry.Mesh'
   OBJECTS_GEOMETRY_BREP = 'Objects.Geometry.Brep'
 

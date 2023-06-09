@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'length'
 require_relative '../base'
 
 module SpeckleConnector
@@ -24,6 +25,14 @@ module SpeckleConnector
           self[:y] = y
           self[:z] = z
           self[:units] = units
+        end
+
+        def self.to_native(x, y, z, units)
+          Geom::Vector3d.new(
+            Geometry.length_to_native(x, units),
+            Geometry.length_to_native(y, units),
+            Geometry.length_to_native(z, units)
+          )
         end
       end
     end

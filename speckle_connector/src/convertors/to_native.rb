@@ -12,6 +12,9 @@ require_relative '../speckle_objects/other/display_value'
 require_relative '../speckle_objects/revit/revit_instance'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/line'
+require_relative '../speckle_objects/geometry/polycurve'
+require_relative '../speckle_objects/geometry/arc'
+require_relative '../speckle_objects/geometry/circle'
 require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/network'
@@ -46,6 +49,9 @@ module SpeckleConnector
       # Class aliases
       POINT = GEOMETRY::Point
       LINE = GEOMETRY::Line
+      POLYCURVE = GEOMETRY::Polycurve
+      ARC = GEOMETRY::Arc
+      CIRCLE = GEOMETRY::Circle
       MESH = GEOMETRY::Mesh
       BLOCK_DEFINITION = OTHER::BlockDefinition
       BLOCK_INSTANCE = OTHER::BlockInstance
@@ -60,6 +66,9 @@ module SpeckleConnector
       CONVERTABLE_SPECKLE_TYPES = %w[
         Objects.Geometry.Line
         Objects.Geometry.Polyline
+        Objects.Geometry.Polycurve
+        Objects.Geometry.Arc
+        Objects.Geometry.Circle
         Objects.Geometry.Mesh
         Objects.Geometry.Brep
         Objects.Other.BlockInstance
@@ -274,6 +283,9 @@ module SpeckleConnector
       SPECKLE_OBJECT_TO_NATIVE = {
         OBJECTS_GEOMETRY_LINE => LINE.method(:to_native),
         OBJECTS_GEOMETRY_POLYLINE => LINE.method(:to_native),
+        OBJECTS_GEOMETRY_POLYCURVE => POLYCURVE.method(:to_native),
+        OBJECTS_GEOMETRY_ARC => ARC.method(:to_native),
+        OBJECTS_GEOMETRY_CIRCLE => CIRCLE.method(:to_native),
         OBJECTS_GEOMETRY_MESH => MESH.method(:to_native),
         OBJECTS_GEOMETRY_BREP => MESH.method(:to_native),
         OBJECTS_OTHER_BLOCKDEFINITION => BLOCK_DEFINITION.method(:to_native),
