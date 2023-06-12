@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SpeckleConnector
-  module Mapping
+  module Mapper
     module Category
       # Revit categories.
       class RevitCategory < Hash

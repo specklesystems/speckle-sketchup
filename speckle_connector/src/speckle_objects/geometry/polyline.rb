@@ -5,16 +5,21 @@ require_relative 'point'
 require_relative 'bounding_box'
 require_relative '../base'
 require_relative '../primitive/interval'
-require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
-require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
     module Geometry
-      # Line object definition for Speckle.
+      # Polyline object definition for Speckle.
       class Polyline < Base
         SPECKLE_TYPE = OBJECTS_GEOMETRY_POLYLINE
 
+        # @param value [Array<Numeric>] polygon vertex coordinates as flat list.
+        # @param domain [Primitive::Interval] domain of the polyline.
+        # @param length [Numeric] length of the polyline.
+        # @param closed [Boolean] whether polyline is closed or not.
+        # @param units [String] units of the polyline.
+        # @param application_id [String] application id of the polyline which corresponds to persistent_id of the Loop.
+        # rubocop:disable Metrics/ParameterLists
         def initialize(value:, domain:, length:, closed:, units:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -28,6 +33,7 @@ module SpeckleConnector
           self[:closed] = closed
           self[:units] = units
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param loop [Sketchup::Loop] loop to convert closed speckle polyline.
         def self.from_loop(loop, units)
@@ -46,7 +52,7 @@ module SpeckleConnector
             length: length,
             units: units,
             closed: true,
-            application_id: loop.entityID
+            application_id: loop.persistent_id.to_s
           )
         end
       end

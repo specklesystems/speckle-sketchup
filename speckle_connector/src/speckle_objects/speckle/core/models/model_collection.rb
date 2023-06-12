@@ -4,6 +4,7 @@ require_relative 'collection'
 require_relative 'layer_collection'
 require_relative '../../../built_elements/view3d'
 require_relative '../../../built_elements/revit/direct_shape'
+require_relative '../../../../mapper/mapper'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -31,7 +32,7 @@ module SpeckleConnector
               )
 
               # Direct shapes will pass directly to elements which are already flattened with all children
-              model_collection[:elements] += collect_direct_shapes(sketchup_model, units, preferences)
+              model_collection[:elements] += collect_mapped_entities(sketchup_model, units, preferences)
 
               # Views will pass directly to elements since they don't have any relation with layers and geometries.
               model_collection[:elements] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
@@ -52,8 +53,9 @@ module SpeckleConnector
               return speckle_state, model_collection
             end
 
-            def self.collect_direct_shapes(sketchup_model, units, preferences)
-              DIRECT_SHAPE.direct_shapes_on_selection(sketchup_model).collect do |entities|
+            # @param sketchup_model [Sketchup::Model] active model to retrieve and convert mapped entities.
+            def self.collect_mapped_entities(sketchup_model, units, preferences)
+              Mapper.mapped_entities_on_selection(sketchup_model).collect do |entities|
                 entity = entities[0]
                 path = entities[1..-1]
 

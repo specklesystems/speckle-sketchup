@@ -2,7 +2,7 @@
 
 require_relative '../dictionary/speckle_schema_dictionary_handler'
 require_relative '../../speckle_entities/speckle_entity'
-require_relative '../../mapping/category/revit_category'
+require_relative '../../mapper/category/revit_category'
 require_relative '../../constants/dict_constants'
 
 module SpeckleConnector
@@ -103,7 +103,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         def self.mapped_entity_details(entities)
-          reverse_category_dictionary = Mapping::Category::RevitCategory.reverse_dictionary
+          reverse_category_dictionary = Mapper::Category::RevitCategory.reverse_dictionary
           entities.collect do |entity|
             speckle_schema = get_schema(entity)
             speckle_schema_definition = entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
