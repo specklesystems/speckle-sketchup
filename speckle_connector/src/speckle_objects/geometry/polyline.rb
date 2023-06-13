@@ -36,8 +36,12 @@ module SpeckleConnector
         # rubocop:enable Metrics/ParameterLists
 
         # @param loop [Sketchup::Loop] loop to convert closed speckle polyline.
-        def self.from_loop(loop, units)
-          points = loop.vertices.collect(&:position)
+        def self.from_loop(loop, units, global_transformation: nil)
+          points = loop.vertices.collect do |vertex|
+            position = vertex.position
+            position = vertex.position.transform!(global_transformation) unless global_transformation.nil?
+            position
+          end
           values = points.collect do |p|
             [Geometry.length_to_speckle(p.x, units),
              Geometry.length_to_speckle(p.y, units),

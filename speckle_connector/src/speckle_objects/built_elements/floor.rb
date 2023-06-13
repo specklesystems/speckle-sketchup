@@ -27,12 +27,12 @@ module SpeckleConnector
         end
 
         # @param face [Sketchup::Face] face to get speckle schema for floor.
-        def self.to_speckle_schema(face, units)
-          outline = Geometry::Polyline.from_loop(face.loops.first, units)
+        def self.to_speckle_schema(face, units, global_transformation: nil)
+          outline = Geometry::Polyline.from_loop(face.loops.first, units, global_transformation: global_transformation)
           voids = []
           if face.loops.length > 1
             voids = face.loops[1..face.loops.length - 1].collect do |loop|
-              Geometry::Polyline.from_loop(loop, units)
+              Geometry::Polyline.from_loop(loop, units, global_transformation: global_transformation)
             end
           end
           Floor.new(

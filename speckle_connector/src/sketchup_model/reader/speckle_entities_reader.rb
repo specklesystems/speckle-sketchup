@@ -100,20 +100,18 @@ module SpeckleConnector
           }
         end
 
-        # rubocop:disable Metrics/CyclomaticComplexity
-        # rubocop:disable Metrics/PerceivedComplexity
         def self.mapped_entity_details(entities)
           reverse_category_dictionary = Mapper::Category::RevitCategory.reverse_dictionary
           entities.collect do |entity|
             speckle_schema = get_schema(entity)
             speckle_schema_definition = entity.respond_to?(:definition) ? get_schema(entity.definition) : nil
             entity_type = entity.class.name.split('::').last.gsub(/(?<=[a-z])(?=[A-Z])/, ' ').split.first
+            category = get_map_attribute(speckle_schema, speckle_schema_definition, 'category')
             {
-              name: speckle_schema['name'] || speckle_schema_definition['name'],
-              category: speckle_schema['category'] || speckle_schema_definition['category'],
-              categoryName: reverse_category_dictionary[speckle_schema['category']] ||
-                reverse_category_dictionary[speckle_schema_definition['category']],
-              method: speckle_schema['method'] || speckle_schema_definition['method'],
+              name: get_map_attribute(speckle_schema, speckle_schema_definition, 'name'),
+              category: category,
+              categoryName: category.nil? ? '' : reverse_category_dictionary[category],
+              method: get_map_attribute(speckle_schema, speckle_schema_definition, 'method'),
               entityName: entity.respond_to?(:name) ? entity.name : '',
               entityId: entity.persistent_id,
               entityType: entity.is_a?(Sketchup::ComponentDefinition) ? 'Definition' : entity_type,
@@ -122,8 +120,13 @@ module SpeckleConnector
             }
           end
         end
-        # rubocop:enable Metrics/CyclomaticComplexity
-        # rubocop:enable Metrics/PerceivedComplexity
+
+        def self.get_map_attribute(schema, definition_schema, attribute)
+          return schema[attribute] if schema[attribute]
+          return definition_schema[attribute] if !definition_schema.nil? && definition_schema[attribute]
+
+          nil
+        end
       end
     end
   end

@@ -28,12 +28,12 @@ module SpeckleConnector
       mapped_selection
     end
 
-    def self.to_speckle(entity, units)
+    def self.to_speckle(entity, units, global_transformation: nil)
       speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
       return speckle_schema if speckle_schema.nil?
 
-      if speckle_schema["method"] == 'Default Floor'
-        return SpeckleObjects::BuiltElements::Floor.to_speckle_schema(entity, units)
+      if speckle_schema['method'] == 'Default Floor'
+        return SpeckleObjects::BuiltElements::Floor.to_speckle_schema(entity, units, global_transformation: global_transformation)
       end
 
       return speckle_schema
