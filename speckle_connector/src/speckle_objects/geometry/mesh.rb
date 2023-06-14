@@ -3,6 +3,7 @@
 require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/render_material'
+require_relative '../../mapper/mapper'
 require_relative '../../sketchup_model/query/entity'
 require_relative '../../convertors/clean_up'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
@@ -51,7 +52,7 @@ module SpeckleConnector
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
-          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
+          self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
@@ -153,7 +154,7 @@ module SpeckleConnector
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
-          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(face)
+          speckle_schema = Mapper.to_speckle(face, units, global_transformation: global_transform)
           material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(
             units: units,

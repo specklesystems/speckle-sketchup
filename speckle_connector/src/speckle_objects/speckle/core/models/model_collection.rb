@@ -4,6 +4,7 @@ require_relative 'collection'
 require_relative 'layer_collection'
 require_relative '../../../built_elements/view3d'
 require_relative '../../../built_elements/revit/direct_shape'
+require_relative '../../../../mapper/mapper'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -13,7 +14,9 @@ module SpeckleConnector
           # ModelCollection object that collect other speckle objects under it's elements.
           class ModelCollection < Collection
             DIRECT_SHAPE = SpeckleObjects::BuiltElements::Revit::DirectShape
+            QUERY = SketchupModel::Query
             VIEW3D = SpeckleObjects::BuiltElements::View3d
+            SPECKLE_SCHEMA_DICTIONARY_HANDLER = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
             def initialize(name:, active_layer:, elements: [], application_id: nil)
               super(
                 name: name,
@@ -31,7 +34,7 @@ module SpeckleConnector
               )
 
               # Direct shapes will pass directly to elements which are already flattened with all children
-              model_collection[:elements] += collect_direct_shapes(sketchup_model, units, preferences)
+              model_collection[:elements] += collect_mapped_entities(sketchup_model, units, preferences, &convert)
 
               # Views will pass directly to elements since they don't have any relation with layers and geometries.
               model_collection[:elements] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
@@ -52,13 +55,11 @@ module SpeckleConnector
               return speckle_state, model_collection
             end
 
-            def self.collect_direct_shapes(sketchup_model, units, preferences)
-              DIRECT_SHAPE.direct_shapes_on_selection(sketchup_model).collect do |entities|
-                entity = entities[0]
-                path = entities[1..-1]
-
-                direct_shape = DIRECT_SHAPE.from_entity(entity, path, units, preferences)
-                [direct_shape, [entity]]
+            # @param sketchup_model [Sketchup::Model] active model to retrieve and convert mapped entities.
+            def self.collect_mapped_entities(sketchup_model, units, preferences, &convert)
+              mapped_entities = Mapper.mapped_entities_on_selection(sketchup_model)
+              mapped_entities.collect do |entity_with_path|
+                convert_mapped_entity(entity_with_path, preferences, units)
               end
             end
 
@@ -74,6 +75,24 @@ module SpeckleConnector
               state.sketchup_state.sketchup_model.active_layer = active_layer unless active_layer.nil?
 
               return state, []
+            end
+
+            def self.convert_mapped_entity(entity_with_path, preferences, units)
+              entity = entity_with_path[0]
+              path = entity_with_path[1..-1]
+
+              method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity, 'method')
+
+              if method.include?('Floor') && entity.is_a?(Sketchup::Face)
+                global_transformation = QUERY::Entity.global_transformation(entity, path)
+                floor = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: units,
+                                                                 model_preferences: preferences,
+                                                                 global_transform: global_transformation)
+                return [floor, [entity]]
+              end
+
+              direct_shape = DIRECT_SHAPE.from_entity(entity, path, units, preferences)
+              return [direct_shape, [entity]]
             end
           end
         end
