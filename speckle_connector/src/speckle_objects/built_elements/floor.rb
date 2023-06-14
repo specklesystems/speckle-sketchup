@@ -35,11 +35,12 @@ module SpeckleConnector
               Geometry::Polyline.from_loop(loop, units, global_transformation: global_transformation)
             end
           end
+          material = face.material || face.back_material
           Floor.new(
             outline: outline,
             voids: voids,
             units: units,
-            material: Other::RenderMaterial.from_material(face.material || face.back_material),
+            material: material.nil? ? nil : Other::RenderMaterial.from_material(face.material || face.back_material),
             application_id: face.entityID
           )
         end
