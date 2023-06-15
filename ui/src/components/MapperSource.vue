@@ -18,6 +18,7 @@
         item-text="name"
         item-value="id"
         density="compact"
+        @change="onSourceBranchChanged"
     ></v-autocomplete>
   </v-container>
 </template>
@@ -27,8 +28,14 @@
 import gql from "graphql-tag";
 import streamQuery from "@/graphql/stream.gql";
 import {bus} from "@/main";
+import ObjectLoader from "@speckle/objectloader";
 
 const streamLimit = 20
+
+global.mapperSourceUpdated = function (streamId, levels, types) {
+  console.log(JSON.stringify(levels), "levels")
+  console.log(JSON.stringify(types), "types")
+}
 
 export default {
   name: "MappingSource",
@@ -71,19 +78,45 @@ export default {
         bus.$emit('streams-loaded')
         this.showMoreEnabled = data.streams?.items.length < data.streams.totalCount
         return data.streams
+      },
+      $subscribe: {
+        commitCreated: {
+          query: gql`
+          subscription ($streamId: String!) {
+            commitCreated(streamId: $streamId)
+          }
+        `,
+          variables() {
+            return {
+              streamId: this.sourceStreamId
+            }
+          },
+          result() {
+            // console.log('source branch is not up-to-date!')
+            this.$apollo.queries.stream.refetch()
+          }
+        }
       }
     },
     stream: {
       query: streamQuery,
-      prefetch: false,
+      prefetch: true,
       variables() {
         return {
           id: this.sourceStreamId
         }
-      }
+      },
+      skip() {
+        // Return true to skip the initial query execution
+        return this.sourceStreamId === null;
+      },
     }
   },
   computed: {
+    selectedBranch() {
+      if (!this.stream) return
+      return this.stream.branches.items.find((branch) => branch.id === this.sourceBranchId)
+    },
     allStreamsList() {
       if (this.$apollo.loading) return
       return this.streams?.items
@@ -92,6 +125,28 @@ export default {
       if (this.$apollo.loading) return
       return this.stream?.branches.items
     },
+  },
+  methods: {
+    async onSourceBranchChanged() {
+     const commitRefId = this.selectedBranch.commits.items[0]?.referencedObject
+      if (!commitRefId) { return }
+
+      const loader = new ObjectLoader({
+        serverUrl: localStorage.getItem('serverUrl'),
+        token: localStorage.getItem('SpeckleSketchup.AuthToken'),
+        streamId: this.sourceStreamId,
+        objectId: commitRefId
+      })
+
+      let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
+      sketchup.exec({name:"mapper_source_updated" , data: {
+          base: rootObj,
+          stream_name: this.stream.name,
+          stream_id: this.sourceStreamId,
+          branch_name: this.selectedBranch.name,
+          branch_id: this.selectedBranch.id
+        }})
+    }
   }
 }
 

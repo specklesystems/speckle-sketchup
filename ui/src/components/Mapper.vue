@@ -68,7 +68,7 @@
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <mapping-source/>
+          <mapper-source/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -218,7 +218,7 @@
 /*global sketchup*/
 import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
-import MappingSource from "@/components/MappingSource.vue";
+import MappingSource from "@/components/MapperSource.vue";
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
@@ -235,7 +235,7 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 export default {
   name: "Mapper",
   components: {
-    MappingSource,
+    MapperSource: () => import('@/components/MapperSource.vue'),
     GlobalToast: () => import('@/components/GlobalToast'),
     MappedElements: () => import('@/components/MappedElements.vue')
   },
