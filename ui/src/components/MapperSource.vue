@@ -40,14 +40,15 @@ global.mapperSourceUpdated = function (streamId, levels, types) {
 export default {
   name: "MappingSource",
   props: {
-    streamSearchQuery: { type: String, default: null }
+    streamSearchQuery: { type: String, default: null },
+    sourceUpToDate: { type: Boolean },
   },
   data() {
     return {
       sourceStreamId: null,
       sourceBranchId: null,
       sourceStreamName: null,
-      sourceBranchName: null,
+      sourceBranchName: null
     }
   },
   apollo: {
@@ -79,23 +80,30 @@ export default {
         this.showMoreEnabled = data.streams?.items.length < data.streams.totalCount
         return data.streams
       },
-      $subscribe: {
-        commitCreated: {
-          query: gql`
+    },
+    $subscribe: {
+      commitCreated: {
+        query: gql`
           subscription ($streamId: String!) {
             commitCreated(streamId: $streamId)
           }
         `,
-          variables() {
-            return {
-              streamId: this.sourceStreamId
-            }
-          },
-          result() {
-            // console.log('source branch is not up-to-date!')
-            this.$apollo.queries.stream.refetch()
+        variables() {
+          return {
+            streamId: this.sourceStreamId
           }
-        }
+        },
+        result() {
+          this.afterCommitCreated()
+            this.$eventHub.$emit('notification', {
+                text: `A new commit was created on source stream!`,
+            })
+          this.$apollo.queries.stream.refetch()
+        },
+        skip() {
+            // Return true to skip the initial query execution
+            return this.sourceStreamId === null;
+        },
       }
     },
     stream: {
@@ -126,9 +134,18 @@ export default {
       return this.stream?.branches.items
     },
   },
+  mounted() {
+    bus.$on('refresh-source-branch', () => {
+      this.onSourceBranchChanged()
+      bus.$emit('set-source-up-to-date', true)
+    })
+  },
   methods: {
+    afterCommitCreated(){
+      bus.$emit('set-source-up-to-date', false)
+    },
     async onSourceBranchChanged() {
-     const commitRefId = this.selectedBranch.commits.items[0]?.referencedObject
+      const commitRefId = this.selectedBranch.commits.items[0]?.referencedObject
       if (!commitRefId) { return }
 
       const loader = new ObjectLoader({
@@ -137,6 +154,8 @@ export default {
         streamId: this.sourceStreamId,
         objectId: commitRefId
       })
+
+      console.log(commitRefId)
 
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
       sketchup.exec({name:"mapper_source_updated" , data: {

@@ -59,16 +59,30 @@
       </v-expansion-panel>
 
       <v-expansion-panel key="source">
-        <v-expansion-panel-header>
-          <div>
+        <v-expansion-panel-header class="flex">
+          <v-container class="ma-0 pa-0">
             <v-icon>
               mdi-source-branch
             </v-icon>
-            {{ sourceStreamName === null ? `Source` : `Source (${sourceStreamName} - ${sourceStreamName})` }}
-          </div>
+            {{ `Source` }}
+            <v-btn
+                v-if="!sourceUpToDate"
+                v-tooltip="'Source branch is not up-to-date!'"
+                class="ma-0"
+                height="20px"
+                icon
+                small
+                color="red"
+                @click="refreshSourceBranch"
+            >
+              <v-icon>
+                mdi-update
+              </v-icon>
+            </v-btn>
+          </v-container>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <mapper-source/>
+          <mapper-source :source-up-to-date="this.sourceUpToDate"/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -241,10 +255,7 @@ export default {
   },
   data() {
     return {
-      sourceStreamId: null,
-      sourceBranchId: null,
-      sourceStreamName: null,
-      sourceBranchName: null,
+      sourceUpToDate: true,
       // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
       // Expanded indexes for mapped element table (Categories)
@@ -374,6 +385,9 @@ export default {
     }
   },
   methods:{
+    refreshSourceBranch(){
+      bus.$emit('refresh-source-branch')
+    },
     clearInputs(){
       this.enabledMethods = []
       this.availableCategories = []
@@ -556,6 +570,10 @@ export default {
     })
     bus.$on('mapped-entities-updated', async (mappedEntities) => {
       this.mappedEntityCount = mappedEntities.length
+    })
+    bus.$on('set-source-up-to-date', (isUpToDate) => {
+      this.sourceUpToDate = isUpToDate
+      console.log(this.sourceUpToDate)
     })
   }
 }
