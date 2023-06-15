@@ -58,6 +58,20 @@
         </v-expansion-panel-content>
       </v-expansion-panel>
 
+      <v-expansion-panel key="source">
+        <v-expansion-panel-header>
+          <div>
+            <v-icon>
+              mdi-source-branch
+            </v-icon>
+            {{ sourceStreamName === null ? `Source` : `Source (${sourceStreamName} - ${sourceStreamName})` }}
+          </div>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <mapping-source/>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+
       <v-expansion-panel key="mapping">
         <v-expansion-panel-header>
           <div>
@@ -204,6 +218,7 @@
 /*global sketchup*/
 import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
+import MappingSource from "@/components/MappingSource.vue";
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
@@ -220,11 +235,16 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 export default {
   name: "Mapper",
   components: {
+    MappingSource,
     GlobalToast: () => import('@/components/GlobalToast'),
     MappedElements: () => import('@/components/MappedElements.vue')
   },
   data() {
     return {
+      sourceStreamId: null,
+      sourceBranchId: null,
+      sourceStreamName: null,
+      sourceBranchName: null,
       // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
       // Expanded indexes for mapped element table (Categories)
@@ -247,7 +267,7 @@ export default {
       availableCategories: [],
       mappedEntityCount: 0,
       mappedEntities: [],
-      panel: [1],
+      panel: [2],
       selectionHeaders: [
         { text: 'Type', sortable: false, value: 'entityType', width: '60%' },
         { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' },
