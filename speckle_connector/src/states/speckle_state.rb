@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'speckle_mapper_state'
 require_relative '../immutable/immutable'
 require_relative '../callbacks/callback_message'
 require_relative '../speckle_entities/speckle_entity'
@@ -10,12 +11,12 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
+      # @return [States::SpeckleMapperState] state of the mapper.
+      attr_reader :speckle_mapper_state
+
       # @return [ImmutableHash{Integer=>SpeckleEntities::SpeckleEntity}] persistent_id of the sketchup entity and
       #  corresponding speckle entity
       attr_reader :speckle_entities
-
-      # @return [ImmutableHash{Integer=>Sketchup::Entity}] persistent_id of the sketchup entity and itself
-      attr_reader :mapped_entities
 
       # @return [Array] accounts on appdata.
       attr_reader :accounts
@@ -47,10 +48,10 @@ module SpeckleConnector
         @message_queue = queue
         @stream_queue = stream_queue
         @speckle_entities = Immutable::EmptyHash
-        @mapped_entities = Immutable::EmptyHash
         @render_materials = Immutable::EmptyHash
         @definitions = Immutable::EmptyHash
         @relation = Relations::ManyToOneRelation.new
+        @speckle_mapper_state = SpeckleMapperState.new
       end
 
       # @param callback_name [String] name of the callback command
@@ -96,13 +97,18 @@ module SpeckleConnector
       end
 
       def with_mapped_entity(entity)
-        new_mapped_entities = mapped_entities.put(entity.persistent_id, entity)
-        with_mapped_entities(new_mapped_entities)
+        new_speckle_mapper_state = speckle_mapper_state.with_mapped_entity(entity)
+        with(:@speckle_mapper_state => new_speckle_mapper_state)
       end
 
       def with_removed_mapped_entity(entity)
-        new_mapped_entities = mapped_entities.delete(entity.persistent_id)
-        with_mapped_entities(new_mapped_entities)
+        new_speckle_mapper_state = speckle_mapper_state.with_removed_mapped_entity(entity)
+        with(:@speckle_mapper_state => new_speckle_mapper_state)
+      end
+
+      def with_mapped_entities(new_mapped_entities)
+        new_speckle_mapper_state = speckle_mapper_state.with_mapped_entities(new_mapped_entities)
+        with(:@speckle_mapper_state => new_speckle_mapper_state)
       end
 
       def with_speckle_entity(traversed_entity)
@@ -112,10 +118,6 @@ module SpeckleConnector
 
       def with_speckle_entities(new_speckle_entities)
         with(:@speckle_entities => new_speckle_entities)
-      end
-
-      def with_mapped_entities(new_mapped_entities)
-        with(:@mapped_entities => new_mapped_entities)
       end
 
       def with_relation(new_relation)

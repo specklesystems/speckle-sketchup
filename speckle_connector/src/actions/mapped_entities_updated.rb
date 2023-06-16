@@ -11,7 +11,7 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, _data = nil)
         mapped_entities = SketchupModel::Reader::SpeckleEntitiesReader
-                          .mapped_entity_details(state.speckle_state.mapped_entities.values.to_a)
+                          .mapped_entity_details(state.speckle_state.speckle_mapper_state.mapped_entities.values.to_a)
 
         state.with_mapped_entities_queue(mapped_entities)
       end
