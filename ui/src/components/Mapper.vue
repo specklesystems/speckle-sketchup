@@ -234,6 +234,11 @@ import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
 import MappingSource from "@/components/MapperSource.vue";
 
+global.mapperSourceUpdated = function (streamId, levels, types) {
+  console.log(JSON.stringify(levels), "levels")
+  console.log(JSON.stringify(types), "types")
+}
+
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
 }

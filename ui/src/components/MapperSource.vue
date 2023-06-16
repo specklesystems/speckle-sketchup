@@ -32,11 +32,6 @@ import ObjectLoader from "@speckle/objectloader";
 
 const streamLimit = 20
 
-global.mapperSourceUpdated = function (streamId, levels, types) {
-  console.log(JSON.stringify(levels), "levels")
-  console.log(JSON.stringify(types), "types")
-}
-
 export default {
   name: "MappingSource",
   props: {
@@ -155,15 +150,11 @@ export default {
         objectId: commitRefId
       })
 
-      console.log(commitRefId)
-
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
       sketchup.exec({name:"mapper_source_updated" , data: {
           base: rootObj,
-          stream_name: this.stream.name,
           stream_id: this.sourceStreamId,
-          branch_name: this.selectedBranch.name,
-          branch_id: this.selectedBranch.id
+          commit_id: commitRefId
         }})
     }
   }

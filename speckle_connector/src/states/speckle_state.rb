@@ -96,6 +96,11 @@ module SpeckleConnector
         with(:@accounts => new_accounts)
       end
 
+      def with_mapper_source(mapper_source)
+        new_speckle_mapper_state = speckle_mapper_state.with_mapper_source(mapper_source)
+        with(:@speckle_mapper_state => new_speckle_mapper_state)
+      end
+
       def with_mapped_entity(entity)
         new_speckle_mapper_state = speckle_mapper_state.with_mapped_entity(entity)
         with(:@speckle_mapper_state => new_speckle_mapper_state)

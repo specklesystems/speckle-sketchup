@@ -8,12 +8,10 @@ module SpeckleConnector
     # Command to update mapper source.
     class MapperSourceUpdated < Command
       def _run(data)
-        stream_id = data['stream_id']
         base = data['base']
-        branch_name = data['branch_name']
-        branch_id = data['branch_id']
-        stream_name = data['stream_name']
-        action = Actions::MapperSourceUpdated.new(stream_id, base, stream_name, branch_name, branch_id)
+        stream_id = data['stream_id']
+        commit_id = data['commit_id']
+        action = Actions::MapperSourceUpdated.new(base, stream_id, commit_id)
         app.update_state!(action)
       end
     end

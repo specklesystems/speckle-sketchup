@@ -3,6 +3,7 @@
 require_relative '../immutable/immutable'
 require_relative '../callbacks/callback_message'
 require_relative '../speckle_entities/speckle_entity'
+require_relative '../mapper/mapper_source'
 
 module SpeckleConnector
   module States
@@ -13,8 +14,12 @@ module SpeckleConnector
       # @return [ImmutableHash{Integer=>Sketchup::Entity}] persistent_id of the sketchup entity and itself
       attr_reader :mapped_entities
 
+      # @return [Mapper::MapperSource] source of the mapper.
+      attr_reader :mapper_source
+
       def initialize
         @mapped_entities = Immutable::EmptyHash
+        @mapper_source = nil
       end
 
       def with_mapped_entity(entity)
@@ -29,6 +34,10 @@ module SpeckleConnector
 
       def with_mapped_entities(new_mapped_entities)
         with(:@mapped_entities => new_mapped_entities)
+      end
+
+      def with_mapper_source(mapper_source)
+        with(:@mapper_source => mapper_source)
       end
     end
   end
