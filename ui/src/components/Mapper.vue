@@ -275,6 +275,7 @@ export default {
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
+      familyTypes: {},
       lastSelectedEntity: null,
       selectedMethod: null,
       selectedCategory: null,
@@ -560,6 +561,7 @@ export default {
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
+      this.familyTypes = selectionPars.familyTypes
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
       this.entityMapped = this.isEntitiesMapped(this.selectedEntities)
       this.definitionMapped = this.isEntityDefinitionsMapped(this.selectedEntities)

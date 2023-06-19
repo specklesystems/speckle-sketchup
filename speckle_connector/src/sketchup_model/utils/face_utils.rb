@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../../constants/geo_constants'
+
 module SpeckleConnector
   # Operations related to {SketchupModel}.
   module SketchupModel
@@ -23,6 +25,16 @@ module SpeckleConnector
             edges_ary = new_faces.collect(&:edges).flatten.uniq - edges_ary
           end
           adj_faces.uniq
+        end
+
+        # @param face [Sketchup::Face] face to check whether is vertical or not.
+        def self.vertical?(face)
+          face.normal.perpendicular?(VECTOR_Z)
+        end
+
+        # @param face [Sketchup::Face] face to check whether is horizontal or not.
+        def self.horizontal?(face)
+          face.normal.parallel?(VECTOR_Z)
         end
       end
     end

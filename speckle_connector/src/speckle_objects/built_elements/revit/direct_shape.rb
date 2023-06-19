@@ -7,7 +7,7 @@ require_relative '../../other/block_definition'
 require_relative '../../other/transform'
 require_relative '../../../constants/type_constants'
 require_relative '../../../sketchup_model/query/entity'
-require_relative '../../../sketchup_model/reader/speckle_entities_reader'
+require_relative '../../../sketchup_model/reader/mapper_reader'
 require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
@@ -78,9 +78,9 @@ module SpeckleConnector
             mapped_selection = []
             flat_selection_with_path.each do |entities|
               entity = entities[0]
-              is_entity_mapped = READER::SpeckleEntitiesReader.mapped_with_schema?(entity)
+              is_entity_mapped = READER::MapperReader.mapped_with_schema?(entity)
               if entity.respond_to?(:definition)
-                is_definition_mapped = READER::SpeckleEntitiesReader.mapped_with_schema?(entity.definition)
+                is_definition_mapped = READER::MapperReader.mapped_with_schema?(entity.definition)
                 mapped_selection.append(entities) if is_entity_mapped || is_definition_mapped
                 next
               end

@@ -15,6 +15,7 @@ require_relative '../speckle_objects/relations/layers'
 require_relative '../speckle_objects/speckle/core/models/model_collection'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
+require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
 
 module SpeckleConnector
@@ -63,7 +64,7 @@ module SpeckleConnector
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
-        unless SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 
