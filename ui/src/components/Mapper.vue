@@ -58,6 +58,34 @@
         </v-expansion-panel-content>
       </v-expansion-panel>
 
+      <v-expansion-panel key="source">
+        <v-expansion-panel-header class="flex">
+          <v-container class="ma-0 pa-0">
+            <v-icon>
+              mdi-source-branch
+            </v-icon>
+            {{ `Source` }}
+            <v-btn
+                v-if="!sourceUpToDate"
+                v-tooltip="'Source branch is not up-to-date!'"
+                class="ma-0"
+                height="20px"
+                icon
+                small
+                color="red"
+                @click="refreshSourceBranch"
+            >
+              <v-icon>
+                mdi-update
+              </v-icon>
+            </v-btn>
+          </v-container>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <mapper-source :source-up-to-date="this.sourceUpToDate"/>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+
       <v-expansion-panel key="mapping">
         <v-expansion-panel-header>
           <div>
@@ -204,6 +232,12 @@
 /*global sketchup*/
 import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
+import MappingSource from "@/components/MapperSource.vue";
+
+global.mapperSourceUpdated = function (streamId, levels, types) {
+  console.log(JSON.stringify(levels), "levels")
+  console.log(JSON.stringify(types), "types")
+}
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
@@ -220,11 +254,13 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 export default {
   name: "Mapper",
   components: {
+    MapperSource: () => import('@/components/MapperSource.vue'),
     GlobalToast: () => import('@/components/GlobalToast'),
     MappedElements: () => import('@/components/MappedElements.vue')
   },
   data() {
     return {
+      sourceUpToDate: true,
       // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
       // Expanded indexes for mapped element table (Categories)
@@ -247,7 +283,7 @@ export default {
       availableCategories: [],
       mappedEntityCount: 0,
       mappedEntities: [],
-      panel: [1],
+      panel: [2],
       selectionHeaders: [
         { text: 'Type', sortable: false, value: 'entityType', width: '60%' },
         { text: 'Count', sortable: false, align: 'center', value: 'count', width: '20%' },
@@ -354,6 +390,9 @@ export default {
     }
   },
   methods:{
+    refreshSourceBranch(){
+      bus.$emit('refresh-source-branch')
+    },
     clearInputs(){
       this.enabledMethods = []
       this.availableCategories = []
@@ -536,6 +575,10 @@ export default {
     })
     bus.$on('mapped-entities-updated', async (mappedEntities) => {
       this.mappedEntityCount = mappedEntities.length
+    })
+    bus.$on('set-source-up-to-date', (isUpToDate) => {
+      this.sourceUpToDate = isUpToDate
+      console.log(this.sourceUpToDate)
     })
   }
 }
