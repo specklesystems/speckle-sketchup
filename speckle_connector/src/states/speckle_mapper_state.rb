@@ -37,6 +37,7 @@ module SpeckleConnector
       end
 
       def with_mapper_source(mapper_source)
+        # TODO: Check/Sync here parameters of the mapped entities.
         with(:@mapper_source => mapper_source)
       end
     end
