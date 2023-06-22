@@ -18,8 +18,34 @@
         item-text="name"
         item-value="id"
         density="compact"
-        @change="onSourceBranchChanged"
     ></v-autocomplete>
+
+    <v-container class="pa-0 mt-2">
+      <v-row justify="center" align="center">
+        <v-col cols="auto" class="pa-1 pb-2">
+          <v-btn
+              small
+              @click="applySource"
+          >
+            <v-icon dark left>
+              mdi-checkbox-marked-circle
+            </v-icon>Apply
+          </v-btn>
+        </v-col>
+        <v-col cols="auto" class="pa-1 pb-2">
+          <v-btn
+              small
+              :disabled="!sourceApplied"
+              @click="clearSource"
+          >
+            <v-icon dark left>
+              mdi-close-circle
+            </v-icon>Clear
+          </v-btn>
+        </v-col>
+      </v-row>
+
+    </v-container>
   </v-container>
 </template>
 
@@ -40,6 +66,7 @@ export default {
   },
   data() {
     return {
+      sourceApplied: false,
       sourceStreamId: null,
       sourceBranchId: null,
       sourceStreamName: null,
@@ -88,12 +115,14 @@ export default {
             streamId: this.sourceStreamId
           }
         },
-        result() {
-          this.afterCommitCreated()
+        result(data) {
+          if (data.data.commitCreated.sourceApplication.includes('Revit')){
+            this.afterCommitCreated()
             this.$eventHub.$emit('notification', {
-                text: `A new commit was created on source stream!`,
+              text: `A new commit was created on Revit!`,
             })
-          this.$apollo.queries.stream.refetch()
+            this.$apollo.queries.stream.refetch()
+          }
         },
         skip() {
             // Return true to skip the initial query execution
@@ -136,6 +165,13 @@ export default {
     })
   },
   methods: {
+    applySource(){
+      this.onSourceBranchChanged()
+    },
+    clearSource(){
+      sketchup.exec({name:"clear_mapper_source" , data: {}})
+      this.sourceApplied = false
+    },
     afterCommitCreated(){
       bus.$emit('set-source-up-to-date', false)
     },
@@ -156,6 +192,7 @@ export default {
           stream_id: this.sourceStreamId,
           commit_id: commitRefId
         }})
+      this.sourceApplied = true
     }
   }
 }
