@@ -9,12 +9,16 @@ module SpeckleConnector
   module Actions
     # Apply mappings for selected entities.
     class ApplyMappings < Action
-      def initialize(entities_to_map, method, category, name, is_definition)
+      def initialize(entities_to_map, method, category, family,
+                     family_type, level, name, is_definition)
         super()
         @entities_to_map = entities_to_map
         @method = method
         @category = category
         @name = name
+        @family = family
+        @family_type = family_type
+        @level = level
         @is_definition = is_definition
       end
 
@@ -51,6 +55,9 @@ module SpeckleConnector
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :category, @category)
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :name, name)
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :method, @method)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :family, @family)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :family_type, @family_type)
+          SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.set_attribute(entity, :level, @level)
           speckle_state = speckle_state.with_mapped_entity(entity)
         end
 

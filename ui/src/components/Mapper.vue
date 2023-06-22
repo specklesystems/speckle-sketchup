@@ -155,9 +155,48 @@
               :items="enabledMethods"
               density="compact"
               clearable
+              @change="onSelectedMethodChange"
           ></v-autocomplete>
 
           <v-autocomplete
+              v-if="familySelectionActive"
+              v-model="selectedFamily"
+              class="pt-0"
+              label="Family"
+              :disabled="!entitySelected"
+              :items="families"
+              density="compact"
+              clearable
+          ></v-autocomplete>
+
+          <v-autocomplete
+              v-if="typeSelectionActive"
+              v-model="selectedFamilyType"
+              class="pt-0"
+              label="Type"
+              :disabled="!entitySelected"
+              item-value="type"
+              item-text="type"
+              :items="familyTypes"
+              density="compact"
+              clearable
+          ></v-autocomplete>
+
+          <v-autocomplete
+              v-if="levelSelectionActive"
+              v-model="selectedLevel"
+              class="pt-0"
+              label="Base Level"
+              :disabled="!entitySelected"
+              :items="levels"
+              item-value="name"
+              item-text="name"
+              density="compact"
+              clearable
+          ></v-autocomplete>
+
+          <v-autocomplete
+              v-if="categorySelectionActive"
               v-model="selectedCategory"
               class="pt-0"
               label="Category"
@@ -170,6 +209,7 @@
           ></v-autocomplete>
 
           <v-text-field
+              v-if="nameSelectionActive"
               v-model="name"
               class="pt-0"
               label="Name"
@@ -181,6 +221,7 @@
             <v-row justify="center" align="center">
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
+                    small
                     :disabled="!entitySelected"
                     @click="applyMapping"
                 >
@@ -191,6 +232,7 @@
               </v-col>
               <v-col cols="auto" class="pa-1 pb-2">
                 <v-btn
+                    small
                     :disabled="!entitySelected"
                     @click="clearMapping"
                 >
@@ -201,10 +243,7 @@
               </v-col>
             </v-row>
 
-
           </v-container>
-
-
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -235,8 +274,7 @@ import {groupBy} from "@/utils/groupBy";
 import MappingSource from "@/components/MapperSource.vue";
 
 global.mapperSourceUpdated = function (streamId, levels, types) {
-  console.log(JSON.stringify(levels), "levels")
-  console.log(JSON.stringify(types), "types")
+  console.log(`Mapper source updated for ${streamId}.`)
 }
 
 global.entitySelected = function (selectionParameters) {
@@ -260,6 +298,17 @@ export default {
   },
   data() {
     return {
+      nativeFaceMethods: ['Floor', 'Wall'],
+      nativeEdgeMethods: ['Column', 'Beam', 'Brace', 'Pipe', 'Duct'],
+      nativeDefaultFaceMethods: ['Default Floor', 'Default Wall'],
+      nativeDefaultEdgeMethods: ['Default Column', 'Default Beam', 'Default Brace', 'Default Pipe', 'Default Duct'],
+
+      familySelectionActive: false,
+      typeSelectionActive: false,
+      levelSelectionActive: false,
+      categorySelectionActive: false,
+      nameSelectionActive: false,
+
       sourceUpToDate: true,
       // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
@@ -275,13 +324,22 @@ export default {
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
-      familyTypes: {},
+      familyTypes: [],
       lastSelectedEntity: null,
+
       selectedMethod: null,
       selectedCategory: null,
+      selectedFamily: null,
+      selectedFamilyType: null,
+      selectedLevel: null,
       name: "",
+
       enabledMethods: [],
       availableCategories: [],
+      families: [],
+      allTypes: {},
+      levels: [],
+
       mappedEntityCount: 0,
       mappedEntities: [],
       panel: [2],
@@ -391,6 +449,81 @@ export default {
     }
   },
   methods:{
+    onSelectedMethodChange(){
+      this.hideOptionalMappingInputs()
+      this.updateMappingInputs()
+      this.getTypesFromSelectedMethod()
+    },
+    updateMappingInputs(){
+      if (this.selectedMethod === null){
+        this.typeSelectionActive = false
+        this.familySelectionActive = false
+        this.levelSelectionActive = false
+        this.categorySelectionActive = false
+        this.nameSelectionActive = false
+        return
+      }
+      const nativeDefaultMethods = this.nativeDefaultEdgeMethods.concat(this.nativeDefaultFaceMethods)
+      const nativeMethods = this.nativeEdgeMethods.concat(this.nativeFaceMethods)
+
+      if (this.selectedMethod === 'Direct Shape'){
+        this.categorySelectionActive = true
+        this.nameSelectionActive = true
+      }
+      else if (nativeDefaultMethods.includes(this.selectedMethod)){
+        this.typeSelectionActive = false
+        this.familySelectionActive = false
+        this.levelSelectionActive = false
+        this.categorySelectionActive = false
+        this.nameSelectionActive = false
+      }
+      else if (nativeMethods.includes(this.selectedMethod)){
+        this.typeSelectionActive = true
+        this.familySelectionActive = true
+        this.levelSelectionActive = true
+      }
+    },
+    getTypesFromSelectedMethod(){
+      switch (this.selectedMethod) {
+        case 'Floor':
+          this.familyTypes = this.allTypes['Floors'];
+          this.families = ['Floor'];
+          break;
+        case 'Wall':
+          this.familyTypes = this.allTypes['Walls'];
+          this.families = ['Wall'];
+          break;
+        case 'Column':
+          this.familyTypes = this.allTypes['Columns'];
+          this.families = ['Column'];
+          break;
+        case 'Beam':
+          this.familyTypes = this.allTypes['Beams'];
+          this.families = ['Beam'];
+          break;
+        case 'Brace':
+          this.familyTypes = this.allTypes['Braces'];
+          this.families = ['Brace'];
+          break;
+        case 'Pipe':
+          this.familyTypes = this.allTypes['Pipes'];
+          this.families = ['Pipe'];
+          break;
+        case 'Duct':
+          this.familyTypes = this.allTypes['Ducts'];
+          this.families = ['Duct'];
+          break;
+        default:
+          break;
+      }
+    },
+    hideOptionalMappingInputs(){
+      this.categorySelectionActive = false
+      this.nameSelectionActive = false
+      this.typeSelectionActive = false
+      this.familySelectionActive = false
+      this.levelSelectionActive = false
+    },
     refreshSourceBranch(){
       bus.$emit('refresh-source-branch')
     },
@@ -405,6 +538,11 @@ export default {
       this.selectedCategory = null
       this.entityMapped = false
       this.definitionMapped = false
+      this.selectedLevel = null
+      this.selectedFamily = null
+      this.selectedFamilyType = null
+      this.allTypes = null
+      this.familyTypes = null
     },
     getSelectionTableData(){
       let groupByClass = groupBy('entityType')
@@ -456,7 +594,7 @@ export default {
           }else{
             this.name = this.lastSelectedEntity['definition']['entityName']
           }
-          this.selectedMethod = 'Direct Shape'
+          // this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
         } else {
           if (this.selectedEntityCount > 1){
@@ -474,7 +612,8 @@ export default {
           }else{
             this.name = this.lastSelectedEntity['entityName']
           }
-          this.selectedMethod = 'Direct Shape'
+          this.updateMappingInputs()
+          // this.selectedMethod = 'Direct Shape'
           this.selectedCategory = 49
         } else {
           if (this.selectedEntityCount > 1){
@@ -483,7 +622,12 @@ export default {
             this.name = this.lastSelectedEntity['schema']['name']
           }
           this.selectedMethod = this.lastSelectedEntity['schema']['method']
+          this.updateMappingInputs()
+          this.getTypesFromSelectedMethod()
           this.selectedCategory = this.lastSelectedEntity['schema']['category']
+          this.selectedFamily = this.lastSelectedEntity['schema']['family']
+          this.selectedFamilyType = this.lastSelectedEntity['schema']['family_type']
+          this.selectedLevel = this.lastSelectedEntity['schema']['level']
         }
       }
     },
@@ -533,6 +677,9 @@ export default {
         entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
         method: this.selectedMethod,
         category:  this.selectedCategory,
+        family: this.selectedFamily,
+        familyType: this.selectedFamilyType,
+        level: this.selectedLevel,
         name: this.name,
         isDefinition: this.definitionSelected
       }
@@ -557,11 +704,15 @@ export default {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
 
     bus.$on('entities-selected', async (selectionParameters) => {
+      this.selectedMethod = null
       const selectionPars = JSON.parse(selectionParameters)
       this.enabledMethods = selectionPars.mappingMethods
       this.availableCategories = selectionPars.categories
       this.selectedEntities = selectionPars.selection
-      this.familyTypes = selectionPars.familyTypes
+      this.allTypes = selectionPars.types
+      this.levels = selectionPars.levels
+      this.selectedLevel = selectionPars.selectedLevel
+      console.log(selectionPars)
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
       this.entityMapped = this.isEntitiesMapped(this.selectedEntities)
       this.definitionMapped = this.isEntityDefinitionsMapped(this.selectedEntities)
@@ -574,13 +725,13 @@ export default {
     bus.$on('entities-deselected', async () => {
       this.entitySelected = false
       this.clearInputs()
+      this.hideOptionalMappingInputs()
     })
     bus.$on('mapped-entities-updated', async (mappedEntities) => {
       this.mappedEntityCount = mappedEntities.length
     })
     bus.$on('set-source-up-to-date', (isUpToDate) => {
       this.sourceUpToDate = isUpToDate
-      console.log(this.sourceUpToDate)
     })
   }
 }
