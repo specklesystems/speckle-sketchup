@@ -7,8 +7,10 @@ module SpeckleConnector
 
   OBJECTS_BUILTELEMENTS_VIEW3D = 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
   OBJECTS_BUILTELEMENTS_NETWORK = 'Objects.BuiltElements.Network'
-  OBJECTS_BUILTELEMENTS_FLOOR = 'Objects.BuiltElements.Floor'
+  OBJECTS_BUILTELEMENTS_DEFAULT_FLOOR = 'Objects.BuiltElements.Floor'
+  OBJECTS_BUILTELEMENTS_FLOOR = 'Objects.BuiltElements.Floor:Objects.BuiltElements.Revit.RevitFloor'
   OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE = 'Objects.BuiltElements.Revit.DirectShape'
+  OBJECTS_BUILTELEMENTS_REVIT_PARAMETER = 'Objects.BuiltElements.Revit.Parameter'
   OBJECTS_BUILTELEMENTS_REVIT_REVITELEMENTTYPE = 'Objects.BuiltElements.Revit.RevitElementType'
   OBJECTS_BUILTELEMENTS_REVIT_LEVEL = 'Objects.BuiltElements.Level:Objects.BuiltElements.Revit.RevitLevel'
 
