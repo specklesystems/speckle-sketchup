@@ -6,6 +6,7 @@ require_relative '../geometry/line'
 require_relative '../geometry/length'
 require_relative '../geometry/polyline'
 require_relative '../../constants/type_constants'
+require_relative '../../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -25,10 +26,12 @@ module SpeckleConnector
           self[:elevation] = elevation
           self[:units] = units
           self[:elementId] = element_id
+          self[:referenceOnly] = true
+          self[:createView] = false
         end
 
         # @param state [States::State] state of the application.
-        def self.to_native(state, speckle_level)
+        def self.to_native(state, speckle_level, stream_id)
           sketchup_model = state.sketchup_state.sketchup_model
           levels_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == 'Levels' }
           levels_layer = sketchup_model.layers.add('Levels') if levels_layer.nil?
@@ -38,6 +41,7 @@ module SpeckleConnector
           units = speckle_level['units']
           element_id = speckle_level['elementId']
           application_id = speckle_level['applicationId']
+          id = speckle_level['id']
 
           skp_elevation = Geometry.length_to_native(elevation, units)
 
@@ -47,6 +51,15 @@ module SpeckleConnector
           definition = sketchup_model.definitions.add(definition_name) if definition.nil?
           instance = sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
           instance.locked = true
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
+            instance, application_id, id, SPECKLE_TYPE, [], stream_id
+          )
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.set_attribute(instance, :name, name)
+
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
+            definition, application_id, id, SPECKLE_TYPE, [], stream_id
+          )
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.set_attribute(definition, :name, name)
 
           c1_e = Geom::Point3d.new(0, 10.m, skp_elevation)
           c2_e = Geom::Point3d.new(0, 0, skp_elevation)

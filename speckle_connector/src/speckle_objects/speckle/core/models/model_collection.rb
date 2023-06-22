@@ -34,7 +34,8 @@ module SpeckleConnector
               )
 
               # Direct shapes will pass directly to elements which are already flattened with all children
-              model_collection[:elements] += collect_mapped_entities(sketchup_model, units, preferences, &convert)
+              model_collection[:elements] += collect_mapped_entities(speckle_state, sketchup_model, units,
+                                                                     preferences, &convert)
 
               # Views will pass directly to elements since they don't have any relation with layers and geometries.
               model_collection[:elements] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
@@ -56,10 +57,10 @@ module SpeckleConnector
             end
 
             # @param sketchup_model [Sketchup::Model] active model to retrieve and convert mapped entities.
-            def self.collect_mapped_entities(sketchup_model, units, preferences, &convert)
+            def self.collect_mapped_entities(speckle_state, sketchup_model, units, preferences, &convert)
               mapped_entities = Mapper.mapped_entities_on_selection(sketchup_model)
               mapped_entities.collect do |entity_with_path|
-                convert_mapped_entity(entity_with_path, preferences, units)
+                convert_mapped_entity(speckle_state, entity_with_path, preferences, units)
               end
             end
 
@@ -77,7 +78,7 @@ module SpeckleConnector
               return state, []
             end
 
-            def self.convert_mapped_entity(entity_with_path, preferences, units)
+            def self.convert_mapped_entity(speckle_state, entity_with_path, preferences, units)
               entity = entity_with_path[0]
               path = entity_with_path[1..-1]
 
@@ -85,13 +86,13 @@ module SpeckleConnector
 
               if method.include?('Floor') && entity.is_a?(Sketchup::Face)
                 global_transformation = QUERY::Entity.global_transformation(entity, path)
-                floor = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: units,
-                                                                 model_preferences: preferences,
+                floor = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity,
+                                                                 units: units, model_preferences: preferences,
                                                                  global_transform: global_transformation)
                 return [floor, [entity]]
               end
 
-              direct_shape = DIRECT_SHAPE.from_entity(entity, path, units, preferences)
+              direct_shape = DIRECT_SHAPE.from_entity(speckle_state, entity, path, units, preferences)
               return [direct_shape, [entity]]
             end
           end

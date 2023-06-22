@@ -69,13 +69,13 @@ module SpeckleConnector
         with(:@message_queue => new_queue)
       end
 
-      def with_selection_queue(selection_parameters)
+      def with_mapper_selection_queue(selection_parameters)
         new_queue = message_queue.merge({ "entitySelected":
                                             "entitySelected(#{JSON.generate(selection_parameters)})" })
         with(:@message_queue => new_queue)
       end
 
-      def with_deselection_queue
+      def with_mapper_deselection_queue
         new_queue = message_queue.merge({ "entitiesDeselected": 'entitiesDeselected()' })
         with(:@message_queue => new_queue)
       end
@@ -98,6 +98,11 @@ module SpeckleConnector
 
       def with_mapper_source(mapper_source)
         new_speckle_mapper_state = speckle_mapper_state.with_mapper_source(mapper_source)
+        with(:@speckle_mapper_state => new_speckle_mapper_state)
+      end
+
+      def with_removed_mapper_source
+        new_speckle_mapper_state = speckle_mapper_state.with_mapper_source(nil)
         with(:@speckle_mapper_state => new_speckle_mapper_state)
       end
 

@@ -15,6 +15,7 @@ require_relative '../speckle_objects/relations/layers'
 require_relative '../speckle_objects/speckle/core/models/model_collection'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
+require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
 
 module SpeckleConnector
@@ -63,7 +64,7 @@ module SpeckleConnector
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
-        unless SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 
@@ -72,7 +73,7 @@ module SpeckleConnector
 
       def from_mapped_to_speckle(entity, path, preferences)
         direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
-                       .from_entity(entity, path, @units, preferences)
+                       .from_entity(speckle_state, entity, path, @units, preferences)
         return [direct_shape, [entity]]
       end
 
@@ -84,7 +85,7 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::Face)
-          mesh = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: @units,
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity, units: @units,
                                                           model_preferences: preferences[:model])
           return speckle_state, [mesh, [entity]]
         end

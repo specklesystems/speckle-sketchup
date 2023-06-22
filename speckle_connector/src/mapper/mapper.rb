@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 require_relative '../speckle_objects/built_elements/floor'
+require_relative '../speckle_objects/built_elements/default_floor'
 require_relative '../sketchup_model/query/entity'
-require_relative '../sketchup_model/reader/speckle_entities_reader'
+require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
@@ -17,9 +18,9 @@ module SpeckleConnector
       mapped_selection = []
       flat_selection_with_path.each do |entities|
         entity = entities[0]
-        is_entity_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity)
+        is_entity_mapped = SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
         if entity.respond_to?(:definition)
-          is_definition_mapped = SketchupModel::Reader::SpeckleEntitiesReader.mapped_with_schema?(entity.definition)
+          is_definition_mapped = SketchupModel::Reader::MapperReader.mapped_with_schema?(entity.definition)
           mapped_selection.append(entities) if is_entity_mapped || is_definition_mapped
           next
         end
@@ -28,12 +29,18 @@ module SpeckleConnector
       mapped_selection
     end
 
-    def self.to_speckle(entity, units, global_transformation: nil)
+    def self.to_speckle(speckle_state, entity, units, global_transformation: nil)
       speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
       return speckle_schema if speckle_schema.nil?
 
       if speckle_schema['method'] == 'Default Floor'
-        return SpeckleObjects::BuiltElements::Floor.to_speckle_schema(entity, units, global_transformation: global_transformation)
+        return SpeckleObjects::BuiltElements::DefaultFloor
+               .to_speckle_schema(entity, units, global_transformation: global_transformation)
+      end
+
+      if speckle_schema['method'] == 'Floor'
+        return SpeckleObjects::BuiltElements::Floor
+               .to_speckle_schema(speckle_state, entity, units, global_transformation: global_transformation)
       end
 
       return speckle_schema

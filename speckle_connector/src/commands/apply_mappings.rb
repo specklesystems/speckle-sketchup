@@ -11,9 +11,13 @@ module SpeckleConnector
         entities_to_map = data['entitiesToMap']
         method = data['method']
         category = data['category']
+        family = data['family']
+        family_type = data['familyType']
+        level = data['level']
         name = data['name']
         is_definition = data['isDefinition']
-        action = Actions::ApplyMappings.new(entities_to_map, method, category, name, is_definition)
+        action = Actions::ApplyMappings.new(entities_to_map, method, category, family,
+                                            family_type, level, name, is_definition)
         app.update_state!(action)
       end
     end

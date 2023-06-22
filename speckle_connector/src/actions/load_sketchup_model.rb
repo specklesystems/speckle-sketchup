@@ -3,6 +3,7 @@
 require_relative 'action'
 require_relative 'initialize_materials'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
+require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../preferences/preferences'
 require_relative '../states/state'
 require_relative '../states/sketchup_state'
@@ -29,7 +30,7 @@ module SpeckleConnector
         new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
         new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
         # Read mapped entities
-        new_mapped_entities = SketchupModel::Reader::SpeckleEntitiesReader.read_mapped_entities(sketchup_model.entities)
+        new_mapped_entities = SketchupModel::Reader::MapperReader.read_mapped_entities(sketchup_model.entities)
         new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
         new_state = new_state.with_speckle_state(new_speckle_state)
 
