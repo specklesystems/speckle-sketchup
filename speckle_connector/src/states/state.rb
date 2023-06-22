@@ -41,11 +41,11 @@ module SpeckleConnector
         with(:@speckle_state => new_speckle_state)
       end
 
-      def with_selection_queue(selection_parameters)
+      def with_mapper_selection_queue(selection_parameters)
         new_speckle_state = if selection_parameters[:selection].any?
-                              speckle_state.with_selection_queue(selection_parameters)
+                              speckle_state.with_mapper_selection_queue(selection_parameters)
                             else
-                              speckle_state.with_deselection_queue
+                              speckle_state.with_mapper_deselection_queue
                             end
         with(:@speckle_state => new_speckle_state)
       end
