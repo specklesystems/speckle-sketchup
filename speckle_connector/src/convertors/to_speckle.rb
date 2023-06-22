@@ -73,7 +73,7 @@ module SpeckleConnector
 
       def from_mapped_to_speckle(entity, path, preferences)
         direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
-                       .from_entity(entity, path, @units, preferences)
+                       .from_entity(speckle_state, entity, path, @units, preferences)
         return [direct_shape, [entity]]
       end
 
@@ -85,7 +85,7 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::Face)
-          mesh = SpeckleObjects::Geometry::Mesh.from_face(face: entity, units: @units,
+          mesh = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity, units: @units,
                                                           model_preferences: preferences[:model])
           return speckle_state, [mesh, [entity]]
         end

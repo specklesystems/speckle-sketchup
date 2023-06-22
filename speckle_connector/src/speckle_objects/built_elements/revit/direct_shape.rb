@@ -89,7 +89,7 @@ module SpeckleConnector
             mapped_selection
           end
 
-          def self.from_entity(entity, path, units, preferences)
+          def self.from_entity(speckle_state, entity, path, units, preferences)
             schema = DICTIONARY::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
             if schema.nil? && entity.respond_to?(:definition)
               schema = DICTIONARY::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity.definition)
@@ -103,7 +103,7 @@ module SpeckleConnector
                                       entity.definition.entities, [Sketchup::Face], path.append(entity)
                                     )
             end
-            base_geometries = group_faces_under_mesh_by_material(entities_with_path, units, preferences)
+            base_geometries = group_faces_under_mesh_by_material(speckle_state, entities_with_path, units, preferences)
             DirectShape.new(
               name: schema[:name], category: schema[:category], units: units,
               base_geometries: base_geometries, application_id: entity.persistent_id
@@ -111,7 +111,7 @@ module SpeckleConnector
           end
 
           # rubocop:disable Metrics/MethodLength
-          def self.group_faces_under_mesh_by_material(faces_with_path, units, preferences)
+          def self.group_faces_under_mesh_by_material(speckle_state, faces_with_path, units, preferences)
             mesh_groups = {}
             faces_with_path.each do |face_with_path|
               face = face_with_path[0]
@@ -125,6 +125,7 @@ module SpeckleConnector
                 mesh_group[1].append(face)
               else
                 mesh = Geometry::Mesh.from_face(
+                  speckle_state: speckle_state,
                   face: face, units: units, model_preferences: preferences[:model],
                   global_transform: QUERY::Entity.global_transformation(face, entity_path),
                   parent_material: parent_material
