@@ -44,7 +44,7 @@ module SpeckleConnector
 
       def convert_levels(state, levels)
         levels.collect do |level|
-          SpeckleObjects::BuiltElements::Level.to_native(state, level)
+          SpeckleObjects::BuiltElements::Level.to_native(state, level, @stream_id)
         end
       end
     end
