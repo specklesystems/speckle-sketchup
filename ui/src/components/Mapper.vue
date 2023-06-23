@@ -477,7 +477,6 @@ export default {
       }
     },
     onSelectedMethodChange(){
-      debugger
       this.hideOptionalMappingInputs()
       this.updateMappingInputs()
       this.getFamiliesFromSelectedMethod()
@@ -516,7 +515,8 @@ export default {
       }
     },
     getTypesFromSelectedFamily(){
-      debugger
+      this.familyTypes = this.allFamilyTypes[this.selectedFamily]
+      this.selectedFamilyType = this.familyTypes[0].type
       if (this.selectedFamily === null || this.selectedFamily === undefined){
         this.selectedFamily = this.families[0]
       }
@@ -746,7 +746,6 @@ export default {
         })
         return
       }
-      debugger
       const mapping = {
         entitiesToMap: this.selectedEntities.map((entity) => entity['entityId']),
         method: this.selectedMethod,
@@ -807,7 +806,6 @@ export default {
     sketchup.exec({name: "collect_mapped_entities", data: {}})
 
     bus.$on('entities-selected', async (selectionParameters) => {
-      debugger
       // Parse data to json object
       const selectionPars = JSON.parse(selectionParameters)
       // Reset mapping inputs with nulls and empties.
