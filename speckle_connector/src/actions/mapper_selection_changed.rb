@@ -111,7 +111,7 @@ module SpeckleConnector
           categories: Mapper::Category::RevitCategory.to_a,
           types: types,
           levels: levels,
-          selectedLevel: selected_level_name
+          selectedLevelName: selected_level_name
         }.freeze
       end
 

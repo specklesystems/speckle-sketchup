@@ -62,7 +62,7 @@ export default {
   name: "MappingSource",
   props: {
     streamSearchQuery: { type: String, default: null },
-    sourceUpToDate: { type: Boolean },
+    sourceState: { type: String, default: 'Not Set' },
   },
   data() {
     return {
@@ -117,11 +117,13 @@ export default {
         },
         result(data) {
           if (data.data.commitCreated.sourceApplication.includes('Revit')){
-            this.afterCommitCreated()
-            this.$eventHub.$emit('notification', {
-              text: `A new commit was created on Revit!`,
-            })
-            this.$apollo.queries.stream.refetch()
+            if (data.data.commitCreated.branchName === this.selectedBranch.name){
+              this.afterCommitCreated()
+              this.$eventHub.$emit('notification', {
+                text: `A new commit was created on Revit!`,
+              })
+              this.$apollo.queries.stream.refetch()
+            }
           }
         },
         skip() {
@@ -166,14 +168,26 @@ export default {
   },
   methods: {
     applySource(){
+      bus.$emit('set-source-up-to-date', 'Set')
       this.onSourceBranchChanged()
+      this.$eventHub.$emit('success', {
+        text: 'Mapper source applied.\n'
+      })
     },
     clearSource(){
       sketchup.exec({name:"clear_mapper_source" , data: {}})
+      bus.$emit('set-source-up-to-date', 'Not Set')
       this.sourceApplied = false
+      this.sourceBranchName = null
+      this.sourceStreamName = null
+      this.sourceBranchId = null
+      this.sourceStreamId = null
+      this.$eventHub.$emit('error', {
+        text: 'Mapper source cleared.\n'
+      })
     },
     afterCommitCreated(){
-      bus.$emit('set-source-up-to-date', false)
+      bus.$emit('set-source-up-to-date', 'Outdated')
     },
     async onSourceBranchChanged() {
       const commitRefId = this.selectedBranch.commits.items[0]?.referencedObject
