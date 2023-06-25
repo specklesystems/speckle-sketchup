@@ -140,10 +140,10 @@ module SpeckleConnector
         source_exist = !state.speckle_state.speckle_mapper_state.mapper_source.nil?
 
         if source_exist
-          methods = ['Column', 'Beam', 'Brace', 'Pipe', 'Duct']
+          methods = ['Column', 'Beam', 'Pipe', 'Duct']
           direct_shape_selection_info_with_source(state, edges, methods)
         else
-          default_methods = ['Default Column', 'Default Beam', 'Default Brace', 'Default Pipe', 'Default Duct']
+          default_methods = ['Default Column', 'Default Beam', 'Default Pipe', 'Default Duct']
           direct_shape_selection_info_with_default(edges, default_methods)
         end
       end

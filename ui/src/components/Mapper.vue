@@ -545,10 +545,6 @@ export default {
           this.families = Object.keys(this.allTypes['Beams']);
           this.allFamilyTypes = this.allTypes['Beams']
           break;
-        case 'Brace':
-          this.families = Object.keys(this.allTypes['Braces']);
-          this.allFamilyTypes = this.allTypes['Braces']
-          break;
         case 'Pipe':
           this.families = Object.keys(this.allTypes['Pipes']);
           this.allFamilyTypes = this.allTypes['Pipes']
