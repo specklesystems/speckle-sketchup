@@ -546,12 +546,12 @@ export default {
           this.allFamilyTypes = this.allTypes['Beams']
           break;
         case 'Pipe':
-          this.families = Object.keys(this.allTypes['Pipes']);
-          this.allFamilyTypes = this.allTypes['Pipes']
+          this.families = Object.keys(this.allTypes['Piping System']);
+          this.allFamilyTypes = this.allTypes['Piping System']
           break;
         case 'Duct':
-          this.families = Object.keys(this.allTypes['Ducts']);
-          this.allFamilyTypes = this.allTypes['Ducts']
+          this.families = Object.keys(this.allTypes['Duct System']);
+          this.allFamilyTypes = this.allTypes['Duct System']
           break;
         default:
           break;
