@@ -791,7 +791,7 @@ export default {
       this.selectedEntities = selectionParameters.selection
       this.allTypes = selectionParameters.types
       this.levels = selectionParameters.levels
-      this.selectedLevel = this.levels.find((l) => l.name === selectionParameters.selectedLevelName)
+      this.selectedLevel = selectionParameters.selectedLevelName
     },
     updateStatesFromSelectionData(){
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
