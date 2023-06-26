@@ -65,20 +65,27 @@
               mdi-source-branch
             </v-icon>
             {{ `Source` }}
-            <v-btn
-                v-tooltip="'Source branch is not up-to-date!'"
-                class="ma-0 ml-1"
-                height="20px"
-                width="20px"
-                icon
-                x-small
-                :color="getSourceStateIconColor()"
-                @click="refreshSourceBranch"
-            >
-              <v-icon>
-                {{ getSourceStateIcon() }}
-              </v-icon>
-            </v-btn>
+            <v-tooltip right>
+              <template #activator="{ on, attrs }">
+                <v-btn
+                    class="ma-0 ml-1"
+                    height="20px"
+                    width="20px"
+                    icon
+                    x-small
+                    :color="getSourceStateIconColor()"
+                    v-bind="attrs"
+                    v-on="on"
+                    @click="refreshSourceBranch"
+                >
+                  <v-icon>
+                    {{ getSourceStateIcon() }}
+                  </v-icon>
+                </v-btn>
+              </template>
+              <span>{{ getSourceStateToolTip() }}</span>
+            </v-tooltip>
+
           </v-container>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
@@ -464,6 +471,18 @@ export default {
           break;
       }
     },
+    getSourceStateToolTip(){
+      switch (this.sourceState){
+        case "Not Set":
+          return 'Source disconnected.';
+        case "Set":
+          return 'Source connected.';
+        case "Outdated":
+          return 'Source branch is not up-to-date!';
+        default:
+          break;
+      }
+    },
     getSourceStateIconColor(){
       switch (this.sourceState){
         case "Not Set":
@@ -571,7 +590,9 @@ export default {
       this.levelSelectionActive = false
     },
     refreshSourceBranch(){
-      bus.$emit('refresh-source-branch')
+      if (this.sourceState === 'Outdated'){
+        bus.$emit('refresh-source-branch')
+      }
     },
     clearInputs(){
       this.availableMethods = []
