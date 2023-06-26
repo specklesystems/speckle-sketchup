@@ -40,7 +40,11 @@ module SpeckleConnector
       # Send messages to HtmlDialog if any.
       def send_messages!
         queue = @state.speckle_state.message_queue
-        queue.each_value { |value| ui_controller.user_interfaces[Ui::SPECKLE_UI_ID].dialog.execute_script(value) }
+        queue.each_value do |value|
+          ui_controller.user_interfaces.each_value do |view|
+            view.dialog.execute_script(value)
+          end
+        end
         update_state!(Actions::ClearQueue)
       end
 
