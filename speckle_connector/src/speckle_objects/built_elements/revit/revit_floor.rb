@@ -1,20 +1,21 @@
 # frozen_string_literal: true
 
-require_relative '../base'
-require_relative '../built_elements/revit/parameter'
-require_relative '../other/render_material'
-require_relative '../geometry/line'
-require_relative '../geometry/polyline'
-require_relative '../../constants/type_constants'
-require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
+require_relative '../../base'
+require_relative '../../built_elements/revit/parameter'
+require_relative '../../other/render_material'
+require_relative '../../geometry/line'
+require_relative '../../geometry/polyline'
+require_relative '../../../constants/type_constants'
+require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
 module SpeckleConnector
   module SpeckleObjects
     module BuiltElements
-      # Floor object.
-      class Floor < Base
-        SPECKLE_TYPE = OBJECTS_BUILTELEMENTS_FLOOR
+      # Revit floor object.
+      class RevitFloor < Base
+        SPECKLE_TYPE = OBJECTS_BUILTELEMENTS_REVIT_FLOOR
 
+        # rubocop:disable Metrics/ParameterLists
         def initialize(family:, type:, outline:, voids:, level:, units:, material:, parameters:nil, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -31,6 +32,7 @@ module SpeckleConnector
           self[:parameters] = parameters
           self[:renderMaterial] = material
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param face [Sketchup::Face] face to get speckle schema for floor.
         def self.to_speckle_schema(speckle_state, face, units, global_transformation: nil)
@@ -57,7 +59,7 @@ module SpeckleConnector
             parameters['Height Offset From Level'] = offset_parameter
           end
 
-          Floor.new(
+          RevitFloor.new(
             family: schema['family'],
             type: schema['family_type'],
             outline: outline,
