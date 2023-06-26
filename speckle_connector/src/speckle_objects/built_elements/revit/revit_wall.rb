@@ -4,8 +4,10 @@ require_relative '../../base'
 require_relative '../../built_elements/revit/parameter'
 require_relative '../../other/render_material'
 require_relative '../../geometry/line'
+require_relative '../../geometry/length'
 require_relative '../../../constants/type_constants'
 require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
+require_relative '../../../sketchup_model/utils/face_utils'
 
 module SpeckleConnector
   module SpeckleObjects
@@ -50,7 +52,7 @@ module SpeckleConnector
             family: schema['family'],
             type: schema['family_type'],
             base_line: base_line,
-            height: get_wall_height(face, units),
+            height: Geometry.length_to_speckle(SketchupModel::Utils::FaceUtils.max_z(face), units),
             flipped: false,
             level: level,
             units: units,

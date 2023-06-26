@@ -755,6 +755,9 @@ export default {
             this.selectedFamilyType !== null &&
             this.selectedLevel !== null
       }
+      else {
+        return true;
+      }
     },
     applyMapping(){
       if (!this.inputsReadyToApply()){
