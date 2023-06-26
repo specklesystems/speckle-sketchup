@@ -3,6 +3,7 @@
 require_relative 'menu_command_handler'
 require_relative 'action_command'
 require_relative 'initialize_speckle'
+require_relative 'initialize_dui3_speckle'
 require_relative '../actions/one_click_send'
 
 module SpeckleConnector
@@ -10,6 +11,7 @@ module SpeckleConnector
     # Speckle menu commands that adds them to Sketchup menu and toolbar.
     class SpeckleMenuCommands
       CMD_INITIALIZE_SPECKLE = :initialize_speckle
+      CMD_INITIALIZE_DUI3_SPECKLE = :initialize_dui3_speckle
       CMD_SEND_TO_SPECKLE = :send_to_speckle
       CMD_RECEIVE_FROM_SPECKLE = :receive_from_speckle
 
@@ -26,6 +28,10 @@ module SpeckleConnector
         commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
         commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
 
+        commands[CMD_INITIALIZE_DUI3_SPECKLE] = initialize_dui3_speckle_command(app)
+        commands.add_to_menu!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_menu)
+        commands.add_to_toolbar!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_toolbar)
+
         # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
         # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
         # commands.add_to_toolbar!(CMD_SEND_TO_SPECKLE, speckle_toolbar)
@@ -39,6 +45,17 @@ module SpeckleConnector
         cmd.status_bar_text = 'Opens the Speckle Connector window'
         cmd.small_icon  = '../../img/s2logo.png'
         cmd.large_icon  = '../../img/s2logo.png'
+        cmd
+      end
+
+      def self.initialize_dui3_speckle_command(app)
+        cmd = MenuCommandHandler.sketchup_command(
+          InitializeDUI3Speckle.new(app), 'Initialize DUI3 Speckle'
+        )
+        cmd.tooltip = 'Launch Connector with DUI3'
+        cmd.status_bar_text = 'Opens the Speckle Connector DUI3 Window'
+        cmd.small_icon  = '../../img/s2logo_dui3.png'
+        cmd.large_icon  = '../../img/s2logo_dui3.png'
         cmd
       end
 
