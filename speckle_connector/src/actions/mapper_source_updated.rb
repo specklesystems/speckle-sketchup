@@ -38,6 +38,7 @@ module SpeckleConnector
           elements = type_elements.map do |type_element|
             SpeckleObjects::BuiltElements::Revit::RevitElementType.to_native(type_element)
           end
+          elements = elements.group_by { |e| e[:family] }
           [type, elements]
         end.compact.to_h
       end

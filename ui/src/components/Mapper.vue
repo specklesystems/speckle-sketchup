@@ -66,23 +66,23 @@
             </v-icon>
             {{ `Source` }}
             <v-btn
-                v-if="!sourceUpToDate"
                 v-tooltip="'Source branch is not up-to-date!'"
-                class="ma-0"
+                class="ma-0 ml-1"
                 height="20px"
+                width="20px"
                 icon
-                small
-                color="red"
+                x-small
+                :color="getSourceStateIconColor()"
                 @click="refreshSourceBranch"
             >
               <v-icon>
-                mdi-update
+                {{ getSourceStateIcon() }}
               </v-icon>
             </v-btn>
           </v-container>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <mapper-source :source-up-to-date="this.sourceUpToDate"/>
+          <mapper-source :source-state="this.sourceState"/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -152,7 +152,7 @@
               class="pt-0"
               label="Mapper Method"
               :disabled="!entitySelected"
-              :items="enabledMethods"
+              :items="availableMethods"
               density="compact"
               clearable
               @change="onSelectedMethodChange"
@@ -167,6 +167,7 @@
               :items="families"
               density="compact"
               clearable
+              @change="onSelectedFamilyChange"
           ></v-autocomplete>
 
           <v-autocomplete
@@ -272,6 +273,7 @@
 import {bus} from "@/main";
 import {groupBy} from "@/utils/groupBy";
 import MappingSource from "@/components/MapperSource.vue";
+import {sourceMap} from "@vue/cli-service/lib/config/terserOptions";
 
 global.mapperSourceUpdated = function (streamId, levels, types) {
   console.log(`Mapper source updated for ${streamId}.`)
@@ -309,7 +311,7 @@ export default {
       categorySelectionActive: false,
       nameSelectionActive: false,
 
-      sourceUpToDate: true,
+      sourceState: 'Not Set',
       // Expanded indexes for selection table (Types)
       selectionExpandedIndexes: [],
       // Expanded indexes for mapped element table (Categories)
@@ -324,6 +326,7 @@ export default {
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
+      allFamilyTypes: {},
       familyTypes: [],
       lastSelectedEntity: null,
 
@@ -334,7 +337,7 @@ export default {
       selectedLevel: null,
       name: "",
 
-      enabledMethods: [],
+      availableMethods: [],
       availableCategories: [],
       families: [],
       allTypes: {},
@@ -449,10 +452,38 @@ export default {
     }
   },
   methods:{
+    getSourceStateIcon(){
+      switch (this.sourceState){
+        case "Not Set":
+          return `mdi-cloud-off-outline`;
+        case "Set":
+          return `mdi-checkbox-marked-circle-outline`;
+        case "Outdated":
+          return `mdi-update`;
+        default:
+          break;
+      }
+    },
+    getSourceStateIconColor(){
+      switch (this.sourceState){
+        case "Not Set":
+          return `grey`;
+        case "Set":
+          return `green`;
+        case "Outdated":
+          return `red`;
+        default:
+          break;
+      }
+    },
     onSelectedMethodChange(){
       this.hideOptionalMappingInputs()
       this.updateMappingInputs()
-      this.getTypesFromSelectedMethod()
+      this.getFamiliesFromSelectedMethod()
+      this.getTypesFromSelectedFamily()
+    },
+    onSelectedFamilyChange(){
+      this.getTypesFromSelectedFamily();
     },
     updateMappingInputs(){
       if (this.selectedMethod === null){
@@ -483,38 +514,53 @@ export default {
         this.levelSelectionActive = true
       }
     },
-    getTypesFromSelectedMethod(){
+    getTypesFromSelectedFamily(){
+      this.familyTypes = this.allFamilyTypes[this.selectedFamily]
+      this.selectedFamilyType = this.familyTypes[0].type
+      if (this.selectedFamily === null || this.selectedFamily === undefined){
+        this.selectedFamily = this.families[0]
+      }
+      if (this.familyTypes === null ||this.familyTypes === undefined){
+        this.familyTypes = this.allFamilyTypes[this.selectedFamily]
+      }
+      if (this.selectedFamilyType === null || this.selectedFamilyType === undefined){
+        this.selectedFamilyType = this.familyTypes[0].type
+      }
+    },
+    getFamiliesFromSelectedMethod(){
       switch (this.selectedMethod) {
         case 'Floor':
-          this.familyTypes = this.allTypes['Floors'];
-          this.families = ['Floor'];
+          this.families = Object.keys(this.allTypes['Floors']);
+          this.allFamilyTypes = this.allTypes['Floors']
           break;
         case 'Wall':
-          this.familyTypes = this.allTypes['Walls'];
-          this.families = ['Wall'];
+          this.families = Object.keys(this.allTypes['Walls']);
+          this.allFamilyTypes = this.allTypes['Walls']
           break;
         case 'Column':
-          this.familyTypes = this.allTypes['Columns'];
-          this.families = ['Column'];
+          this.families = Object.keys(this.allTypes['Columns']);
+          this.allFamilyTypes = this.allTypes['Columns']
           break;
         case 'Beam':
-          this.familyTypes = this.allTypes['Beams'];
-          this.families = ['Beam'];
-          break;
-        case 'Brace':
-          this.familyTypes = this.allTypes['Braces'];
-          this.families = ['Brace'];
+          this.families = Object.keys(this.allTypes['Beams']);
+          this.allFamilyTypes = this.allTypes['Beams']
           break;
         case 'Pipe':
-          this.familyTypes = this.allTypes['Pipes'];
-          this.families = ['Pipe'];
+          this.families = Object.keys(this.allTypes['Piping System']);
+          this.allFamilyTypes = this.allTypes['Piping System']
           break;
         case 'Duct':
-          this.familyTypes = this.allTypes['Ducts'];
-          this.families = ['Duct'];
+          this.families = Object.keys(this.allTypes['Duct System']);
+          this.allFamilyTypes = this.allTypes['Duct System']
           break;
         default:
           break;
+      }
+      if (this.selectedFamily === null || this.selectedFamily === undefined){
+        this.selectedFamily = this.families[0]
+      }
+      if (this.selectedLevel === null || this.selectedLevel === undefined){
+        this.selectedLevel = this.levels[0].name
       }
     },
     hideOptionalMappingInputs(){
@@ -528,7 +574,7 @@ export default {
       bus.$emit('refresh-source-branch')
     },
     clearInputs(){
-      this.enabledMethods = []
+      this.availableMethods = []
       this.availableCategories = []
       this.selectedEntities = []
       this.selectionTableData = []
@@ -581,12 +627,12 @@ export default {
       return summary
     },
     setInputValuesFromSelection(){
+      // Clear all inputs if entity is not selected.
       if (!this.entitySelected){
-        this.name = ""
-        this.selectedMethod = null
-        this.selectedCategory = null
+        this.clearMappingInputs()
         return
       }
+      // Check if definition card is selected and set definition mappings.
       if (this.definitionSelected) {
         if (!this.definitionMapped){
           if (this.selectedEntityCount > 1){
@@ -605,15 +651,20 @@ export default {
           this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
           this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
         }
-      } else {
+      }
+      // Otherwise set entity mappings.
+      else
+      {
         if (!this.entityMapped){
           if (this.selectedEntityCount > 1){
             this.name = '<Mixed>'
           }else{
             this.name = this.lastSelectedEntity['entityName']
           }
+          console.log("entity not mapped")
           this.updateMappingInputs()
-          // this.selectedMethod = 'Direct Shape'
+          this.getFamiliesFromSelectedMethod()
+          this.getTypesFromSelectedFamily()
           this.selectedCategory = 49
         } else {
           if (this.selectedEntityCount > 1){
@@ -622,10 +673,12 @@ export default {
             this.name = this.lastSelectedEntity['schema']['name']
           }
           this.selectedMethod = this.lastSelectedEntity['schema']['method']
+          console.log("entity is mapped")
           this.updateMappingInputs()
-          this.getTypesFromSelectedMethod()
-          this.selectedCategory = this.lastSelectedEntity['schema']['category']
           this.selectedFamily = this.lastSelectedEntity['schema']['family']
+          this.selectedCategory = this.lastSelectedEntity['schema']['category']
+          this.getFamiliesFromSelectedMethod()
+          this.getTypesFromSelectedFamily()
           this.selectedFamilyType = this.lastSelectedEntity['schema']['family_type']
           this.selectedLevel = this.lastSelectedEntity['schema']['level']
         }
@@ -666,10 +719,26 @@ export default {
         this.mappedElementsExpandedIndexes.push(slotData.item);
       }
     },
+    inputsReadyToApply(){
+      if (this.selectedMethod === null || this.selectedMethod === undefined){
+        return false;
+      }
+
+      const nativeMethods = this.nativeEdgeMethods.concat(this.nativeFaceMethods)
+
+      if (this.selectedMethod === 'Direct Shape'){
+        return this.selectedCategory !== null
+      }
+      else if (nativeMethods.includes(this.selectedMethod)){
+        return this.selectedFamily !== null &&
+            this.selectedFamilyType !== null &&
+            this.selectedLevel !== null
+      }
+    },
     applyMapping(){
-      if (this.selectedMethod === null || this.selectedCategory === null){
+      if (!this.inputsReadyToApply()){
         this.$eventHub.$emit('error', {
-          text: 'Method and category are not set.\n'
+          text: 'Some inputs are not set to apply mapping.\n'
         })
         return
       }
@@ -698,28 +767,52 @@ export default {
       this.$eventHub.$emit('error', {
         text: 'Mapping Cleared.\n'
       })
-    }
-  },
-  mounted() {
-    sketchup.exec({name: "collect_mapped_entities", data: {}})
-
-    bus.$on('entities-selected', async (selectionParameters) => {
+    },
+    clearMappingInputs(){
       this.selectedMethod = null
-      const selectionPars = JSON.parse(selectionParameters)
-      this.enabledMethods = selectionPars.mappingMethods
-      this.availableCategories = selectionPars.categories
-      this.selectedEntities = selectionPars.selection
-      this.allTypes = selectionPars.types
-      this.levels = selectionPars.levels
-      this.selectedLevel = selectionPars.selectedLevel
-      console.log(selectionPars)
+      this.selectedCategory = null
+      this.name = ""
+      this.selectedFamily = null
+      this.selectedFamilyType = null
+      this.selectedLevel = null
+      this.familyTypes = null
+      this.levels = null
+      this.availableMethods = null
+      this.availableCategories = null
+      this.allTypes = null
+    },
+    getDataFromSelection(selectionParameters){
+      this.availableMethods = selectionParameters.mappingMethods
+      this.availableCategories = selectionParameters.categories
+      this.selectedEntities = selectionParameters.selection
+      this.allTypes = selectionParameters.types
+      this.levels = selectionParameters.levels
+      this.selectedLevel = selectionParameters.selectedLevelName
+    },
+    updateStatesFromSelectionData(){
       this.lastSelectedEntity = this.selectedEntities[this.selectedEntities.length - 1]
       this.entityMapped = this.isEntitiesMapped(this.selectedEntities)
       this.definitionMapped = this.isEntityDefinitionsMapped(this.selectedEntities)
       this.definitionSelected = !this.entityMapped && this.definitionMapped
       this.selectedEntityCount = this.selectedEntities.length
       this.entitySelected = this.selectedEntityCount !== 0
+    }
+  },
+  mounted() {
+    sketchup.exec({name: "collect_mapped_entities", data: {}})
+
+    bus.$on('entities-selected', async (selectionParameters) => {
+      // Parse data to json object
+      const selectionPars = JSON.parse(selectionParameters)
+      // Reset mapping inputs with nulls and empties.
+      this.clearMappingInputs()
+      // Get data from selection into objects and arrays. These data basically constructs the dropdowns.
+      this.getDataFromSelection(selectionPars)
+      // Update inner state of the mapper component according to selection data.
+      this.updateStatesFromSelectionData()
+      // Get selection table data.
       this.getSelectionTableData()
+      // Set mapping input values from selection data.
       this.setInputValuesFromSelection()
     })
     bus.$on('entities-deselected', async () => {
@@ -731,7 +824,7 @@ export default {
       this.mappedEntityCount = mappedEntities.length
     })
     bus.$on('set-source-up-to-date', (isUpToDate) => {
-      this.sourceUpToDate = isUpToDate
+      this.sourceState = isUpToDate
     })
   }
 }
