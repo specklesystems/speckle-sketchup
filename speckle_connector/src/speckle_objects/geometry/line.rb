@@ -40,7 +40,7 @@ module SpeckleConnector
         # rubocop:enable Metrics/ParameterLists
 
         # @param edge [Sketchup::Edge] edge to convert line.
-        def self.from_edge(edge, units, model_preferences)
+        def self.from_edge(edge, units, model_preferences, global_transformation: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(edge, model_preferences)
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
@@ -57,6 +57,41 @@ module SpeckleConnector
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: edge.persistent_id.to_s
+          )
+        end
+
+        # @param edge [Sketchup::Face] face to get base line from face.
+        def self.base_line_from_face(face, units, global_transformation: nil)
+          points = face.vertices.collect(&:position)
+          points_z_values = points.collect(&:z)
+          height = Geometry.length_to_speckle(points_z_values.max - points_z_values.min, units)
+          min_z = points_z_values.min
+          projected_points = points.map { |p| Geom::Point3d.new(p.x, p.y, min_z) }
+          distance_with_points = Struct.new(:distance, :point_1, :point_2)
+          lines_with_distances = []
+          projected_points.each do |p|
+            projected_points.each do |p_other|
+              next if p_other == p
+
+              lines_with_distances.append(distance_with_points.new(p.distance(p_other), p, p_other))
+            end
+          end
+          lines_with_distances.sort_by!(&:distance).reverse!
+          p_1 = lines_with_distances.first.point_1
+          p_2 = lines_with_distances.first.point_2
+          unless global_transformation.nil?
+            p_1 = p_1.transform!(global_transformation)
+            p_2 = p_2.transform!(global_transformation)
+          end
+          Line.new(
+            start_pt: Geometry::Point.from_vertex(p_1, units),
+            end_pt: Geometry::Point.from_vertex(p_2, units),
+            domain: Primitive::Interval.from_numeric(0, Geometry.length_to_speckle(p_1.distance(p_2), units), units),
+            units: units,
+            layer: SketchupModel::Query::Layer.entity_path(face),
+            sketchup_attributes: {},
+            speckle_schema: {},
+            application_id: face.persistent_id.to_s
           )
         end
 

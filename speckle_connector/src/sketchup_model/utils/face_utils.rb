@@ -27,14 +27,11 @@ module SpeckleConnector
           adj_faces.uniq
         end
 
-        # @param face [Sketchup::Face] face to check whether is vertical or not.
-        def self.vertical?(face)
-          face.normal.perpendicular?(VECTOR_Z)
-        end
-
-        # @param face [Sketchup::Face] face to check whether is horizontal or not.
-        def self.horizontal?(face)
-          face.normal.parallel?(VECTOR_Z)
+        # @param face [Sketchup::Face] face to get max z distance for all vertices.
+        def self.max_z(face)
+          points = face.vertices.collect(&:position)
+          points_z_values = points.collect(&:z)
+          points_z_values.max - points_z_values.min
         end
       end
     end

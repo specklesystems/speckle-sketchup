@@ -163,7 +163,7 @@ export default {
   mounted() {
     bus.$on('refresh-source-branch', () => {
       this.onSourceBranchChanged()
-      bus.$emit('set-source-up-to-date', true)
+      bus.$emit('set-source-up-to-date', 'Set')
     })
   },
   methods: {

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require_relative '../speckle_objects/built_elements/revit/revit_floor'
+require_relative '../speckle_objects/built_elements/revit/revit_wall'
 require_relative '../speckle_objects/built_elements/default_floor'
+require_relative '../speckle_objects/built_elements/default_wall'
 require_relative '../sketchup_model/query/entity'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
@@ -40,6 +42,16 @@ module SpeckleConnector
 
       if speckle_schema['method'] == 'Floor'
         return SpeckleObjects::BuiltElements::RevitFloor
+               .to_speckle_schema(speckle_state, entity, units, global_transformation: global_transformation)
+      end
+
+      if speckle_schema['method'] == 'Default Wall'
+        return SpeckleObjects::BuiltElements::DefaultWall
+               .to_speckle_schema(entity, units, global_transformation: global_transformation)
+      end
+
+      if speckle_schema['method'] == 'Wall'
+        return SpeckleObjects::BuiltElements::RevitWall
                .to_speckle_schema(speckle_state, entity, units, global_transformation: global_transformation)
       end
 
