@@ -21,7 +21,7 @@ module SpeckleConnector
       def _run
         app = self.app
         unless app.state.instance_of?(States::InitialState)
-          vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
+          vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_DUI3_ID]
           vue_view.show
           return
         end
