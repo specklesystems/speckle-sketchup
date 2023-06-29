@@ -84,7 +84,7 @@ module SpeckleConnector
 
               method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity, 'method')
 
-              if (method.include?('Floor') || method.include?('Wall')) && entity.is_a?(Sketchup::Face)
+              if !method.nil? && (method.include?('Floor') || method.include?('Wall')) && entity.is_a?(Sketchup::Face)
                 global_transformation = QUERY::Entity.global_transformation(entity, path)
                 floor = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity,
                                                                  units: units, model_preferences: preferences,
