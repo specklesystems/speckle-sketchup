@@ -232,22 +232,27 @@ export default {
         // }
     },
     clearMappingsFromTableSelection(){
-        sketchup.exec({ name: "clear_mappings_from_table", data: this.elementSelection })
+      sketchup.exec({ name: "clear_mappings_from_table", data: this.elementSelection })
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Clear' })
     },
     isolateMappedElementsOnSketchup(){
       if (this.isIsolated){
         this.isIsolated = false
         sketchup.exec({ name: "show_all_entities", data: {} })
+        this.$mixpanel.track('MappingsAction', { name: 'Mappings Un-Isolate' })
       } else {
         this.isIsolated = true
         sketchup.exec({ name: "isolate_mappings_from_table", data: this.elementSelection })
+        this.$mixpanel.track('MappingsAction', { name: 'Mappings Isolate' })
       }
     },
     hideMappedElementsOnSketchup(){
-        sketchup.exec({ name: "hide_mappings_from_table", data: this.elementSelection })
+      sketchup.exec({ name: "hide_mappings_from_table", data: this.elementSelection })
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Hide' })
     },
     selectMappedElementsOnSketchup(){
-        sketchup.exec({ name: "select_mappings_from_table", data: this.elementSelection })
+      sketchup.exec({ name: "select_mappings_from_table", data: this.elementSelection })
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Select Elements' })
     },
     // Update mapped elements table whenever mapped elements has changed.
     getMappedElementsTableData(){
