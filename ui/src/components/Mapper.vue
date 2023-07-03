@@ -500,6 +500,7 @@ export default {
       this.updateMappingInputs()
       this.getFamiliesFromSelectedMethod()
       this.getTypesFromSelectedFamily()
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Set', schema: this.selectedMethod })
     },
     onSelectedFamilyChange(){
       this.getTypesFromSelectedFamily();
@@ -781,7 +782,8 @@ export default {
       this.$eventHub.$emit('success', {
         text: 'Mapping Applied.\n'
       })
-      this.$mixpanel.track('MappingsAction', { name: 'Mappings Set', schema: this.selectedMethod })
+
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Applied' })
     },
     clearMapping(){
       const mapping = {
