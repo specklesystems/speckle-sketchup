@@ -500,6 +500,7 @@ export default {
       this.updateMappingInputs()
       this.getFamiliesFromSelectedMethod()
       this.getTypesFromSelectedFamily()
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Set', schema: this.selectedMethod })
     },
     onSelectedFamilyChange(){
       this.getTypesFromSelectedFamily();
@@ -592,6 +593,7 @@ export default {
     refreshSourceBranch(){
       if (this.sourceState === 'Outdated'){
         bus.$emit('refresh-source-branch')
+        this.$mixpanel.track('MappingsAction', { name: 'Mappings Source Update' })
       }
     },
     clearInputs(){
@@ -780,6 +782,8 @@ export default {
       this.$eventHub.$emit('success', {
         text: 'Mapping Applied.\n'
       })
+
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Applied' })
     },
     clearMapping(){
       const mapping = {
@@ -791,6 +795,7 @@ export default {
       this.$eventHub.$emit('error', {
         text: 'Mapping Cleared.\n'
       })
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Clear' })
     },
     clearMappingInputs(){
       this.selectedMethod = null

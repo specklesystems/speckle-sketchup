@@ -173,6 +173,7 @@ export default {
       this.$eventHub.$emit('success', {
         text: 'Mapper source applied.\n'
       })
+      this.$mixpanel.track('MappingsAction', { name: 'Mappings Source Apply' })
     },
     clearSource(){
       sketchup.exec({name:"clear_mapper_source" , data: {}})
