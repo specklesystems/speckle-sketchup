@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'command_data'
+require_relative '../ext/bridge/bridge'
 
 module SpeckleConnector
   module Ui
@@ -77,10 +78,30 @@ module SpeckleConnector
         dialog.set_can_close do
           true
         end
-        File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
-        # dialog.set_url('http://localhost:8081') # uncomment this line if you want to use your local version of ui
+        bridge = Bridge.decorate(dialog)
+        # File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
+        dialog.set_url('http://localhost:8083') # uncomment this line if you want to use your local version of ui
+        add_bridge_callback(bridge)
         add_exec_callback(dialog)
+        add_exec_callback2(dialog)
         dialog
+      end
+
+      # @param bridge [Bridge] bridge to Javascript.
+      def add_bridge_callback(bridge)
+        bridge.on('compute_area') do |deferred, width, length|
+          if width && length
+            result = compute_area(width, length)
+            deferred.resolve(result)
+          else
+            deferred.reject('The input is not valid.')
+          end
+        end
+      end
+
+      def compute_area(width, length)
+        sleep(3)
+        width * length
       end
 
       # Add callbacks to the HTMLDialog
@@ -88,6 +109,20 @@ module SpeckleConnector
         html_dialog.add_action_callback('exec') do |_, data|
           exec_callback(data)
         end
+      end
+
+      def add_exec_callback2(html_dialog)
+        html_dialog.add_action_callback('sayHi') do |_, data, data2, data3, data4|
+          say_hi_handler(data, data2, data3, data4)
+        end
+      end
+
+      def say_hi_handler(data, data2, data3, data4)
+
+        puts data
+        puts data2
+        puts data3
+        puts data4
       end
 
       # Method parses commands sent from javascript code in HTML dialog and calls
