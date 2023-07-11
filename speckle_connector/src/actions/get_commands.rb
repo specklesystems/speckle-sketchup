@@ -15,8 +15,8 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def update_state(state)
         commands_string = JSON.generate(@commands)
-        js = "bindings.receiveCommandsAndInitializeBridge('#{commands_string}')"
-        state.with_add_queue_js_command('getCommands', js)
+        js_script = "bindings.receiveCommandsAndInitializeBridge('#{commands_string}')"
+        state.with_add_queue_js_command('getCommands', js_script)
       end
     end
   end
