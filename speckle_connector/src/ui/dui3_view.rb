@@ -5,6 +5,7 @@ require_relative '../ui/dui3_dialog'
 require_relative '../constants/path_constants'
 
 require_relative '../commands/dialog_ready'
+require_relative '../commands/get_commands'
 
 require_relative '../actions/init_local_accounts'
 
@@ -46,12 +47,11 @@ module SpeckleConnector
         #  App object triggers this method by ui_controller
       end
 
-      private
-
       def commands
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app),
-          init_local_accounts: Commands::ActionCommand.new(@app, Actions::InitLocalAccounts)
+          init_local_accounts: Commands::ActionCommand.new(@app, Actions::InitLocalAccounts),
+          get_commands: Commands::GetCommands.new(@app)
         }.freeze
       end
     end
