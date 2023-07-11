@@ -24,7 +24,15 @@ module SpeckleConnector
 
         return nil unless name.is_a?(String)
 
-        CommandData.new(name.to_sym, command['data'])
+        arguments = command['data'].nil? ? nil : command['data']['arguments']
+        request_id = command['data'].nil? ? nil : command['data']['request_id']
+
+        unless arguments.nil?
+          arguments = {}
+          arguments[:request_id] = request_id
+        end
+
+        CommandData.new(name.to_sym, arguments)
       end
     end
   end
