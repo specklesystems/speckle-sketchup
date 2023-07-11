@@ -36,6 +36,11 @@ module SpeckleConnector
         with(:@speckle_state => new_speckle_state)
       end
 
+      def with_add_queue_js_command(callback_name, js_command)
+        new_speckle_state = speckle_state.with_add_queue_js_command(callback_name, js_command)
+        with(:@speckle_state => new_speckle_state)
+      end
+
       def with_mapped_entities_queue(mapped_entities)
         new_speckle_state = speckle_state.with_mapped_entities_queue(mapped_entities)
         with(:@speckle_state => new_speckle_state)

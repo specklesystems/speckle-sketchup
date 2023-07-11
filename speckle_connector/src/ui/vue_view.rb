@@ -65,8 +65,6 @@ module SpeckleConnector
         #  App object triggers this method by ui_controller
       end
 
-      private
-
       # rubocop:disable Metrics/MethodLength
       def commands
         @commands ||= {
