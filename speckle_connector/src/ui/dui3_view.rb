@@ -8,6 +8,7 @@ require_relative '../commands/dialog_ready'
 require_relative '../commands/get_commands'
 
 require_relative '../actions/init_local_accounts'
+require_relative '../actions/get_source_app_name'
 
 
 module SpeckleConnector
@@ -51,7 +52,8 @@ module SpeckleConnector
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app),
           init_local_accounts: Commands::ActionCommand.new(@app, Actions::InitLocalAccounts),
-          get_commands: Commands::GetCommands.new(@app)
+          get_commands: Commands::GetCommands.new(@app),
+          getSourceAppName: Commands::ActionCommand.new(@app, Actions::GetSourceAppName)
         }.freeze
       end
     end
