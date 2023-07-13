@@ -46,7 +46,6 @@ module SpeckleConnector
         dui3_view = Ui::DUI3View.new(dialog_specs, app)
         app.ui_controller.register_ui(Ui::SPECKLE_DUI3_ID, dui3_view)
         dui3_view.show
-        dui3_view.init
       end
       # rubocop:enable Naming/VariableNumber
     end

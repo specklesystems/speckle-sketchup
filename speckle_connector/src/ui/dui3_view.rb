@@ -32,12 +32,6 @@ module SpeckleConnector
         dialog.show
       end
 
-      def init
-        init_callback = "window['hostApp'] = 'sketchup'"
-        init_callback = "localStorage.setItem('hostApp', 'sketchup')"
-        dialog.execute_script(init_callback)
-      end
-
       # @return [SpeckleConnector::Ui::DUI3Dialog] wrapper for the {Sketchup::HTMLDialog}
       def dialog
         @dialog ||= SpeckleConnector::Ui::DUI3Dialog.new(commands: commands, **@dialog_specs)
