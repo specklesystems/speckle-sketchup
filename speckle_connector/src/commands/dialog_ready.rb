@@ -7,7 +7,7 @@ module SpeckleConnector
     # Run this command when the UI is ready to get data
     class DialogReady < Command
       # Update the selected user interface
-      def _run(_data)
+      def _run(_resolve_id, _data)
         view.update_view(app.state)
       end
     end

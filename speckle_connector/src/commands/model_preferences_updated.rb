@@ -8,7 +8,7 @@ module SpeckleConnector
   module Commands
     # Command to update theme.
     class ModelPreferencesUpdated < Command
-      def _run(data)
+      def _run(_resolve_id, data)
         preference = data['preference']
         new_value = data['value']
         app.update_state!(Actions::ModelPreferencesUpdated.new(preference, new_value))

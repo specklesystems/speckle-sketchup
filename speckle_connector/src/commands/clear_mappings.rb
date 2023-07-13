@@ -7,7 +7,7 @@ module SpeckleConnector
   module Commands
     # Command to clear mapping for selected entities.
     class ClearMappings < Command
-      def _run(data)
+      def _run(_resolve_id, data)
         entities_to_map = data['entitiesToClearMap']
         is_definition = data['isDefinition']
         action = Actions::ClearMappings.new(entities_to_map, is_definition)
