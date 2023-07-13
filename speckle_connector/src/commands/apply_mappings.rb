@@ -7,7 +7,7 @@ module SpeckleConnector
   module Commands
     # Command to apply mapping for selected entities.
     class ApplyMappings < Command
-      def _run(data)
+      def _run(_resolve_id, data)
         entities_to_map = data['entitiesToMap']
         method = data['method']
         category = data['category']

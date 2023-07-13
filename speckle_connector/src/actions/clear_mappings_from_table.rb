@@ -11,7 +11,7 @@ module SpeckleConnector
     class ClearMappingsFromTable < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, data)
+      def self.update_state(state, _resolve_id, data)
         # Flat entities to clear mappings
         flat_entities = SketchupModel::Query::Entity.flat_entities(state.sketchup_state.sketchup_model.entities)
 
