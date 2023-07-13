@@ -19,17 +19,17 @@ module SpeckleConnector
 
       def _run
         app = self.app
-        unless app.state.instance_of?(States::InitialState)
+        if !app.state.instance_of?(States::InitialState) && app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
           vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
           vue_view.show
           return
         end
 
-        initialize_speckle(app)
+        initialize_speckle_legacy_view(app)
       end
 
       # Do the actual Speckle initialization.
-      def initialize_speckle(app)
+      def initialize_speckle_legacy_view(app)
         # TODO: Initialize here speckle states and observers.
         observer_handler = Observers::Factory.create_handler(app)
         app.add_observer_handler!(observer_handler)
