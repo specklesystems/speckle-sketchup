@@ -8,9 +8,8 @@ module SpeckleConnector
     class ActionCommand < Command
       # @param app [App::SpeckleConnectorApp] the app object to run command on
       # @param action [#update_state] the action that knows how to change the state of the speckle app
-      def initialize(app, action)
-        super(app)
-        @app = app
+      def initialize(app, view, action)
+        super(app, view)
         @action = action
       end
 

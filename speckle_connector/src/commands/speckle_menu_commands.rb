@@ -44,7 +44,7 @@ module SpeckleConnector
 
       def self.initialize_speckle_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          InitializeSpeckle.new(app), 'Initialize Speckle'
+          InitializeSpeckle.new(app, nil), 'Initialize Speckle'
         )
         cmd.tooltip = 'Launch Connector'
         cmd.status_bar_text = 'Opens the Speckle Connector window'
@@ -66,7 +66,7 @@ module SpeckleConnector
 
       def self.initialize_dui3_speckle_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          InitializeDUI3Speckle.new(app), 'Initialize DUI3 Speckle'
+          InitializeDUI3Speckle.new(app, nil), 'Initialize DUI3 Speckle'
         )
         cmd.tooltip = 'Launch Connector with DUI3'
         cmd.status_bar_text = 'Opens the Speckle Connector DUI3 Window'
@@ -77,7 +77,7 @@ module SpeckleConnector
 
       def self.send_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          ActionCommand.new(app, Actions::OneClickSend), 'Send to Speckle'
+          ActionCommand.new(app, nil, Actions::OneClickSend), 'Send to Speckle'
         )
         cmd.tooltip = 'Send to Speckle'
         cmd.status_bar_text = 'Send to Speckle'

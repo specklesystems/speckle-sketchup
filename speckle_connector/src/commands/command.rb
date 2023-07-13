@@ -11,9 +11,9 @@ module SpeckleConnector
       attr_reader :view
 
       # @@param app [App::SpeckleConnectorApp] the main app object
-      def initialize(app)
+      def initialize(app, view)
         @app = app
-        @view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
+        @view = view
       end
 
       def run(*parameters)
