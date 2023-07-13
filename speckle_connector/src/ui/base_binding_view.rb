@@ -13,28 +13,16 @@ require_relative '../actions/get_source_app_name'
 
 module SpeckleConnector
   module Ui
-    SPECKLE_DUI3_ID = 'speckle_dui3'
+    BASE_BINDING = 'baseBinding'
 
     # View that provided by vue.js
-    class DUI3View < View
+    class BaseBindingView < View
       CMD_UPDATE_VIEW = 'speckle.updateView'
 
-      # @param dialog_specs [Hash] the specifications for the {SpeckleConnector::Ui::Dialog}.
       # @param app [App::SpeckleConnectorApp] the reference to the app object
-      def initialize(dialog_specs, app)
+      def initialize(app)
         super()
-        @dialog_specs = dialog_specs
         @app = app
-      end
-
-      # Show the HTML dialog
-      def show
-        dialog.show
-      end
-
-      # @return [SpeckleConnector::Ui::DUI3Dialog] wrapper for the {Sketchup::HTMLDialog}
-      def dialog
-        @dialog ||= SpeckleConnector::Ui::DUI3Dialog.new(commands: commands, **@dialog_specs)
       end
 
       def update_view(_state)
