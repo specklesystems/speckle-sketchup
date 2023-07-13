@@ -4,6 +4,7 @@ require_relative 'action'
 
 module SpeckleConnector
   module Actions
+    # Get source app name.
     class GetSourceAppName < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object

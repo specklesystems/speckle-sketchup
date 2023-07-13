@@ -8,7 +8,7 @@ module SpeckleConnector
     class ShowAllEntities < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _data)
+      def self.update_state(state, _resolve_id, _data)
         # Show all entities first
         state.sketchup_state.sketchup_model.entities.each do |ent|
           ent.hidden = false
