@@ -7,7 +7,7 @@ require_relative '../constants/path_constants'
 require_relative '../commands/dialog_ready'
 require_relative '../commands/get_commands'
 
-require_relative '../actions/init_local_accounts'
+require_relative '../actions/get_accounts'
 require_relative '../actions/get_source_app_name'
 
 
@@ -51,7 +51,7 @@ module SpeckleConnector
       def commands
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app),
-          getAccounts: Commands::ActionCommand.new(@app, Actions::InitLocalAccounts),
+          getAccounts: Commands::ActionCommand.new(@app, Actions::GetAccounts),
           getCommands: Commands::GetCommands.new(@app),
           getSourceAppName: Commands::ActionCommand.new(@app, Actions::GetSourceAppName)
         }.freeze

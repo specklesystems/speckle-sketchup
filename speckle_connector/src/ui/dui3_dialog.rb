@@ -99,7 +99,7 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          @commands[cmd.name].run(cmd.data)
+          @commands[cmd.name].run(cmd.resolve_id, cmd.data)
         end
       end
     end
