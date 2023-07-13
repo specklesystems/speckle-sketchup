@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../states/initial_state'
 require_relative '../ui/vue_view'
-require_relative '../ui/dui3_view'
+require_relative '../ui/base_binding_view'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
@@ -12,6 +12,8 @@ module SpeckleConnector
     # Command to initialize Speckle UI and register it to ui_controller.
     # This is the command where we show UI to user.
     class InitializeDUI3Speckle < Command
+      SPECKLE_DUI3 = 'speckle_dui3'
+
       def dialog_title
         "Speckle #{CONNECTOR_VERSION}"
       end
@@ -20,9 +22,9 @@ module SpeckleConnector
 
       def _run
         app = self.app
-        if !app.state.instance_of?(States::InitialState) && app.ui_controller.user_interfaces[Ui::SPECKLE_DUI3_ID]
-          vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_DUI3_ID]
-          vue_view.show
+        if !app.state.instance_of?(States::InitialState) && app.ui_controller.user_interfaces[SPECKLE_DUI3]
+          dialog = app.ui_controller.user_interfaces[SPECKLE_DUI3]
+          dialog.show
           return
         end
 
@@ -38,14 +40,17 @@ module SpeckleConnector
         observers = Observers::Factory.create_observers(observer_handler)
         app.update_state!(Actions::InitializeSpeckle, observers)
         dialog_specs = {
-          dialog_id: Ui::SPECKLE_DUI3_ID,
+          dialog_id: SPECKLE_DUI3,
           dialog_title: dialog_title,
           height: 950,
           width: 300
         }
-        dui3_view = Ui::DUI3View.new(dialog_specs, app)
-        app.ui_controller.register_ui(Ui::SPECKLE_DUI3_ID, dui3_view)
-        dui3_view.show
+        base_binding_view = Ui::BaseBindingView.new(app)
+
+        dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
+        dui3_dialog.views[Ui::BASE_BINDING] = base_binding_view
+        app.ui_controller.register_ui(SPECKLE_DUI3, dui3_dialog)
+        dui3_dialog.show
       end
       # rubocop:enable Naming/VariableNumber
     end

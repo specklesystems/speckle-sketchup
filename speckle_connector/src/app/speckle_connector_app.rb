@@ -41,8 +41,8 @@ module SpeckleConnector
       def send_messages!
         queue = @state.speckle_state.message_queue
         queue.each_value do |value|
-          ui_controller.user_interfaces.each_value do |view|
-            view.dialog.execute_script(value)
+          ui_controller.user_interfaces.each_value do |dialog|
+            dialog.execute_script(value)
           end
         end
         update_state!(Actions::ClearQueue)

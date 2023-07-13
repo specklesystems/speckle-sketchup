@@ -11,16 +11,24 @@ module SpeckleConnector
         height: 400, width: 600, min_width: 250, min_height: 50
       }.freeze
 
-      # @param commands [Hash{Symbol=>Object}] commands that are sent from the HTMLDialog
+      # @return views [Hash{String=>Ui::View}] views that responsible to run upcoming commands
+      attr_reader :views
+
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
-      def initialize(commands:, dialog_id:, htm_file: nil, **specs)
-        @commands = commands
+      def initialize(dialog_id:, htm_file: nil, **specs)
+        @views = {}
         @id = dialog_id
         @htm_file = htm_file
         @dialog_specs = DEFAULT_SPECS.merge(
           dialog_title: 'SpeckleSketchUp',
           preferences_key: "speckle.systems.#{dialog_id}"
         ).merge(specs)
+      end
+
+      def update_views(state)
+        views.each_value do |view|
+          view.update_view(state)
+        end
       end
 
       def ready?
@@ -78,7 +86,7 @@ module SpeckleConnector
           true
         end
         # File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:9091')
-        dialog.set_url('http://localhost:3002') # uncomment this line if you want to use your local version of ui
+        dialog.set_url('http://localhost:3003') # uncomment this line if you want to use your local version of ui
         add_exec_callback(dialog)
         dialog
       end
@@ -87,6 +95,20 @@ module SpeckleConnector
       def add_exec_callback(html_dialog)
         html_dialog.add_action_callback('exec') do |_, data|
           exec_callback(data)
+        end
+
+        html_dialog.add_action_callback('getCommands') do |_, data|
+          get_commands(data)
+        end
+      end
+
+      def get_commands(view_id)
+        if @views[view_id]
+          commands_string = JSON.generate(@views[view_id].commands.keys)
+          html_dialog.execute_script("bindings.receiveCommandsAndInitializeBridge('#{commands_string}')")
+        else
+          puts "There is no registered binding named: #{view_id}"
+          html_dialog.execute_script("bindings.rejectBindings('There is no registered binding named: #{view_id}')")
         end
       end
 
@@ -99,7 +121,7 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          @commands[cmd.name].run(cmd.resolve_id, cmd.data)
+          @views[data['view_id']].commands[cmd.name].run(cmd.resolve_id, cmd.data)
         end
       end
     end
