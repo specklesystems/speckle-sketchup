@@ -50,10 +50,10 @@ module SpeckleConnector
 
       def commands
         @commands ||= {
-          dialog_ready: Commands::DialogReady.new(@app),
-          getAccounts: Commands::ActionCommand.new(@app, Actions::GetAccounts),
-          getCommands: Commands::GetCommands.new(@app),
-          getSourceApplicationName: Commands::ActionCommand.new(@app, Actions::GetSourceAppName)
+          dialog_ready: Commands::DialogReady.new(@app, self),
+          getAccounts: Commands::ActionCommand.new(@app, self, Actions::GetAccounts),
+          getCommands: Commands::GetCommands.new(@app, self),
+          getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName)
         }.freeze
       end
     end
