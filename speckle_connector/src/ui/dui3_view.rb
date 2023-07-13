@@ -53,7 +53,7 @@ module SpeckleConnector
           dialog_ready: Commands::DialogReady.new(@app),
           getAccounts: Commands::ActionCommand.new(@app, Actions::GetAccounts),
           getCommands: Commands::GetCommands.new(@app),
-          getSourceAppName: Commands::ActionCommand.new(@app, Actions::GetSourceAppName)
+          getSourceApplicationName: Commands::ActionCommand.new(@app, Actions::GetSourceAppName)
         }.freeze
       end
     end

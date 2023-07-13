@@ -13,7 +13,7 @@ module SpeckleConnector
       def self.update_state(state, resolve_id, _data)
         puts 'Initialisation of Speckle accounts requested by plugin'
         accounts_data = state.speckle_state.accounts
-        js_script = "bindings.receiveResponse('#{resolve_id}', #{accounts_data.to_json})"
+        js_script = "baseBinding.receiveResponse('#{resolve_id}', #{accounts_data.to_json})"
         state.with_add_queue_js_command('init_local_accounts', js_script)
       end
     end
