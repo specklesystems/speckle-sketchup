@@ -10,13 +10,10 @@ module SpeckleConnector
     class InitLocalAccounts < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _data)
+      def self.update_state(state, _request_id, _data)
         puts 'Initialisation of Speckle accounts requested by plugin'
         accounts_data = state.speckle_state.accounts
-        # state.with_add_queue('bindings.receiveResponse', accounts_data.to_json, [])
-        js_script = "bindings.receiveResponse('#{_data[:request_id]}', #{accounts_data.to_json})"
-        puts js_script
-        state.with_add_queue_js_command('init_local_accounts', js_script)
+        state.with_add_queue('loadAccounts', accounts_data.to_json, [])
       end
     end
   end
