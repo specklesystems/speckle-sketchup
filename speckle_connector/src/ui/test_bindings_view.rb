@@ -1,23 +1,20 @@
 # frozen_string_literal: true
 
 require_relative 'view'
-require_relative '../ui/dui3_dialog'
 require_relative '../constants/path_constants'
 
-require_relative '../commands/dialog_ready'
-
-require_relative '../actions/get_accounts'
-require_relative '../actions/get_source_app_name'
-require_relative '../actions/get_document_info'
-require_relative '../actions/say_hi_from_random'
+require_relative '../actions/test_actions/say_hi'
+require_relative '../actions/test_actions/go_away'
+require_relative '../actions/test_actions/get_complex_type'
+require_relative '../actions/test_actions/trigger_event'
 
 
 module SpeckleConnector
   module Ui
-    SKETCHUP_RANDOM_BINDING_VIEW = 'sketchupRandomBinding'
+    TEST_BINDINGS_VIEW = 'testBindings'
 
     # View that provided by vue.js
-    class SketchupRandomBindingView < View
+    class TestBindingsView < View
       CMD_UPDATE_VIEW = 'speckle.updateView'
 
       # @param app [App::SpeckleConnectorApp] the reference to the app object
@@ -33,7 +30,10 @@ module SpeckleConnector
 
       def commands
         @commands ||= {
-          sayHiFromRandom: Commands::ActionCommand.new(@app, self, Actions::SayHiFromRandom)
+          sayHi: Commands::ActionCommand.new(@app, self, Actions::SayHi),
+          goAway: Commands::ActionCommand.new(@app, self, Actions::GoAway),
+          getComplexType: Commands::ActionCommand.new(@app, self, Actions::GetComplexType),
+          triggerEvent: Commands::ActionCommand.new(@app, self, Actions::TriggerEvent)
         }.freeze
       end
     end
