@@ -5,10 +5,10 @@ require_relative '../ui/dui3_dialog'
 require_relative '../constants/path_constants'
 
 require_relative '../commands/dialog_ready'
-require_relative '../commands/get_commands'
 
 require_relative '../actions/get_accounts'
 require_relative '../actions/get_source_app_name'
+require_relative '../actions/get_document_info'
 
 
 module SpeckleConnector
@@ -34,8 +34,8 @@ module SpeckleConnector
         @commands ||= {
           dialog_ready: Commands::DialogReady.new(@app, self),
           getAccounts: Commands::ActionCommand.new(@app, self, Actions::GetAccounts),
-          getCommands: Commands::GetCommands.new(@app, self),
-          getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName)
+          getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName),
+          getDocumentInfo: Commands::ActionCommand.new(@app, self, Actions::GetDocumentInfo)
         }.freeze
       end
     end
