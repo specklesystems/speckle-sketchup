@@ -121,7 +121,7 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          @views[data['view_id']].commands[cmd.name].run(cmd.resolve_id, cmd.data)
+          @views[data['view_id']].commands[cmd.name].run(cmd.resolve_id, *cmd.data['args'])
         end
       end
     end
