@@ -10,7 +10,7 @@ module SpeckleConnector
     class GetAccounts < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, resolve_id, _data)
+      def self.update_state(state, resolve_id)
         puts 'Initialisation of Speckle accounts requested by plugin'
         accounts_data = state.speckle_state.accounts
         js_script = "baseBinding.receiveResponse('#{resolve_id}', #{accounts_data.to_json})"
