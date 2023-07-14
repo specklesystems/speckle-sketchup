@@ -13,7 +13,7 @@ require_relative '../actions/get_source_app_name'
 
 module SpeckleConnector
   module Ui
-    BASE_BINDING = 'baseBinding'
+    BASE_BINDING_VIEW = 'baseBinding'
 
     # View that provided by vue.js
     class BaseBindingView < View
