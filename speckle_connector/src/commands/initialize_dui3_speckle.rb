@@ -48,7 +48,7 @@ module SpeckleConnector
         base_binding_view = Ui::BaseBindingView.new(app)
 
         dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
-        dui3_dialog.views[Ui::BASE_BINDING] = base_binding_view
+        dui3_dialog.views[Ui::BASE_BINDING_VIEW] = base_binding_view
         app.ui_controller.register_ui(SPECKLE_DUI3, dui3_dialog)
         dui3_dialog.show
       end

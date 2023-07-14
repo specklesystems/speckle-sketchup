@@ -11,10 +11,12 @@ module SpeckleConnector
         height: 400, width: 600, min_width: 250, min_height: 50
       }.freeze
 
-      # @param commands [Hash{Symbol=>Object}] commands that are sent from the HTMLDialog
+      # @return views [Hash{String=>Ui::View}] views that responsible to run upcoming commands
+      attr_reader :views
+
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
-      def initialize(commands:, dialog_id:, htm_file:, **specs)
-        @commands = commands
+      def initialize(dialog_id:, htm_file:, **specs)
+        @views = {}
         @id = dialog_id
         @htm_file = htm_file
         @dialog_specs = DEFAULT_SPECS.merge(
@@ -25,6 +27,12 @@ module SpeckleConnector
 
       def ready?
         @ready
+      end
+
+      def update_views(state)
+        views.each_value do |view|
+          view.update_view(state)
+        end
       end
 
       # Show dialog if it's not visible yet
@@ -78,7 +86,7 @@ module SpeckleConnector
           true
         end
         # File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
-        dialog.set_url('http://localhost:8083') # uncomment this line if you want to use your local version of ui
+        dialog.set_url('http://localhost:8081') # uncomment this line if you want to use your local version of ui
         add_exec_callback(dialog)
         dialog
       end
@@ -107,7 +115,8 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          @commands[cmd.name].run(cmd.resolve_id, cmd.data)
+          # We have single view for legacy UI
+          @views[SPECKLE_LEGACY_VIEW_ID].commands[cmd.name].run(cmd.resolve_id, cmd.data)
         end
       end
     end

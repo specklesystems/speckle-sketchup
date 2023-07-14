@@ -11,6 +11,8 @@ module SpeckleConnector
     # Command to initialize old Speckle UI and register it to ui_controller.
     # This is the command where we show UI to user.
     class InitializeSpeckle < Command
+      SPECKLE_LEGACY_UI = 'speckle_legacy_ui'
+
       def dialog_title
         "Speckle #{CONNECTOR_VERSION}"
       end
@@ -19,8 +21,8 @@ module SpeckleConnector
 
       def _run
         app = self.app
-        if !app.state.instance_of?(States::InitialState) && app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
-          vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
+        if !app.state.instance_of?(States::InitialState) && app.ui_controller.user_interfaces[SPECKLE_LEGACY_UI]
+          vue_view = app.ui_controller.user_interfaces[SPECKLE_LEGACY_UI]
           vue_view.show
           return
         end
@@ -36,15 +38,17 @@ module SpeckleConnector
         observers = Observers::Factory.create_observers(observer_handler)
         app.update_state!(Actions::InitializeSpeckle, observers)
         dialog_specs = {
-          dialog_id: Ui::SPECKLE_UI_ID,
+          dialog_id: SPECKLE_LEGACY_UI,
           htm_file: Ui::VUE_UI_HTML,
           dialog_title: dialog_title,
           height: 950,
           width: 300
         }
-        vue_view = Ui::VueView.new(dialog_specs, app)
-        app.ui_controller.register_ui(Ui::SPECKLE_UI_ID, vue_view)
-        vue_view.show
+        legacy_ui_dialog = SpeckleConnector::Ui::Dialog.new(**dialog_specs)
+        vue_view = Ui::VueView.new(app)
+        legacy_ui_dialog.views[Ui::SPECKLE_LEGACY_VIEW_ID] = vue_view
+        app.ui_controller.register_ui(SPECKLE_LEGACY_UI, legacy_ui_dialog)
+        legacy_ui_dialog.show
       end
     end
   end

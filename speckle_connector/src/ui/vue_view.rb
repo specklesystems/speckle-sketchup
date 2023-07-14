@@ -34,29 +34,17 @@ require_relative '../actions/clear_mapper_source'
 
 module SpeckleConnector
   module Ui
-    SPECKLE_UI_ID = 'speckle_ui'
+    SPECKLE_LEGACY_VIEW_ID = 'speckle_legacy_view'
     VUE_UI_HTML = Pathname.new(File.join(SPECKLE_SRC_PATH, '..', 'vue_ui', 'index.html')).cleanpath.to_s
 
     # View that provided by vue.js
     class VueView < View
       CMD_UPDATE_VIEW = 'speckle.updateView'
 
-      # @param dialog_specs [Hash] the specifications for the {SpeckleConnector::Ui::Dialog}.
       # @param app [App::SpeckleConnectorApp] the reference to the app object
-      def initialize(dialog_specs, app)
+      def initialize( app)
         super()
-        @dialog_specs = dialog_specs
         @app = app
-      end
-
-      # Show the HTML dialog
-      def show
-        dialog.show
-      end
-
-      # @return [SpeckleConnector::Ui::Dialog] wrapper for the {Sketchup::HTMLDialog}
-      def dialog
-        @dialog ||= SpeckleConnector::Ui::Dialog.new(commands: commands, **@dialog_specs)
       end
 
       def update_view(_state)
