@@ -13,7 +13,7 @@ module SpeckleConnector
         count.times do
           said_hi.append("#{say_hello_not_hi ? 'Hello' : 'Hi'} #{name}!")
         end
-        js_script = "testBindings.receiveResponse('#{resolve_id}', #{said_hi})"
+        js_script = "testBinding.receiveResponse('#{resolve_id}', #{said_hi})"
         state.with_add_queue_js_command('sayHi', js_script)
       end
     end
