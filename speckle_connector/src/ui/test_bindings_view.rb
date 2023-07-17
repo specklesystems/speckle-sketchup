@@ -17,10 +17,14 @@ module SpeckleConnector
     class TestBindingsView < View
       CMD_UPDATE_VIEW = 'speckle.updateView'
 
+      # @return [String] name of the view.
+      attr_reader :name
+
       # @param app [App::SpeckleConnectorApp] the reference to the app object
-      def initialize(app)
+      def initialize(app, name)
         super()
         @app = app
+        @name = name
       end
 
       def update_view(_state)

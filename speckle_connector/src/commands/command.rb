@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../actions/handle_error'
+
 module SpeckleConnector
   module Commands
     # Base command schema to wrap common operations for all commands.
@@ -17,9 +19,14 @@ module SpeckleConnector
       end
 
       def run(*parameters)
-        # Run here common operations that same for each command.
-        with_observers_disabled do
-          _run(*parameters)
+        begin
+          # Run here common operations that same for each command.
+          with_observers_disabled do
+            _run(*parameters)
+          end
+        rescue StandardError => e
+          action = Actions::HandleError.new(e, @view.name, @action, parameters)
+          app.update_state!(action)
         end
       end
 
