@@ -10,7 +10,7 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id)
         puts 'SketchUp went away :('
-        js_script = "testBindings.receiveResponse('#{resolve_id}')"
+        js_script = "testBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('goAway', js_script)
       end
     end

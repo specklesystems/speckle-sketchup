@@ -8,17 +8,19 @@ module SpeckleConnector
     class TriggerEvent < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _resolve_id, event_name)
+      def self.update_state(state, resolve_id, event_name)
         if event_name == 'emptyTestEvent'
-          js_script = "testBindings.emit('#{event_name}')"
+          js_script = "testBinding.emit('#{event_name}')"
         else
           args = {
             name: 'Oguzhan',
             isOk: true,
             count: 3
           }
-          js_script = "testBindings.emit('#{event_name}', #{args.to_json})"
+          js_script = "testBinding.emit('#{event_name}', #{args.to_json})"
         end
+        resolve_js_script = "testBinding.receiveResponse('#{resolve_id}')"
+        state = state.with_add_queue_js_command('triggerEventResolve', resolve_js_script)
         state.with_add_queue_js_command('triggerEvent', js_script)
       end
     end
