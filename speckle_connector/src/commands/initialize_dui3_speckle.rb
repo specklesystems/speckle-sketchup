@@ -46,8 +46,8 @@ module SpeckleConnector
           height: 950,
           width: 300
         }
-        base_binding_view = Ui::BaseBindingView.new(app)
-        test_bindings_view = Ui::TestBindingsView.new(app)
+        base_binding_view = Ui::BaseBindingView.new(app, Ui::BASE_BINDING_VIEW)
+        test_bindings_view = Ui::TestBindingsView.new(app, Ui::TEST_BINDINGS_VIEW)
 
         dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
         dui3_dialog.views[Ui::BASE_BINDING_VIEW] = base_binding_view
