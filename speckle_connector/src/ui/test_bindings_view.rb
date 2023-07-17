@@ -11,7 +11,7 @@ require_relative '../actions/test_actions/trigger_event'
 
 module SpeckleConnector
   module Ui
-    TEST_BINDINGS_VIEW = 'testBindings'
+    TEST_BINDINGS_VIEW = 'testBinding'
 
     # View that provided by vue.js
     class TestBindingsView < View

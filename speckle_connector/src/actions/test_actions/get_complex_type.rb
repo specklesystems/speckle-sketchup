@@ -13,7 +13,7 @@ module SpeckleConnector
           id: 'complex_type_id',
           count: 3
         }
-        js_script = "testBindings.receiveResponse('#{resolve_id}', #{complex_type.to_json})"
+        js_script = "testBinding.receiveResponse('#{resolve_id}', #{complex_type.to_json})"
         state.with_add_queue_js_command('getComplexType', js_script)
       end
     end
