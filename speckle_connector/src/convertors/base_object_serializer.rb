@@ -310,8 +310,12 @@ module SpeckleConnector
         Digest::MD5.hexdigest(traversed_base.to_json)
       end
 
+      def batch_objects
+        @objects
+      end
+
       # rubocop:disable Metrics/MethodLength
-      def batch_objects(max_batch_size_mb = 1)
+      def batch_json_objects(max_batch_size_mb = 1)
         max_size = 1000 * 1000 * max_batch_size_mb
         batches = []
         batch = '['

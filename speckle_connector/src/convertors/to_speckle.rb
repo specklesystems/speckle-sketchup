@@ -44,7 +44,7 @@ module SpeckleConnector
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id, preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
-        batches = serializer.batch_objects
+        batches = serializer.batch_json_objects
         # write_to_speckle_folder(id, batches)
         puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
