@@ -2,9 +2,9 @@
 
 require_relative 'command'
 require_relative '../states/initial_state'
-require_relative '../ui/vue_view'
-require_relative '../ui/base_binding_view'
-require_relative '../ui/test_bindings_view'
+require_relative '../ui/legacy_binding'
+require_relative '../ui/base_binding'
+require_relative '../ui/test_binding'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
@@ -46,12 +46,12 @@ module SpeckleConnector
           height: 950,
           width: 300
         }
-        base_binding_view = Ui::BaseBindingView.new(app, Ui::BASE_BINDING_VIEW)
-        test_bindings_view = Ui::TestBindingsView.new(app, Ui::TEST_BINDINGS_VIEW)
+        base_binding = Ui::BaseBinding.new(app, Ui::BASE_BINDING_NAME)
+        test_bindings = Ui::TestBinding.new(app, Ui::TEST_BINDINGS_NAME)
 
         dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
-        dui3_dialog.views[Ui::BASE_BINDING_VIEW] = base_binding_view
-        dui3_dialog.views[Ui::TEST_BINDINGS_VIEW] = test_bindings_view
+        dui3_dialog.bindings[Ui::BASE_BINDING_NAME] = base_binding
+        dui3_dialog.bindings[Ui::TEST_BINDINGS_NAME] = test_bindings
         app.ui_controller.register_ui(SPECKLE_DUI3, dui3_dialog)
         dui3_dialog.show
       end
