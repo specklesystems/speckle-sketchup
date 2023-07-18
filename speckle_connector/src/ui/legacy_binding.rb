@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'view'
+require_relative 'binding'
 require_relative '../ui/dialog'
 require_relative '../constants/path_constants'
 
 require_relative '../commands/send_selection'
 require_relative '../commands/receive_objects'
 require_relative '../commands/action_command'
-require_relative '../commands/dialog_ready'
 require_relative '../commands/save_stream'
 require_relative '../commands/remove_stream'
 require_relative '../commands/notify_connected'
@@ -34,28 +33,14 @@ require_relative '../actions/clear_mapper_source'
 
 module SpeckleConnector
   module Ui
-    SPECKLE_LEGACY_VIEW_ID = 'speckle_legacy_view'
+    SPECKLE_LEGACY_BINDING_NAME = 'speckle_legacy_view'
     VUE_UI_HTML = Pathname.new(File.join(SPECKLE_SRC_PATH, '..', 'vue_ui', 'index.html')).cleanpath.to_s
 
     # View that provided by vue.js
-    class VueView < View
-      CMD_UPDATE_VIEW = 'speckle.updateView'
-
-      # @param app [App::SpeckleConnectorApp] the reference to the app object
-      def initialize( app)
-        super()
-        @app = app
-      end
-
-      def update_view(_state)
-        # TODO: If you want to send data to dialog additionally, consume this method.
-        #  App object triggers this method by ui_controller
-      end
-
+    class LegacyBinding < Binding
       # rubocop:disable Metrics/MethodLength
       def commands
         @commands ||= {
-          dialog_ready: Commands::DialogReady.new(@app, self),
           send_selection: Commands::SendSelection.new(@app, self),
           receive_objects: Commands::ReceiveObjects.new(@app, self),
           reload_accounts: Commands::ActionCommand.new(@app, self, Actions::ReloadAccounts),

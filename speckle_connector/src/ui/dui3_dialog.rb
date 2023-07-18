@@ -11,24 +11,18 @@ module SpeckleConnector
         height: 400, width: 600, min_width: 250, min_height: 50
       }.freeze
 
-      # @return views [Hash{String=>Ui::View}] views that responsible to run upcoming commands
-      attr_reader :views
+      # @return views [Hash{String=>Ui::Binding}] views that responsible to run upcoming commands
+      attr_reader :bindings
 
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
       def initialize(dialog_id:, htm_file: nil, **specs)
-        @views = {}
+        @bindings = {}
         @id = dialog_id
         @htm_file = htm_file
         @dialog_specs = DEFAULT_SPECS.merge(
           dialog_title: 'SpeckleSketchUp',
           preferences_key: "speckle.systems.#{dialog_id}"
         ).merge(specs)
-      end
-
-      def update_views(state)
-        views.each_value do |view|
-          view.update_view(state)
-        end
       end
 
       def ready?
@@ -102,13 +96,13 @@ module SpeckleConnector
         end
       end
 
-      def get_commands(view_id)
-        if @views[view_id]
-          commands_string = JSON.generate(@views[view_id].commands.keys)
+      def get_commands(binding_name)
+        if @bindings[binding_name]
+          commands_string = JSON.generate(@bindings[binding_name].commands.keys)
           html_dialog.execute_script("bindings.receiveCommandsAndInitializeBridge('#{commands_string}')")
         else
-          puts "There is no registered binding named: #{view_id}"
-          html_dialog.execute_script("bindings.rejectBindings('There is no registered binding named: #{view_id}')")
+          puts "There is no registered binding named: #{binding_name}"
+          html_dialog.execute_script("bindings.rejectBindings('There is no registered binding named: #{binding_name}')")
         end
       end
 
@@ -121,7 +115,7 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          @views[data['view_id']].commands[cmd.name].run(cmd.resolve_id, *cmd.data['args'])
+          @bindings[cmd.binding_name].commands[cmd.name].run(cmd.resolve_id, *cmd.data['args'])
         end
       end
     end
