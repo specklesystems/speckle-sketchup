@@ -26,7 +26,7 @@ module SpeckleConnector
             # Action to let UI to render itself with new preferences state
             # TODO: Later UI should be updated if any stream is invalid after
             #  we collected speckle_entities appropriately
-            # new_state = CollectPreferences.update_state(new_state, nil, {})
+            new_state = CollectPreferences.update_state(new_state, nil, {})
             OnDocumentChanged.update_state(new_state)
           end
         end
