@@ -28,10 +28,6 @@ module SpeckleConnector
         state.speckle_state?
       end
 
-      def update_ui!
-        ui_controller.update_ui(state)
-      end
-
       # Attach observers to application when speckle initialized via menu commands.
       def add_observer_handler!(observer_handler)
         @observer_handler = observer_handler
@@ -55,7 +51,6 @@ module SpeckleConnector
         old_state = @state
         @state = action.update_state(old_state, *parameters)
         send_messages! if @state.speckle_state.message_queue.any?
-        update_ui! unless @state.equal?(old_state)
       end
     end
   end

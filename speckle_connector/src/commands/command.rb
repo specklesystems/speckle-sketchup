@@ -9,13 +9,14 @@ module SpeckleConnector
       # @return [App::SpeckleConnectorApp] the main app object
       attr_reader :app
 
-      # @return [Ui::View] view object holds dialog and it's state
-      attr_reader :view
+      # @return [Ui::Binding] binding object holds dialog and it's state
+      attr_reader :binding
 
-      # @@param app [App::SpeckleConnectorApp] the main app object
-      def initialize(app, view)
+      # @param app [App::SpeckleConnectorApp] the main app object
+      # @param binding [Ui::Binding] binding object holds commands to call
+      def initialize(app, binding)
         @app = app
-        @view = view
+        @binding = binding
       end
 
       def run(*parameters)
@@ -25,7 +26,7 @@ module SpeckleConnector
             _run(*parameters)
           end
         rescue StandardError => e
-          action = Actions::HandleError.new(e, @view.name, @action, parameters)
+          action = Actions::HandleError.new(e, @binding.name, @action, parameters)
           app.update_state!(action)
         end
       end

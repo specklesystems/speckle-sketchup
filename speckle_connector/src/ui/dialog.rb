@@ -11,12 +11,12 @@ module SpeckleConnector
         height: 400, width: 600, min_width: 250, min_height: 50
       }.freeze
 
-      # @return views [Hash{String=>Ui::View}] views that responsible to run upcoming commands
-      attr_reader :views
+      # @return bindings [Hash{String=>Ui::Binding}] views that responsible to run upcoming commands
+      attr_reader :bindings
 
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
       def initialize(dialog_id:, htm_file:, **specs)
-        @views = {}
+        @bindings = {}
         @id = dialog_id
         @htm_file = htm_file
         @dialog_specs = DEFAULT_SPECS.merge(
@@ -27,12 +27,6 @@ module SpeckleConnector
 
       def ready?
         @ready
-      end
-
-      def update_views(state)
-        views.each_value do |view|
-          view.update_view(state)
-        end
       end
 
       # Show dialog if it's not visible yet
@@ -102,14 +96,6 @@ module SpeckleConnector
         end
       end
 
-      def say_hi_handler(data, data2, data3, data4)
-
-        puts data
-        puts data2
-        puts data3
-        puts data4
-      end
-
       # Method parses commands sent from javascript code in HTML dialog and calls
       # and passes that commands to the object that handles the commands.
       # @param data [Array, Hash] data that comes as json from HTMLDialog
@@ -120,7 +106,7 @@ module SpeckleConnector
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
           # We have single view for legacy UI
-          @views[SPECKLE_LEGACY_VIEW_ID].commands[cmd.name].run(cmd.resolve_id, cmd.data)
+          @bindings[SPECKLE_LEGACY_BINDING_NAME].commands[cmd.name].run(cmd.resolve_id, cmd.data)
         end
       end
     end
