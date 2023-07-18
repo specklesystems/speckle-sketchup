@@ -17,7 +17,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        state = DeactivateDiffing.update_state(state, {})
+        state = DeactivateDiffing.update_state(state, nil, {})
         converter = Converters::ToSpeckle.new(state, @stream_id)
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
