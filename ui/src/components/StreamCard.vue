@@ -5,14 +5,6 @@
     @mouseenter="hover = true"
     @mouseleave="hover = false"
   >
-    <v-btn
-        icon x-small class="ml-0 mr-1"
-        @click="bridgeTest"
-    >
-      <v-icon>
-        mdi-plus
-      </v-icon>
-    </v-btn>
     <v-toolbar flat height="70" :color="getColor(invalid)">
       <v-btn v-tooptip="''" icon small outlined class="delta-btn" v-if="invalid" @click="activateDiffing">
         <v-icon v-if="!diffing" class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-eye-off-outline</v-icon>
@@ -457,21 +449,6 @@ export default {
     },
     updateLoadingStage({ stage }) {
       this.loadingStage = stage
-    },
-    async bridgeTest(){
-      let w = 2
-      let l = 4
-      console.log("before sketchup call")
-      const area = await Bridge.get('compute_area', w, l)
-          .then(function (result) {
-            return result;
-          }, function (error) {
-            alert(error);
-          });
-
-      console.log(area)
-
-      console.log("after sketchup call")
     },
     async send() {
       this.loadingStage = 'converting'
