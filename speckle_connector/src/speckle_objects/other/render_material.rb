@@ -57,7 +57,7 @@ module SpeckleConnector
           materials = state.sketchup_state.materials
 
           # return material with same name if it exists
-          name = render_material['name'] || render_material['id']
+          name = render_material['name'] || render_material['id'] || render_material['diffuse'].to_s
           material = materials.by_id(name)
           return state, [material] if material
 
