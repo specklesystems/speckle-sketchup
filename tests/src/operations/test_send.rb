@@ -2,7 +2,8 @@
 
 require 'json'
 require 'net/http'
-require "uri"
+require 'uri'
+require 'zlib'
 
 require_relative '../../test_helper'
 require_relative '../../../speckle_connector/src/states/speckle_state'
@@ -11,13 +12,15 @@ require_relative '../../../speckle_connector/src/speckle_objects/geometry/point'
 require_relative '../../../speckle_connector/src/speckle_objects/geometry/line'
 require_relative '../../../speckle_connector/src/convertors/base_object_serializer'
 require_relative '../../../speckle_connector/src/immutable/immutable'
+require_relative '../../../speckle_connector/src/operations/send'
 
 module SpeckleConnector
   module Converters
     class SendTest < Minitest::Test
       include Immutable::ImmutableUtils
 
-      TEST_STREAM_ID = 'ee5346d3e1'
+      # Replace here test stream id
+      TEST_STREAM_ID = 'f0b4392dc8'
       TEST_PREFERENCES = {
         user: {
           register_speckle_entity: true
@@ -76,29 +79,38 @@ module SpeckleConnector
 
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, TEST_STREAM_ID, TEST_PREFERENCES)
         id = serializer.serialize(base_and_entities)
-        batches = serializer.batch_objects
-        send_batch(id, batches)
+        batches = serializer.batch_json_objects
+        send_batch(batches)
       end
 
-      def send_batch(id, batches)
-        default_account = Accounts.default_account
+      # @param string [String]
+      def gzip(string)
+        encoded_string = string.encode('UTF-8')
+        io = StringIO.new
+        io.puts(encoded_string)
+        gzip = Zlib::GzipWriter.new(io)
+        # Zlib::Deflate.deflate(string)
+        # gzip << encoded_string
+        # gzip.close.string
+        gzip.close.string
+      end
 
-        uri = URI.parse(default_account['serverInfo']['url'] + '/objects/' + TEST_STREAM_ID)
+      def send_batch(batch)
+        # compressed_contents = gzip(batch) # FIXME!
+        local_server_account = Accounts.try_get_local_server_account
+
+        boundary = "----RubyMultipartClient#{rand(1000000)}ZZZZZ"
+        payload = Operations.format_payload(boundary, batch, 'application/json')
+
+        uri = URI.parse("#{local_server_account['serverInfo']['url']}/objects/#{TEST_STREAM_ID}")
         http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
         req = Net::HTTP::Post.new(uri)
-        req["Authorization"] = "Bearer #{default_account['token']}"
-
-        req["Content-Type"] = "multipart/form-data"
-        form_data = [['batch-1', batches.values.first.to_json]] # FIXME: Iterate later batches
-        req.set_form(form_data, 'multipart/form-data')
-        res = http.request(req)
-
-
+        req['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
+        req["Authorization"] = "Bearer #{local_server_account['token']}"
+        res = http.request(req, payload)
       rescue => e
         puts "failed #{e}"
       end
-
     end
   end
 end

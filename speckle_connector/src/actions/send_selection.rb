@@ -4,6 +4,7 @@ require_relative 'action'
 require_relative 'deactivate_diffing'
 require_relative '../convertors/units'
 require_relative '../convertors/to_speckle'
+require_relative '../operations/send'
 
 module SpeckleConnector
   module Actions
@@ -22,6 +23,9 @@ module SpeckleConnector
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
                                                                                    state.user_state.preferences)
+        # TODO: Later active send operation.
+        # Operations.send(@stream_id, batches)
+
         puts("converted #{base.count} objects for stream #{@stream_id}")
 
         # This is the place we can send information to UI for diffing check
