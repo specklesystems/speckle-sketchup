@@ -25,7 +25,8 @@ module SpeckleConnector
 
       def test_receive
         local_server_account = Accounts.try_get_local_server_account
-        uri = URI.parse("#{local_server_account['serverInfo']['url']}/objects/#{TEST_STREAM_ID}/#{TEST_OBJECT_ID}/single")
+        uri = URI.parse("https://speckle.xyz/objects/1ce562e99a/745ea505d154c09e2317121bd263a2b2/single")
+        # uri = URI.parse("#{local_server_account['serverInfo']['url']}/objects/#{TEST_STREAM_ID}/#{TEST_OBJECT_ID}/single")
         http = Net::HTTP.new(uri.host, uri.port)
         req = Net::HTTP::Get.new(uri)
         req["Authorization"] = "Bearer #{local_server_account['token']}"
