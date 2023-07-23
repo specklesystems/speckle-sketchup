@@ -406,7 +406,8 @@ export default {
           stream_id: this.streamId,
           branch_name: this.selectedCommit.branchName,
           branch_id: this.selectedCommit.id,
-          source_app: this.selectedCommit.sourceApplication
+          source_app: this.selectedCommit.sourceApplication,
+          object_id: refId
       }})
 
       await this.$apollo.mutate({

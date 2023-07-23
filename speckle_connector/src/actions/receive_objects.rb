@@ -3,13 +3,14 @@
 require_relative 'action'
 require_relative '../convertors/units'
 require_relative '../convertors/to_native'
+require_relative '../operations/receive'
 
 module SpeckleConnector
   module Actions
     # Action to receive objects from Speckle Server.
     class ReceiveObjects < Action
       # rubocop:disable Metrics/ParameterLists
-      def initialize(stream_id, base, stream_name, branch_name, branch_id, source_app)
+      def initialize(stream_id, base, stream_name, branch_name, branch_id, source_app, object_id)
         super()
         @stream_id = stream_id
         @base = base
@@ -17,12 +18,15 @@ module SpeckleConnector
         @branch_name = branch_name
         @branch_id = branch_id
         @source_app = source_app
+        @object_id = object_id
       end
       # rubocop:enable Metrics/ParameterLists
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
+        # content = Operations.receive(@stream_id, @object_id)
+
         converter = Converters::ToNative.new(state, @stream_id, @stream_name, @branch_name, @source_app)
         # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
         start_time = Time.now.to_f
