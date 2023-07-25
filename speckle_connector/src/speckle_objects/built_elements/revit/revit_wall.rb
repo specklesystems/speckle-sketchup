@@ -44,8 +44,16 @@ module SpeckleConnector
           schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(face).to_h
           source_exist = !speckle_state.speckle_mapper_state.mapper_source.nil?
           level = nil
+          parameters = nil
           if source_exist
             level = speckle_state.speckle_mapper_state.mapper_source.levels.find { |l| l[:name] == schema['level'] }
+            parameters = Base.new
+            offset_parameter = BuiltElements::Revit::Parameter.new(name: 'Height Offset From Level')
+            level_z = Geometry.length_to_native(level[:elevation], level[:units])
+            min_z = face.vertices.collect(&:position).map(&:z).min
+            offset_parameter['value'] = Geometry.length_to_speckle(min_z - level_z, units)
+            offset_parameter['units'] = units
+            parameters['Height Offset From Level'] = offset_parameter
           end
 
           RevitWall.new(
@@ -56,7 +64,7 @@ module SpeckleConnector
             flipped: false,
             level: level,
             units: units,
-            parameters: nil,
+            parameters: parameters,
             material: material.nil? ? nil : Other::RenderMaterial.from_material(face.material || face.back_material),
             application_id: face.persistent_id
           )
