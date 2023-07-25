@@ -159,6 +159,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity
         def self.group_entities_to_speckle(entities, preferences, speckle_state, parent, &convert)
+          entities = entities.reject(&:hidden?)
           orphan_edges = entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
           lines = orphan_edges.collect do |orphan_edge|
             new_speckle_state, converted = convert.call(orphan_edge, preferences, speckle_state, parent)
