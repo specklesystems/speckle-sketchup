@@ -7,6 +7,7 @@ require_relative '../ui/base_binding'
 require_relative '../ui/test_binding'
 require_relative '../ui/receive_binding'
 require_relative '../ui/config_binding'
+require_relative '../ui/sketchup_config_binding'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
@@ -53,6 +54,7 @@ module SpeckleConnector
         test_bindings = Ui::TestBinding.new(app, Ui::TEST_BINDINGS_NAME)
         receive_bindings = Ui::ReceiveBinding.new(app, Ui::RECEIVE_BINDING_NAME)
         config_bindings = Ui::ConfigBinding.new(app, Ui::CONFIG_BINDING_NAME)
+        connector_config_bindings = Ui::SketchupConfigBinding.new(app, Ui::CONNECTOR_CONFIG_BINDING_NAME)
 
         # Init dialog
         dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
@@ -62,6 +64,7 @@ module SpeckleConnector
         dui3_dialog.bindings[Ui::TEST_BINDINGS_NAME] = test_bindings
         dui3_dialog.bindings[Ui::RECEIVE_BINDING_NAME] = receive_bindings
         dui3_dialog.bindings[Ui::CONFIG_BINDING_NAME] = config_bindings
+        dui3_dialog.bindings[Ui::CONNECTOR_CONFIG_BINDING_NAME] = connector_config_bindings
 
         app.ui_controller.register_ui(SPECKLE_DUI3, dui3_dialog)
         dui3_dialog.show
