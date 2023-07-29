@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../action'
+require_relative '../../filters/send_filters'
 
 module SpeckleConnector
   module Actions
@@ -13,11 +14,15 @@ module SpeckleConnector
           sendCards: [
             {
               projectId: 'Sketchup Project',
-              modelId: 'Sketchup Model'
+              modelId: 'Sketchup Model',
+              filters: Filters::SendFilters.get_default(state.sketchup_state.sketchup_model),
+              activeFilters: ['everything']
             },
             {
               projectId: 'Sketchup Project 2',
-              modelId: 'Sketchup Model 2'
+              modelId: 'Sketchup Model 2',
+              filters: Filters::SendFilters.get_default(state.sketchup_state.sketchup_model),
+              activeFilters: ['selection', 'tags']
             }
           ]
         }
