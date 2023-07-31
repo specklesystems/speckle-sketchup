@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../speckle_objects/other/color'
+
 module SpeckleConnector
   module Filters
     # Send filters for sketchup connector.
@@ -9,7 +11,8 @@ module SpeckleConnector
       def self.get_default(sketchup_model)
         layer_tags = sketchup_model.layers.collect do |layer|
           {
-            id: layer.persistent_id, name: layer.display_name, active: true
+            id: layer.persistent_id, name: layer.display_name,
+            color: SpeckleObjects::Other::Color.to_hex(layer.color), active: true
           }
         end
         {

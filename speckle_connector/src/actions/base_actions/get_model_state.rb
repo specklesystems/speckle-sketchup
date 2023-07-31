@@ -13,14 +13,14 @@ module SpeckleConnector
         model_state = {
           sendCards: [
             {
-              projectId: 'Sketchup Project',
-              modelId: 'Sketchup Model',
+              projectId: 'Sketchup',
+              modelId: 'Saved',
               filters: Filters::SendFilters.get_default(state.sketchup_state.sketchup_model),
               activeFilters: ['everything']
             },
             {
-              projectId: 'Sketchup Project 2',
-              modelId: 'Sketchup Model 2',
+              projectId: 'Sketchup',
+              modelId: 'Saved-2',
               filters: Filters::SendFilters.get_default(state.sketchup_state.sketchup_model),
               activeFilters: ['selection', 'tags']
             }
