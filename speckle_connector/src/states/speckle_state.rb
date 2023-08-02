@@ -11,6 +11,9 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
+      # @return [ImmutableHash{String=>Cards::SendCard}] send cards.
+      attr_reader :send_cards
+
       # @return [States::SpeckleMapperState] state of the mapper.
       attr_reader :speckle_mapper_state
 
@@ -50,6 +53,7 @@ module SpeckleConnector
         @speckle_entities = Immutable::EmptyHash
         @render_materials = Immutable::EmptyHash
         @definitions = Immutable::EmptyHash
+        @send_cards = Immutable::EmptyHash
         @relation = Relations::ManyToOneRelation.new
         @speckle_mapper_state = SpeckleMapperState.new
       end
@@ -139,6 +143,11 @@ module SpeckleConnector
 
       def with_speckle_entities(new_speckle_entities)
         with(:@speckle_entities => new_speckle_entities)
+      end
+
+      def with_send_card(send_card)
+        new_send_cards = send_cards.put(send_card.id, send_card)
+        with(:@send_cards => new_send_cards)
       end
 
       def with_relation(new_relation)
