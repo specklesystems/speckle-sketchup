@@ -35,6 +35,12 @@ module SpeckleConnector
           "#%02X%02X%02X" % [r, g, b] # Scale alpha value to 0-255 range
         end
 
+        # @param color [Sketchup::Color] color to convert speckle object
+        def self.to_rgb(color)
+          r, g, b, a = color.to_a
+          "#{r},#{g},#{b}"
+        end
+
         # @param argb [Numeric] int value of the corresponding color
         # @return [Sketchup::Color] sketchup color
         def self.from_int(argb)

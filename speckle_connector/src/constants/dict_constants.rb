@@ -5,6 +5,8 @@ module SpeckleConnector
   SPECKLE_MAPPING_TOOL_SCHEMA = 'Speckle_Mapping_Tool_Schema'
   SPECKLE_SCHEMA = 'Speckle_Schema'
 
+  SPECKLE_SEND_CARDS = 'Speckle_Send_Cards'
+
   SPECKLE_ID = 'speckle_id'
   SPECKLE_TYPE = 'speckle_type'
   APPLICATION_ID = 'application_id'
