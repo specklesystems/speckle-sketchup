@@ -6,7 +6,7 @@ require_relative '../../filters/send_filters'
 module SpeckleConnector
   module Actions
     # Action to get send filter.
-    class GetSendFilter < Action
+    class GetSendFilters < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id)

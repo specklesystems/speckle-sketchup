@@ -6,8 +6,8 @@ require_relative '../../sketchup_model/dictionary/send_card_dictionary_handler'
 
 module SpeckleConnector
   module Actions
-    # Gets model state.
-    class GetModelState < Action
+    # Gets document state.
+    class GetDocumentState < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id)
@@ -31,7 +31,7 @@ module SpeckleConnector
         model_state = { sendCards: send_cards }
 
         js_script = "baseBinding.receiveResponse('#{resolve_id}', #{model_state.to_json})"
-        state.with_add_queue_js_command('getModelState', js_script)
+        state.with_add_queue_js_command('getDocumentState', js_script)
       end
     end
   end
