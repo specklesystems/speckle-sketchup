@@ -2,6 +2,7 @@
 
 require_relative 'event_action'
 require_relative '../mapper_selection_changed'
+require_relative '../selection_actions/get_selection'
 require_relative '../../mapper/category/revit_category'
 require_relative '../../sketchup_model/reader/speckle_entities_reader'
 require_relative '../../sketchup_model/reader/mapper_reader'
@@ -20,9 +21,11 @@ module SpeckleConnector
           # Get sketchup selection
           sketchup_selection = state.sketchup_state.sketchup_model.selection
 
+          Actions::GetSelection.update_state(state, nil)
+
           # Collect and return mapper selection info.
           # Later we can add more selection info for different scopes.
-          MapperSelectionChanged.new(sketchup_selection).update_state(state)
+          # MapperSelectionChanged.new(sketchup_selection).update_state(state)
         end
       end
     end
