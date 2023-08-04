@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../action'
-require_relative '../../cards/send_card'
+require_relative '../../cards/send_card_multiple_filters'
 require_relative '../../filters/send/everything_filter'
 require_relative '../../filters/send/selection_filter'
 require_relative '../../filters/send_filters'
@@ -21,7 +21,7 @@ module SpeckleConnector
         puts data['filters'].to_json
         filters = Filters::SendFilters.get_default(state.sketchup_state.sketchup_model)
         # Init card and add to the state
-        send_card = Cards::SendCard.new(card_id, data['accountId'], data['projectId'], data['modelId'], filters)
+        send_card = Cards::SendCardMultipleFilters.new(card_id, data['accountId'], data['projectId'], data['modelId'], filters)
 
         SketchupModel::Dictionary::SendCardDictionaryHandler
           .save_card_to_model(send_card, state.sketchup_state.sketchup_model)

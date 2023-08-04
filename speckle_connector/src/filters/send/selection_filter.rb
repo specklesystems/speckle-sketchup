@@ -7,13 +7,27 @@ module SpeckleConnector
     module Send
       # Selection filter for sketchup connector to send all.
       class SelectionFilter < UiData::Components::Selections::ListSelectionItem
-        def initialize
-          super('selection', 'Selection', nil,
-                'User based selection filter. UI should replace this summary with the selection info summary!')
+        DEFAULT_SUMMARY = 'User based selection filter. UI should replace this summary with the selection info summary!'
+
+        attr_reader :selected_object_ids
+
+        def initialize(selected_object_ids, summary = DEFAULT_SUMMARY)
+          super('selection', 'Selection', nil, summary)
+          @selected_object_ids = selected_object_ids
+          self[:selectedObjectIds] = selected_object_ids
         end
 
         def self.from_json(_data)
-          SelectionFilter.new
+          SelectionFilter.new([])
+        end
+
+        def self.read_from_document(data)
+          SelectionFilter.new(data['selectedObjectIds'], data['summary'])
+        end
+
+        def self.from_ui_data(data)
+          # FIXME: Solve inconsistency! UI send data as hash which should be array
+          SelectionFilter.new(data['selectedObjectIds'].values, data['summary'])
         end
       end
     end
