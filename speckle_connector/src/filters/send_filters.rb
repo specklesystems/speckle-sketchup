@@ -18,7 +18,7 @@ module SpeckleConnector
       }.freeze
 
       def self.get_filter_from_ui_data(filter)
-        method = TYPE_CLASSES[filter['id'].to_sym].method(:from_ui_data)
+        method = TYPE_CLASSES[filter['name'].downcase.to_sym].method(:from_ui_data)
         method.call(filter)
       end
 

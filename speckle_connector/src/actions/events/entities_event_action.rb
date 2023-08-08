@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'event_action'
+require_relative '../../actions/send_actions/send_card_expiration_check'
 require_relative '../../sketchup_model/utils/face_utils'
 require_relative '../../constants/dict_constants'
 
@@ -26,19 +27,23 @@ module SpeckleConnector
           def self.update_state(state, event_data)
             speckle_state = state.speckle_state
             modified_entity = event_data[0][1]
-            if modified_entity.is_a?(Sketchup::Face)
-              path = state.sketchup_state.sketchup_model.active_path
-              modified_faces = SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
-              path_objects = path.nil? ? [] : path + path.collect(&:definition)
-              parent_ids = path_objects.collect(&:persistent_id)
-              ids_to_invalidate = modified_faces.collect(&:persistent_id) + parent_ids
-              entities_to_invalidate = speckle_entities_to_invalidate(speckle_state, ids_to_invalidate)
-              new_speckle_state = invalidate_speckle_entities(speckle_state, entities_to_invalidate)
-              # This is the place we can send information to UI for diffing check
-              diffing = state.user_state.preferences[:user][:diffing]
-              new_speckle_state = new_speckle_state.with_invalid_streams_queue if diffing
-              return state.with_speckle_state(new_speckle_state)
-            end
+            modified_entities = event_data.collect { |data| data[1] }
+            new_speckle_state = state.speckle_state.with_changed_object_ids(modified_entities.collect(&:persistent_id))
+            state = state.with_speckle_state(new_speckle_state)
+            state = Actions::SendCardExpirationCheck.update_state(state)
+            # if modified_entity.is_a?(Sketchup::Face)
+            #   path = state.sketchup_state.sketchup_model.active_path
+            #   modified_faces = SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
+            #   path_objects = path.nil? ? [] : path + path.collect(&:definition)
+            #   parent_ids = path_objects.collect(&:persistent_id)
+            #   ids_to_invalidate = modified_faces.collect(&:persistent_id) + parent_ids
+            #   entities_to_invalidate = speckle_entities_to_invalidate(speckle_state, ids_to_invalidate)
+            #   new_speckle_state = invalidate_speckle_entities(speckle_state, entities_to_invalidate)
+            #   # This is the place we can send information to UI for diffing check
+            #   diffing = state.user_state.preferences[:user][:diffing]
+            #   new_speckle_state = new_speckle_state.with_invalid_streams_queue if diffing
+            #   return state.with_speckle_state(new_speckle_state)
+            # end
 
             state
           end

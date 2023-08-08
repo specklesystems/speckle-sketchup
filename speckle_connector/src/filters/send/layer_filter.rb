@@ -17,6 +17,11 @@ module SpeckleConnector
           end.to_h
           LayerFilter.new(items, data['selectedItems'])
         end
+
+        def check_expiry(_ids)
+          # TODO: Implement!
+          false
+        end
       end
     end
   end

@@ -15,6 +15,10 @@ module SpeckleConnector
         def self.from_json(_data)
           EverythingFilter.new
         end
+
+        def check_expiry(_ids)
+          true
+        end
       end
     end
   end
