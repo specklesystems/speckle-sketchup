@@ -11,13 +11,16 @@ module SpeckleConnector
     class SpeckleState
       include Immutable::ImmutableUtils
 
-      # @return [ImmutableHash{String=>Cards::SendCard}] send cards.
+      # @return [Immutable::Hash{String=>Cards::SendCard}] send cards.
       attr_reader :send_cards
+
+      # @return [Immutable::Set] changed entity ids.
+      attr_reader :changed_entity_ids
 
       # @return [States::SpeckleMapperState] state of the mapper.
       attr_reader :speckle_mapper_state
 
-      # @return [ImmutableHash{Integer=>SpeckleEntities::SpeckleEntity}] persistent_id of the sketchup entity and
+      # @return [Immutable::Hash{Integer=>SpeckleEntities::SpeckleEntity}] persistent_id of the sketchup entity and
       #  corresponding speckle entity
       attr_reader :speckle_entities
 
@@ -38,11 +41,11 @@ module SpeckleConnector
       attr_accessor :relation
 
       # TODO: Do cashing later
-      # @return [ImmutableHash{String=>SpeckleObjects::Other::RenderMaterial}] converted render materials
+      # @return [Immutable::Hash{String=>SpeckleObjects::Other::RenderMaterial}] converted render materials
       attr_accessor :render_materials
 
       # TODO: Do cashing later
-      # @return [ImmutableHash{String=>SpeckleObjects::Other::BlockDefinition}] converted component definitions
+      # @return [Immutable::Hash{String=>SpeckleObjects::Other::BlockDefinition}] converted component definitions
       attr_accessor :definitions
 
       def initialize(accounts, observers, queue, stream_queue)
@@ -50,6 +53,7 @@ module SpeckleConnector
         @observers = observers
         @message_queue = queue
         @stream_queue = stream_queue
+        @changed_entity_ids = Immutable::EmptySet
         @speckle_entities = Immutable::EmptyHash
         @render_materials = Immutable::EmptyHash
         @definitions = Immutable::EmptyHash
@@ -142,6 +146,15 @@ module SpeckleConnector
       def with_send_card(send_card)
         new_send_cards = send_cards.put(send_card.id, send_card)
         with(:@send_cards => new_send_cards)
+      end
+
+      def with_empty_changed_object_ids
+        with(:@changed_entity_ids => Immutable::EmptySet)
+      end
+
+      def with_changed_object_ids(ids)
+        new_ids = changed_entity_ids + Immutable::Set.new(ids)
+        with(:@changed_entity_ids => new_ids)
       end
 
       def with_relation(new_relation)

@@ -9,7 +9,7 @@ module SpeckleConnector
     class GetSelection < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, resolve_id)
+      def self.update_state(state)
         selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
         summary = "Selected #{selected_object_ids.length} objects."
         selection_info = UiData::Sketchup::SelectionInfo.new(selected_object_ids, summary)

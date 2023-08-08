@@ -9,12 +9,17 @@ module SpeckleConnector
       class SelectionFilter < UiData::Components::Selections::ListSelectionItem
         DEFAULT_SUMMARY = 'User based selection filter. UI should replace this summary with the selection info summary!'
 
+        # @return [Array<Integer>]
         attr_reader :selected_object_ids
 
         def initialize(selected_object_ids, summary = DEFAULT_SUMMARY)
           super('selection', 'Selection', nil, summary)
           @selected_object_ids = selected_object_ids
           self[:selectedObjectIds] = selected_object_ids
+        end
+
+        def check_expiry(ids)
+          selected_object_ids.intersection(ids.to_a).any?
         end
 
         def self.from_json(_data)

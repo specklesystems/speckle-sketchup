@@ -11,7 +11,7 @@ module SpeckleConnector
     class SpeckleMapperState
       include Immutable::ImmutableUtils
 
-      # @return [ImmutableHash{Integer=>Sketchup::Entity}] persistent_id of the sketchup entity and itself
+      # @return [Immutable::Hash{Integer=>Sketchup::Entity}] persistent_id of the sketchup entity and itself
       attr_reader :mapped_entities
 
       # @return [Mapper::MapperSource] source of the mapper.

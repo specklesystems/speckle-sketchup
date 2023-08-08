@@ -19,7 +19,7 @@ module SpeckleConnector
       # @return [Array<SpeckleObjects::BuiltElements::Level>] levels in the source branch.
       attr_reader :levels
 
-      # @return [ImmutableHash{String=>Array<SpeckleObjects::BuiltElements::Revit::RevitElementType>}] revit element
+      # @return [Immutable::Hash{String=>Array<SpeckleObjects::BuiltElements::Revit::RevitElementType>}] revit element
       #  types.
       attr_reader :types
 
