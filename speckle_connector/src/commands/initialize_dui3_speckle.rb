@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 require_relative 'command'
+require_relative '../ui/dui3_dialog'
 require_relative '../states/initial_state'
 require_relative '../ui/legacy_binding'
-require_relative '../ui/base_binding'
+require_relative '../ui/bindings/accounts_binding'
+require_relative '../ui/bindings/base_binding'
 require_relative '../ui/test_binding'
 require_relative '../ui/receive_binding'
 require_relative '../ui/config_binding'
@@ -53,6 +55,7 @@ module SpeckleConnector
         }
         # Init bindings
         base_binding = Ui::BaseBinding.new(app, Ui::BASE_BINDING_NAME)
+        accounts_binding = Ui::AccountsBinding.new(app, Ui::ACCOUNTS_BINDING_NAME)
         selection_binding = Ui::SelectionBinding.new(app, Ui::SELECTION_BINDING_NAME)
         test_bindings = Ui::TestBinding.new(app, Ui::TEST_BINDINGS_NAME)
         receive_bindings = Ui::ReceiveBinding.new(app, Ui::RECEIVE_BINDING_NAME)
@@ -65,6 +68,7 @@ module SpeckleConnector
 
         # Register bindings to dialog
         dui3_dialog.bindings[Ui::BASE_BINDING_NAME] = base_binding
+        dui3_dialog.bindings[Ui::ACCOUNTS_BINDING_NAME] = accounts_binding
         dui3_dialog.bindings[Ui::TEST_BINDINGS_NAME] = test_bindings
         dui3_dialog.bindings[Ui::RECEIVE_BINDING_NAME] = receive_bindings
         dui3_dialog.bindings[Ui::CONFIG_BINDING_NAME] = config_bindings
