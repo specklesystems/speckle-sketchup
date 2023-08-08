@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'bindings/binding'
-require_relative '../actions/selection_actions/get_selection'
+require_relative 'binding'
+require_relative '../../actions/selection_actions/get_selection'
 
 module SpeckleConnector
   module Ui
