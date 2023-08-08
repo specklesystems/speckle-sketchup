@@ -25,9 +25,9 @@ module SpeckleConnector
           with_observers_disabled do
             _run(*parameters)
           end
-        # rescue StandardError => e
-        #   action = Actions::HandleError.new(e, @binding.name, @action, parameters)
-        #   app.update_state!(action)
+        rescue StandardError => e
+          action = Actions::HandleError.new(e, @binding.name, @action, parameters)
+          app.update_state!(action)
         end
       end
 
