@@ -12,7 +12,7 @@ module SpeckleConnector
       def self.update_state(state, resolve_id, data, value)
         SketchupModel::Dictionary::SendCardDictionaryHandler.update_filter(state.sketchup_state.sketchup_model, data, value)
 
-        js_script = "baseBinding.receiveResponse('#{resolve_id}')"
+        js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('updateSendFilter', js_script)
       end
     end

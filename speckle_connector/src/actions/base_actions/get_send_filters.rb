@@ -11,7 +11,7 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id)
         default_filters = Filters::SendFilters.get_default(state.sketchup_state.sketchup_model)
-        js_script = "baseBinding.receiveResponse('#{resolve_id}', #{default_filters.to_json})"
+        js_script = "sendBinding.receiveResponse('#{resolve_id}', #{default_filters.to_json})"
         state.with_add_queue_js_command('getSendFilter', js_script)
       end
     end
