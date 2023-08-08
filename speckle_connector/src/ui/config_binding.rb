@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'binding'
+require_relative 'bindings/binding'
 require_relative '../actions/config_actions/get_config'
 require_relative '../actions/config_actions/update_config'
 

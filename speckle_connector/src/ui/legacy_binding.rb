@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'binding'
+require_relative 'bindings/binding'
 require_relative '../ui/dialog'
 require_relative '../constants/path_constants'
 

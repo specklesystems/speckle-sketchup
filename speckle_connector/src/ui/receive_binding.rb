@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'binding'
+require_relative 'bindings/binding'
 require_relative '../actions/receive_actions/before_receive'
 require_relative '../actions/receive_actions/receive_single_object'
 require_relative '../actions/receive_actions/after_receive'
