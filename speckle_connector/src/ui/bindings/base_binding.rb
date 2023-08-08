@@ -6,7 +6,6 @@ require_relative '../../constants/path_constants'
 require_relative '../../actions/get_source_app_name'
 require_relative '../../actions/get_document_info'
 require_relative '../../actions/base_actions/add_model'
-require_relative '../../actions/base_actions/update_model'
 require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/update_send_filter'
 require_relative '../../actions/base_actions/get_model_state'
@@ -22,7 +21,8 @@ module SpeckleConnector
       def commands
         @commands ||= {
           addModel: Commands::ActionCommand.new(@app, self, Actions::AddModel),
-          updateModel: Commands::ActionCommand.new(@app, self, Actions::UpdateModel),
+          # Since we send exact model card with updateModel, I can use directly AddModel action, it will replace
+          updateModel: Commands::ActionCommand.new(@app, self, Actions::AddModel),
           getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName),
           getDocumentInfo: Commands::ActionCommand.new(@app, self, Actions::GetDocumentInfo),
           updateSendFilter: Commands::ActionCommand.new(@app, self, Actions::UpdateSendFilter),
