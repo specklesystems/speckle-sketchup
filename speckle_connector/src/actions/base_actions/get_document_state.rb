@@ -25,7 +25,8 @@ module SpeckleConnector
             accountId: send_card.account_id,
             projectId: send_card.project_id,
             modelId: send_card.model_id,
-            sendFilter: send_card.send_filter
+            sendFilter: send_card.send_filter,
+            typeDiscriminator: send_card.type_discriminator
           }
         end
 
