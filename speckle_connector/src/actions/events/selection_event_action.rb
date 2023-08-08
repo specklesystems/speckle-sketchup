@@ -21,7 +21,7 @@ module SpeckleConnector
           # Get sketchup selection
           sketchup_selection = state.sketchup_state.sketchup_model.selection
 
-          Actions::GetSelection.update_state(state, nil)
+          Actions::GetSelection.update_state(state)
 
           # Collect and return mapper selection info.
           # Later we can add more selection info for different scopes.

@@ -6,7 +6,7 @@ module SpeckleConnector
   module Cards
     # Send card for sketchup connector to communicate speckle.
     class SendCard < Card
-      # @return [Filter] filter of the card.
+      # @return [Filters::Send::EverythingFilter | Filters::Send::SelectionFilter | Filters::Send::LayerFilter] filter of the card.
       attr_reader :send_filter
 
       # @return [Object] send settings of the card.

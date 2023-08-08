@@ -14,9 +14,10 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, data)
+        send_filter = Filters::SendFilters.get_filter_from_ui_data(data['sendFilter'])
         # Init card and add to the state
         send_card = Cards::SendCard.new(data['id'], data['accountId'], data['projectId'], data['modelId'],
-                                        data['sendFilter'], {})
+                                        send_filter, {})
 
         SketchupModel::Dictionary::SendCardDictionaryHandler
           .save_card_to_model(send_card, state.sketchup_state.sketchup_model)
