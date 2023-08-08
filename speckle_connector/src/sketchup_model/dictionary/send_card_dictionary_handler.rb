@@ -34,8 +34,7 @@ module SpeckleConnector
 
         def self.get_card_dict(sketchup_model, data)
           send_cards_dict = send_cards_dict(sketchup_model)
-          card_id = "#{data['accountId']}-#{data['projectId']}-#{data['modelId']}"
-          send_cards_dict.attribute_dictionaries.find { |dict| dict.name == card_id }
+          send_cards_dict.attribute_dictionaries.find { |dict| dict.name == data['id'] }
         end
 
         def self.get_card_filters_dict(sketchup_model, data)
@@ -48,6 +47,7 @@ module SpeckleConnector
           items_dict = filters_dict.attribute_dictionaries.find { |dict| dict.name == 'items' }
           items_dict.attribute_dictionaries.find { |dict| dict.name == data['filterId'] }
         end
+
 
         def self.update_filter(sketchup_model, data, value)
           filter_dict = get_card_filters_dict(sketchup_model, data)
