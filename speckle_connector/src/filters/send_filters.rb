@@ -23,7 +23,7 @@ module SpeckleConnector
       end
 
       def self.get_filter_from_document(filter)
-        method = TYPE_CLASSES[filter['id'].to_sym].method(:read_from_document)
+        method = TYPE_CLASSES[filter['name'].downcase.to_sym].method(:read_from_document)
         method.call(filter)
       end
 

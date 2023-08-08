@@ -14,7 +14,7 @@ module SpeckleConnector
         card_id = "#{data['accountId']}-#{data['projectId']}-#{data['modelId']}"
         send_card = state.speckle_state.send_cards[card_id]
         puts "Send card filter updated -> #{card_id} -> #{send_card}"
-        js_script = "sendBinding.receiveResponse('#{resolve_id}')"
+        js_script = "sendBindingOld.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('activateSendFilter', js_script)
       end
     end

@@ -1,19 +1,17 @@
 # frozen_string_literal: true
 
 require_relative 'bindings/binding'
-require_relative '../actions/send_actions/add_send_card'
 require_relative '../actions/send_actions/activate_send_filter'
 require_relative '../actions/send_actions/activate_send_filter_tag'
 
 module SpeckleConnector
   module Ui
-    SEND_BINDING_NAME = 'sendBinding'
+    SEND_BINDING_NAME = 'sendBindingOld'
 
     # Send binding that provided for DUI.
-    class SendBinding < Binding
+    class SendBindingOld < Binding
       def commands
         @commands ||= {
-          addSendCard: Commands::ActionCommand.new(@app, self, Actions::AddSendCard),
           activateSendFilter: Commands::ActionCommand.new(@app, self, Actions::ActivateSendFilter),
           activateSendFilterTag: Commands::ActionCommand.new(@app, self, Actions::ActivateSendFilterTag)
         }.freeze

@@ -6,10 +6,10 @@ require_relative '../states/initial_state'
 require_relative '../ui/legacy_binding'
 require_relative '../ui/bindings/accounts_binding'
 require_relative '../ui/bindings/base_binding'
+require_relative '../ui/bindings/send_binding'
 require_relative '../ui/test_binding'
 require_relative '../ui/receive_binding'
 require_relative '../ui/config_binding'
-require_relative '../ui/send_binding'
 require_relative '../ui/selection_binding'
 require_relative '../ui/sketchup_config_binding'
 require_relative '../actions/initialize_speckle'
@@ -56,11 +56,12 @@ module SpeckleConnector
         # Init bindings
         base_binding = Ui::BaseBinding.new(app, Ui::BASE_BINDING_NAME)
         accounts_binding = Ui::AccountsBinding.new(app, Ui::ACCOUNTS_BINDING_NAME)
+        send_binding = Ui::SendBinding.new(app, Ui::SEND_BINDING_NAME)
         selection_binding = Ui::SelectionBinding.new(app, Ui::SELECTION_BINDING_NAME)
         test_bindings = Ui::TestBinding.new(app, Ui::TEST_BINDINGS_NAME)
         receive_bindings = Ui::ReceiveBinding.new(app, Ui::RECEIVE_BINDING_NAME)
         config_bindings = Ui::ConfigBinding.new(app, Ui::CONFIG_BINDING_NAME)
-        send_bindings = Ui::SendBinding.new(app, Ui::SEND_BINDING_NAME)
+        # send_bindings = Ui::SendBinding.new(app, Ui::SEND_BINDING_NAME)
         connector_config_bindings = Ui::SketchupConfigBinding.new(app, Ui::CONNECTOR_CONFIG_BINDING_NAME)
 
         # Init dialog
@@ -69,11 +70,12 @@ module SpeckleConnector
         # Register bindings to dialog
         dui3_dialog.bindings[Ui::BASE_BINDING_NAME] = base_binding
         dui3_dialog.bindings[Ui::ACCOUNTS_BINDING_NAME] = accounts_binding
+        dui3_dialog.bindings[Ui::SEND_BINDING_NAME] = send_binding
         dui3_dialog.bindings[Ui::TEST_BINDINGS_NAME] = test_bindings
         dui3_dialog.bindings[Ui::RECEIVE_BINDING_NAME] = receive_bindings
         dui3_dialog.bindings[Ui::CONFIG_BINDING_NAME] = config_bindings
         dui3_dialog.bindings[Ui::CONNECTOR_CONFIG_BINDING_NAME] = connector_config_bindings
-        dui3_dialog.bindings[Ui::SEND_BINDING_NAME] = send_bindings
+        # dui3_dialog.bindings[Ui::SEND_BINDING_NAME] = send_bindings
         dui3_dialog.bindings[Ui::SELECTION_BINDING_NAME] = selection_binding
 
         app.ui_controller.register_ui(SPECKLE_DUI3, dui3_dialog)
