@@ -24,6 +24,11 @@ module SpeckleConnector
       rows.map { |row| JSON.parse(row[1]) }
     end
 
+    def self.get_account_by_id(id)
+      accounts = load_accounts
+      accounts.select { |acc| acc['id'] == id }[0]
+    end
+
     # Default account on the user computer.
     def self.default_account
       accounts = load_accounts
