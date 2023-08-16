@@ -14,6 +14,9 @@ module SpeckleConnector
 
       attr_reader :type_discriminator
 
+      # @return [String, NilClass] message to send
+      attr_reader :message
+
       def initialize(card_id, account_id, project_id, model_id, send_filter, send_settings)
         super(card_id, account_id, project_id, model_id)
         @send_filter = send_filter
