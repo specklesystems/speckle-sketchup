@@ -46,7 +46,7 @@ module SpeckleConnector
         observer_handler = Observers::Factory.create_handler(app)
         app.add_observer_handler!(observer_handler)
         observers = Observers::Factory.create_observers(observer_handler)
-        app.update_state!(Actions::InitializeSpeckle, observers)
+        app.update_state!(Actions::InitializeSpeckle, observers, app.method(:instant_message_sender))
         dialog_specs = {
           dialog_id: SPECKLE_DUI3,
           dialog_title: dialog_title,

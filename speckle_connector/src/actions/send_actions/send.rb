@@ -24,6 +24,16 @@ module SpeckleConnector
 
         state = state.with_speckle_state(new_speckle_state)
 
+        selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
+        selected_object_ids.each_with_index do |selection_id, i|
+          sender_progress_args = {
+            id: model_card_id,
+            status: selection_id,
+            progress: i
+          }
+          state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
+        end
+
         resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state = state.with_add_queue_js_command('send', resolve_js_script)
         args = {

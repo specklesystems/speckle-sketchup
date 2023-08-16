@@ -21,7 +21,14 @@ module SpeckleConnector
       def initialize(menu_commands, state, ui_controller)
         @menu_commands = menu_commands
         @state = state
+
         @ui_controller = ui_controller
+      end
+
+      def instant_message_sender(message)
+        ui_controller.user_interfaces.each_value do |dialog|
+          dialog.execute_script(message)
+        end
       end
 
       def speckle_loaded?

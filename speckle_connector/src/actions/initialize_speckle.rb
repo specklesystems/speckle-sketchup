@@ -14,7 +14,7 @@ module SpeckleConnector
     class InitializeSpeckle < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, observers)
+      def self.update_state(state, observers, instant_message_sender)
         attach_app_observer!(observers[APP_OBSERVER])
         accounts = SpeckleConnector::Accounts.load_accounts
         speckle_state = States::SpeckleState.new(accounts, observers, {}, {})
@@ -22,7 +22,8 @@ module SpeckleConnector
         sketchup_state = States::SketchupState.new(Sketchup.active_model)
         preferences = Preferences.read_preferences(sketchup_state.sketchup_model)
         user_state_with_preferences = state.user_state.with_preferences(preferences)
-        state = States::State.new(user_state_with_preferences, speckle_state, sketchup_state, false)
+        state = States::State.new(user_state_with_preferences, speckle_state, sketchup_state,
+                                  false, &instant_message_sender)
         # This is where we attach observers to related model objects like selection, entities..
         Actions::LoadSketchupModel.update_state(state, sketchup_state.sketchup_model)
       end
