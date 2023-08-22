@@ -27,6 +27,7 @@ module SpeckleConnector
         resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state = state.with_add_queue_js_command('send', resolve_js_script)
         args = {
+          modelCardId: model_card_id,
           projectId: model_card.project_id,
           modelId: model_card.model_id,
           token: account['token'],
