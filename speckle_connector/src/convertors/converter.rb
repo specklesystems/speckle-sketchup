@@ -21,6 +21,8 @@ module SpeckleConnector
 
       attr_accessor :definitions
 
+
+
       # @param state [States::State] the current state of the {SpeckleConnector::App}
       def initialize(state, stream_id)
         @state = state

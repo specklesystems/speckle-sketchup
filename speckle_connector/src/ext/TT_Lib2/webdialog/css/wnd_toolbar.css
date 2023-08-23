@@ -1,0 +1,20 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body > div {
+  float: left;
+}
+
+body > div.button {
+  width: 26px;
+  padding: 1px;
+}
+body > div.button:hover {
+  background: #333;
+}
+
+body > div.list {
+  padding: 3px 1px;
+}
