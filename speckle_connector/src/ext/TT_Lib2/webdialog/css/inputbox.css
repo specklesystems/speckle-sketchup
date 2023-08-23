@@ -1,0 +1,51 @@
+label {
+  padding-right: 10px;
+  position: absolute;
+  right: 60%;
+}
+form {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+input[type=text],
+select {
+  width: 100%;
+}
+.container div {
+  width: 60%;
+  float: right;
+}
+.container div p {
+  margin: 0;
+}
+.container div label {
+  display: block;
+  text-align: left;
+  position: static;
+  padding: 0;
+  right: auto;
+}
+.container .description {  
+  clear: both;
+  color: #999;
+	font-style: italic;
+  padding: 3px 0 5px 5px;
+  width: auto;
+}
+.group .container
+{
+  padding: 2px;
+}
+.group:hover .container
+{
+  border: 1px solid #555;
+}
+#content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  overflow-y: scroll;
+  padding: 3px 5px;
+}

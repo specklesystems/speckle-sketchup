@@ -5,6 +5,7 @@ require_relative '../../accounts/accounts'
 require_relative '../../convertors/units'
 require_relative '../../convertors/to_speckle'
 require_relative '../../operations/send'
+require_relative '../../ext/TT_Lib2/progressbar'
 
 module SpeckleConnector
   module Actions
@@ -15,7 +16,7 @@ module SpeckleConnector
       def self.update_state(state, resolve_id, model_card_id)
         model_card = state.speckle_state.send_cards[model_card_id]
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, @stream_id)
+        converter = Converters::ToSpeckle.new(state, @stream_id, model_card.send_filter)
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
                                                                                    state.user_state.preferences)

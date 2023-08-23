@@ -1,0 +1,74 @@
+#-----------------------------------------------------------------------------
+#
+# CHANGELOG
+# 2.5.0 - 18.10.2010
+#    * Upgraded JQuery to 1.4.4
+#    * Now bundles JQuery minimized
+#    * Added Win32Utils' Win32::API under TT::Win32::API
+#    * Added module: TT::Bezier
+#    * Added module: TT::Edge
+#    * Added module: TT::Edges
+#    * Added module: TT::Faces
+#    * Added module: TT::Materials
+#    * Added module: TT::Gizmo::Axis
+#    * Added module: TT::Win32
+#    * Added class: TT::Babelfish
+#    * Added class: TT::Dimension
+#    * Added class: TT::GUI::ToolWindow
+#    * Added method: TT::debug
+#    * Added method: TT::Point3d.douglas_peucker
+#    * Added method: TT::Point3d.simplify_curve
+#    * Added method: TT::Geom3d.interpolate_linear
+#    * Added method: TT::Geom3d.average_point
+#    * Added method: TT::GUI::Button.custom_properties
+#    * Added method: TT::GUI::Control.add_event
+#    * Added method: TT::GUI::Control.call_event
+#    * Added method: TT::GUI::Control.positioned?
+#    * Added method: TT::GUI::Control.properties
+#    * Added method: TT::GUI::ContainerElement.add_controls_to_webdialog
+#    * Added method: TT::GUI::ContainerElement.get_control_by_ui_id
+#    * Added methods: TT::GUI::Listbox
+#    * Added method: TT::GUI::Window.add_action_callback
+#    * Added method: TT::GUI::Window.add_control_to_webdialog
+#    * Added method: TT::GUI::Window.set_client_size
+#    * Added method: TT::System.is_windows?
+#    * Changed: TT::Gizmo::Manipulator
+#    * Changed: TT::GUI::Inputbox now inherits from TT::GUI::ToolWindow
+#    * Changed: TT::GUI::Inputbox.add_control accepts a +key+ argument a control id.
+#    * Changed: TT::GUI::Inputbox.prompt returns a Hash instead of Array.
+#    * Changed: TT::UV_Plane
+#    * Fixed: TT::JSON.to_s - Now handles Symbols as values.
+#    * Plus lots lots more - lots track of it all.
+#
+# 2.4.0 - 22.09.2010
+#    * Added module: TT::Binary
+#    * Added module: TT::GUI
+#    * Added class:  TT::GUI::Window
+#    * Added class:  TT::GUI::Inputbox
+#    * Added class:  TT::JSON
+#    * Added module: TT::System
+#    * Added module: TT::Locale
+#    * Added module: TT::Cursor
+#
+# 2.3.0 - 08.09.2010
+#    * Added method: TT::Geom3d.spiral_sphere
+#    * Fixed: TT::Ray.test
+#
+# 2.2.0 - 06.09.2010
+#    * Added module: TT::Bounds
+#
+# 2.1.1 - 04.09.2010
+#    * Fixed bug: Ray.test (Workaround for SU8.0 bug)
+#
+# 2.1.0 - 03.09.2010
+#    * Added module: TT::Selection
+#    * Added module: TT::UVQ
+#    * Added class:  TT::UV_Plane
+#    * Added class:  TT::Gizmo::Manipulator
+#    * Added method: TT::Entities.bounds
+#    * Fixed: TT::Ray.test
+#
+# 2.0.0 - 01.09.2010
+#    * Initial Release
+#
+#-----------------------------------------------------------------------------
