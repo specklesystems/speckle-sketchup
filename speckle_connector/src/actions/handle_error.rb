@@ -19,7 +19,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
-        error_message = "Error: #{@error}\nBinding: #{@view_name}\nArgs: #{@args}\n"
+        error_message = "Error: #{@error}\nBinding: #{@view_name}\nAction:#{@action}\nArgs: #{@args}\n"
         error = {
           error: error_message
         }
