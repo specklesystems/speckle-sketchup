@@ -14,6 +14,9 @@ module SpeckleConnector
       # @return [Immutable::Hash{String=>Cards::SendCard}] send cards.
       attr_reader :send_cards
 
+      # @return [Immutable::Hash{String=>Cards::ReceiveCard}] receive cards.
+      attr_reader :receive_cards
+
       # @return [Immutable::Set] changed entity ids.
       attr_reader :changed_entity_ids
 
@@ -58,6 +61,7 @@ module SpeckleConnector
         @render_materials = Immutable::EmptyHash
         @definitions = Immutable::EmptyHash
         @send_cards = Immutable::EmptyHash
+        @receive_cards = Immutable::EmptyHash
         @relation = Relations::ManyToOneRelation.new
         @speckle_mapper_state = SpeckleMapperState.new
       end
@@ -146,6 +150,11 @@ module SpeckleConnector
       def with_send_card(send_card)
         new_send_cards = send_cards.put(send_card.id, send_card)
         with(:@send_cards => new_send_cards)
+      end
+
+      def with_receive_card(receive_card)
+        new_receive_cards = receive_cards.put(receive_card.id, receive_card)
+        with(:@receive_cards => new_receive_cards)
       end
 
       def with_empty_changed_object_ids

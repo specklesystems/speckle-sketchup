@@ -24,7 +24,7 @@ module SpeckleConnector
         @type_discriminator = 'SenderModelCard'
         self[:sendFilter] = send_filter
         self[:sendSettings] = send_settings
-
+        self[:type_discriminator] = @type_discriminator
       end
     end
   end
