@@ -188,6 +188,7 @@ jobs:
       - run:
           name: Checkout branch
           command: |
+            cd speckle-sharp-ci-tools
             git checkout sketchup/mac-installer
       - persist_to_workspace:
           root: ./
