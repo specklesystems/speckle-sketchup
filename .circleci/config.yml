@@ -130,8 +130,7 @@ jobs:
       - run:
           name: Zip Connector files
           command: |
-            cd "speckle_connector/vue_ui"
-            zip -r << parameters.slug >>-mac.zip "./"
+            zip -r << parameters.slug >>-mac.zip "./speckle_connector" "./speckle_connector.rb"
             # Copy installer files
       - run:
           name: Copy files to installer
