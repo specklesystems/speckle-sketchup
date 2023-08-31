@@ -22,35 +22,6 @@ jobs:
           root: ./
           paths:
             - speckle_connector/vue_ui
-            - patch_version.py
-
-  patch-version:
-    executor:
-      name: win/default # comes with python 3.7.3
-      shell: cmd.exe
-    parameters:
-      slug:
-        type: string
-        default: ""
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ./
-      - run:
-          name: Set Environment Variable
-          shell: powershell.exe
-          command: |
-            $tag = if([string]::IsNullOrEmpty($env:CIRCLE_TAG)) { "2.0.999" } else { $env:CIRCLE_TAG }
-            $semver = if($tag.Contains('/')) {$tag.Split("/")[0] } else { $tag }
-            $ver = if($semver.Contains('-')) {$semver.Split("-")[0] } else { $semver }
-            $version = "$($ver).$($env:WORKFLOW_NUM)"
-            python patch_version.py $semver
-          environment:
-            WORKFLOW_NUM: << pipeline.number >>
-      - persist_to_workspace:
-          root: ./
-          paths:
-            - speckle_connector/vue_ui
 
   build-connector: # Reusable job for basic connectors
     executor:
@@ -70,6 +41,17 @@ jobs:
           command: |
             echo $env:PFX_B64 > "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.txt"
             certutil -decode "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.txt" "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.pfx"
+      - run:
+          name: Set Environment Variable
+          shell: powershell.exe
+          command: |
+            $tag = if([string]::IsNullOrEmpty($env:CIRCLE_TAG)) { "2.0.999" } else { $env:CIRCLE_TAG }
+            $semver = if($tag.Contains('/')) {$tag.Split("/")[0] } else { $tag }
+            $ver = if($semver.Contains('-')) {$semver.Split("-")[0] } else { $semver }
+            $version = "$($ver).$($env:WORKFLOW_NUM)"
+            python patch_version.py $semver
+          environment:
+            WORKFLOW_NUM: << pipeline.number >>
       - run:
           name: Build Installer
           command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\sketchup.iss /Sbyparam=$p
@@ -154,19 +136,11 @@ workflows:
             tags:
               only: /.*/
 
-      - patch-version:
-          slug: sketchup
-          requires:
-            - build-ui
-          filters:
-            tags:
-              only: /.*/
-
       - build-connector:
           slug: sketchup
           requires:
             - get-ci-tools
-            - patch-version
+            - build-ui
           filters:
             tags:
               only: /.*/
