@@ -248,6 +248,7 @@ workflows:
           filters:
             tags:
               only: /.*/
+          installername: SpeckleSketchUpInstall
 
       - deploy-manager2:
           context: do-spaces-speckle-releases
