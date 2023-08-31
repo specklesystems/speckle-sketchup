@@ -136,7 +136,7 @@ jobs:
           name: Copy files to installer
           command: |
                   mkdir -p speckle-sharp-ci-tools/Mac/<< parameters.installername >>/.installationFiles/
-                  cp speckle_connector/vue_ui/<< parameters.slug >>-mac.zip speckle-sharp-ci-tools/Mac/<<parameters.installername>>/.installationFiles
+                  cp << parameters.slug >>-mac.zip speckle-sharp-ci-tools/Mac/<<parameters.installername>>/.installationFiles
       # Create installer
       - run:
           name: Exit if External PR
