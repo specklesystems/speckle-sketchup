@@ -124,7 +124,7 @@ jobs:
             SEMVER=$(echo "$TAG" | sed -e 's/\/[a-zA-Z-]*//')
             VER=$(echo "$SEMVER" | sed -e 's/-.*//')
             VERSION=$(echo $VER.$WORKFLOW_NUM)
-            python patch_version.py $SEMVER
+            python3 patch_version.py $SEMVER
           environment:
             WORKFLOW_NUM: << pipeline.number >>
       - run:
