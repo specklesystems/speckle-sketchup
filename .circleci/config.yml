@@ -80,8 +80,6 @@ jobs:
     macos:
       xcode: 12.5.1
     parameters:
-      slnname:
-        type: string
       projname:
         type: string
         default: ""
