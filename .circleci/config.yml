@@ -119,7 +119,6 @@ jobs:
             mkdir -p speckle-sharp-ci-tools/Installers/<< parameters.slug >>
       - run:
           name: Set Environment Variable
-          shell: powershell.exe
           command: |
             $tag = if([string]::IsNullOrEmpty($env:CIRCLE_TAG)) { "2.0.999" } else { $env:CIRCLE_TAG }
             $semver = if($tag.Contains('/')) {$tag.Split("/")[0] } else { $tag }
