@@ -102,7 +102,7 @@ jobs:
         type: string
         default: ""
     steps:
-      - cached-checkout
+      - checkout
       - attach_workspace:
           at: ./
       - run:
