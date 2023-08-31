@@ -51,7 +51,7 @@ jobs:
           paths:
             - speckle_connector/vue_ui
 
-build-connector: # Reusable job for basic connectors
+  build-connector: # Reusable job for basic connectors
     executor:
       name: win/default # comes with python 3.7.3
       shell: cmd.exe
