@@ -22,6 +22,7 @@ jobs:
           root: ./
           paths:
             - speckle_connector/vue_ui
+            - patch_version.py
 
   patch-version:
     executor:
