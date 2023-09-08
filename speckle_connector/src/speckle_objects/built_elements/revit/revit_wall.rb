@@ -36,6 +36,27 @@ module SpeckleConnector
         end
         # rubocop:enable Metrics/ParameterLists
 
+        def self.to_native(state, wall, layer, entities, &convert_to_native)
+          obj = Other::DisplayValue.collect_definition_geometries(wall)
+          obj['name'] = Other::DisplayValue.get_definition_name(obj)
+
+          state, _definitions = Other::BlockDefinition.to_native(
+            state, obj, layer, entities, &convert_to_native
+          )
+
+          definition = state.sketchup_state.sketchup_model.definitions[Other::BlockDefinition.get_definition_name(obj)]
+
+          Other::BlockInstance.find_and_erase_existing_instance(definition, obj['id'], obj['applicationId'])
+          t_arr = obj['transform']
+          transform = t_arr.nil? ? Geom::Transformation.new : Other::Transform.to_native(t_arr, obj['units'])
+          instance = entities.add_instance(definition, transform)
+          instance.name = Other::DisplayValue.get_instance_name(obj['name']) unless obj['name'].nil?
+          instance.layer = layer unless layer.nil?
+          # Align instance axes that created from display value. (without any transform)
+          # BlockInstance.align_instance_axes(instance)
+          return state, [instance, definition]
+        end
+
         # @param face [Sketchup::Face] face to get speckle schema for wall.
         def self.to_speckle_schema(speckle_state, face, units, global_transformation: nil)
           base_line = Geometry::Line.base_line_from_face(face, units, global_transformation: global_transformation)

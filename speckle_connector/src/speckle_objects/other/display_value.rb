@@ -83,13 +83,19 @@ module SpeckleConnector
 
           elements = obj['elements'] || obj['@elements']
 
-          if !elements.nil? && elements.is_a?(Array)
-            elements.each do |element|
-              # Mullions is a special case here, they are extracted as base object with @displayValue from revit..
-              if element['@displayValue'].nil?
-                obj['geometry'].append(element)
-              else
-                obj['geometry'] += element['@displayValue']
+          # if only elements are there then assign only elements, there are some cases that RevitWalls can only
+          # have elements instead of display value
+          if obj['geometry'].nil? && !elements.nil?
+            obj['geometry'] = elements
+          else
+            if !elements.nil? && elements.is_a?(Array)
+              elements.each do |element|
+                # Mullions is a special case here, they are extracted as base object with @displayValue from revit..
+                if element['@displayValue'].nil?
+                  obj['geometry'].append(element)
+                else
+                  obj['geometry'] += element['@displayValue']
+                end
               end
             end
           end

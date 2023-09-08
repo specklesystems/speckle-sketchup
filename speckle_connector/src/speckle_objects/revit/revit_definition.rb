@@ -15,8 +15,10 @@ module SpeckleConnector
             family = def_obj['family']
             type = def_obj['type']
             category = def_obj['category']
+            element_id = def_obj['elementId']
+            id = def_obj['id']
 
-            return "#{family}-#{type}-#{category}-#{def_obj['elementId']}"
+            return "#{family}-#{type}-#{category}-#{element_id}-#{id}"
           end
 
           def self.to_native(state, definition, layer, entities, &convert_to_native)
