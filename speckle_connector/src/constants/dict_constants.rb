@@ -6,6 +6,7 @@ module SpeckleConnector
   SPECKLE_SCHEMA = 'Speckle_Schema'
 
   SPECKLE_SEND_CARDS = 'Speckle_Send_Cards'
+  SPECKLE_RECEIVE_CARDS = 'Speckle_Receive_Cards'
 
   SPECKLE_ID = 'speckle_id'
   SPECKLE_TYPE = 'speckle_type'
