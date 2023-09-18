@@ -7,8 +7,8 @@ require_relative '../../constants/dict_constants'
 module SpeckleConnector
   module SketchupModel
     module Dictionary
-      # Read and write attributes for Speckle send cards on SketchUp model.
-      class SendCardDictionaryHandler < DictionaryHandler
+      # Read and write attributes for Speckle model cards on SketchUp model.
+      class ModelCardDictionaryHandler < DictionaryHandler
         # @param send_card [Cards::SendCard] card to save model
         # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
         def self.save_card_to_model(send_card, sketchup_model)
@@ -32,6 +32,17 @@ module SpeckleConnector
           end
         end
 
+        def self.remove_card_dict(sketchup_model, data)
+          receive_cards_dict = receive_cards_dict(sketchup_model)
+          send_cards_dict = send_cards_dict(sketchup_model)
+          if receive_cards_dict && receive_cards_dict.attribute_dictionaries
+            receive_cards_dict.attribute_dictionaries.delete(data['id'])
+          end
+          if send_cards_dict && send_cards_dict.attribute_dictionaries
+            send_cards_dict.attribute_dictionaries.delete(data['id'])
+          end
+        end
+
         def self.get_card_dict(sketchup_model, data)
           send_cards_dict = send_cards_dict(sketchup_model)
           send_cards_dict.attribute_dictionaries.find { |dict| dict.name == data['id'] }
@@ -47,7 +58,6 @@ module SpeckleConnector
           items_dict = filters_dict.attribute_dictionaries.find { |dict| dict.name == 'items' }
           items_dict.attribute_dictionaries.find { |dict| dict.name == data['filterId'] }
         end
-
 
         def self.update_filter(sketchup_model, data, value)
           filter_dict = get_card_filters_dict(sketchup_model, data)
@@ -92,9 +102,18 @@ module SpeckleConnector
           end
         end
 
+        # @param sketchup_model [Sketchup::Model] sketchup model to get send cards.
+        # @return [Sketchup::AttributeDictionary, NilClass] attribute dictionary
         def self.send_cards_dict(sketchup_model)
           speckle_dict = sketchup_model.attribute_dictionary('Speckle', true)
           speckle_dict.attribute_dictionary(SPECKLE_SEND_CARDS, true)
+        end
+
+        # @param sketchup_model [Sketchup::Model] sketchup model to get receive cards.
+        # @return [Sketchup::AttributeDictionary, NilClass] attribute dictionary
+        def self.receive_cards_dict(sketchup_model)
+          speckle_dict = sketchup_model.attribute_dictionary('Speckle', true)
+          speckle_dict.attribute_dictionary(SPECKLE_RECEIVE_CARDS, true)
         end
 
         def self.get_cards_from_dict(sketchup_model)

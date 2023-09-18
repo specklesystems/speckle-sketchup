@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../action'
-require_relative '../../sketchup_model/dictionary/send_card_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector
   module Actions

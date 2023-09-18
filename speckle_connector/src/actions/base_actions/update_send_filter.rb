@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../action'
-require_relative '../../sketchup_model/dictionary/send_card_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector
   module Actions
@@ -10,7 +10,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, data, value)
-        SketchupModel::Dictionary::SendCardDictionaryHandler.update_filter(state.sketchup_state.sketchup_model, data, value)
+        SketchupModel::Dictionary::ModelCardDictionaryHandler.update_filter(state.sketchup_state.sketchup_model, data, value)
 
         js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('updateSendFilter', js_script)

@@ -152,8 +152,18 @@ module SpeckleConnector
         with(:@send_cards => new_send_cards)
       end
 
+      def without_send_card(id)
+        new_send_cards = send_cards.delete(id)
+        with(:@send_cards => new_send_cards)
+      end
+
       def with_receive_card(receive_card)
         new_receive_cards = receive_cards.put(receive_card.id, receive_card)
+        with(:@receive_cards => new_receive_cards)
+      end
+
+      def without_receive_card(id)
+        new_receive_cards = receive_cards.delete(id)
         with(:@receive_cards => new_receive_cards)
       end
 

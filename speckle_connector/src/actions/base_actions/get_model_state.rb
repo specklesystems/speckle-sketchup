@@ -2,7 +2,7 @@
 
 require_relative '../action'
 require_relative '../../filters/send_filters'
-require_relative '../../sketchup_model/dictionary/send_card_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector
   module Actions
@@ -11,7 +11,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id)
-        send_cards_hash = SketchupModel::Dictionary::SendCardDictionaryHandler
+        send_cards_hash = SketchupModel::Dictionary::ModelCardDictionaryHandler
                           .get_cards_from_dict(state.sketchup_state.sketchup_model)
 
         send_cards = send_cards_hash.collect do |id, card|

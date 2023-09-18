@@ -6,7 +6,7 @@ require_relative '../../cards/receive_card'
 require_relative '../../filters/send/everything_filter'
 require_relative '../../filters/send/selection_filter'
 require_relative '../../filters/send_filters'
-require_relative '../../sketchup_model/dictionary/send_card_dictionary_handler'
+require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector
   module Actions
@@ -20,7 +20,7 @@ module SpeckleConnector
                                                 data['projectId'], data['projectName'],
                                                 data['modelId'], data['modelName'],
                                                 data['referencedObject'])
-          SketchupModel::Dictionary::SendCardDictionaryHandler
+          SketchupModel::Dictionary::ModelCardDictionaryHandler
             .save_card_to_model(receive_card, state.sketchup_state.sketchup_model)
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)
           state = state.with_speckle_state(new_speckle_state)
@@ -33,7 +33,7 @@ module SpeckleConnector
         send_card = Cards::SendCard.new(data['id'], data['accountId'], data['projectId'], data['modelId'],
                                         send_filter, {})
 
-        SketchupModel::Dictionary::SendCardDictionaryHandler
+        SketchupModel::Dictionary::ModelCardDictionaryHandler
           .save_card_to_model(send_card, state.sketchup_state.sketchup_model)
 
         new_speckle_state = state.speckle_state.with_send_card(send_card)
