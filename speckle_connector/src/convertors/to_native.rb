@@ -56,6 +56,7 @@ module SpeckleConnector
       BLOCK_DEFINITION = OTHER::BlockDefinition
       BLOCK_INSTANCE = OTHER::BlockInstance
       REVIT_INSTANCE = REVIT::Other::RevitInstance
+      REVIT_WALL = BUILTELEMENTS::RevitWall
       RENDER_MATERIAL = OTHER::RenderMaterial
       DISPLAY_VALUE = OTHER::DisplayValue
       VIEW3D = BUILTELEMENTS::View3d
@@ -77,6 +78,7 @@ module SpeckleConnector
         Objects.Other.RenderMaterial
         Objects.Other.Instance:Objects.Other.BlockInstance
         Objects.BuiltElements.View:Objects.BuiltElements.View3D
+        Objects.BuiltElements.Wall:Objects.BuiltElements.Revit.RevitWall
         Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
         Speckle.Core.Models.Collection
@@ -294,6 +296,7 @@ module SpeckleConnector
         OBJECTS_OTHER_REVIT_REVITINSTANCE => REVIT_INSTANCE.method(:to_native),
         OBJECTS_OTHER_RENDERMATERIAL => RENDER_MATERIAL.method(:to_native),
         OBJECTS_BUILTELEMENTS_VIEW3D => VIEW3D.method(:to_native),
+        OBJECTS_BUILTELEMENTS_REVIT_WALL => REVIT_WALL.method(:to_native),
         OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
         OBJECTS_BUILTELEMENTS_NETWORK => BUILTELEMENTS::Network.method(:to_native),
         OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
