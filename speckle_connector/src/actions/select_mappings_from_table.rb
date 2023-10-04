@@ -14,7 +14,7 @@ module SpeckleConnector
         # Clear first selection
         state.sketchup_state.sketchup_model.selection.clear
 
-        # Flat entities to clear mappings
+        # Flat entities to select mapped elements
         flat_entities = SketchupModel::Query::Entity.flat_entities(state.sketchup_state.sketchup_model.entities)
 
         # Collect entity ids to clear mappings
