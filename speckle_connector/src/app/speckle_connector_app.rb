@@ -45,6 +45,12 @@ module SpeckleConnector
         update_state!(Actions::ClearQueue)
       end
 
+      def instant_message_sender(message)
+        ui_controller.user_interfaces.each_value do |dialog|
+          dialog.execute_script(message)
+        end
+      end
+
       # This is the only function application state will be switched by calling upcoming action with it's parameters
       #  if any.
       def update_state!(action, *parameters)
