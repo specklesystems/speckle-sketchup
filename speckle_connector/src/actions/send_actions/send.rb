@@ -6,6 +6,7 @@ require_relative '../../convertors/units'
 require_relative '../../convertors/to_speckle'
 require_relative '../../operations/send'
 require_relative '../../ext/TT_Lib2/progressbar'
+require_relative '../../ext/worker'
 
 module SpeckleConnector
   module Actions
@@ -18,26 +19,11 @@ module SpeckleConnector
         account = Accounts.get_account_by_id(model_card.account_id)
         converter = Converters::ToSpeckle.new(state, model_card_id, model_card.send_filter)
 
-        # selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
-        # selected_object_ids.each_with_index do |selection_id, i|
-        #   progress = i.to_f / selected_object_ids.length.to_f
-        #   sender_progress_args = {
-        #     id: model_card_id,
-        #     status: selection_id,
-        #     progress: progress
-        #   }
-        #   state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
-        #   sleep 0.1
-        # end
-
-        # update_test(state)
-        UI.start_timer(0, false) do
-          puts 'Conversion starting'
-          sleep 0.1
-        end
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
                                                                                    state.user_state.preferences)
+
+        update_test(state)
 
         puts("converted #{base.count} objects for stream #{@stream_id}")
 
@@ -84,15 +70,15 @@ module SpeckleConnector
         dialog.set_html(html)
         dialog.show
 
-        action = Proc.new do
-          js_command = "document.getElementById('hi').innerHTML = '<b>#test</b>'"
+        action = Proc.new do |status|
+          js_command = "document.getElementById('hi').innerHTML = '<b>#{status}</b>'"
           log_js_command = "console.log('test')"
           dialog.execute_script(js_command)
           dialog.execute_script(log_js_command)
         end
 
         selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
-        state.worker.add_jobs(1000.times.to_a)
+        state.worker.add_jobs(1000.times.to_a.map { |i| Job.new(i, &action) })
         state.worker.do_work(Time.now.to_f, &action)
       end
     end

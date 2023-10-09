@@ -48,7 +48,28 @@ module SpeckleConnector
               return state, []
             end
 
-            def self.from_sketchup_model(sketchup_model, speckle_state, units, preferences, &convert)
+            def self.to_native(state, model_collection, layer, entities, &convert_to_native)
+              elements = model_collection['elements']
+              views = model_collection['@Views']
+              if views
+                views.each do |view|
+                  new_state, _converted_entities = convert_to_native.call(state, view, layer, entities)
+                  state = new_state
+                end
+              end
+
+              elements.each do |element|
+                new_state, _converted_entities = convert_to_native.call(state, element, layer, entities)
+                state = new_state
+              end
+
+              active_layer = model_collection['active_layer']
+              state.sketchup_state.sketchup_model.active_layer = active_layer unless active_layer.nil?
+
+              return state, []
+            end
+
+            def self.from_sketchup_model(sketchup_model, speckle_state, units, preferences, state, model_card_id, &convert)
               model_collection = ModelCollection.new(
                 name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,
                 application_id: sketchup_model.guid
@@ -64,7 +85,18 @@ module SpeckleConnector
               # Add layer collections.
               model_collection[:elements] += LayerCollection.create_layer_collections(sketchup_model)
 
+              count = 0
               sketchup_model.selection.each do |entity|
+
+                count += 1
+                progress = count / sketchup_model.selection.count.to_f
+                sender_progress_args = {
+                  id: model_card_id,
+                  status: progress == 1 ? 'Completed' : 'Converting',
+                  progress: progress
+                }
+                state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
+
                 layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state

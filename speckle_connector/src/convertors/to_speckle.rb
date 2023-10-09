@@ -59,25 +59,8 @@ module SpeckleConnector
       def convert_selection_to_base(preferences)
         convert = method(:convert)
 
-        @count += 1
-        progress = @count / sketchup_model.selection.count.to_f
-        new_speckle_state = nil
-        model_collection = nil
-        UI.start_timer(0, false) do
-          sender_progress_args = {
-            id: @stream_id,
-            status: 'Converting',
-            progress: progress
-          }
-          @state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
-
-
-        end
-
         new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, speckle_state,
-                                                                                   @units, preferences, &convert)
-
-
+                                                                                   @units, preferences, state, @stream_id, &convert)
 
         return new_speckle_state, model_collection
       end

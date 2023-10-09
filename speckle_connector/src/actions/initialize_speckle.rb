@@ -16,7 +16,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, observers, instant_message_sender)
-        worker = SpeckleConnector::Worker.new([])
+        worker = SpeckleConnector::Worker.new()
         attach_app_observer!(observers[APP_OBSERVER])
         accounts = SpeckleConnector::Accounts.load_accounts
         speckle_state = States::SpeckleState.new(accounts, observers, {}, {})
