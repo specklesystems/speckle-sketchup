@@ -33,26 +33,51 @@ module SpeckleConnector
       # @return [TT::ProgressBar]
       attr_reader :progress_bar
 
+      attr_reader :entity_count
+
       attr_reader :send_filter
+
+      attr_reader :worker
+
+      attr_writer :count
 
       def initialize(state, stream_id, send_filter)
         super(state, stream_id)
+        @count = 0
         @send_filter = send_filter
         model = state.sketchup_state.sketchup_model
-        entity_count = if send_filter.name == 'Selection'
-                         TT::Model.count_unique_entity(model)
-                       else
-                         TT::Entities.count_unique_entity(model.selection)
-                       end
-        @progress_bar = TT::Progressbar.new(entity_count, 'Converting to Speckle')
+        @entity_count = if send_filter.name == 'Selection'
+                          TT::Model.count_unique_entity(model)
+                        else
+                          TT::Entities.count_unique_entity(model.selection)
+                        end
+        @progress_bar = TT::Progressbar.new(@entity_count, 'Converting to Speckle')
       end
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
         convert = method(:convert)
+
+        @count += 1
+        progress = @count / sketchup_model.selection.count.to_f
+        new_speckle_state = nil
+        model_collection = nil
+        UI.start_timer(0, false) do
+          sender_progress_args = {
+            id: @stream_id,
+            status: 'Converting',
+            progress: progress
+          }
+          @state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
+
+
+        end
+
         new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, speckle_state,
                                                                                    @units, preferences, &convert)
+
+
 
         return new_speckle_state, model_collection
       end

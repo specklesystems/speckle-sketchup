@@ -17,10 +17,18 @@ module SpeckleConnector
       # @return [States::UserState] the user specific part of the states
       attr_reader :user_state
 
-      def initialize(user_state, speckle_state, sketchup_state, is_connected)
+      # @return [Sketchup::Worker] worker to run operations with UI.timer(0, false)
+      attr_reader :worker
+
+      # @return [Proc] call to send message immediately to ui.
+      attr_reader :instant_message_sender
+
+      def initialize(user_state, speckle_state, sketchup_state, is_connected, worker, &instant_message_sender)
         @speckle_state = speckle_state
         @is_connected = is_connected
         @sketchup_state = sketchup_state
+        @worker = worker
+        @instant_message_sender = instant_message_sender
         super(user_state)
       end
 

@@ -7,6 +7,23 @@ module SpeckleConnector
       # Queries for entity.
       class Entity
         class << self
+          def tree_entities(entities_to_get_tree,
+                            classes = [Sketchup::Edge, Sketchup::Face, Sketchup::ComponentInstance,
+                                       Sketchup::Group, Sketchup::ComponentDefinition],
+                            tree = [])
+            entities_to_get_tree.each do |entity|
+              if classes.include?(entity.class)
+                if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+                  sub_tree = tree_entities(entity.definition.entities, classes, [])
+                  tree.append([entity.persistent_id, sub_tree])
+                else
+                  tree.append(entity.persistent_id)
+                end
+              end
+            end
+            tree
+          end
+
           # Creates flat list for entities that defined in classes property. It searches from top to bottom to collect
           # entities.
           # @param entities_to_flat [Sketchup::Entities] entities to flat their children, grandchildren and so on..

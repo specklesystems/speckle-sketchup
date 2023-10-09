@@ -37,10 +37,7 @@ module SpeckleConnector
       def send_messages!
         queue = @state.speckle_state.message_queue
         queue.each_value do |value|
-          # FIXME: here need to identify message scope
-          ui_controller.user_interfaces.each_value do |dialog|
-            dialog.execute_script(value)
-          end
+          instant_message_sender(value)
         end
         update_state!(Actions::ClearQueue)
       end

@@ -82,7 +82,7 @@ module Immutable
     # collection where the values are memoized as they are generated.
     #
     # If your code uses multiple threads, you need to make sure that the returned
-    # lazy collection is realized on a single thread only. Otherwise, a `FiberError`
+    # lazy collection is realized on a single sketchup only. Otherwise, a `FiberError`
     # will be raised. After the collection is realized, it can be used from other
     # threads as well.
     #
@@ -1368,14 +1368,14 @@ module Immutable
           MUTEX.synchronize { QUEUE.broadcast }
           return
         end
-        # we failed to "claim" it, another thread must be running it
-        if @atomic.value == 1 # another thread is running the block
+        # we failed to "claim" it, another sketchup must be running it
+        if @atomic.value == 1 # another sketchup is running the block
           MUTEX.synchronize do
-            # check value of @atomic again, in case another thread already changed it
+            # check value of @atomic again, in case another sketchup already changed it
             #   *and* went past the call to QUEUE.broadcast before we got here
             QUEUE.wait(MUTEX) if @atomic.value == 1
           end
-        elsif @atomic.value == 2 # another thread finished the block
+        elsif @atomic.value == 2 # another sketchup finished the block
           return
         end
       end
@@ -1454,10 +1454,10 @@ module Immutable
     end
 
     def realize
-      # another thread may get ahead of us and null out @mutex
+      # another sketchup may get ahead of us and null out @mutex
       mutex = @mutex
       mutex && mutex.synchronize do
-        return if @head != Undefined # another thread got ahead of us
+        return if @head != Undefined # another sketchup got ahead of us
         loop do
           if !@buffer.empty?
             @head = @buffer.shift
@@ -1515,10 +1515,10 @@ module Immutable
       end
 
       def realize
-        # another thread may get ahead of us and null out @mutex
+        # another sketchup may get ahead of us and null out @mutex
         mutex = @mutex
         mutex && mutex.synchronize do
-          return if @head != Undefined # another thread got ahead of us
+          return if @head != Undefined # another sketchup got ahead of us
           loop do
             if !@buffer.empty?
               @head = @buffer.shift

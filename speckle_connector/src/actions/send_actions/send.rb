@@ -16,7 +16,25 @@ module SpeckleConnector
       def self.update_state(state, resolve_id, model_card_id)
         model_card = state.speckle_state.send_cards[model_card_id]
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, @stream_id, model_card.send_filter)
+        converter = Converters::ToSpeckle.new(state, model_card_id, model_card.send_filter)
+
+        # selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
+        # selected_object_ids.each_with_index do |selection_id, i|
+        #   progress = i.to_f / selected_object_ids.length.to_f
+        #   sender_progress_args = {
+        #     id: model_card_id,
+        #     status: selection_id,
+        #     progress: progress
+        #   }
+        #   state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
+        #   sleep 0.1
+        # end
+
+        # update_test(state)
+        UI.start_timer(0, false) do
+          puts 'Conversion starting'
+          sleep 0.1
+        end
         new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
                                                                                    state.user_state.preferences)
@@ -43,6 +61,39 @@ module SpeckleConnector
         }
         js_script = "sendBinding.emit('sendViaBrowser', #{args.to_json})"
         state.with_add_queue_js_command('sendViaBrowser', js_script)
+      end
+
+      def self.update_test(state)
+        dialog = UI::HtmlDialog.new(
+          {
+            :dialog_title => 'Dialog Example',
+            :preferences_key => 'com.sample.plugin',
+            :scrollable => true,
+            :resizable => true,
+            :width => 600,
+            :height => 400,
+            :left => 10,
+            :top => 10,
+            :min_width => 50,
+            :min_height => 50,
+            :max_width =>1000,
+            :max_height => 1000,
+            :style => UI::HtmlDialog::STYLE_DIALOG
+          })
+        html = '<div id="hi"><b>Hello world!</b></div>'
+        dialog.set_html(html)
+        dialog.show
+
+        action = Proc.new do
+          js_command = "document.getElementById('hi').innerHTML = '<b>#test</b>'"
+          log_js_command = "console.log('test')"
+          dialog.execute_script(js_command)
+          dialog.execute_script(log_js_command)
+        end
+
+        selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
+        state.worker.add_jobs(1000.times.to_a)
+        state.worker.do_work(Time.now.to_f, &action)
       end
     end
   end
