@@ -34,6 +34,8 @@ module SpeckleConnector
           state.sketchup_state.sketchup_model.selection.add(entity)
         end
 
+        state.sketchup_state.sketchup_model.active_view.zoom(state.sketchup_state.sketchup_model.selection)
+
         # Resolve promise
         js_script = "baseBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('highlightModel', js_script)
