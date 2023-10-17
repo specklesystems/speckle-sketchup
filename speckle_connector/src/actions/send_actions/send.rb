@@ -23,7 +23,7 @@ module SpeckleConnector
         id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
                                                                                    state.user_state.preferences)
 
-        update_test(state)
+        # update_test(state)
 
         puts("converted #{base.count} objects for stream #{@stream_id}")
 

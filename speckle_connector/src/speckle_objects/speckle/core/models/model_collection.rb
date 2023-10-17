@@ -87,6 +87,13 @@ module SpeckleConnector
 
               count = 0
               sketchup_model.selection.each do |entity|
+                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
+                new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
+                speckle_state = new_speckle_state
+                unless converted_object_with_entity.nil?
+                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
+                  layer_collection[:elements].append(converted_object_with_entity)
+                end
 
                 count += 1
                 progress = count / sketchup_model.selection.count.to_f
@@ -96,14 +103,6 @@ module SpeckleConnector
                   progress: progress
                 }
                 state.instant_message_sender.call("sendBinding.emit('senderProgress', #{sender_progress_args.to_json})")
-
-                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
-                new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
-                speckle_state = new_speckle_state
-                unless converted_object_with_entity.nil?
-                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
-                  layer_collection[:elements].append(converted_object_with_entity)
-                end
               end
 
               return speckle_state, model_collection
