@@ -23,7 +23,7 @@
 
           <v-card>
             <v-card-title class="text-h5">
-              Create a New Stream
+              {{ `Create a New ${isFE2 ? 'Project' : 'Stream'}` }}
             </v-card-title>
             <v-container class="px-6" pb-0>
               <!--
@@ -56,7 +56,7 @@
                   hide-details
                   dense
                   flat
-                  placeholder="Stream Name (Optional)"
+                  :placeholder="`${isFE2 ? 'Project' : 'Stream'} Name (Optional)`"
               />
               <v-text-field
                   v-model="description"
@@ -68,7 +68,7 @@
               />
               <v-switch
                   v-model="privateStream"
-                  :label="'Private Stream'"
+                  :label="`Private ${isFE2 ? 'Project' : 'Stream'}`"
               ></v-switch>
             </v-container>
 

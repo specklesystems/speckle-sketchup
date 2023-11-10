@@ -3,7 +3,7 @@
   <v-dialog v-model="showCreateBranch">
     <template #activator="{ on: dialog, attrs }">
       <v-btn
-          v-tooltip="`Create ${branchTooltipName}`"
+          v-tooltip="`Create ${isFE2 ? 'Model' : 'Branch'}`"
           icon x-small class="ml-0 mr-1"
           v-bind="attrs"
           v-on="{...dialog}"
@@ -15,10 +15,10 @@
     </template>
     <v-card>
       <v-card-title class="text-h5 mb-1">
-        Create a New Branch
+        {{ `Create a New ${isFE2 ? 'Model' : 'Branch'}` }}
       </v-card-title>
       <v-card-subtitle class="py-0 my-0 font-italic">
-        under {{ streamName }} stream
+        {{ `under ${streamName} ${isFE2 ? 'project' : 'stream'}` }}
       </v-card-subtitle>
       <v-container class="px-6" pb-0>
         <v-text-field
@@ -27,7 +27,7 @@
             hide-details
             dense
             flat
-            placeholder="Branch Name"
+            :placeholder="`${isFE2 ? 'Model' : 'Branch'} Name`"
         />
         <v-text-field
             v-model="description"
@@ -75,6 +75,10 @@ export default {
     streamName: {
       type: String,
       default: null
+    },
+    isFE2: {
+      type: Boolean,
+      default: false
     },
     branchTooltipName: {
       type: String,

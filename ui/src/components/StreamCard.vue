@@ -66,7 +66,11 @@
         <template #activator="{ on, attrs }">
           <v-slide-x-transition>
             <div v-show="hover">
-              <create-branch-dialog :branch-tooltip-name="branchText" :stream-name="stream.name" :stream-id="streamId"/>
+              <create-branch-dialog
+                  :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                  :stream-name="stream.name"
+                  :stream-id="streamId"
+              />
             </div>
           </v-slide-x-transition>
           <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
@@ -207,7 +211,8 @@ export default {
       diffing: false,
       streamText: '',
       branchText: '',
-      commitText: ''
+      commitText: '',
+      preferences: {}
     }
   },
   apollo: {
@@ -291,6 +296,7 @@ export default {
   mounted() {
     bus.$on('update-preferences', async (preferences) => {
       const pref = JSON.parse(preferences)
+      this.preferences = pref
       this.streamText = pref.user.fe2 ? 'Project' : 'Stream'
       this.branchText = pref.user.fe2 ? 'Model' : 'Branch'
       this.commitText = pref.user.fe2 ? 'Version' : 'Commit'
