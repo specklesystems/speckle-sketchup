@@ -16,13 +16,24 @@
         Settings
       </v-card-title>
       <v-container class="px-6" pb-0>
-        <!-- Switch Theme -->
+
+        <!-- User preferences -->
         <div class="sm1 mt-3">User Preferences</div>
         <v-divider class="mb-2"/>
+
+        <!-- Switch Theme -->
         <v-btn icon small class="mx-1" @click="switchTheme">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
         <span>Color Mode</span>
+
+        <!-- FE2 -->
+        <v-switch
+            :input-value="fe2"
+            class="pt-3 mt-n2 mb-n7"
+            :label="'FE2'"
+            @change="fe2Handler"
+        />
 
         <!-- Register objects as Speckle Entity on send/receive -->
         <v-switch
@@ -133,6 +144,7 @@ export default {
       includeComponentAttributes: this.preferences.model.include_component_entity_attributes,
       mergeCoplanarFaces: this.preferences.model.merge_coplanar_faces,
       diffing: this.preferences.user.diffing,
+      fe2: this.preferences.user.fe2,
       registerSpeckleEntity: this.preferences.user.register_speckle_entity
     }
   },
@@ -147,6 +159,7 @@ export default {
         this.includeComponentAttributes = newValue.model.include_component_entity_attributes
         this.mergeCoplanarFaces = newValue.model.merge_coplanar_faces
         this.diffing = newValue.user.diffing
+        this.fe2 = newValue.user.fe2
         this.registerSpeckleEntity = newValue.user.register_speckle_entity
       },
       deep: true,
@@ -161,6 +174,15 @@ export default {
     }
   },
   methods: {
+    fe2Handler(newValue){
+      this.fe2 = !!newValue
+      sketchup.exec({
+        name: "user_preferences_updated",
+        data: {preference_hash: "configSketchup", preference: "fe2", value: this.fe2}
+      })
+      this.$mixpanel.track('Connector Action', { name: 'Toggle FE2' })
+      sketchup.exec({name: "collect_preferences", data: {}})
+    },
     diffingHandler(newValue){
       this.diffing = !!newValue
       sketchup.exec({

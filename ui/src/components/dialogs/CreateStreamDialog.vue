@@ -16,7 +16,8 @@
                   left
               >
                 mdi-plus-circle
-              </v-icon>Create New Stream
+              </v-icon>
+              {{ `Create New ${isFE2 ? 'Project': 'Stream'}` }}
             </v-btn>
           </template>
 
@@ -169,6 +170,10 @@ export default {
     serverUrl: {
       type: String,
       default: null
+    },
+    isFE2: {
+      type: Boolean,
+      default: false
     }
   },
   data() {

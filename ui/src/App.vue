@@ -15,7 +15,7 @@
         >
           <v-tabs-slider class="mx-sm-1"></v-tabs-slider>
           <v-tab href="#streams">
-            {{"Streams"}}
+            {{ streamsText }}
           </v-tab>
           <v-tab href="#mapper">
             {{"Mapper"}}
@@ -88,7 +88,7 @@
               <v-text-field
                   v-model="streamSearchQuery"
                   prepend-inner-icon="mdi-magnify"
-                  label="Search streams"
+                  :label="searchText"
                   background-color="background"
                   hide-details
                   clearable
@@ -101,6 +101,7 @@
             </v-container>
             <create-stream-dialog
                 v-if="accounts().length !== 0"
+                :is-f-e2="preferences && preferences.user && preferences.user.fe2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
@@ -183,7 +184,9 @@ export default {
       createStreamByIdDialog: false,
       createStreamByIdText: "",
       preferences: {},
-      tab: "streams"
+      tab: "streams",
+      searchText: '',
+      streamsText: 'Streams'
     }
   },
   computed: {
@@ -209,8 +212,9 @@ export default {
     })
 
     bus.$on('update-preferences', async (preferences) => {
-      let prefs = JSON.parse(preferences)
-      this.preferences = prefs
+      this.preferences = JSON.parse(preferences)
+      this.searchText = this.preferences.user.fe2 ? 'Search projects' : 'Search streams'
+      this.streamsText = this.preferences.user.fe2 ? 'Projects' : 'Streams'
       this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
 

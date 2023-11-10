@@ -3,7 +3,7 @@
   <v-dialog v-model="showCreateBranch">
     <template #activator="{ on: dialog, attrs }">
       <v-btn
-          v-tooltip="'Create Branch'"
+          v-tooltip="`Create ${branchTooltipName}`"
           icon x-small class="ml-0 mr-1"
           v-bind="attrs"
           v-on="{...dialog}"
@@ -75,6 +75,10 @@ export default {
     streamName: {
       type: String,
       default: null
+    },
+    branchTooltipName: {
+      type: String,
+      default: ''
     }
   },
   data() {
