@@ -205,7 +205,7 @@ export default {
     },
     async getStream(){
       try {
-        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl)
+        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl, this.isFE2)
         let res = await this.$apollo.query({
           query: gql`
             query Stream($id: String!){
