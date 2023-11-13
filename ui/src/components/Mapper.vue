@@ -89,7 +89,7 @@
           </v-container>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <mapper-source :source-state="this.sourceState"/>
+          <mapper-source :stream-text="streamText" :branch-text="branchText" :source-state="this.sourceState"/>
         </v-expansion-panel-content>
       </v-expansion-panel>
 
@@ -300,6 +300,16 @@ global.mappedEntitiesUpdated = function (mappedEntities) {
 
 export default {
   name: "Mapper",
+  props: {
+    streamText: {
+      type: String,
+      default: ''
+    },
+    branchText: {
+      type: String,
+      default: ''
+    }
+  },
   components: {
     MapperSource: () => import('@/components/MapperSource.vue'),
     GlobalToast: () => import('@/components/GlobalToast'),
