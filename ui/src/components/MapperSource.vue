@@ -2,7 +2,7 @@
   <v-container class="pa-0">
     <v-autocomplete
         v-model="sourceStreamId"
-        label="Stream"
+        :label="streamText"
         :items="allStreamsList"
         item-text="name"
         item-value="id"
@@ -12,7 +12,7 @@
     <v-autocomplete
         v-model="sourceBranchId"
         class="pt-0 mb-n5"
-        label="Branch"
+        :label="branchText"
         :items="allBranchesList"
         :disabled="sourceStreamId === null"
         item-text="name"
@@ -63,6 +63,14 @@ export default {
   props: {
     streamSearchQuery: { type: String, default: null },
     sourceState: { type: String, default: 'Not Set' },
+    streamText: {
+      type: String,
+      default: ''
+    },
+    branchText: {
+      type: String,
+      default: ''
+    }
   },
   data() {
     return {

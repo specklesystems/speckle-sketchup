@@ -27,7 +27,7 @@
           elevation="0"
           @click="showMore"
         >
-          More Streams
+          {{ `More ${streamsText}` }}
         </v-btn>
       </div>
     </div>
@@ -64,7 +64,8 @@ export default {
   data() {
     return {
       showMoreEnabled: true,
-      savedStreams: []
+      savedStreams: [],
+      streamsText: ''
     }
   },
   computed: {
@@ -80,6 +81,14 @@ export default {
     }
   },
   mounted() {
+    bus.$on('update-preferences', async (preferences) => {
+      const pref = JSON.parse(preferences)
+      this.streamsText = pref.user.fe2 ? 'Projects' : 'Streams'
+    })
+
+    // Collect preferences to render UI according to it
+    sketchup.exec({name: "collect_preferences", data: {}})
+
     bus.$on("deactivate-diffing-except", (exceptedStreamId) => {
       this.savedStreams.forEach((streamId) => {
         if (streamId !== exceptedStreamId){
