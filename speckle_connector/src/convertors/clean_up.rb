@@ -22,6 +22,16 @@ module SpeckleConnector
         merged_faces(faces)
       end
 
+      def self.merge_coplanar_faces_2(faces)
+        edges = []
+        faces.each { |face| face.edges.each { |edge| edges << edge } }
+        edges.uniq!
+        edges.each { |edge| remove_edge_have_coplanar_faces(edge, faces, false) }
+        # Remove remaining orphan edges
+        # edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
+        merged_faces(faces)
+      end
+
       def self.merged_faces(faces)
         faces.reject(&:deleted?)
       end
@@ -46,13 +56,15 @@ module SpeckleConnector
         return false unless edge.faces.size == 2
 
         # Check scoped faces have this edges
-        if edge.faces.size == 2
-          is_first = faces.include?(edge.faces[0])
-          is_second = faces.include?(edge.faces[1])
-          return false unless is_first && is_second
-        end
+        # if edge.faces.size == 2
+        #   is_first = faces.include?(edge.faces[0])
+        #   is_second = faces.include?(edge.faces[1])
+        #   return false unless is_first && is_second
+        # end
 
         face_1, face_2 = edge.faces
+
+        return false unless face_1.normal.samedirection?(face_2.normal)
 
         return false if face_duplicate?(face_1, face_2)
         # Check for troublesome faces which might lead to missing geometry if merged.
