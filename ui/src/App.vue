@@ -15,7 +15,7 @@
         >
           <v-tabs-slider class="mx-sm-1"></v-tabs-slider>
           <v-tab href="#streams">
-            {{"Streams"}}
+            {{ streamsText }}
           </v-tab>
           <v-tab href="#mapper">
             {{"Mapper"}}
@@ -88,7 +88,7 @@
               <v-text-field
                   v-model="streamSearchQuery"
                   prepend-inner-icon="mdi-magnify"
-                  label="Search streams"
+                  :label="searchText"
                   background-color="background"
                   hide-details
                   clearable
@@ -101,6 +101,7 @@
             </v-container>
             <create-stream-dialog
                 v-if="accounts().length !== 0"
+                :is-f-e2="preferences && preferences.user && preferences.user.fe2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
@@ -115,7 +116,7 @@
         </v-tab-item>
         <v-tab-item :key="2" value="mapper">
           <v-card flat>
-            <mapper></mapper>
+            <mapper :stream-text="streamText" :branch-text="branchText"></mapper>
           </v-card>
         </v-tab-item>
       </v-tabs-items>
@@ -174,7 +175,7 @@ export default {
     size: {
       type: Number,
       default: 42
-    },
+    }
   },
   data() {
     return {
@@ -183,7 +184,11 @@ export default {
       createStreamByIdDialog: false,
       createStreamByIdText: "",
       preferences: {},
-      tab: "streams"
+      tab: "streams",
+      searchText: '',
+      streamsText: 'Streams',
+      streamText: 'Stream',
+      branchText: 'Branch'
     }
   },
   computed: {
@@ -209,8 +214,11 @@ export default {
     })
 
     bus.$on('update-preferences', async (preferences) => {
-      let prefs = JSON.parse(preferences)
-      this.preferences = prefs
+      this.preferences = JSON.parse(preferences)
+      this.searchText = this.preferences.user.fe2 ? 'Search projects' : 'Search streams'
+      this.streamsText = this.preferences.user.fe2 ? 'Projects' : 'Streams'
+      this.streamText = this.preferences.user.fe2 ? 'Project' : 'Stream'
+      this.branchText = this.preferences.user.fe2 ? 'Model' : 'Branch'
       this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
 

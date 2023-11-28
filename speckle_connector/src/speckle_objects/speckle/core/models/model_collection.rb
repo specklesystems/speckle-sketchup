@@ -66,6 +66,13 @@ module SpeckleConnector
 
             def self.to_native(state, model_collection, layer, entities, &convert_to_native)
               elements = model_collection['elements']
+              views = model_collection['@Views']
+              if views
+                views.each do |view|
+                  new_state, _converted_entities = convert_to_native.call(state, view, layer, entities)
+                  state = new_state
+                end
+              end
 
               elements.each do |element|
                 new_state, _converted_entities = convert_to_native.call(state, element, layer, entities)

@@ -13,7 +13,7 @@
       <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
         <v-btn
-          v-tooltip="'Pin this stream - it will be saved to this file.'"
+          v-tooltip="`Pin this ${streamText.toLowerCase()} - it will be saved to this file.`"
           icon
           x-small
           @click="toggleSavedStream"
@@ -66,7 +66,11 @@
         <template #activator="{ on, attrs }">
           <v-slide-x-transition>
             <div v-show="hover">
-              <create-branch-dialog :stream-name="stream.name" :stream-id="streamId"/>
+              <create-branch-dialog
+                  :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                  :stream-name="stream.name"
+                  :stream-id="streamId"
+              />
             </div>
           </v-slide-x-transition>
           <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
@@ -133,7 +137,7 @@
               hide-details
               dense
               flat
-              placeholder="Write your commit message here"
+              :placeholder="`Write your ${commitText.toLowerCase()} message here`"
             />
           </div>
         </v-slide-y-transition>
@@ -204,7 +208,11 @@ export default {
       commitId: 'latest',
       commitMessage: null,
       invalid: false,
-      diffing: false
+      diffing: false,
+      streamText: '',
+      branchText: '',
+      commitText: '',
+      preferences: {}
     }
   },
   apollo: {
@@ -286,6 +294,16 @@ export default {
     }
   },
   mounted() {
+    bus.$on('update-preferences', async (preferences) => {
+      const pref = JSON.parse(preferences)
+      this.preferences = pref
+      this.streamText = pref.user.fe2 ? 'Project' : 'Stream'
+      this.branchText = pref.user.fe2 ? 'Model' : 'Branch'
+      this.commitText = pref.user.fe2 ? 'Version' : 'Commit'
+    })
+    // Collect preferences to render UI according to it
+    sketchup.exec({name: "collect_preferences", data: {}})
+
     bus.$on(`deactivate-diffing-${this.streamId}`, () => {
       this.diffing = false
     })
