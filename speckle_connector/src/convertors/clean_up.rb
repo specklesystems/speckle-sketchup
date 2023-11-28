@@ -25,40 +25,18 @@ module SpeckleConnector
 
       def self.merge_coplanar_faces(faces)
         edges = []
-        start_time = Time.now.to_f
-        puts "number of faces before reject deleted: #{faces.length}"
         faces = faces.reject(&:deleted?)
-        puts "number of faces #{faces.length}"
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 1- Rejecting deleted faces executed in #{elapsed_time} sec ===="
 
-        start_time = Time.now.to_f
         faces.each { |face| face.edges.each { |edge| edges << edge } }
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 2- Collecting edges executed in #{elapsed_time} sec ===="
 
-        start_time = Time.now.to_f
-        puts "number of edges before uniq!: #{edges.length}"
         edges.uniq!
-        puts "number of edges #{edges.length}"
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 3- Making edges uniq! in #{elapsed_time} sec ===="
 
-        start_time = Time.now.to_f
         edges.each { |edge| remove_edge_have_coplanar_faces(edge) }
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 4- Clean up edges executed in #{elapsed_time} sec ===="
 
-        start_time = Time.now.to_f
         # Remove remaining orphan edges
-        edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 5- Removing orphan edges edges executed in #{elapsed_time} sec ===="
+        # edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
 
-        start_time = Time.now.to_f
         merged_faces(faces)
-        elapsed_time = (Time.now.to_f - start_time).round(3)
-        puts "==== 6- Rejecting deleted faces executed in #{elapsed_time} sec ===="
       end
 
       def self.merged_faces(faces)
