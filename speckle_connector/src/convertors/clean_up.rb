@@ -11,14 +11,31 @@ module SpeckleConnector
       # @param entities [Sketchup::Entities] entities to remove edges between that make entities coplanar.
       # @note Merging coplanar faces idea originated from [CleanUp](https://github.com/thomthom/cleanup) plugin
       # which is developed by [Thomas Thomassen](https://github.com/thomthom).
-      def self.merge_coplanar_faces(entities)
+      def self.merge_coplanar_entities(entities)
         edges = []
         faces = entities.collect { |entity| entity if entity.is_a? Sketchup::Face }.compact
+        faces = merged_faces(faces)
         faces.each { |face| face.edges.each { |edge| edges << edge } }
         edges.uniq!
         edges.each { |edge| remove_edge_have_coplanar_faces(edge, faces, false) }
         # Remove remaining orphan edges
         edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
+        merged_faces(faces)
+      end
+
+      def self.merge_coplanar_faces(faces)
+        edges = []
+        faces = faces.reject(&:deleted?)
+
+        faces.each { |face| face.edges.each { |edge| edges << edge } }
+
+        edges.uniq!
+
+        edges.each { |edge| remove_edge_have_coplanar_faces(edge) }
+
+        # Remove remaining orphan edges
+        # edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
+
         merged_faces(faces)
       end
 
@@ -35,43 +52,29 @@ module SpeckleConnector
       #  - Whether UV texture map is aligned between faces or not.
       #  - Finally, if faces are coplanar by correcting these checks, then removes edge from Sketchup.active_model.
       # @param edge [Sketchup::Edge] edge to check.
-      # @param faces [Array<Sketchup::Face>] scoped faces to check 'edge.faces' both (first and second)
-      #  belongs to this faces or not. If any of this faces does not involve this scoped faces, then do not delete.
       # @param ignore_materials [Boolean] whether ignore materials or not.
       # Returns true if the given edge separating two coplanar faces.
       # Return false otherwise.
-      # rubocop:disable Metrics/AbcSize
-      def self.remove_edge_have_coplanar_faces(edge, faces, ignore_materials)
+      def self.remove_edge_have_coplanar_faces(edge)
         return false unless edge.valid? && edge.is_a?(Sketchup::Edge)
         return false unless edge.faces.size == 2
 
-        # Check scoped faces have this edges
-        if edge.faces.size == 2
-          is_first = faces.include?(edge.faces[0])
-          is_second = faces.include?(edge.faces[1])
-          return false unless is_first && is_second
-        end
-
         face_1, face_2 = edge.faces
+
+        return false unless face_1.normal.samedirection?(face_2.normal)
 
         return false if face_duplicate?(face_1, face_2)
         # Check for troublesome faces which might lead to missing geometry if merged.
         return false unless edge_safe_to_merge?(edge)
 
-        # Check materials match.
-        unless ignore_materials
-          return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
+        return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
 
-          # Verify UV mapping match.
-          return false if !face_1.material.nil? && !continuous_uv?(face_1, face_2, edge) && face_1.material.texture.nil?
-        end
         # Check faces are coplanar or not.
         return false unless faces_coplanar?(face_1, face_2)
 
         edge.erase!
         true
       end
-      # rubocop:enable Metrics/AbcSize
 
       # Determines if two faces are overlapped.
       def self.face_duplicate?(face_1, face_2, overlapping: false)
