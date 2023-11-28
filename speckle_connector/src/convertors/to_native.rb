@@ -32,11 +32,14 @@ module SpeckleConnector
       # @return [String] source application of received object that will be converted to native
       attr_reader :source_app
 
+      attr_reader :converted_faces
+
       def initialize(state, stream_id, stream_name, branch_name, source_app)
         super(state, stream_id)
         @stream_name = stream_name
         @branch_name = branch_name
         @source_app = source_app.downcase
+        @converted_faces = []
       end
 
       # Module aliases
@@ -312,6 +315,8 @@ module SpeckleConnector
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
         state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
+        @converted_faces += faces if faces.any?
         if from_revit
           # Create levels as section planes if they exists
           create_levels(state, obj)
