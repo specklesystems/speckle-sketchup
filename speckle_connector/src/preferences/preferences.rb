@@ -12,7 +12,7 @@ module SpeckleConnector
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
     # rubocop:disable Layout/LineLength
-    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false}, \"fe2\":false');"
+    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false, \"fe2\":false}');"
     # rubocop:enable Layout/LineLength
     DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false, "fe2": false}'
 
@@ -34,12 +34,16 @@ module SpeckleConnector
     def self.data_complete?(row_data)
       return false if row_data.empty?
 
-      data = JSON.parse(row_data.first.first)
-      if data['dark_theme'].nil? || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
-        return false
-      end
+      begin
+        data = JSON.parse(row_data.first.first)
+        if data['dark_theme'].nil? || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
+          return false
+        end
 
-      true
+        true
+      rescue StandardError
+        false
+      end
     end
 
     # Validates current preferences. If there are incomplete data then this method resets it with default preferences.
