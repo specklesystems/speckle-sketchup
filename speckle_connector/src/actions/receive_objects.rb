@@ -27,10 +27,12 @@ module SpeckleConnector
         converter = Converters::ToNative.new(state, @stream_id, @stream_name, @branch_name, @source_app)
         # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
         start_time = Time.now.to_f
+        state.sketchup_state.sketchup_model.start_operation('Receive Speckle Objects', true)
         state = converter.receive_commit_object(@base)
         if state.user_state.model_preferences[:merge_coplanar_faces]
           Converters::CleanUp.merge_coplanar_faces(converter.converted_faces)
         end
+        state.sketchup_state.sketchup_model.commit_operation
         elapsed_time = (Time.now.to_f - start_time).round(3)
         puts "==== Converting to Native executed in #{elapsed_time} sec ===="
         puts "==== Source application is #{@source_app}. ===="
