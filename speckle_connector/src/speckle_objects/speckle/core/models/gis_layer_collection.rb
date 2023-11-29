@@ -8,9 +8,7 @@ module SpeckleConnector
       module Core
         module Models
           # VectorLayerCollection object that collect GIS vector elements under it's elements.
-          class VectorLayerCollection < Collection
-            SPECKLE_TYPE = 'Speckle.Core.Models.Collection:Objects.GIS.VectorLayer'
-
+          class GisLayerCollection < Collection
             # @param state [States::State] state of the Speckle application.
             def self.to_native(state, vector_layer_collection, layer_or_folder, entities, &convert_to_native)
               elements = vector_layer_collection['elements']
