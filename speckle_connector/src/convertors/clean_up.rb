@@ -61,19 +61,24 @@ module SpeckleConnector
 
         face_1, face_2 = edge.faces
 
-        return false unless face_1.normal.samedirection?(face_2.normal)
+        begin
+          return false unless face_1.normal.samedirection?(face_2.normal)
 
-        return false if face_duplicate?(face_1, face_2)
-        # Check for troublesome faces which might lead to missing geometry if merged.
-        return false unless edge_safe_to_merge?(edge)
+          return false if face_duplicate?(face_1, face_2)
+          # Check for troublesome faces which might lead to missing geometry if merged.
+          return false unless edge_safe_to_merge?(edge)
 
-        return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
+          return false unless (face_1.material == face_2.material) && (face_1.back_material == face_2.back_material)
 
-        # Check faces are coplanar or not.
-        return false unless faces_coplanar?(face_1, face_2)
+          # Check faces are coplanar or not.
+          return false unless faces_coplanar?(face_1, face_2)
 
-        edge.erase!
-        true
+          edge.erase!
+          true
+        rescue StandardError => e
+          puts "Failed to merge coplanar faces by removing edge with error: #{e}"
+          false
+        end
       end
 
       # Determines if two faces are overlapped.

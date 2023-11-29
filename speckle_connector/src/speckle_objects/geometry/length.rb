@@ -11,6 +11,10 @@ module SpeckleConnector
       end
 
       def self.length_to_native(length, units)
+        if units == 'none'
+          units = SpeckleConnector::Converters::
+              SKETCHUP_UNITS[Sketchup.active_model.options['UnitsOptions']['LengthUnit']]
+        end
         length.__send__(SpeckleConnector::Converters::SKETCHUP_UNIT_STRINGS[units])
       end
     end
