@@ -19,6 +19,7 @@ require_relative '../speckle_objects/geometry/mesh'
 require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/network'
 require_relative '../speckle_objects/speckle/core/models/collection'
+require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
 module SpeckleConnector
@@ -65,6 +66,7 @@ module SpeckleConnector
       VIEW3D = BUILTELEMENTS::View3d
       POLYGON_ELEMENT = GIS::PolygonElement
       COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
+      GIS_LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::GisLayerCollection
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
@@ -85,6 +87,8 @@ module SpeckleConnector
         Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
         Speckle.Core.Models.Collection
+        Speckle.Core.Models.Collection:Objects.GIS.RasterLayer
+        Speckle.Core.Models.Collection:Objects.GIS.VectorLayer
       ].freeze
 
       def from_revit
@@ -303,7 +307,9 @@ module SpeckleConnector
         OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
         OBJECTS_BUILTELEMENTS_NETWORK => BUILTELEMENTS::Network.method(:to_native),
         OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
-        SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native)
+        SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native),
+        SPECKLE_CORE_MODELS_COLLECTION_RASTER_LAYER => GIS_LAYER_COLLECTION.method(:to_native),
+        SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER => GIS_LAYER_COLLECTION.method(:to_native)
       }.freeze
 
       # @param state [States::State] state of the speckle application
