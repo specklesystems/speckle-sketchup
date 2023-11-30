@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'utils'
 require_relative '../base'
 require_relative '../other/transform'
 require_relative '../other/block_definition'
@@ -14,26 +15,11 @@ module SpeckleConnector
       class LineElement < Base
         SPECKLE_TYPE = OBJECTS_GIS_LINEELEMENT
 
-        def self.get_definition_name(obj, attributes)
-          return obj['name'] unless obj['name'].nil?
-
-          return attributes['name'] unless attributes['name'].nil?
-
-          return "def::#{obj['id']}"
-        end
-
-        def self.get_qgis_attributes(obj)
-          attributes = obj['attributes'].to_h
-          speckle_properties = %w[id speckle_type totalChildrenCount units applicationId]
-          speckle_properties.each { |key| attributes.delete(key) }
-          attributes
-        end
-
         # Handles polygon element differently from display value.
         def self.to_native(state, obj, layer, entities, &convert_to_native)
-          attributes = get_qgis_attributes(obj)
+          attributes = GIS.get_qgis_attributes(obj)
           obj = collect_definition_geometries(obj)
-          obj['name'] = get_definition_name(obj, attributes)
+          obj['name'] = GIS.get_definition_name(obj, attributes)
 
           state, _definitions = Other::BlockDefinition.to_native(
             state, obj, layer, entities, &convert_to_native
