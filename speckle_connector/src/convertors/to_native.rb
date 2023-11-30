@@ -4,6 +4,7 @@ require_relative 'converter'
 require_relative '../constants/type_constants'
 require_relative '../speckle_entities/speckle_entity'
 require_relative '../speckle_objects/gis/polygon_element'
+require_relative '../speckle_objects/gis/line_element'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
 require_relative '../speckle_objects/other/block_definition'
@@ -65,6 +66,7 @@ module SpeckleConnector
       DISPLAY_VALUE = OTHER::DisplayValue
       VIEW3D = BUILTELEMENTS::View3d
       POLYGON_ELEMENT = GIS::PolygonElement
+      LINE_ELEMENT = GIS::LineElement
       COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
       GIS_LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::GisLayerCollection
 
@@ -86,6 +88,7 @@ module SpeckleConnector
         Objects.BuiltElements.Wall:Objects.BuiltElements.Revit.RevitWall
         Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
+        Objects.GIS.LineElement
         Speckle.Core.Models.Collection
         Speckle.Core.Models.Collection:Objects.GIS.RasterLayer
         Speckle.Core.Models.Collection:Objects.GIS.VectorLayer
@@ -307,6 +310,7 @@ module SpeckleConnector
         OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE => BUILTELEMENTS::Revit::DirectShape.method(:to_native),
         OBJECTS_BUILTELEMENTS_NETWORK => BUILTELEMENTS::Network.method(:to_native),
         OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
+        OBJECTS_GIS_LINEELEMENT => LINE_ELEMENT.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION_RASTER_LAYER => GIS_LAYER_COLLECTION.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER => GIS_LAYER_COLLECTION.method(:to_native)

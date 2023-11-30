@@ -4,6 +4,7 @@ module SpeckleConnector
   BASE_OBJECT = 'Base'
 
   OBJECTS_GIS_POLYGONELEMENT = 'Objects.GIS.PolygonElement'
+  OBJECTS_GIS_LINEELEMENT = 'Objects.GIS.LineElement'
 
   OBJECTS_BUILTELEMENTS_VIEW3D = 'Objects.BuiltElements.View:Objects.BuiltElements.View3D'
   OBJECTS_BUILTELEMENTS_NETWORK = 'Objects.BuiltElements.Network'
