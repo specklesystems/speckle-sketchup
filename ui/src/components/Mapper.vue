@@ -208,7 +208,7 @@
               v-model="selectedCategory"
               class="pt-0"
               label="Category"
-              :items="availableCategories"
+              :items="selectedMethod === 'New Revit Family' ? familyCategories : categories"
               item-value="value"
               item-text="key"
               :disabled="!entitySelected"
@@ -290,6 +290,10 @@ global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
 }
 
+global.mapperInitialized = function (initParameters) {
+  bus.$emit('mapper-initialized', JSON.stringify(initParameters))
+}
+
 global.entitiesDeselected = function () {
   bus.$emit('entities-deselected')
 }
@@ -355,7 +359,9 @@ export default {
       name: "",
 
       availableMethods: [],
-      availableCategories: [],
+      categories: [],
+      familyCategories: [],
+
       families: [],
       allTypes: {},
       levels: [],
@@ -531,6 +537,9 @@ export default {
         this.categorySelectionActive = true
         this.nameSelectionActive = true
       }
+      else if (this.selectedMethod === 'New Revit Family'){
+        this.categorySelectionActive = true
+      }
       else if (nativeDefaultMethods.includes(this.selectedMethod)){
         this.typeSelectionActive = false
         this.familySelectionActive = false
@@ -545,17 +554,20 @@ export default {
       }
     },
     getTypesFromSelectedFamily(){
-      this.familyTypes = this.allFamilyTypes[this.selectedFamily]
-      this.selectedFamilyType = this.familyTypes[0].type
+      if (this.sourceState !== 'Not Set'){
+        this.familyTypes = this.allFamilyTypes[this.selectedFamily]
+        this.selectedFamilyType = this.familyTypes[0].type
+        if (this.selectedFamilyType === null || this.selectedFamilyType === undefined){
+          this.selectedFamilyType = this.familyTypes[0].type
+        }
+      }
       if (this.selectedFamily === null || this.selectedFamily === undefined){
         this.selectedFamily = this.families[0]
       }
       if (this.familyTypes === null ||this.familyTypes === undefined){
         this.familyTypes = this.allFamilyTypes[this.selectedFamily]
       }
-      if (this.selectedFamilyType === null || this.selectedFamilyType === undefined){
-        this.selectedFamilyType = this.familyTypes[0].type
-      }
+
     },
     getFamiliesFromSelectedMethod(){
       switch (this.selectedMethod) {
@@ -589,8 +601,10 @@ export default {
       if (this.selectedFamily === null || this.selectedFamily === undefined){
         this.selectedFamily = this.families[0]
       }
-      if (this.selectedLevel === null || this.selectedLevel === undefined){
-        this.selectedLevel = this.levels[0].name
+      if (this.sourceState === 'Set'){
+        if (this.selectedLevel === null || this.selectedLevel === undefined){
+          this.selectedLevel = this.levels[0].name
+        }
       }
     },
     hideOptionalMappingInputs(){
@@ -608,7 +622,6 @@ export default {
     },
     clearInputs(){
       this.availableMethods = []
-      this.availableCategories = []
       this.selectedEntities = []
       this.selectionTableData = []
       this.selectedEntityCount = 0
@@ -683,6 +696,7 @@ export default {
           }
           this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
           this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
+          this.updateMappingInputs()
         }
       }
       // Otherwise set entity mappings.
@@ -694,7 +708,6 @@ export default {
           }else{
             this.name = this.lastSelectedEntity['entityName']
           }
-          console.log("entity not mapped")
           this.updateMappingInputs()
           this.getFamiliesFromSelectedMethod()
           this.getTypesFromSelectedFamily()
@@ -706,7 +719,6 @@ export default {
             this.name = this.lastSelectedEntity['schema']['name']
           }
           this.selectedMethod = this.lastSelectedEntity['schema']['method']
-          console.log("entity is mapped")
           this.updateMappingInputs()
           this.selectedFamily = this.lastSelectedEntity['schema']['family']
           this.selectedCategory = this.lastSelectedEntity['schema']['category']
@@ -817,12 +829,10 @@ export default {
       this.familyTypes = null
       this.levels = null
       this.availableMethods = null
-      this.availableCategories = null
       this.allTypes = null
     },
     getDataFromSelection(selectionParameters){
       this.availableMethods = selectionParameters.mappingMethods
-      this.availableCategories = selectionParameters.categories
       this.selectedEntities = selectionParameters.selection
       this.allTypes = selectionParameters.types
       this.levels = selectionParameters.levels
@@ -838,7 +848,14 @@ export default {
     }
   },
   mounted() {
+    sketchup.exec({name: "mapper_initialized", data: {}})
     sketchup.exec({name: "collect_mapped_entities", data: {}})
+
+    bus.$on('mapper-initialized', async (initParameters) => {
+      const initPars = JSON.parse(initParameters)
+      this.categories = initPars.categories
+      this.familyCategories = initPars.familyCategories
+    })
 
     bus.$on('entities-selected', async (selectionParameters) => {
       // Parse data to json object

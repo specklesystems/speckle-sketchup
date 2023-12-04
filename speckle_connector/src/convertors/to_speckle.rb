@@ -71,12 +71,6 @@ module SpeckleConnector
         return speckle_state, nil
       end
 
-      def from_mapped_to_speckle(entity, path, preferences)
-        direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
-                       .from_entity(speckle_state, entity, path, @units, preferences)
-        return [direct_shape, [entity]]
-      end
-
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         if entity.is_a?(Sketchup::Edge)

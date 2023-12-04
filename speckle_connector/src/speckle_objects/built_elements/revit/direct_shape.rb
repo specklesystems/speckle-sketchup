@@ -89,7 +89,7 @@ module SpeckleConnector
             mapped_selection
           end
 
-          def self.from_entity(speckle_state, entity, path, units, preferences)
+          def self.from_entity(speckle_state, entity, path, units, model_preferences)
             schema = DICTIONARY::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity)
             if schema.nil? && entity.respond_to?(:definition)
               schema = DICTIONARY::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity.definition)
@@ -103,7 +103,7 @@ module SpeckleConnector
                                       entity.definition.entities, [Sketchup::Face], path.append(entity)
                                     )
             end
-            base_geometries = group_faces_under_mesh_by_material(speckle_state, entities_with_path, units, preferences)
+            base_geometries = group_faces_under_mesh_by_material(speckle_state, entities_with_path, units, model_preferences)
             DirectShape.new(
               name: schema[:name], category: schema[:category], units: units,
               base_geometries: base_geometries, application_id: entity.persistent_id
@@ -111,13 +111,13 @@ module SpeckleConnector
           end
 
           # rubocop:disable Metrics/MethodLength
-          def self.group_faces_under_mesh_by_material(speckle_state, faces_with_path, units, preferences)
+          def self.group_faces_under_mesh_by_material(speckle_state, faces_with_path, units, model_preferences)
             mesh_groups = {}
             faces_with_path.each do |face_with_path|
               face = face_with_path[0]
               entity_path = face_with_path[1..-1]
               parent_material = QUERY::Entity.parent_material(entity_path)
-              mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model], parent_material)
+              mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, model_preferences, parent_material)
 
               if mesh_groups.key?(mesh_group_id)
                 mesh_group = mesh_groups[mesh_group_id]
@@ -126,7 +126,7 @@ module SpeckleConnector
               else
                 mesh = Geometry::Mesh.from_face(
                   speckle_state: speckle_state,
-                  face: face, units: units, model_preferences: preferences[:model],
+                  face: face, units: units, model_preferences: model_preferences,
                   global_transform: QUERY::Entity.global_transformation(face, entity_path),
                   parent_material: parent_material
                 )

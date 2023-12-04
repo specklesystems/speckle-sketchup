@@ -18,6 +18,7 @@ require_relative '../commands/apply_mappings'
 require_relative '../commands/clear_mappings'
 require_relative '../commands/mapper_source_updated'
 
+require_relative '../actions/mapper_initialized'
 require_relative '../actions/reload_accounts'
 require_relative '../actions/load_saved_streams'
 require_relative '../actions/init_local_accounts'
@@ -93,7 +94,8 @@ module SpeckleConnector
           select_mappings_from_table: Commands::ActionCommand.new(@app, Actions::SelectMappingsFromTable),
           show_all_entities: Commands::ActionCommand.new(@app, Actions::ShowAllEntities),
           mapper_source_updated: Commands::MapperSourceUpdated.new(@app),
-          clear_mapper_source: Commands::ActionCommand.new(@app, Actions::ClearMapperSource)
+          clear_mapper_source: Commands::ActionCommand.new(@app, Actions::ClearMapperSource),
+          mapper_initialized: Commands::ActionCommand.new(@app, Actions::MapperInitialized)
         }.freeze
       end
       # rubocop:enable Metrics/MethodLength

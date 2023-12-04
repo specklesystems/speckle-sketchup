@@ -2,6 +2,7 @@
 
 require_relative 'action'
 require_relative '../mapper/category/revit_category'
+require_relative '../mapper/category/revit_family_category'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
@@ -35,6 +36,7 @@ module SpeckleConnector
       end
 
       def get_mapping_info(state, selection)
+        source_exist = !state.speckle_state.speckle_mapper_state.mapper_source.nil?
         selection = filter_out_levels(selection)
         grouped_by_type = group_by_type(selection)
 
@@ -48,7 +50,11 @@ module SpeckleConnector
         if supported_entity_count > 1 ||
            (supported_entity_count == 1 &&
              MAPPER_DIRECT_SHAPE_SUPPORTED_ENTITY_TYPES.include?(grouped_by_type.keys.first))
-          return direct_shape_selection_info(selection)
+          if source_exist
+            return direct_shape_selection_info_with_source(state, selection, [])
+          else
+            return direct_shape_selection_info(selection, source_exist)
+          end
         end
 
         # Only single type selections remained after this point.
@@ -73,23 +79,22 @@ module SpeckleConnector
 
       EMPTY_SELECTION = {
         selection: [],
-        mappingMethods: [],
-        categories: []
+        mappingMethods: []
       }.freeze
 
-      def direct_shape_selection_info(selection)
+      def direct_shape_selection_info(selection, source_exist)
+        methods = ['Direct Shape', 'New Revit Family']
+        methods.append('Family Instance') if source_exist
         {
           selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
-          mappingMethods: ['Direct Shape'],
-          categories: Mapper::Category::RevitCategory.to_a
+          mappingMethods: methods
         }.freeze
       end
 
       def direct_shape_selection_info_with_default(selection, methods)
         {
           selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
-          mappingMethods: ['Direct Shape'] + methods,
-          categories: Mapper::Category::RevitCategory.to_a
+          mappingMethods: ['Direct Shape'] + methods
         }.freeze
       end
 
@@ -107,7 +112,7 @@ module SpeckleConnector
         end
         {
           selection: READER::MapperReader.entities_schema_details(filtered_selection),
-          mappingMethods: ['Direct Shape'] + methods,
+          mappingMethods: ['Direct Shape', 'Family Instance'] + methods,
           categories: Mapper::Category::RevitCategory.to_a,
           types: types,
           levels: levels,
@@ -119,7 +124,7 @@ module SpeckleConnector
       def face_selection_info(state, faces)
         source_exist = !state.speckle_state.speckle_mapper_state.mapper_source.nil?
         grouped_by_verticality = faces.group_by { |face| face.normal.perpendicular?(VECTOR_Z) }
-        return direct_shape_selection_info(faces) if grouped_by_verticality.length == 2
+        return direct_shape_selection_info(faces, source_exist) if grouped_by_verticality.length == 2
 
         if source_exist
           if grouped_by_verticality.keys.first
