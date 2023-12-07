@@ -6,6 +6,7 @@ require_relative 'block_definition'
 require_relative '../base'
 require_relative '../geometry/bounding_box'
 require_relative '../other/mapped_block_wrapper'
+require_relative '../built_elements/revit/family_instance'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 require_relative '../../sketchup_model/query/layer'
@@ -121,7 +122,19 @@ module SpeckleConnector
                 application_id: component_instance.persistent_id.to_s
               )
             when 'Family Instance'
-              puts 'not there yet'
+              level = speckle_state.speckle_mapper_state.mapper_source
+                                   .levels.find { |l| l[:name] == speckle_schema['level'] }
+              family = speckle_schema['family']
+              type = speckle_schema['family_type']
+              block_instance['@SpeckleSchema'] = SpeckleObjects::BuiltElements::Revit::FamilyInstance.new(
+                family: family,
+                type: type,
+                level: level,
+                units: units,
+                base_point: SpeckleObjects::Geometry::Point
+                              .from_vertex(component_instance.bounds.min.transform(transformation), units),
+                application_id: component_instance.persistent_id.to_s
+              )
             end
           end
 

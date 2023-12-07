@@ -103,7 +103,7 @@ module SpeckleConnector
                 return [direct_shape, [entity]]
               end
 
-              if method == 'New Revit Family'
+              if ['New Revit Family', 'Family Instance'].include?(method)
                 _speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
                   entity, units, preferences, speckle_state, path: path, &convert
                 )
