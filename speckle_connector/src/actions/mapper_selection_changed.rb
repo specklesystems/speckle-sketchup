@@ -47,11 +47,18 @@ module SpeckleConnector
 
         # Return Direct Shape itself if multiple kinds of element are selected like Edge and Face.
         # OR single type is equal to only direct shape supports.
+        return multiple_supported_selection_info(selection) if supported_entity_count > 1
+
+        # FIXME: Distinguish selection info according to selection elegantly!!!
+        if grouped_by_type.keys.first == Sketchup::ComponentInstance
+          return component_selection_info(selection, source_exist)
+        end
+
         if supported_entity_count > 1 ||
            (supported_entity_count == 1 &&
              MAPPER_DIRECT_SHAPE_SUPPORTED_ENTITY_TYPES.include?(grouped_by_type.keys.first))
           if source_exist
-            return direct_shape_selection_info_with_source(state, selection, [])
+            return direct_shape_selection_info_with_source(selection, [])
           else
             return direct_shape_selection_info(selection, source_exist)
           end
@@ -82,6 +89,27 @@ module SpeckleConnector
         mappingMethods: []
       }.freeze
 
+      def multiple_supported_selection_info(selection)
+        {
+          selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
+          mappingMethods: ['Direct Shape']
+        }.freeze
+      end
+
+      def component_selection_info(selection, source_exist)
+        if source_exist
+          {
+            selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
+            mappingMethods: ['New Revit Family', 'Family Instance']
+          }.freeze
+        else
+          {
+            selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
+            mappingMethods: ['New Revit Family']
+          }.freeze
+        end
+      end
+
       def direct_shape_selection_info(selection, source_exist)
         methods = ['Direct Shape', 'New Revit Family']
         methods.append('Family Instance') if source_exist
@@ -98,9 +126,7 @@ module SpeckleConnector
         }.freeze
       end
 
-      def direct_shape_selection_info_with_source(state, filtered_selection, methods)
-        types = state.speckle_state.speckle_mapper_state.mapper_source.types
-        levels = state.speckle_state.speckle_mapper_state.mapper_source.levels
+      def direct_shape_selection_info_with_source(filtered_selection, methods)
         instances = @selection.grep(Sketchup::ComponentInstance)
         selected_level = instances.find do |i|
           DICTIONARY::SpeckleEntityDictionaryHandler
@@ -112,10 +138,8 @@ module SpeckleConnector
         end
         {
           selection: READER::MapperReader.entities_schema_details(filtered_selection),
-          mappingMethods: ['Direct Shape', 'Family Instance'] + methods,
+          mappingMethods: ['Direct Shape'] + methods,
           categories: Mapper::Category::RevitCategory.to_a,
-          types: types,
-          levels: levels,
           selectedLevelName: selected_level_name
         }.freeze
       end
@@ -128,9 +152,9 @@ module SpeckleConnector
 
         if source_exist
           if grouped_by_verticality.keys.first
-            direct_shape_selection_info_with_source(state, faces, ['Wall'])
+            direct_shape_selection_info_with_source(faces, ['Wall'])
           else
-            direct_shape_selection_info_with_source(state, faces, ['Floor'])
+            direct_shape_selection_info_with_source(faces, ['Floor'])
           end
         else
           if grouped_by_verticality.keys.first
@@ -146,7 +170,7 @@ module SpeckleConnector
 
         if source_exist
           methods = ['Column', 'Beam', 'Pipe', 'Duct']
-          direct_shape_selection_info_with_source(state, edges, methods)
+          direct_shape_selection_info_with_source(edges, methods)
         else
           default_methods = ['Default Column', 'Default Beam', 'Default Pipe', 'Default Duct']
           direct_shape_selection_info_with_default(edges, default_methods)
