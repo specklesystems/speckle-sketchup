@@ -102,12 +102,12 @@ module SpeckleConnector
         if source_exist
           {
             selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
-            mappingMethods: ['New Revit Family', 'Family Instance']
+            mappingMethods: ['Direct Shape', 'New Revit Family', 'Family Instance']
           }.freeze
         else
           {
             selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
-            mappingMethods: ['New Revit Family']
+            mappingMethods: ['Direct Shape', 'New Revit Family']
           }.freeze
         end
       end
