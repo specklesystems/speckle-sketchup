@@ -54,6 +54,8 @@ module SpeckleConnector
           return component_selection_info(selection, source_exist)
         end
 
+        return group_selection_info(selection) if grouped_by_type.keys.first == Sketchup::Group
+
         if supported_entity_count > 1 ||
            (supported_entity_count == 1 &&
              MAPPER_DIRECT_SHAPE_SUPPORTED_ENTITY_TYPES.include?(grouped_by_type.keys.first))
@@ -108,6 +110,13 @@ module SpeckleConnector
             mappingMethods: ['New Revit Family']
           }.freeze
         end
+      end
+
+      def group_selection_info(selection)
+        {
+          selection: SketchupModel::Reader::MapperReader.entities_schema_details(selection),
+          mappingMethods: ['Direct Shape']
+        }.freeze
       end
 
       def direct_shape_selection_info(selection, source_exist)
