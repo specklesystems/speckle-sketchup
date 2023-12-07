@@ -138,6 +138,7 @@ module SpeckleConnector
                 units: units,
                 base_point: SpeckleObjects::Geometry::Point
                               .from_vertex(component_instance.bounds.min.transform(transformation), units),
+                rotation: calculate_rotation(transformation.to_a),
                 application_id: component_instance.persistent_id.to_s
               )
             end
@@ -267,6 +268,26 @@ module SpeckleConnector
           entities.transform_entities(transform, entities.to_a)
           instance_transform = instance.transformation
           instance.transform!(instance_transform * transform.inverse * instance_transform.inverse)
+        end
+
+        def self.calculate_rotation(matrix)
+          # Ensure the matrix is a flat array with 16 elements
+          unless matrix.is_a?(Array) && matrix.size == 16
+            raise ArgumentError, 'Matrix must be an array with 16 elements'
+          end
+
+          # Extract the elements of the 2x2 rotation sub-matrix
+          cos_theta = matrix[0] # First column, first row
+          sin_theta = matrix[1] # Second column, first row
+
+          # Calculate the rotation angle in radians
+          theta = Math.atan2(sin_theta, cos_theta)
+
+          # Ensure the angle is between -π and π
+          theta -= 2 * Math::PI while theta > Math::PI
+          theta += 2 * Math::PI while theta < -Math::PI
+
+          theta
         end
       end
     end

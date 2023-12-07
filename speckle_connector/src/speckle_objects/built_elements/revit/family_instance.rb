@@ -15,7 +15,7 @@ module SpeckleConnector
           DICTIONARY = SketchupModel::Dictionary
 
           # rubocop:disable Metrics/ParameterLists
-          def initialize(family:, type:, level:, units:, base_point:, application_id: nil)
+          def initialize(family:, type:, level:, units:, base_point:, rotation:, application_id: nil)
             super(
               speckle_type: SPECKLE_TYPE,
               total_children_count: 0,
@@ -27,6 +27,7 @@ module SpeckleConnector
             self[:level] = level
             self[:units] = units
             self[:basePoint] = base_point
+            self[:rotation] = rotation
           end
           # rubocop:enable Metrics/ParameterLists
         end
