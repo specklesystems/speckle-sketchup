@@ -64,7 +64,8 @@ module SpeckleConnector
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
-        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
+        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity) &&
+               !entity.is_a?(Sketchup::ComponentDefinition)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 

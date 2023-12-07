@@ -89,6 +89,9 @@ module SpeckleConnector
               entity = entity_with_path[0]
               path = entity_with_path[1..-1]
               method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity, 'method')
+              if entity.is_a?(Sketchup::ComponentInstance) && method.nil?
+                method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity.definition, 'method')
+              end
 
               if !method.nil? && (method.include?('Floor') || method.include?('Wall')) && entity.is_a?(Sketchup::Face)
                 global_transformation = QUERY::Entity.global_transformation(entity, path)

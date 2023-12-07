@@ -89,6 +89,11 @@ module SpeckleConnector
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)
 
+          if speckle_schema.empty?
+            speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
+                             .speckle_schema_to_speckle(component_instance.definition)
+          end
+
           # transform into global if any path provided
           transformation = component_instance.transformation
           transformation = SketchupModel::Query::Entity.global_transformation(component_instance, path) if path
