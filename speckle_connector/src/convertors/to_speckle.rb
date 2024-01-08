@@ -64,17 +64,12 @@ module SpeckleConnector
       def convert(entity, preferences, speckle_state, parent = :base)
         convert = method(:convert)
 
-        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
+        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity) &&
+               !entity.is_a?(Sketchup::ComponentDefinition)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 
         return speckle_state, nil
-      end
-
-      def from_mapped_to_speckle(entity, path, preferences)
-        direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
-                       .from_entity(speckle_state, entity, path, @units, preferences)
-        return [direct_shape, [entity]]
       end
 
       # rubocop:disable Metrics/MethodLength

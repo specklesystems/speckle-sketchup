@@ -154,7 +154,7 @@ module SpeckleConnector
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
-          speckle_schema = Mapper.to_speckle(speckle_state, face, units, global_transformation: global_transform)
+          speckle_schema = Mapper.to_speckle(speckle_state, face, units, model_preferences, global_transformation: global_transform)
           material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(
             units: units,

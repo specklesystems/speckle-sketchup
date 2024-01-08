@@ -4,6 +4,7 @@ require_relative '../speckle_objects/built_elements/revit/revit_floor'
 require_relative '../speckle_objects/built_elements/revit/revit_wall'
 require_relative '../speckle_objects/built_elements/default_floor'
 require_relative '../speckle_objects/built_elements/default_wall'
+require_relative '../speckle_objects/other/mapped_block_wrapper'
 require_relative '../sketchup_model/query/entity'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
@@ -31,7 +32,7 @@ module SpeckleConnector
       mapped_selection
     end
 
-    def self.to_speckle(speckle_state, entity, units, global_transformation: nil)
+    def self.to_speckle(speckle_state, entity, units, model_preferences, global_transformation: nil, path: nil)
       speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(entity)
       return speckle_schema if speckle_schema.nil?
 

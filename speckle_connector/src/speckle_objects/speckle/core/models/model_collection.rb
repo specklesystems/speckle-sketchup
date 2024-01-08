@@ -27,6 +27,27 @@ module SpeckleConnector
               self[:active_layer] = active_layer
             end
 
+            def self.to_native(state, model_collection, layer, entities, &convert_to_native)
+              elements = model_collection['elements']
+              views = model_collection['@Views']
+              if views
+                views.each do |view|
+                  new_state, _converted_entities = convert_to_native.call(state, view, layer, entities)
+                  state = new_state
+                end
+              end
+
+              elements.each do |element|
+                new_state, _converted_entities = convert_to_native.call(state, element, layer, entities)
+                state = new_state
+              end
+
+              active_layer = model_collection['active_layer']
+              state.sketchup_state.sketchup_model.active_layer = active_layer unless active_layer.nil?
+
+              return state, []
+            end
+
             def self.from_sketchup_model(sketchup_model, speckle_state, units, preferences, &convert)
               model_collection = ModelCollection.new(
                 name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,
@@ -60,36 +81,17 @@ module SpeckleConnector
             def self.collect_mapped_entities(speckle_state, sketchup_model, units, preferences, &convert)
               mapped_entities = Mapper.mapped_entities_on_selection(sketchup_model)
               mapped_entities.collect do |entity_with_path|
-                convert_mapped_entity(speckle_state, entity_with_path, preferences, units)
+                convert_mapped_entity(speckle_state, entity_with_path, preferences, units, &convert)
               end
             end
 
-            def self.to_native(state, model_collection, layer, entities, &convert_to_native)
-              elements = model_collection['elements']
-              views = model_collection['@Views']
-              if views
-                views.each do |view|
-                  new_state, _converted_entities = convert_to_native.call(state, view, layer, entities)
-                  state = new_state
-                end
-              end
-
-              elements.each do |element|
-                new_state, _converted_entities = convert_to_native.call(state, element, layer, entities)
-                state = new_state
-              end
-
-              active_layer = model_collection['active_layer']
-              state.sketchup_state.sketchup_model.active_layer = active_layer unless active_layer.nil?
-
-              return state, []
-            end
-
-            def self.convert_mapped_entity(speckle_state, entity_with_path, preferences, units)
+            def self.convert_mapped_entity(speckle_state, entity_with_path, preferences, units, &convert)
               entity = entity_with_path[0]
               path = entity_with_path[1..-1]
-
               method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity, 'method')
+              if entity.is_a?(Sketchup::ComponentInstance) && method.nil?
+                method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity.definition, 'method')
+              end
 
               if !method.nil? && (method.include?('Floor') || method.include?('Wall')) && entity.is_a?(Sketchup::Face)
                 global_transformation = QUERY::Entity.global_transformation(entity, path)
@@ -99,8 +101,19 @@ module SpeckleConnector
                 return [floor, [entity]]
               end
 
-              direct_shape = DIRECT_SHAPE.from_entity(speckle_state, entity, path, units, preferences)
-              return [direct_shape, [entity]]
+              if method == 'Direct Shape'
+                direct_shape = DIRECT_SHAPE.from_entity(speckle_state, entity, path, units, preferences)
+                return [direct_shape, [entity]]
+              end
+
+              if ['New Revit Family', 'Family Instance'].include?(method)
+                _speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
+                  entity, units, preferences, speckle_state, path: path, &convert
+                )
+                return [block_instance, [entity]]
+              end
+
+              nil
             end
           end
         end

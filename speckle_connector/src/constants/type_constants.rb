@@ -14,8 +14,10 @@ module SpeckleConnector
   OBJECTS_BUILTELEMENTS_DEFAULT_WALL = 'Objects.BuiltElements.Wall'
   OBJECTS_BUILTELEMENTS_REVIT_WALL = 'Objects.BuiltElements.Wall:Objects.BuiltElements.Revit.RevitWall'
   OBJECTS_BUILTELEMENTS_REVIT_DIRECTSHAPE = 'Objects.BuiltElements.Revit.DirectShape'
+  OBJECTS_BUILTELEMENTS_REVIT_FAMILY_INSTANCE = 'Objects.BuiltElements.Revit.FamilyInstance'
   OBJECTS_BUILTELEMENTS_REVIT_PARAMETER = 'Objects.BuiltElements.Revit.Parameter'
   OBJECTS_BUILTELEMENTS_REVIT_REVITELEMENTTYPE = 'Objects.BuiltElements.Revit.RevitElementType'
+  OBJECTS_BUILTELEMENTS_REVIT_REVITSYMBOLELEMENTTYPE = 'Objects.BuiltElements.Revit.RevitElementType:Objects.BuiltElements.Revit.RevitSymbolElementType'
 
   OBJECTS_GEOMETRY_LINE = 'Objects.Geometry.Line'
   OBJECTS_GEOMETRY_POLYLINE = 'Objects.Geometry.Polyline'
