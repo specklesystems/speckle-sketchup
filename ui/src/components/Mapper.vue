@@ -623,8 +623,6 @@ export default {
           this.selectedLevel = this.levels[0].name
         }
       }
-      console.log(this.selectedFamily, "selectedFamily after")
-      console.log(this.selectedLevel, "selectedLevel after")
     },
     hideOptionalMappingInputs(){
       this.categorySelectionActive = false
@@ -713,6 +711,11 @@ export default {
           }
           this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
           this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
+          this.selectedFamily = this.lastSelectedEntity['definition']['schema']['family']
+          this.getFamiliesFromSelectedMethod()
+          this.getTypesFromSelectedFamily()
+          this.selectedFamilyType = this.lastSelectedEntity['definition']['schema']['family_type']
+          this.selectedLevel = this.lastSelectedEntity['definition']['schema']['level']
           this.updateMappingInputs()
         }
       }
