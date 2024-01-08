@@ -136,8 +136,10 @@ module SpeckleConnector
                 type: type,
                 level: level,
                 units: units,
-                base_point: SpeckleObjects::Geometry::Point
-                              .from_vertex(component_instance.bounds.min.transform(transformation), units),
+                base_point: SpeckleObjects::Geometry::Point.from_vertex(
+                  component_instance.bounds.min.transform(transformation * component_instance.transformation.inverse),
+                  units
+                ),
                 rotation: calculate_rotation(transformation.to_a),
                 application_id: component_instance.persistent_id.to_s
               )
