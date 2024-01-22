@@ -617,10 +617,14 @@ export default {
       }
       if (this.selectedMethod){
         if (this.selectedFamily === null || this.selectedFamily === undefined){
-          this.selectedFamily = this.inputFamilies[0]
+          if (this.inputFamilies[0]){
+            this.selectedFamily = this.inputFamilies[0]
+          }
         }
         if (this.selectedLevel === null || this.selectedLevel === undefined){
-          this.selectedLevel = this.levels[0].name
+          if (this.levels[0]){
+            this.selectedLevel = this.levels[0].name
+          }
         }
       }
     },
