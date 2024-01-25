@@ -57,6 +57,10 @@ module SpeckleConnector
         html_dialog.execute_script(data)
       end
 
+      def reset_dialog_location
+        html_dialog.center
+      end
+
       private
 
       # @return [UI::HtmlDialog] the Sketchup interface to dialog
