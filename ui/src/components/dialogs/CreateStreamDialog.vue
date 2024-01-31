@@ -17,13 +17,13 @@
               >
                 mdi-plus-circle
               </v-icon>
-              {{ `Create New ${isFE2 ? 'Project': 'Stream'}` }}
+              {{ `Create New ${isFE2Terms ? 'Project': 'Stream'}` }}
             </v-btn>
           </template>
 
           <v-card>
             <v-card-title class="text-h5">
-              {{ `Create a New ${isFE2 ? 'Project' : 'Stream'}` }}
+              {{ `Create a New ${isFE2Terms ? 'Project' : 'Stream'}` }}
             </v-card-title>
             <v-container class="px-6" pb-0>
               <!--
@@ -56,7 +56,7 @@
                   hide-details
                   dense
                   flat
-                  :placeholder="`${isFE2 ? 'Project' : 'Stream'} Name (Optional)`"
+                  :placeholder="`${isFE2Terms ? 'Project' : 'Stream'} Name (Optional)`"
               />
               <v-text-field
                   v-model="description"
@@ -68,7 +68,7 @@
               />
               <v-switch
                   v-model="privateStream"
-                  :label="`Private ${isFE2 ? 'Project' : 'Stream'}`"
+                  :label="`Private ${isFE2Terms ? 'Project' : 'Stream'}`"
               ></v-switch>
             </v-container>
 
@@ -172,6 +172,10 @@ export default {
       default: null
     },
     isFE2: {
+      type: Boolean,
+      default: false
+    },
+    isFE2Terms: {
       type: Boolean,
       default: false
     }
