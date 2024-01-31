@@ -101,7 +101,8 @@
             </v-container>
             <create-stream-dialog
                 v-if="accounts().length !== 0"
-                :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                :is-f-e2-terms="preferences && preferences.user && preferences.user.fe2"
+                :is-f-e2="activeAccount().serverInfo.frontend2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
@@ -241,6 +242,8 @@ export default {
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
+      // Force pushes to reload page to create ApolloClient from scratch
+      location.reload()
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})
