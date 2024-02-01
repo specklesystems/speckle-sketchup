@@ -171,10 +171,6 @@ export default {
       type: String,
       default: null
     },
-    isFE2: {
-      type: Boolean,
-      default: false
-    },
     isFE2Terms: {
       type: Boolean,
       default: false
@@ -209,7 +205,7 @@ export default {
     },
     async getStream(){
       try {
-        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl, this.isFE2)
+        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl, localStorage.getItem('frontend2') === 'true')
         let res = await this.$apollo.query({
           query: gql`
             query Stream($id: String!){
