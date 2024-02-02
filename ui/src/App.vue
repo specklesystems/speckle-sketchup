@@ -101,12 +101,12 @@
             </v-container>
             <create-stream-dialog
                 v-if="accounts().length !== 0"
-                :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                :is-f-e2-terms="preferences && preferences.user && preferences.user.fe2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
             <v-container v-if="accounts().length !== 0" fluid>
-              <router-view :stream-search-query="streamSearchQuery" />
+              <router-view :stream-search-query="streamSearchQuery"/>
             </v-container>
             <v-container v-else>
               <login/>
@@ -147,7 +147,12 @@ global.loadAccounts = function (accounts) {
   let uuid = localStorage.getItem('uuid')
   if (accounts.length !== 0){
     if (uuid) {
-      global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] === uuid))
+      var account = accounts.find((acct) => acct['userInfo']['id'] === uuid)
+      if (account){
+        global.setSelectedAccount(account)
+      }else{
+        global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+      }
     } else {
       global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
     }
@@ -159,6 +164,7 @@ global.setSelectedAccount = function (account) {
   localStorage.setItem('serverUrl', account['serverInfo']['url'])
   localStorage.setItem('SpeckleSketchup.AuthToken', account['token'])
   localStorage.setItem('uuid', account['userInfo']['id'])
+  localStorage.setItem('frontend2', account['serverInfo']['frontend2'])
   bus.$emit('selected-account-reloaded')
 }
 
@@ -241,6 +247,12 @@ export default {
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
+      
+      // Force pushes to reload page to create ApolloClient from scratch
+      setTimeout(() => {
+        // timeout to wait a bit for potential sketchup.exec in the mean time calls
+        location.reload()
+      }, 200);
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})

@@ -17,7 +17,7 @@
     </div>
     <div v-if="allStreamsList" class="mt-5">
       <div v-for="stream in allStreamsList" :key="stream.id">
-        <stream-card :stream-id="stream.id" />
+        <stream-card :stream-id="stream.id"/>
       </div>
       <div class="actions text-center">
         <v-btn
@@ -59,7 +59,10 @@ export default {
     StreamCard: () => import('@/components/StreamCard')
   },
   props: {
-    streamSearchQuery: { type: String, default: null }
+    streamSearchQuery: { 
+      type: String, 
+      default: null 
+    }
   },
   data() {
     return {
