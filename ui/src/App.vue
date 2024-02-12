@@ -48,21 +48,25 @@
                 <v-img v-if="user.avatar" :src="user.avatar" />
                 <v-img v-else :src="`https://robohash.org/` + user.id + `.png?size=40x40`" />
               </v-avatar>
-              <div>
-                <b>{{ user.name }}</b>
-              </div>
               <div class="caption">
                 {{ user.company }}
                 <br />
                 {{ user.bio ? 'Bio: ' + user.bio : '' }}
               </div>
+              <div>
+                <b>{{ user.name }}</b>
+                <br />
+                <b>{{ user.email }}</b>
+              </div>
+              <div class="caption">
+                <b>{{ serverInfo.canonicalUrl }}</b>
+              </div>
             </v-card-text>
             <v-card-text v-if="accounts()">
               <v-divider class="my-3" />
-
               <div v-for="account in accounts()" :key="account.id">
                 <v-btn
-                  v-if="account.userInfo.id != user.id"
+                  v-if="account.id != activeAccount().id"
                   rounded
                   large
                   class="my-1 elevation-0"
@@ -128,6 +132,7 @@
 /*global sketchup*/
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
+import serverInfoQuery from './graphql/serverInfo.gql'
 import { onLogin } from './vue-apollo'
 import Login from "@/views/Login";
 
@@ -205,6 +210,9 @@ export default {
   apollo: {
     user: {
       query: userQuery
+    },
+    serverInfo: {
+      query: serverInfoQuery
     }
   },
   mounted() {

@@ -1,0 +1,6 @@
+query{
+    serverInfo {
+        name
+        canonicalUrl
+    }
+}
