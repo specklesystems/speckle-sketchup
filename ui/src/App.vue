@@ -249,10 +249,12 @@ export default {
       global.setSelectedAccount(account)
       
       // Force pushes to reload page to create ApolloClient from scratch
-      setTimeout(() => {
-        // timeout to wait a bit for potential sketchup.exec in the mean time calls
-        location.reload()
-      }, 200);
+      // setTimeout(() => {
+      //   // timeout to wait a bit for potential sketchup.exec in the mean time calls
+      //   location.reload()
+      // }, 200);
+      this.$apollo.queries.user.refetch()
+      this.$apollo.queries.serverInfo.refetch()
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})
