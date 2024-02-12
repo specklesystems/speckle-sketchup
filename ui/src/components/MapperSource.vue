@@ -145,7 +145,8 @@ export default {
       prefetch: true,
       variables() {
         return {
-          id: this.sourceStreamId
+          id: this.sourceStreamId,
+          limit: 100
         }
       },
       skip() {
