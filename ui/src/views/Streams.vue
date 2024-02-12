@@ -124,12 +124,13 @@ export default {
       if (!this.savedStreams){
         this.savedStreams = []
         this.savedStreams.push(streamId)
+        sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
       } else {
         if (!this.savedStreams.includes(streamId)){
           this.savedStreams.push(streamId)
+          sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
         }
       }
-      sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
     })
     sketchup.exec({name: "load_saved_streams", data: {}})
     console.log('LAUNCHED')
