@@ -59,7 +59,7 @@
                 <b>{{ user.email }}</b>
               </div>
               <div class="caption">
-                <b>{{ serverInfo.canonicalUrl }}</b>
+                <b>{{ activeAccount().serverInfo.url }}</b>
               </div>
             </v-card-text>
             <v-card-text v-if="accounts()">
@@ -155,10 +155,8 @@ global.loadAccounts = function (accounts) {
       var account = accounts.find((acct) => acct['userInfo']['id'] === uuid)
       if (account){
         global.setSelectedAccount(account)
-      }else{
-        global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+        return
       }
-    } else {
       global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
     }
   }
@@ -250,19 +248,17 @@ export default {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
     activeAccount(){
-      return this.accounts().find((account) => account['isDefault'])
+      return JSON.parse(localStorage.getItem('selectedAccount'))
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
-      
+
       // Force pushes to reload page to create ApolloClient from scratch
       // setTimeout(() => {
       //   // timeout to wait a bit for potential sketchup.exec in the mean time calls
       //   location.reload()
       // }, 200);
-      this.$apollo.queries.user.refetch()
-      this.$apollo.queries.serverInfo.refetch()
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})
