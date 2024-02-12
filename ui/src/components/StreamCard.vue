@@ -1,10 +1,6 @@
 <template>
-  <v-card
-    v-if="stream"
-    :class="`mb-3 rounded-lg grey ${$vuetify.theme.dark ? 'darken-4' : 'lighten-4'}`"
-    @mouseenter="hover = true"
-    @mouseleave="hover = false"
-  >
+  <v-card v-if="stream" :class="`mb-3 rounded-lg grey ${$vuetify.theme.dark ? 'darken-4' : 'lighten-4'}`"
+    @mouseenter="hover = true" @mouseleave="hover = false">
     <v-toolbar flat height="70" :color="getColor(invalid)">
       <v-btn v-tooptip="''" icon small outlined class="delta-btn" v-if="invalid" @click="activateDiffing">
         <v-icon v-if="!diffing" class="toggleUpDown" :class='{ "rotate": diffing }' small>mdi-eye-off-outline</v-icon>
@@ -12,12 +8,8 @@
       </v-btn>
       <v-toolbar-title class="ml-0" style="position: relative; left: -10px">
         <!-- Uncomment when pinning is in place and add style="position: relative; left: -10px" to the element above :)  -->
-        <v-btn
-          v-tooltip="`Pin this ${streamText.toLowerCase()} - it will be saved to this file.`"
-          icon
-          x-small
-          @click="toggleSavedStream"
-        >
+        <v-btn v-tooltip="`Pin this ${streamText.toLowerCase()} - it will be saved to this file.`" icon x-small
+          @click="toggleSavedStream">
           <v-icon v-if="saved" x-small>mdi-pin</v-icon>
           <v-icon v-else x-small>mdi-pin-outline</v-icon>
         </v-btn>
@@ -29,24 +21,12 @@
           <v-btn v-tooltip="'View online'" icon small class="mr-3" @click="openInWeb">
             <v-icon small>mdi-open-in-new</v-icon>
           </v-btn>
-          <v-btn
-            v-tooltip="'Send'"
-            icon
-            class="mr-3 elevation-2"
-            :loading="loadingSend"
-            @click="send"
-          >
+          <v-btn v-tooltip="'Send'" icon class="mr-3 elevation-2" :loading="loadingSend" @click="send">
             <!-- <v-icon>mdi-upload</v-icon> -->
             <v-img v-if="$vuetify.theme.dark" src="@/assets/SenderWhite.png" max-width="30" />
             <v-img v-else src="@/assets/Sender.png" max-width="30" />
           </v-btn>
-          <v-btn
-            v-tooltip="'Receive'"
-            icon
-            class="elevation-2"
-            :loading="loadingReceive"
-            @click="receive"
-          >
+          <v-btn v-tooltip="'Receive'" icon class="elevation-2" :loading="loadingReceive" @click="receive">
             <!-- <v-icon>mdi-download</v-icon> -->
             <v-img v-if="$vuetify.theme.dark" src="@/assets/ReceiverWhite.png" max-width="30" />
             <v-img v-else src="@/assets/Receiver.png" max-width="30" />
@@ -66,11 +46,8 @@
         <template #activator="{ on, attrs }">
           <v-slide-x-transition>
             <div v-show="hover">
-              <create-branch-dialog
-                  :is-f-e2="preferences && preferences.user && preferences.user.fe2"
-                  :stream-name="stream.name"
-                  :stream-id="streamId"
-              />
+              <create-branch-dialog :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                :stream-name="stream.name" :stream-id="streamId" />
             </div>
           </v-slide-x-transition>
           <v-chip v-if="stream.branches" small v-bind="attrs" class="mr-1" v-on="on">
@@ -80,12 +57,8 @@
         </template>
         <!-- Branch list -->
         <v-list dense>
-          <v-list-item
-            v-for="(branch, index) in stream.branches.items"
-            :key="index"
-            link
-            @click="switchBranch(branch.name)"
-          >
+          <v-list-item v-for="(branch, index) in stream.branches.items" :key="index" link
+            @click="switchBranch(branch.name)">
             <v-list-item-title class="text-caption font-weight-regular">
               <v-icon v-if="branch.name === branchName" small class="mr-1 float-left">
                 mdi-check
@@ -100,22 +73,14 @@
         <template #activator="{ on, attrs }">
           <v-chip v-if="stream && stream.commits" small v-bind="attrs" v-on="on">
             <v-icon small class="mr-1 float-left">mdi-source-commit</v-icon>
-            {{  selectedBranch.commits.items.length ? commitId : 'no commits' }}
+            {{ selectedBranch.commits.items.length ? commitId : 'no commits' }}
           </v-chip>
         </template>
         <v-list v-if="selectedBranch && selectedBranch.commits" dense>
-          <v-list-item
-            v-for="(commit, index) in selectedBranch.commits.items"
-            :key="index"
-            link
-            @click="switchCommit(commit.id)"
-          >
+          <v-list-item v-for="(commit, index) in selectedBranch.commits.items" :key="index" link
+            @click="switchCommit(commit.id)">
             <v-list-item-title class="text-caption font-weight-regular">
-              <v-icon
-                v-if="(commitId == 'latest' && index == 0) || commit.id == commitId"
-                small
-                class="mr-1 float-left"
-              >
+              <v-icon v-if="(commitId == 'latest' && index == 0) || commit.id == commitId" small class="mr-1 float-left">
                 mdi-check
               </v-icon>
               <v-icon v-else small class="mr-1 float-left">mdi-source-commit</v-icon>
@@ -131,24 +96,14 @@
       <div class="flex-grow-1 px-4">
         <v-slide-y-transition>
           <div v-show="hover">
-            <v-text-field
-              v-model="commitMessage"
-              xxxclass="small-text-field"
-              hide-details
-              dense
-              flat
-              :placeholder="`Write your ${commitText.toLowerCase()} message here`"
-            />
+            <v-text-field v-model="commitMessage" xxxclass="small-text-field" hide-details dense flat
+              :placeholder="`Write your ${commitText.toLowerCase()} message here`" />
           </div>
         </v-slide-y-transition>
       </div>
     </v-card-text>
-    <v-progress-linear
-      v-if="(loadingSend || loadingReceive) && loadingStage"
-      key="progress-bar"
-      height="14"
-      indeterminate
-    >
+    <v-progress-linear v-if="(loadingSend || loadingReceive) && loadingStage" key="progress-bar" height="14"
+      indeterminate>
       <div class="text-caption">
         {{ loadingStage }}
       </div>
@@ -164,8 +119,9 @@
 import gql from 'graphql-tag'
 import { bus } from '../main'
 import streamQuery from '../graphql/stream.gql'
+import projectQuery from '../graphql/project.gql'
 import ObjectLoader from '@speckle/objectloader'
-import {HostApplications} from '@/utils/hostApplications'
+import { HostApplications } from '@/utils/hostApplications'
 
 global.convertedFromSketchup = function (streamId, batches, commitId, totalChildrenCount) {
   bus.$emit(`sketchup-objects-${streamId}`, batches, commitId, totalChildrenCount)
@@ -212,7 +168,8 @@ export default {
       streamText: '',
       branchText: '',
       commitText: '',
-      preferences: {}
+      preferences: {},
+      filterBranchIds: []
     }
   },
   apollo: {
@@ -222,6 +179,18 @@ export default {
       variables() {
         return {
           id: this.streamId
+        }
+      }
+    },
+    project: {
+      prefetch: true,
+      query: projectQuery,
+      variables() {
+        return {
+          projectId: this.streamId,
+          filter: {
+            ids: this.filterBranchIds
+          }
         }
       }
     },
@@ -302,7 +271,39 @@ export default {
       this.commitText = pref.user.fe2 ? 'Version' : 'Commit'
     })
     // Collect preferences to render UI according to it
-    sketchup.exec({name: "collect_preferences", data: {}})
+    sketchup.exec({ name: "collect_preferences", data: {} })
+
+    bus.$on(`set-stream-branch-commit-${this.streamId}`, async (branchId, commitId) => {
+      console.log(branchId, "branchId");
+      let res = await this.$apollo.query({
+        query: gql`
+          query Project($projectId: String!, $filter: ProjectModelsFilter) {
+            project(id: $projectId) {
+              id
+              name
+              models (filter: $filter) {
+                items {
+                  id
+                  name
+                  versions {
+                    items {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          projectId: this.streamId,
+          filter: {
+            ids: [branchId]
+          }
+        }
+      })
+      console.log(res.data);
+    })
 
     bus.$on(`deactivate-diffing-${this.streamId}`, () => {
       this.diffing = false
@@ -347,11 +348,11 @@ export default {
       this.$mixpanel.track('Send', { method: 'OneClick' })
     })
 
-    if (this.saved) sketchup.exec({name: "notify_connected", data: {stream_id: this.streamId}})
+    if (this.saved) sketchup.exec({ name: "notify_connected", data: { stream_id: this.streamId } })
   },
   methods: {
-    getColor(invalid){
-      if(invalid){
+    getColor(invalid) {
+      if (invalid) {
         return "#ffdfdf"
       } else {
         return ""
@@ -363,7 +364,7 @@ export default {
     openInWeb() {
       var url = localStorage.getItem('frontend2') === "true" ? `${localStorage.getItem('serverUrl')}/projects/${this.streamId}` : `${localStorage.getItem('serverUrl')}/streams/${this.streamId}`
       window.open(url)
-      
+
       this.$mixpanel.track('Connector Action', { name: 'Open In Web' })
     },
     switchBranch(branchName) {
@@ -375,22 +376,22 @@ export default {
       this.$mixpanel.track('Connector Action', { name: 'Commit Switch' })
       this.commitId = commitId
     },
-    activateDiffing(){
-      if (this.diffing){
+    activateDiffing() {
+      if (this.diffing) {
         this.diffing = false
-        sketchup.exec({name: "deactivate_diffing", data: {}})
+        sketchup.exec({ name: "deactivate_diffing", data: {} })
         return
       }
       this.diffing = true
       bus.$emit("deactivate-diffing-except", (this.streamId))
-      sketchup.exec({name: "activate_diffing", data: {stream_id: this.streamId}})
+      sketchup.exec({ name: "activate_diffing", data: { stream_id: this.streamId } })
     },
     toggleSavedStream() {
       if (this.saved) {
-        sketchup.exec({name: "remove_stream", data: {stream_id: this.streamId}})
+        sketchup.exec({ name: "remove_stream", data: { stream_id: this.streamId } })
         this.$mixpanel.track('Connector Action', { name: 'Stream Remove' })
       } else {
-        sketchup.exec({name: "save_stream", data: {stream_id: this.streamId}})
+        sketchup.exec({ name: "save_stream", data: { stream_id: this.streamId } })
         this.$mixpanel.track('Connector Action', { name: 'Stream Save' })
       }
     },
@@ -401,7 +402,7 @@ export default {
       const isMultiplayer = this.selectedCommit.authorId !== selectedAccount['userInfo']['id']
       const sourceApp = this.selectedCommit.sourceApplication
       const sourceAppSlug = HostApplications.GetHostAppFromString(sourceApp).slug
-      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer, sourceHostApp: sourceAppSlug, sourceHostAppVersion: sourceApp})
+      this.$mixpanel.track('Receive', { isMultiplayer: isMultiplayer, sourceHostApp: sourceAppSlug, sourceHostAppVersion: sourceApp })
       const refId = this.selectedCommit?.referencedObject
       if (!refId) {
         this.loadingReceive = false
@@ -418,14 +419,16 @@ export default {
 
       let rootObj = await loader.getAndConstructObject(this.updateLoadingStage)
 
-      sketchup.exec({name:"receive_objects" , data: {
+      sketchup.exec({
+        name: "receive_objects", data: {
           base: rootObj,
           stream_name: this.stream.name,
           stream_id: this.streamId,
           branch_name: this.selectedCommit.branchName,
           branch_id: this.selectedCommit.id,
           source_app: this.selectedCommit.sourceApplication
-      }})
+        }
+      })
 
       await this.$apollo.mutate({
         mutation: gql`
@@ -451,7 +454,7 @@ export default {
       this.loadingStage = 'converting'
       this.loadingSend = true
       this.$mixpanel.track('Send')
-      sketchup.exec({name:"send_selection" , data: {stream_id: this.streamId}})
+      sketchup.exec({ name: "send_selection", data: { stream_id: this.streamId } })
       console.log('>>> SpeckleSketchUp: Objects requested from SketchUp')
       await this.sleep(2000)
     },
@@ -481,7 +484,7 @@ export default {
         }
 
         const t1 = Date.now()
-        const elapsedTime = (t1-t0) / 1000
+        const elapsedTime = (t1 - t0) / 1000
         console.log(`Upload time: ${elapsedTime} second`)
 
         let commit = {
@@ -556,6 +559,7 @@ export default {
 .fade-leave-active {
   transition: opacity 0.2s ease-in;
 }
+
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
@@ -566,27 +570,31 @@ export default {
   max-height: 1200px;
   overflow: hidden;
 }
+
 .expand-leave-active {
   transition: all 0.3s ease;
   max-height: 1200px;
   overflow: hidden;
 }
+
 .expand-enter,
 .expand-leave-to {
   max-height: 0;
   opacity: 0;
 }
 
-.v-text-field >>> input {
+.v-text-field>>>input {
   font-size: 0.9em;
 }
-.v-text-field >>> label {
+
+.v-text-field>>>label {
   font-size: 0.9em;
 }
 
 .btn-fix:focus::before {
   opacity: 0 !important;
 }
+
 .btn-fix:hover::before {
   opacity: 0.08 !important;
 }

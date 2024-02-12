@@ -1,0 +1,17 @@
+query Project($projectId: String!, $filter: ProjectModelsFilter) {
+  project(id: $projectId) {
+    id
+    name
+    models (filter: $filter) {
+      items {
+        id
+        name
+        versions {
+          items {
+            id
+          }
+        }
+      }
+    }
+  }
+}

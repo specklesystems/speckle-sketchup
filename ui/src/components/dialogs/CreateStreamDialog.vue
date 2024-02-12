@@ -250,7 +250,9 @@ export default {
         this.$eventHub.$emit('notification', {
           text: 'Stream Added by URL!\n',
         })
-        bus.$emit('stream-added-by-id-or-url', stream.id)
+        console.log(streamWrapper);
+        console.log(streamWrapper.branchName.slice(0, -1), "stream-added-by-id-or-url");
+        await bus.$emit('stream-added-by-id-or-url', stream.id, streamWrapper.branchName.slice(0, -1), streamWrapper.commitId)
         this.$mixpanel.track('Connector Action', { name: 'Stream Add From URL' })
       }
       catch (e){

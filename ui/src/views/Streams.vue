@@ -120,7 +120,7 @@ export default {
     bus.$on('set-saved-streams', (streamIds) => {
       this.savedStreams = streamIds
     })
-    bus.$on('stream-added-by-id-or-url', (streamId) => {
+    bus.$on('stream-added-by-id-or-url', async(streamId, branchId, commitId) => {
       if (!this.savedStreams){
         this.savedStreams = []
         this.savedStreams.push(streamId)
@@ -128,9 +128,11 @@ export default {
       } else {
         if (!this.savedStreams.includes(streamId)){
           this.savedStreams.push(streamId)
+          
           sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
         }
       }
+      await bus.$emit(`set-stream-branch-commit-${streamId}`, branchId, commitId)
     })
     sketchup.exec({name: "load_saved_streams", data: {}})
     console.log('LAUNCHED')
