@@ -48,21 +48,25 @@
                 <v-img v-if="user.avatar" :src="user.avatar" />
                 <v-img v-else :src="`https://robohash.org/` + user.id + `.png?size=40x40`" />
               </v-avatar>
-              <div>
-                <b>{{ user.name }}</b>
-              </div>
               <div class="caption">
                 {{ user.company }}
                 <br />
                 {{ user.bio ? 'Bio: ' + user.bio : '' }}
               </div>
+              <div>
+                <b>{{ user.name }}</b>
+                <br />
+                <b>{{ user.email }}</b>
+              </div>
+              <div class="caption">
+                <b>{{ activeAccount().serverInfo.url }}</b>
+              </div>
             </v-card-text>
             <v-card-text v-if="accounts()">
               <v-divider class="my-3" />
-
               <div v-for="account in accounts()" :key="account.id">
                 <v-btn
-                  v-if="account.userInfo.id != user.id"
+                  v-if="account.id != activeAccount().id"
                   rounded
                   large
                   class="my-1 elevation-0"
@@ -128,6 +132,7 @@
 /*global sketchup*/
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
+import serverInfoQuery from './graphql/serverInfo.gql'
 import { onLogin } from './vue-apollo'
 import Login from "@/views/Login";
 
@@ -150,10 +155,8 @@ global.loadAccounts = function (accounts) {
       var account = accounts.find((acct) => acct['userInfo']['id'] === uuid)
       if (account){
         global.setSelectedAccount(account)
-      }else{
-        global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+        return
       }
-    } else {
       global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
     }
   }
@@ -205,6 +208,9 @@ export default {
   apollo: {
     user: {
       query: userQuery
+    },
+    serverInfo: {
+      query: serverInfoQuery
     }
   },
   mounted() {
@@ -242,17 +248,17 @@ export default {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
     activeAccount(){
-      return this.accounts().find((account) => account['isDefault'])
+      return JSON.parse(localStorage.getItem('selectedAccount'))
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
-      
+
       // Force pushes to reload page to create ApolloClient from scratch
-      setTimeout(() => {
-        // timeout to wait a bit for potential sketchup.exec in the mean time calls
-        location.reload()
-      }, 200);
+      // setTimeout(() => {
+      //   // timeout to wait a bit for potential sketchup.exec in the mean time calls
+      //   location.reload()
+      // }, 200);
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})

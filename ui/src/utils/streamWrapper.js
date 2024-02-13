@@ -1,12 +1,12 @@
 require('url')
 
 export class StreamWrapper {
-    constructor(streamIdOrUrl, accountId, serverUrl, isFE2) {
-        this.isFE2 = isFE2
+    constructor(streamIdOrUrl, accountId, serverUrl) {
+        this.isFE2 = this.checkIsFE2(streamIdOrUrl)
         this.streamsKey = this.isFE2 ? 'projects/': 'streams/'
         this.branchesKey = this.isFE2 ? 'models/': 'branches/'
         this.commitsKey = this.isFE2 ? 'versions/': 'commits/'
-        this.originalOutput = streamIdOrUrl
+        this.originalOutput = streamIdOrUrl        
         try {
             this.streamWrapperFromUrl(streamIdOrUrl)
         }
@@ -15,6 +15,12 @@ export class StreamWrapper {
             this.userId = accountId
             this.streamId = streamIdOrUrl
         }
+    }
+
+    checkIsFE2(streamUrl){
+        const fe2UrlRegex = /\/projects\/(?<projectId>[\w\d]+)(?:\/models\/(?<model>[\w\d]+(?:@[\w\d]+)?)(?:,(?<additionalModels>[\w\d]+(?:@[\w\d]+)?))*)?/
+        const match = fe2UrlRegex.exec(streamUrl);
+        return match !== null;
     }
 
     streamWrapperFromUrl(streamUrl){
