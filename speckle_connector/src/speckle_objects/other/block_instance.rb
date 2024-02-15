@@ -84,7 +84,7 @@ module SpeckleConnector
           speckle_state = new_speckle_state
 
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(component_instance, preferences)
+                         .attribute_dictionaries_to_speckle(component_instance, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)
