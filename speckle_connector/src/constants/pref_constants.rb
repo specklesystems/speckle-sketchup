@@ -15,7 +15,7 @@ module SpeckleConnector
     Sketchup::ComponentInstance => INCLUDE_COMPONENT_ENTITY_ATTRIBUTES,
     Sketchup::Group => INCLUDE_GROUP_ENTITY_ATTRIBUTES,
     Sketchup::Face => INCLUDE_FACE_ENTITY_ATTRIBUTES,
-    Sketchup::Face => INCLUDE_EDGE_ENTITY_ATTRIBUTES
+    Sketchup::Edge => INCLUDE_EDGE_ENTITY_ATTRIBUTES
   }.freeze
 
   LEVEL_SHIFT_VALUE = SpeckleObjects::Geometry.length_to_native(1.5, 'm')
