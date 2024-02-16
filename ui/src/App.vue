@@ -149,10 +149,10 @@ global.collectVersions = function (versions) {
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
-  let uuid = localStorage.getItem('uuid')
+  let selectedAccountId = localStorage.getItem('selectedAccountId')
   if (accounts.length !== 0){
-    if (uuid) {
-      var account = accounts.find((acct) => acct['userInfo']['id'] === uuid)
+    if (selectedAccountId) {
+      var account = accounts.find((acct) => acct['id'] === selectedAccountId)
       if (account){
         global.setSelectedAccount(account)
         return
@@ -166,7 +166,7 @@ global.setSelectedAccount = function (account) {
   localStorage.setItem('selectedAccount', JSON.stringify(account))
   localStorage.setItem('serverUrl', account['serverInfo']['url'])
   localStorage.setItem('SpeckleSketchup.AuthToken', account['token'])
-  localStorage.setItem('uuid', account['userInfo']['id'])
+  localStorage.setItem('selectedAccountId', account['id'])
   localStorage.setItem('frontend2', account['serverInfo']['frontend2'])
   bus.$emit('selected-account-reloaded')
 }
