@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'development') {
   localStorage.setItem(AUTH_TOKEN, process.env.VUE_APP_DEV_TOKEN)
   localStorage.setItem('serverUrl', process.env.VUE_APP_DEFAULT_SERVER)
 } else if (!localStorage.getItem('serverUrl')) {
-  localStorage.setItem('serverUrl', 'https://speckle.xyz')
+  localStorage.setItem('serverUrl', 'https://app.speckle.systems')
 }
 
 const authLink = setContext((_, { headers }) => {
@@ -34,7 +34,7 @@ const defaultOptions = {
     return (
       (localStorage.getItem('serverUrl').includes('http')
         ? localStorage.getItem('serverUrl')
-        : 'https://speckle.xyz') + '/graphql'
+        : 'https://app.speckle.systems') + '/graphql'
     )
   },
 
@@ -43,7 +43,7 @@ const defaultOptions = {
   wsEndpoint: (
     (localStorage.getItem('serverUrl').includes('http')
       ? localStorage.getItem('serverUrl')
-      : 'https://speckle.xyz') + '/graphql'
+      : 'https://app.speckle.systems') + '/graphql'
   ).replace('http', 'ws'),
 
   // LocalStorage token

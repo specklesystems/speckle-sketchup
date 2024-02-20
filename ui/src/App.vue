@@ -104,12 +104,12 @@
               />
             </v-container>
             <create-stream-dialog
-                v-if="accounts().length !== 0"
+                v-if="accounts() && accounts().length !== 0"
                 :is-f-e2-terms="preferences && preferences.user && preferences.user.fe2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
-            <v-container v-if="accounts().length !== 0" fluid>
+            <v-container v-if="accounts() && accounts().length !== 0" fluid>
               <router-view :stream-search-query="streamSearchQuery"/>
             </v-container>
             <v-container v-else>
@@ -149,16 +149,16 @@ global.collectVersions = function (versions) {
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
-  let uuid = localStorage.getItem('uuid')
+  let selectedAccountId = localStorage.getItem('selectedAccountId')
   if (accounts.length !== 0){
-    if (uuid) {
-      var account = accounts.find((acct) => acct['userInfo']['id'] === uuid)
+    if (selectedAccountId) {
+      var account = accounts.find((acct) => acct['id'] === selectedAccountId)
       if (account){
         global.setSelectedAccount(account)
         return
       }
-      global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
     }
+    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
   }
 }
 
@@ -166,7 +166,7 @@ global.setSelectedAccount = function (account) {
   localStorage.setItem('selectedAccount', JSON.stringify(account))
   localStorage.setItem('serverUrl', account['serverInfo']['url'])
   localStorage.setItem('SpeckleSketchup.AuthToken', account['token'])
-  localStorage.setItem('uuid', account['userInfo']['id'])
+  localStorage.setItem('selectedAccountId', account['id'])
   localStorage.setItem('frontend2', account['serverInfo']['frontend2'])
   bus.$emit('selected-account-reloaded')
 }
@@ -213,6 +213,14 @@ export default {
       query: serverInfoQuery
     }
   },
+  beforeMount() {
+    // Collect accounts from 'Accounts.db' by ruby sqlite3
+    sketchup.exec({name: "init_local_accounts", data: {}})
+    // Collect preferences to render UI according to it
+    sketchup.exec({name: "collect_preferences", data: {}})
+    // Collect versions to inform mixpanel
+    sketchup.exec({name: "collect_versions", data: {}})
+  },
   mounted() {
     bus.$on('selected-account-reloaded', async () => {
       await onLogin(this.$apollo.provider.defaultClient)
@@ -233,21 +241,12 @@ export default {
       this.branchText = this.preferences.user.fe2 ? 'Model' : 'Branch'
       this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
-
-    // Collect versions to inform mixpanel
-    sketchup.exec({name: "collect_versions", data: {}})
-
-    // Collect preferences to render UI according to it
-    sketchup.exec({name: "collect_preferences", data: {}})
-
-    // Collect accounts from 'Accounts.db' by ruby sqlite3
-    sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
     accounts() {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
-    activeAccount(){
+    activeAccount() {
       return JSON.parse(localStorage.getItem('selectedAccount'))
     },
     switchAccount(account) {
