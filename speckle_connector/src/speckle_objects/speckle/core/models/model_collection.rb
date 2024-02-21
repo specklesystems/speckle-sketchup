@@ -81,39 +81,8 @@ module SpeckleConnector
             def self.collect_mapped_entities(speckle_state, sketchup_model, units, preferences, &convert)
               mapped_entities = Mapper.mapped_entities_on_selection(sketchup_model)
               mapped_entities.collect do |entity_with_path|
-                convert_mapped_entity(speckle_state, entity_with_path, preferences, units, &convert)
+                Mapper.convert_mapped_entity(speckle_state, entity_with_path, preferences, units, &convert)
               end
-            end
-
-            def self.convert_mapped_entity(speckle_state, entity_with_path, preferences, units, &convert)
-              entity = entity_with_path[0]
-              path = entity_with_path[1..-1]
-              method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity, 'method')
-              if entity.is_a?(Sketchup::ComponentInstance) && method.nil?
-                method = SPECKLE_SCHEMA_DICTIONARY_HANDLER.get_attribute(entity.definition, 'method')
-              end
-
-              if !method.nil? && (method.include?('Floor') || method.include?('Wall')) && entity.is_a?(Sketchup::Face)
-                global_transformation = QUERY::Entity.global_transformation(entity, path)
-                floor = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity,
-                                                                 units: units, model_preferences: preferences,
-                                                                 global_transform: global_transformation)
-                return [floor, [entity]]
-              end
-
-              if method == 'Direct Shape'
-                direct_shape = DIRECT_SHAPE.from_entity(speckle_state, entity, path, units, preferences)
-                return [direct_shape, [entity]]
-              end
-
-              if ['New Revit Family', 'Family Instance'].include?(method)
-                _speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
-                  entity, units, preferences, speckle_state, path: path, &convert
-                )
-                return [block_instance, [entity]]
-              end
-
-              nil
             end
           end
         end

@@ -75,7 +75,8 @@ module SpeckleConnector
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         if entity.is_a?(Sketchup::Edge)
-          line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
+                                                          units: @units, model_preferences: preferences[:model]).to_h
           return speckle_state, [line, [entity]]
         end
 
