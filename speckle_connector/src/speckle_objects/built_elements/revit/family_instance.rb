@@ -10,9 +10,6 @@ module SpeckleConnector
         # Family instance for Revit mappings.
         class FamilyInstance < Base
           SPECKLE_TYPE = OBJECTS_BUILTELEMENTS_REVIT_FAMILY_INSTANCE
-          READER = SketchupModel::Reader
-          QUERY = SketchupModel::Query
-          DICTIONARY = SketchupModel::Dictionary
 
           # rubocop:disable Metrics/ParameterLists
           def initialize(family:, type:, level:, units:, base_point:, rotation:, application_id: nil)

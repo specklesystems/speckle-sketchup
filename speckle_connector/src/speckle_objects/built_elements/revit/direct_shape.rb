@@ -103,7 +103,14 @@ module SpeckleConnector
                                       entity.definition.entities, [Sketchup::Face], path.append(entity)
                                     )
             end
-            base_geometries = group_faces_under_mesh_by_material(speckle_state, entities_with_path, units, model_preferences)
+            base_geometries = if entity.is_a?(Sketchup::Edge)
+                                [Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity, units: units,
+                                                          model_preferences: model_preferences,
+                                                          global_transformation: nil)]
+                              else
+                                group_faces_under_mesh_by_material(speckle_state, entities_with_path, units,
+                                                                   model_preferences)
+                              end
             DirectShape.new(
               name: schema[:name], category: schema[:category], units: units,
               base_geometries: base_geometries, application_id: entity.persistent_id
