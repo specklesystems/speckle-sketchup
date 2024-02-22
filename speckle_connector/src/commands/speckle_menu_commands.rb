@@ -66,7 +66,7 @@ module SpeckleConnector
 
       def self.reset_window_location_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          ResetWindowLocation.new(app), 'Reset Window Location'
+          ResetWindowLocation.new(app, nil), 'Reset Window Location'
         )
         cmd.tooltip = 'Bring Speckle window onto center of SketchUp window'
         cmd.status_bar_text = 'Bring Speckle window onto center of SketchUp window'

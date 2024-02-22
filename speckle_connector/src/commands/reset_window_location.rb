@@ -2,7 +2,6 @@
 
 require_relative 'command'
 require_relative '../states/initial_state'
-require_relative '../ui/vue_view'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
@@ -15,7 +14,7 @@ module SpeckleConnector
 
       def _run
         app = self.app
-        vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
+        vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_LEGACY_UI]
         if vue_view
           vue_view.dialog.reset_dialog_location
         else
