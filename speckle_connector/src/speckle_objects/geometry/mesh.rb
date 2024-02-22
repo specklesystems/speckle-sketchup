@@ -122,9 +122,9 @@ module SpeckleConnector
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
           # Merge only added faces in this scope
-          if model_preferences[:merge_coplanar_faces]
-            added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
-          end
+          # if model_preferences[:merge_coplanar_faces]
+          #   added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
+          # end
           added_faces.each do |face|
             face.layer = mesh_layer unless mesh_layer.nil?
             # Smooth edges if they already soft

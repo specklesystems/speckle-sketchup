@@ -17,7 +17,7 @@
     </div>
     <div v-if="allStreamsList" class="mt-5">
       <div v-for="stream in allStreamsList" :key="stream.id">
-        <stream-card :stream-id="stream.id" />
+        <stream-card :stream-id="stream.id"/>
       </div>
       <div class="actions text-center">
         <v-btn
@@ -59,7 +59,10 @@ export default {
     StreamCard: () => import('@/components/StreamCard')
   },
   props: {
-    streamSearchQuery: { type: String, default: null }
+    streamSearchQuery: { 
+      type: String, 
+      default: null 
+    }
   },
   data() {
     return {
@@ -121,12 +124,13 @@ export default {
       if (!this.savedStreams){
         this.savedStreams = []
         this.savedStreams.push(streamId)
+        sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
       } else {
         if (!this.savedStreams.includes(streamId)){
           this.savedStreams.push(streamId)
+          sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
         }
       }
-      sketchup.exec({name: "save_stream", data: {stream_id: streamId}})
     })
     sketchup.exec({name: "load_saved_streams", data: {}})
     console.log('LAUNCHED')

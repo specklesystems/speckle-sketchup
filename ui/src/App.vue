@@ -48,21 +48,25 @@
                 <v-img v-if="user.avatar" :src="user.avatar" />
                 <v-img v-else :src="`https://robohash.org/` + user.id + `.png?size=40x40`" />
               </v-avatar>
-              <div>
-                <b>{{ user.name }}</b>
-              </div>
               <div class="caption">
                 {{ user.company }}
                 <br />
                 {{ user.bio ? 'Bio: ' + user.bio : '' }}
               </div>
+              <div>
+                <b>{{ user.name }}</b>
+                <br />
+                <b>{{ user.email }}</b>
+              </div>
+              <div class="caption">
+                <b>{{ activeAccount().serverInfo.url }}</b>
+              </div>
             </v-card-text>
             <v-card-text v-if="accounts()">
               <v-divider class="my-3" />
-
               <div v-for="account in accounts()" :key="account.id">
                 <v-btn
-                  v-if="account.userInfo.id != user.id"
+                  v-if="account.id != activeAccount().id"
                   rounded
                   large
                   class="my-1 elevation-0"
@@ -100,13 +104,13 @@
               />
             </v-container>
             <create-stream-dialog
-                v-if="accounts().length !== 0"
-                :is-f-e2="preferences && preferences.user && preferences.user.fe2"
+                v-if="accounts() && accounts().length !== 0"
+                :is-f-e2-terms="preferences && preferences.user && preferences.user.fe2"
                 :account-id="activeAccount().userInfo.id"
                 :server-url="activeAccount().serverInfo.url"
             />
-            <v-container v-if="accounts().length !== 0" fluid>
-              <router-view :stream-search-query="streamSearchQuery" />
+            <v-container v-if="accounts() && accounts().length !== 0" fluid>
+              <router-view :stream-search-query="streamSearchQuery"/>
             </v-container>
             <v-container v-else>
               <login/>
@@ -128,6 +132,7 @@
 /*global sketchup*/
 import { bus } from './main'
 import userQuery from './graphql/user.gql'
+import serverInfoQuery from './graphql/serverInfo.gql'
 import { onLogin } from './vue-apollo'
 import Login from "@/views/Login";
 
@@ -144,13 +149,16 @@ global.collectVersions = function (versions) {
 global.loadAccounts = function (accounts) {
   console.log('>>> SpeckleSketchup: Loading accounts', accounts)
   localStorage.setItem('localAccounts', JSON.stringify(accounts))
-  let uuid = localStorage.getItem('uuid')
+  let selectedAccountId = localStorage.getItem('selectedAccountId')
   if (accounts.length !== 0){
-    if (uuid) {
-      global.setSelectedAccount(accounts.find((acct) => acct['userInfo']['id'] === uuid))
-    } else {
-      global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
+    if (selectedAccountId) {
+      var account = accounts.find((acct) => acct['id'] === selectedAccountId)
+      if (account){
+        global.setSelectedAccount(account)
+        return
+      }
     }
+    global.setSelectedAccount(accounts.find((acct) => acct['isDefault']))
   }
 }
 
@@ -158,7 +166,8 @@ global.setSelectedAccount = function (account) {
   localStorage.setItem('selectedAccount', JSON.stringify(account))
   localStorage.setItem('serverUrl', account['serverInfo']['url'])
   localStorage.setItem('SpeckleSketchup.AuthToken', account['token'])
-  localStorage.setItem('uuid', account['userInfo']['id'])
+  localStorage.setItem('selectedAccountId', account['id'])
+  localStorage.setItem('frontend2', account['serverInfo']['frontend2'])
   bus.$emit('selected-account-reloaded')
 }
 
@@ -199,7 +208,18 @@ export default {
   apollo: {
     user: {
       query: userQuery
+    },
+    serverInfo: {
+      query: serverInfoQuery
     }
+  },
+  beforeMount() {
+    // Collect accounts from 'Accounts.db' by ruby sqlite3
+    sketchup.exec({name: "init_local_accounts", data: {}})
+    // Collect preferences to render UI according to it
+    sketchup.exec({name: "collect_preferences", data: {}})
+    // Collect versions to inform mixpanel
+    sketchup.exec({name: "collect_versions", data: {}})
   },
   mounted() {
     bus.$on('selected-account-reloaded', async () => {
@@ -221,26 +241,23 @@ export default {
       this.branchText = this.preferences.user.fe2 ? 'Model' : 'Branch'
       this.$vuetify.theme.dark = this.preferences.user.dark_theme
     })
-
-    // Collect versions to inform mixpanel
-    sketchup.exec({name: "collect_versions", data: {}})
-
-    // Collect preferences to render UI according to it
-    sketchup.exec({name: "collect_preferences", data: {}})
-
-    // Collect accounts from 'Accounts.db' by ruby sqlite3
-    sketchup.exec({name: "init_local_accounts", data: {}})
   },
   methods: {
     accounts() {
       return JSON.parse(localStorage.getItem('localAccounts'))
     },
-    activeAccount(){
-      return this.accounts().find((account) => account['isDefault'])
+    activeAccount() {
+      return JSON.parse(localStorage.getItem('selectedAccount'))
     },
     switchAccount(account) {
       this.$mixpanel.track('Connector Action', { name: 'Account Select' })
       global.setSelectedAccount(account)
+
+      // Force pushes to reload page to create ApolloClient from scratch
+      // setTimeout(() => {
+      //   // timeout to wait a bit for potential sketchup.exec in the mean time calls
+      //   location.reload()
+      // }, 200);
     },
     requestRefresh() {
       sketchup.exec({name: 'reload_accounts', data: {}})

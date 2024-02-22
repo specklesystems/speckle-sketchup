@@ -1,4 +1,4 @@
-query Stream($id: String!) {
+query Stream($id: String!, $limit: Int!) {
   stream(id: $id) {
     id
     name
@@ -27,7 +27,7 @@ query Stream($id: String!) {
         referencedObject
       }
     }
-    branches {
+    branches (limit: $limit) {
       totalCount
       items {
         id

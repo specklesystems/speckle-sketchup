@@ -171,7 +171,7 @@
               class="pt-0"
               label="Family"
               :disabled="!entitySelected"
-              :items="families"
+              :items="inputFamilies"
               density="compact"
               clearable
               @change="onSelectedFamilyChange"
@@ -208,7 +208,7 @@
               v-model="selectedCategory"
               class="pt-0"
               label="Category"
-              :items="availableCategories"
+              :items="selectedMethod === 'New Revit Family' ? familyCategories : categories"
               item-value="value"
               item-text="key"
               :disabled="!entitySelected"
@@ -282,12 +282,17 @@ import {groupBy} from "@/utils/groupBy";
 import MappingSource from "@/components/MapperSource.vue";
 import {sourceMap} from "@vue/cli-service/lib/config/terserOptions";
 
-global.mapperSourceUpdated = function (streamId, levels, types) {
+global.mapperSourceUpdated = function (streamId, levels, types, familyInstances) {
   console.log(`Mapper source updated for ${streamId}.`)
+  bus.$emit('mapper-source-updated', JSON.stringify(levels), JSON.stringify(types), JSON.stringify(familyInstances))
 }
 
 global.entitySelected = function (selectionParameters) {
   bus.$emit('entities-selected', JSON.stringify(selectionParameters))
+}
+
+global.mapperInitialized = function (initParameters) {
+  bus.$emit('mapper-initialized', JSON.stringify(initParameters))
 }
 
 global.entitiesDeselected = function () {
@@ -343,7 +348,7 @@ export default {
       entitySelected: false,
       selectedEntityCount: 0,
       selectedEntities: [],
-      allFamilyTypes: {},
+
       familyTypes: [],
       lastSelectedEntity: null,
 
@@ -355,10 +360,17 @@ export default {
       name: "",
 
       availableMethods: [],
-      availableCategories: [],
-      families: [],
-      allTypes: {},
+      categories: [],
+      familyCategories: [],
+
+      inputCategories: [],
+      inputFamilies: [],
+      inputFamilyTypes: {},
+
+      // comes from source
+      types: {},
       levels: [],
+      familyInstanceTypes: {}, // comes from source as filtered
 
       mappedEntityCount: 0,
       mappedEntities: [],
@@ -531,6 +543,14 @@ export default {
         this.categorySelectionActive = true
         this.nameSelectionActive = true
       }
+      else if (this.selectedMethod === 'New Revit Family'){
+        this.categorySelectionActive = true
+      }
+      else if (this.selectedMethod === 'Family Instance'){
+        this.typeSelectionActive = true
+        this.familySelectionActive = true
+        this.levelSelectionActive = true
+      }
       else if (nativeDefaultMethods.includes(this.selectedMethod)){
         this.typeSelectionActive = false
         this.familySelectionActive = false
@@ -545,52 +565,63 @@ export default {
       }
     },
     getTypesFromSelectedFamily(){
-      this.familyTypes = this.allFamilyTypes[this.selectedFamily]
-      this.selectedFamilyType = this.familyTypes[0].type
-      if (this.selectedFamily === null || this.selectedFamily === undefined){
-        this.selectedFamily = this.families[0]
-      }
-      if (this.familyTypes === null ||this.familyTypes === undefined){
-        this.familyTypes = this.allFamilyTypes[this.selectedFamily]
-      }
-      if (this.selectedFamilyType === null || this.selectedFamilyType === undefined){
-        this.selectedFamilyType = this.familyTypes[0].type
+      // There is no sense to set selected family type if method is not selected
+      if (this.selectedMethod){
+        if (this.sourceState !== 'Not Set'){
+          this.familyTypes = this.inputFamilyTypes[this.selectedFamily]
+          this.selectedFamilyType = this.familyTypes[0].type
+          if (this.selectedFamilyType === null || this.selectedFamilyType === undefined){
+            this.selectedFamilyType = this.familyTypes[0].type
+          }
+        }
+        if (this.selectedFamily === null || this.selectedFamily === undefined){
+          this.selectedFamily = this.inputFamilies[0]
+        }
+        if (this.familyTypes === null ||this.familyTypes === undefined){
+          this.familyTypes = this.inputFamilyTypes[this.selectedFamily]
+        }
       }
     },
     getFamiliesFromSelectedMethod(){
       switch (this.selectedMethod) {
         case 'Floor':
-          this.families = Object.keys(this.allTypes['Floors']);
-          this.allFamilyTypes = this.allTypes['Floors']
+          this.inputFamilies = Object.keys(this.types['Floors']);
+          this.inputFamilyTypes = this.types['Floors']
           break;
         case 'Wall':
-          this.families = Object.keys(this.allTypes['Walls']);
-          this.allFamilyTypes = this.allTypes['Walls']
+          this.inputFamilies = Object.keys(this.types['Walls']);
+          this.inputFamilyTypes = this.types['Walls']
           break;
         case 'Column':
-          this.families = Object.keys(this.allTypes['Columns']);
-          this.allFamilyTypes = this.allTypes['Columns']
+          this.inputFamilies = Object.keys(this.types['Columns']);
+          this.inputFamilyTypes = this.types['Columns']
           break;
         case 'Beam':
-          this.families = Object.keys(this.allTypes['Beams']);
-          this.allFamilyTypes = this.allTypes['Beams']
+          this.inputFamilies = Object.keys(this.types['Beams']);
+          this.inputFamilyTypes = this.types['Beams']
           break;
         case 'Pipe':
-          this.families = Object.keys(this.allTypes['Piping System']);
-          this.allFamilyTypes = this.allTypes['Piping System']
+          this.inputFamilies = Object.keys(this.types['Piping System']);
+          this.inputFamilyTypes = this.types['Piping System']
           break;
         case 'Duct':
-          this.families = Object.keys(this.allTypes['Duct System']);
-          this.allFamilyTypes = this.allTypes['Duct System']
+          this.inputFamilies = Object.keys(this.types['Duct System']);
+          this.inputFamilyTypes = this.types['Duct System']
+          break;
+        case 'Family Instance':
+          this.inputFamilies = Object.keys(this.familyInstanceTypes);
+          this.inputFamilyTypes = this.familyInstanceTypes
           break;
         default:
           break;
       }
-      if (this.selectedFamily === null || this.selectedFamily === undefined){
-        this.selectedFamily = this.families[0]
-      }
-      if (this.selectedLevel === null || this.selectedLevel === undefined){
-        this.selectedLevel = this.levels[0].name
+      if (this.selectedMethod){
+        if (this.selectedFamily === null || this.selectedFamily === undefined){
+          this.selectedFamily = this.inputFamilies[0]
+        }
+        if (this.selectedLevel === null || this.selectedLevel === undefined){
+          this.selectedLevel = this.levels[0].name
+        }
       }
     },
     hideOptionalMappingInputs(){
@@ -608,7 +639,6 @@ export default {
     },
     clearInputs(){
       this.availableMethods = []
-      this.availableCategories = []
       this.selectedEntities = []
       this.selectionTableData = []
       this.selectedEntityCount = 0
@@ -620,8 +650,6 @@ export default {
       this.selectedLevel = null
       this.selectedFamily = null
       this.selectedFamilyType = null
-      this.allTypes = null
-      this.familyTypes = null
     },
     getSelectionTableData(){
       let groupByClass = groupBy('entityType')
@@ -683,6 +711,12 @@ export default {
           }
           this.selectedMethod = this.lastSelectedEntity['definition']['schema']['method']
           this.selectedCategory = this.lastSelectedEntity['definition']['schema']['category']
+          this.selectedFamily = this.lastSelectedEntity['definition']['schema']['family']
+          this.getFamiliesFromSelectedMethod()
+          this.getTypesFromSelectedFamily()
+          this.selectedFamilyType = this.lastSelectedEntity['definition']['schema']['family_type']
+          this.selectedLevel = this.lastSelectedEntity['definition']['schema']['level']
+          this.updateMappingInputs()
         }
       }
       // Otherwise set entity mappings.
@@ -694,7 +728,6 @@ export default {
           }else{
             this.name = this.lastSelectedEntity['entityName']
           }
-          console.log("entity not mapped")
           this.updateMappingInputs()
           this.getFamiliesFromSelectedMethod()
           this.getTypesFromSelectedFamily()
@@ -706,7 +739,6 @@ export default {
             this.name = this.lastSelectedEntity['schema']['name']
           }
           this.selectedMethod = this.lastSelectedEntity['schema']['method']
-          console.log("entity is mapped")
           this.updateMappingInputs()
           this.selectedFamily = this.lastSelectedEntity['schema']['family']
           this.selectedCategory = this.lastSelectedEntity['schema']['category']
@@ -814,18 +846,11 @@ export default {
       this.selectedFamily = null
       this.selectedFamilyType = null
       this.selectedLevel = null
-      this.familyTypes = null
-      this.levels = null
       this.availableMethods = null
-      this.availableCategories = null
-      this.allTypes = null
     },
     getDataFromSelection(selectionParameters){
       this.availableMethods = selectionParameters.mappingMethods
-      this.availableCategories = selectionParameters.categories
       this.selectedEntities = selectionParameters.selection
-      this.allTypes = selectionParameters.types
-      this.levels = selectionParameters.levels
       this.selectedLevel = selectionParameters.selectedLevelName
     },
     updateStatesFromSelectionData(){
@@ -838,7 +863,21 @@ export default {
     }
   },
   mounted() {
+    sketchup.exec({name: "mapper_initialized", data: {}})
     sketchup.exec({name: "collect_mapped_entities", data: {}})
+
+    bus.$on('mapper-initialized', async (initParameters) => {
+      const initPars = JSON.parse(initParameters)
+      this.categories = initPars.categories
+      this.familyCategories = initPars.familyCategories
+    })
+
+    bus.$on('mapper-source-updated', async (levels, types, familyInstances) => {
+      // Parse data to json object
+      this.familyInstanceTypes = JSON.parse(familyInstances)
+      this.levels = JSON.parse(levels)
+      this.types = JSON.parse(types)
+    })
 
     bus.$on('entities-selected', async (selectionParameters) => {
       // Parse data to json object

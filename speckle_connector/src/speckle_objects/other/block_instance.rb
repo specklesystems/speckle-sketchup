@@ -5,6 +5,8 @@ require_relative 'transform'
 require_relative 'block_definition'
 require_relative '../base'
 require_relative '../geometry/bounding_box'
+require_relative '../other/mapped_block_wrapper'
+require_relative '../built_elements/revit/family_instance'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 require_relative '../../sketchup_model/query/layer'
@@ -40,7 +42,7 @@ module SpeckleConnector
           self[:renderMaterial] = render_material
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
-          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
+          self[:speckle_schema] = speckle_schema if speckle_schema.any?
           # FIXME: Since blockDefinition sends with @ as detached, block basePlane renders on viewer.
           self['@@definition'] = block_definition
         end
@@ -72,7 +74,7 @@ module SpeckleConnector
 
         # @param component_instance [Sketchup::ComponentInstance] component instance to convert Speckle BlockInstance
         # rubocop:disable Metrics/MethodLength
-        def self.from_component_instance(component_instance, units, preferences, speckle_state, &convert)
+        def self.from_component_instance(component_instance, units, preferences, speckle_state, path: nil, &convert)
           new_speckle_state, block_definition = convert.call(
             component_instance.definition,
             preferences,
@@ -87,6 +89,15 @@ module SpeckleConnector
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)
 
+          if speckle_schema.empty?
+            speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
+                             .speckle_schema_to_speckle(component_instance.definition)
+          end
+
+          # transform into global if any path provided
+          transformation = component_instance.transformation
+          transformation = SketchupModel::Query::Entity.global_transformation(component_instance, path) if path
+
           block_instance = BlockInstance.new(
             units: units,
             is_sketchup_group: false,
@@ -96,13 +107,45 @@ module SpeckleConnector
                              else
                                RenderMaterial.from_material(component_instance.material)
                              end,
-            transform: Other::Transform.from_transformation(component_instance.transformation, units),
+            transform: Other::Transform.from_transformation(transformation, units),
             block_definition: block_definition,
             layer: SketchupModel::Query::Layer.entity_path(component_instance),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
             application_id: component_instance.persistent_id.to_s
           )
+
+          if speckle_schema
+            case speckle_schema['method']
+            when 'New Revit Family'
+              # duplicate already converted one to attach without speckle schema into mapped block wrapper
+              copy_block_instance = block_instance.clone(freeze: true)
+              block_instance['@SpeckleSchema'] = SpeckleObjects::Other::MappedBlockWrapper.new(
+                category: speckle_schema['category'],
+                units: units,
+                instance: copy_block_instance,
+                application_id: component_instance.persistent_id.to_s
+              )
+            when 'Family Instance'
+              level = speckle_state.speckle_mapper_state.mapper_source
+                                   .levels.find { |l| l[:name] == speckle_schema['level'] }
+              family = speckle_schema['family']
+              type = speckle_schema['family_type']
+              block_instance['@SpeckleSchema'] = SpeckleObjects::BuiltElements::Revit::FamilyInstance.new(
+                family: family,
+                type: type,
+                level: level,
+                units: units,
+                base_point: SpeckleObjects::Geometry::Point.from_vertex(
+                  component_instance.definition.insertion_point.transform(transformation),
+                  units
+                ),
+                rotation: calculate_rotation(transformation.to_a),
+                application_id: component_instance.persistent_id.to_s
+              )
+            end
+          end
+
           return speckle_state, block_instance
         end
         # rubocop:enable Metrics/MethodLength
@@ -227,6 +270,26 @@ module SpeckleConnector
           entities.transform_entities(transform, entities.to_a)
           instance_transform = instance.transformation
           instance.transform!(instance_transform * transform.inverse * instance_transform.inverse)
+        end
+
+        def self.calculate_rotation(matrix)
+          # Ensure the matrix is a flat array with 16 elements
+          unless matrix.is_a?(Array) && matrix.size == 16
+            raise ArgumentError, 'Matrix must be an array with 16 elements'
+          end
+
+          # Extract the elements of the 2x2 rotation sub-matrix
+          cos_theta = matrix[0] # First column, first row
+          sin_theta = matrix[1] # Second column, first row
+
+          # Calculate the rotation angle in radians
+          theta = Math.atan2(sin_theta, cos_theta)
+
+          # Ensure the angle is between -π and π
+          theta -= 2 * Math::PI while theta > Math::PI
+          theta += 2 * Math::PI while theta < -Math::PI
+
+          theta
         end
       end
     end

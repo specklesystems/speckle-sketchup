@@ -85,23 +85,19 @@ module SpeckleConnector
         progress_bar.next
         convert = method(:convert)
 
-        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity)
+        unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity) &&
+               !entity.is_a?(Sketchup::ComponentDefinition)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         end
 
         return speckle_state, nil
       end
 
-      def from_mapped_to_speckle(entity, path, preferences)
-        direct_shape = SpeckleObjects::BuiltElements::Revit::DirectShape
-                       .from_entity(speckle_state, entity, path, @units, preferences)
-        return [direct_shape, [entity]]
-      end
-
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
         if entity.is_a?(Sketchup::Edge)
-          line = SpeckleObjects::Geometry::Line.from_edge(entity, @units, preferences[:model]).to_h
+          line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
+                                                          units: @units, model_preferences: preferences[:model]).to_h
           return speckle_state, [line, [entity]]
         end
 

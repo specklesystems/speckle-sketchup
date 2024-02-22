@@ -93,19 +93,19 @@
                 mdi-check
               </v-icon>
               <v-icon v-else small class="mr-1 float-left">mdi-source-branch</v-icon>
-              {{ branch.name }} ({{ branch.commits.totalCount }})
+              {{ branch.name }} ({{ branch && branch.commits ? branch.commits.totalCount : 0 }})
             </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
       <v-menu offset-y>
         <template #activator="{ on, attrs }">
-          <v-chip v-if="stream.commits" small v-bind="attrs" v-on="on">
+          <v-chip v-if="stream && stream.commits" small v-bind="attrs" v-on="on">
             <v-icon small class="mr-1 float-left">mdi-source-commit</v-icon>
-            {{ selectedBranch.commits.items.length ? commitId : 'no commits' }}
+            {{  selectedBranch.commits.items.length ? commitId : 'no commits' }}
           </v-chip>
         </template>
-        <v-list dense>
+        <v-list v-if="selectedBranch && selectedBranch.commits" dense>
           <v-list-item
             v-for="(commit, index) in selectedBranch.commits.items"
             :key="index"
@@ -223,7 +223,8 @@ export default {
       query: streamQuery,
       variables() {
         return {
-          id: this.streamId
+          id: this.streamId,
+          limit: 100
         }
       }
     },
@@ -363,7 +364,9 @@ export default {
       return new Promise((resolve) => setTimeout(resolve, ms))
     },
     openInWeb() {
-      window.open(`${localStorage.getItem('serverUrl')}/streams/${this.streamId}`)
+      var url = localStorage.getItem('frontend2') === "true" ? `${localStorage.getItem('serverUrl')}/projects/${this.streamId}` : `${localStorage.getItem('serverUrl')}/streams/${this.streamId}`
+      window.open(url)
+      
       this.$mixpanel.track('Connector Action', { name: 'Open In Web' })
     },
     switchBranch(branchName) {
@@ -504,13 +507,12 @@ export default {
           }
         })
         console.log('>>> SpeckleSketchUp: Sent to stream: ' + this.streamId, commit)
+        const url = localStorage.getItem('frontend2') === 'true' ? `${localStorage.getItem('serverUrl')}/projects/${this.streamId}/models/${this.selectedBranch.id}@${res.data.commitCreate}` : `${localStorage.getItem('serverUrl')}/streams/${this.streamId}/commits/${res.data.commitCreate}`
         this.$eventHub.$emit('notification', {
           text: 'Model selection sent!\n',
           action: {
             name: 'View in Web',
-            url: `${localStorage.getItem('serverUrl')}/streams/${this.streamId}/commits/${
-              res.data.commitCreate
-            }`
+            url: url
           }
         })
         this.$apollo.queries.stream.refetch()

@@ -4,6 +4,7 @@ require_relative 'menu_command_handler'
 require_relative 'action_command'
 require_relative 'initialize_speckle'
 require_relative 'initialize_dui3_speckle'
+require_relative 'reset_window_location'
 require_relative '../actions/one_click_send'
 
 module SpeckleConnector
@@ -12,6 +13,7 @@ module SpeckleConnector
     class SpeckleMenuCommands
       CMD_INITIALIZE_SPECKLE = :initialize_speckle
       CMD_INITIALIZE_DUI3_SPECKLE = :initialize_dui3_speckle
+      CMD_RESET_WINDOW_LOCATION_SPECKLE = :reset_window_location_speckle
       CMD_SEND_TO_SPECKLE = :send_to_speckle
       CMD_RECEIVE_FROM_SPECKLE = :receive_from_speckle
 
@@ -31,6 +33,9 @@ module SpeckleConnector
         commands[CMD_INITIALIZE_DUI3_SPECKLE] = initialize_dui3_speckle_command(app)
         commands.add_to_menu!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_menu)
         commands.add_to_toolbar!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_toolbar)
+
+        commands[CMD_RESET_WINDOW_LOCATION_SPECKLE] = reset_window_location_command(app)
+        commands.add_to_menu!(CMD_RESET_WINDOW_LOCATION_SPECKLE, speckle_menu)
 
         # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
         # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
@@ -56,6 +61,17 @@ module SpeckleConnector
         cmd.status_bar_text = 'Opens the Speckle Connector DUI3 Window'
         cmd.small_icon  = '../../img/s2logo_dui3.png'
         cmd.large_icon  = '../../img/s2logo_dui3.png'
+        cmd
+      end
+
+      def self.reset_window_location_command(app)
+        cmd = MenuCommandHandler.sketchup_command(
+          ResetWindowLocation.new(app), 'Reset Window Location'
+        )
+        cmd.tooltip = 'Bring Speckle window onto center of SketchUp window'
+        cmd.status_bar_text = 'Bring Speckle window onto center of SketchUp window'
+        cmd.small_icon  = '../../img/s2logo.png'
+        cmd.large_icon  = '../../img/s2logo.png'
         cmd
       end
 

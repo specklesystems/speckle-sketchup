@@ -92,6 +92,12 @@ module SpeckleConnector
         with(:@message_queue => new_queue)
       end
 
+      def with_mapper_init_queue(init_parameters)
+        new_queue = message_queue.merge({ "mapperInitialized":
+                                            "mapperInitialized(#{JSON.generate(init_parameters)})" })
+        with(:@message_queue => new_queue)
+      end
+
       def with_mapper_deselection_queue
         new_queue = message_queue.merge({ "entitiesDeselected": 'entitiesDeselected()' })
         with(:@message_queue => new_queue)

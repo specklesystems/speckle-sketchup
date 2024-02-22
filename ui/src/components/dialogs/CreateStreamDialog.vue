@@ -17,13 +17,13 @@
               >
                 mdi-plus-circle
               </v-icon>
-              {{ `Create New ${isFE2 ? 'Project': 'Stream'}` }}
+              {{ `Create New ${isFE2Terms ? 'Project': 'Stream'}` }}
             </v-btn>
           </template>
 
           <v-card>
             <v-card-title class="text-h5">
-              {{ `Create a New ${isFE2 ? 'Project' : 'Stream'}` }}
+              {{ `Create a New ${isFE2Terms ? 'Project' : 'Stream'}` }}
             </v-card-title>
             <v-container class="px-6" pb-0>
               <!--
@@ -56,7 +56,7 @@
                   hide-details
                   dense
                   flat
-                  :placeholder="`${isFE2 ? 'Project' : 'Stream'} Name (Optional)`"
+                  :placeholder="`${isFE2Terms ? 'Project' : 'Stream'} Name (Optional)`"
               />
               <v-text-field
                   v-model="description"
@@ -68,7 +68,7 @@
               />
               <v-switch
                   v-model="privateStream"
-                  :label="`Private ${isFE2 ? 'Project' : 'Stream'}`"
+                  :label="`Private ${isFE2Terms ? 'Project' : 'Stream'}`"
               ></v-switch>
             </v-container>
 
@@ -171,7 +171,7 @@ export default {
       type: String,
       default: null
     },
-    isFE2: {
+    isFE2Terms: {
       type: Boolean,
       default: false
     }
@@ -205,7 +205,7 @@ export default {
     },
     async getStream(){
       try {
-        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl, this.isFE2)
+        const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl)
         let res = await this.$apollo.query({
           query: gql`
             query Stream($id: String!){

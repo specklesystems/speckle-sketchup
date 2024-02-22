@@ -11,9 +11,9 @@ require_relative '../../sketchup_model/dictionary/dictionary_handler'
 module SpeckleConnector
   module SpeckleObjects
     module GIS
-      # BoundingBox object definition for Speckle.
-      class PolygonElement < Base
-        SPECKLE_TYPE = OBJECTS_GIS_POLYGONELEMENT
+      # Line element in GIS tools.
+      class LineElement < Base
+        SPECKLE_TYPE = OBJECTS_GIS_LINEELEMENT
 
         # Handles polygon element differently from display value.
         def self.to_native(state, obj, layer, entities, &convert_to_native)
@@ -47,12 +47,10 @@ module SpeckleConnector
           #  This is something need to be fixed by QGIS.
           if obj['geometry'].is_a?(Array)
             obj['geometry'].each do |geometry|
-              display_value = geometry['displayValue']
-
-              geometries += display_value
+              geometries << geometry
             end
           else
-            geometries += obj['geometry']['displayValue']
+            geometries += obj['geometry']
           end
 
           geometries.each do |geo|
