@@ -12,7 +12,14 @@ module SpeckleConnector
         # Previously it was stored in user state
         # config = state.user_state.preferences.to_json
         config = {
-          darkTheme: state.user_state.user_preferences[:dark_theme]
+          global: {
+
+          },
+          connectors: {
+            sketchup: {
+              darkTheme: state.user_state.user_preferences[:dark_theme]
+            }
+          }
         }
         js_script = "configBinding.receiveResponse('#{resolve_id}', #{config.to_json})"
         state.with_add_queue_js_command('getConfig', js_script)
