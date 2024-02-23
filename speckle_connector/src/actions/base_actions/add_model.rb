@@ -16,7 +16,7 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, data)
         if data['typeDiscriminator'] == 'ReceiverModelCard'
-          receive_card = Cards::ReceiveCard.new(data['id'], data['accountId'],
+          receive_card = Cards::ReceiveCard.new(data['modelCardId'], data['accountId'],
                                                 data['projectId'], data['projectName'],
                                                 data['modelId'], data['modelName'],
                                                 data['referencedObject'])
@@ -30,7 +30,7 @@ module SpeckleConnector
 
         send_filter = Filters::SendFilters.get_filter_from_ui_data(data['sendFilter'])
         # Init card and add to the state
-        send_card = Cards::SendCard.new(data['id'], data['accountId'], data['projectId'], data['modelId'],
+        send_card = Cards::SendCard.new(data['modelCardId'], data['accountId'], data['projectId'], data['modelId'],
                                         send_filter, {})
 
         SketchupModel::Dictionary::ModelCardDictionaryHandler
