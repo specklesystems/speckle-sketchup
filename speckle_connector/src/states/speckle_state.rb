@@ -154,7 +154,7 @@ module SpeckleConnector
       end
 
       def with_send_card(send_card)
-        new_send_cards = send_cards.put(send_card.id, send_card)
+        new_send_cards = send_cards.put(send_card.model_card_id, send_card)
         with(:@send_cards => new_send_cards)
       end
 
@@ -164,7 +164,7 @@ module SpeckleConnector
       end
 
       def with_receive_card(receive_card)
-        new_receive_cards = receive_cards.put(receive_card.id, receive_card)
+        new_receive_cards = receive_cards.put(receive_card.model_card_id, receive_card)
         with(:@receive_cards => new_receive_cards)
       end
 

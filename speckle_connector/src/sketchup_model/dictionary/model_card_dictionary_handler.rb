@@ -13,7 +13,7 @@ module SpeckleConnector
         # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
         def self.save_card_to_model(send_card, sketchup_model)
           send_cards_dict = send_cards_dict(sketchup_model)
-          serialize_obj_to_dict(send_card.id, send_card, send_cards_dict)
+          serialize_obj_to_dict(send_card.model_card_id, send_card, send_cards_dict)
         end
 
         # @param obj [Object] object to write
@@ -36,16 +36,16 @@ module SpeckleConnector
           receive_cards_dict = receive_cards_dict(sketchup_model)
           send_cards_dict = send_cards_dict(sketchup_model)
           if receive_cards_dict && receive_cards_dict.attribute_dictionaries
-            receive_cards_dict.attribute_dictionaries.delete(data['id'])
+            receive_cards_dict.attribute_dictionaries.delete(data['modelCardId'])
           end
           if send_cards_dict && send_cards_dict.attribute_dictionaries
-            send_cards_dict.attribute_dictionaries.delete(data['id'])
+            send_cards_dict.attribute_dictionaries.delete(data['modelCardId'])
           end
         end
 
         def self.get_card_dict(sketchup_model, data)
           send_cards_dict = send_cards_dict(sketchup_model)
-          send_cards_dict.attribute_dictionaries.find { |dict| dict.name == data['id'] }
+          send_cards_dict.attribute_dictionaries.find { |dict| dict.name == data['modelCardId'] }
         end
 
         def self.get_card_filters_dict(sketchup_model, data)

@@ -25,7 +25,7 @@ module SpeckleConnector
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)
           state = state.with_speckle_state(new_speckle_state)
           js_script = "baseBinding.receiveResponse('#{resolve_id}')"
-          return state.with_add_queue_js_command('addSendCard', js_script)
+          return state.with_add_queue_js_command('addReceiveCard', js_script)
         end
 
         send_filter = Filters::SendFilters.get_filter_from_ui_data(data['sendFilter'])
