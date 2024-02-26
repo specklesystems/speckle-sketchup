@@ -19,7 +19,7 @@ module SpeckleConnector
           receive_card = Cards::ReceiveCard.new(data['modelCardId'], data['accountId'],
                                                 data['projectId'], data['projectName'],
                                                 data['modelId'], data['modelName'],
-                                                data['referencedObject'])
+                                                data['selectedVersionId'])
           SketchupModel::Dictionary::ModelCardDictionaryHandler
             .save_card_to_model(receive_card, state.sketchup_state.sketchup_model)
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)

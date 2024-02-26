@@ -11,8 +11,8 @@ module SpeckleConnector
       # @return [String, NilClass] message to send
       attr_reader :message
 
-      # @return [String] object id to receive
-      attr_reader :object_id
+      # @return [String] selected version id to receive
+      attr_reader :selected_version_id
 
       # @return [String] name of the project
       attr_reader :project_name
@@ -20,10 +20,10 @@ module SpeckleConnector
       # @return [String] name of the model
       attr_reader :model_name
 
-      def initialize(card_id, account_id, project_id, project_name, model_id, model_name, object_id)
+      def initialize(card_id, account_id, project_id, project_name, model_id, model_name, selected_version_id)
         super(card_id, account_id, project_id, model_id)
-        @object_id = object_id
-        self[:object_id] = object_id
+        @selected_version_id = selected_version_id
+        self[:selected_version_id] = selected_version_id
         self[:model_name] = model_name
         self[:project_name] = project_name
         @model_name = model_name
