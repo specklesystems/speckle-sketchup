@@ -7,7 +7,7 @@ module SpeckleConnector
     # Card for sketchup connector to communicate speckle.
     class Card < Hash
       # @return [String] id of the card.
-      attr_reader :id
+      attr_reader :model_card_id
 
       # @return [String] account id of the card.
       attr_reader :account_id
@@ -21,14 +21,14 @@ module SpeckleConnector
       # @return [Boolean] card is valid or not.
       attr_reader :valid
 
-      def initialize(card_id, account_id, project_id, model_id)
+      def initialize(model_card_id, account_id, project_id, model_id)
         super()
-        @id = card_id
+        @model_card_id = model_card_id
         @account_id = account_id
         @project_id = project_id
         @model_id = model_id
         @valid = true
-        self[:id] = card_id
+        self[:model_card_id] = model_card_id
         self[:account_id] = account_id
         self[:project_id] = project_id
         self[:model_id] = model_id
