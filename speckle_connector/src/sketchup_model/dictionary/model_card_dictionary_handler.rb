@@ -11,9 +11,16 @@ module SpeckleConnector
       class ModelCardDictionaryHandler < DictionaryHandler
         # @param send_card [Cards::SendCard] card to save model
         # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
-        def self.save_card_to_model(send_card, sketchup_model)
+        def self.save_send_card_to_model(send_card, sketchup_model)
           send_cards_dict = send_cards_dict(sketchup_model)
           serialize_obj_to_dict(send_card.model_card_id, send_card, send_cards_dict)
+        end
+
+        # @param receive_card [Cards::ReceiveCard] card to save model
+        # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
+        def self.save_receive_card_to_model(receive_card, sketchup_model)
+          receive_cards_dict = receive_cards_dict(sketchup_model)
+          serialize_obj_to_dict(receive_card.model_card_id, receive_card, receive_cards_dict)
         end
 
         # @param obj [Object] object to write
@@ -116,11 +123,18 @@ module SpeckleConnector
           speckle_dict.attribute_dictionary(SPECKLE_RECEIVE_CARDS, true)
         end
 
-        def self.get_cards_from_dict(sketchup_model)
+        def self.get_send_cards_from_dict(sketchup_model)
           send_cards_dict = send_cards_dict(sketchup_model)
           return [] if send_cards_dict.attribute_dictionaries.nil?
 
           dict_to_h(send_cards_dict)
+        end
+
+        def self.get_receive_cards_from_dict(sketchup_model)
+          receive_cards_dict = receive_cards_dict(sketchup_model)
+          return [] if receive_cards_dict.attribute_dictionaries.nil?
+
+          dict_to_h(receive_cards_dict)
         end
 
         # @return [String] the name of the dictionary to read from

@@ -17,13 +17,20 @@ module SpeckleConnector
       # @return [String, NilClass] message to send
       attr_reader :message
 
-      def initialize(model_card_id, account_id, project_id, model_id, send_filter, send_settings)
+      # @return [Boolean] whether sending is happening or not
+      attr_reader :sending
+
+      attr_reader :latest_created_version_id
+
+      def initialize(model_card_id, account_id, project_id, model_id, latest_created_version_id, send_filter, send_settings)
         super(model_card_id, account_id, project_id, model_id)
         @send_filter = send_filter
         @send_settings = send_settings
+        @latest_created_version_id = latest_created_version_id
         @type_discriminator = 'SenderModelCard'
         self[:sendFilter] = send_filter
         self[:sendSettings] = send_settings
+        self[:latestCreatedVersionId] = latest_created_version_id
         self[:type_discriminator] = @type_discriminator
       end
     end

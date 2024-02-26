@@ -11,9 +11,7 @@ require_relative '../../actions/base_actions/highlight_model'
 require_relative '../../actions/base_actions/remove_model'
 require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/update_send_filter'
-require_relative '../../actions/base_actions/get_model_state'
 require_relative '../../actions/base_actions/get_document_state'
-require_relative '../../actions/base_actions/add_model_to_document_state'
 
 module SpeckleConnector
   module Ui
@@ -32,9 +30,7 @@ module SpeckleConnector
           getSourceApplicationVersion: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppVersion),
           getDocumentInfo: Commands::ActionCommand.new(@app, self, Actions::GetDocumentInfo),
           updateSendFilter: Commands::ActionCommand.new(@app, self, Actions::UpdateSendFilter),
-          getModelState: Commands::ActionCommand.new(@app, self, Actions::GetModelState),
-          getDocumentState: Commands::ActionCommand.new(@app, self, Actions::GetDocumentState),
-          addModelToDocumentState: Commands::ActionCommand.new(@app, self, Actions::AddModelToDocumentState)
+          getDocumentState: Commands::ActionCommand.new(@app, self, Actions::GetDocumentState)
         }.freeze
       end
     end
