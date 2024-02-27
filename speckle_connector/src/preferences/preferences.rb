@@ -12,9 +12,9 @@ module SpeckleConnector
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
     # rubocop:disable Layout/LineLength
-    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false, \"fe2\":false}');"
+    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false, \"fe2\":true}');"
     # rubocop:enable Layout/LineLength
-    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false, "fe2": false}'
+    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false, "fe2": true}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
