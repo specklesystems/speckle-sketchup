@@ -48,6 +48,25 @@ module SpeckleConnector
               return state, []
             end
 
+            def self.from_entities(entities, sketchup_model, speckle_state, units, preferences, &convert)
+              model_collection = ModelCollection.new(
+                name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,
+                application_id: sketchup_model.guid
+              )
+
+              entities.each do |entity|
+                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
+                new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
+                speckle_state = new_speckle_state
+                unless converted_object_with_entity.nil?
+                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
+                  layer_collection[:elements].append(converted_object_with_entity)
+                end
+              end
+
+              return speckle_state, model_collection
+            end
+
             def self.from_sketchup_model(sketchup_model, speckle_state, units, preferences, &convert)
               model_collection = ModelCollection.new(
                 name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,

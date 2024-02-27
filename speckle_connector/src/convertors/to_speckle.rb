@@ -47,6 +47,16 @@ module SpeckleConnector
         @progress_bar = TT::Progressbar.new(entity_count, 'Converting to Speckle')
       end
 
+      def convert_entities_to_base(entity_ids, preferences)
+        convert = method(:convert)
+        entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
+
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, sketchup_model, speckle_state,
+                                                                             @units, preferences, &convert)
+
+        return new_speckle_state, model_collection
+      end
+
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
