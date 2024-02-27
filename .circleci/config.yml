@@ -26,21 +26,17 @@ jobs:
   build-connector: # Reusable job for basic connectors
     executor:
       name: win/default # comes with python 3.7.3
-      shell: cmd.exe
+      shell: powershell.exe
     parameters:
       slug:
         type: string
         default: ""
+    environment:
+      SSM: 'C:\Program Files\DigiCert\DigiCert One Signing Manager Tools'
     steps:
       - checkout
       - attach_workspace:
           at: ./
-      - run:
-          name: Create Innosetup signing cert
-          shell: powershell.exe
-          command: |
-            echo $env:PFX_B64 > "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.txt"
-            certutil -decode "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.txt" "speckle-sharp-ci-tools\SignTool\AEC Systems Ltd.pfx"
       - run:
           name: Set Environment Variable
           shell: powershell.exe
@@ -52,25 +48,37 @@ jobs:
             python patch_version.py $semver
           environment:
             WORKFLOW_NUM: << pipeline.number >>
-      - run:
-          name: Build Installer
-          command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\sketchup.iss /Sbyparam=$p
-          shell: cmd.exe #does not work in powershell
-
-      #- run:
-      #    name: Patch
-      #    shell: powershell.exe
-      #    command:
-      #      | # If no tag, use 0.0.0.1 and don't make any YML (for testing only!)
-      #      $tag = if([string]::IsNullOrEmpty($env:CIRCLE_TAG)) { "0.0.0" } else { $env:CIRCLE_TAG }
-      #      $semver = if($tag.Contains('/')) {$tag.Split("/")[1] } else { $tag }
-      #      $ver = if($semver.Contains('-')) {$semver.Split("-")[0] } else { $semver }
-      #      $channel = if($semver.Contains('-')) {$semver.Split("-")[1] } else { "latest" }
-      #      $version = "$($ver).$($env:CIRCLE_BUILD_NUM)"
-      #      New-Item -Force "speckle-sharp-ci-tools/Installers/sketchup/$channel.yml" -ItemType File -Value "version: $semver"
-      #      echo $version
-      #      python patch_version.py $semver
-      #      speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\sketchup.iss
+      - unless: # Build installers unsigned on non-tagged builds
+          condition: << pipeline.git.tag >>
+          steps:
+            - run:
+                name: Build Installer
+                command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\sketchup.iss /Sbyparam=$p
+                shell: cmd.exe # does not work in powershell
+      - when: # Setup certificates and build installers signed for tagged builds
+          condition: << pipeline.git.tag >>
+          steps:
+            - run:
+                name: "Digicert Signing Manager Setup"
+                command: |
+                  cd C:\
+                  curl.exe -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/smtools-windows-x64.msi/download -H "x-api-key:$env:SM_API_KEY" -o smtools-windows-x64.msi
+                  msiexec.exe /i smtools-windows-x64.msi /quiet /qn | Wait-Process
+            - run:
+                name: "Create Auth & OV Signing Cert"
+                command: |
+                  cd C:\
+                  echo $env:SM_CLIENT_CERT_FILE_B64 > certificate.txt
+                  certutil -decode certificate.txt certificate.p12
+                  echo $env:SM_OV_PEM_CERT > SpeckleOVCertificate-2024.pem
+            - run:
+                name: "Sync Certs"
+                command: |
+                  & $env:SSM\smksp_cert_sync.exe
+            - run:
+                name: "Build Installer"
+                command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\sketchup.iss /Sbyparam=$p /DSIGN_INSTALLER
+                shell: cmd.exe
       - persist_to_workspace:
           root: ./
           paths:
@@ -184,10 +192,16 @@ jobs:
       - run:
           name: Clone
           command: git clone git@github.com:specklesystems/speckle-sharp-ci-tools.git speckle-sharp-ci-tools
-      - persist_to_workspace:
-          root: ./
-          paths:
-            - speckle-sharp-ci-tools
+      - run:
+          name: Checkout branch
+          command: |
+            cd speckle-sharp-ci-tools
+            if [ -z "$CIRCLE_TAG" ]
+            then
+                  git checkout ${CIRCLE_BRANCH} || git checkout main
+            else
+                  git checkout ${CIRCLE_TAG} || git checkout main
+            fi
       - persist_to_workspace:
           root: ./
           paths:
@@ -238,7 +252,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-          context: innosetup
+          context: digicert-signing-connectors-test
 
       - build-connector-mac:
           slug: sketchup

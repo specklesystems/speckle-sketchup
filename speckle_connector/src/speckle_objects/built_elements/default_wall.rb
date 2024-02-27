@@ -32,7 +32,7 @@ module SpeckleConnector
         end
 
         # @param face [Sketchup::Face] face to get speckle schema for floor.
-        def self.to_speckle_schema(face, units, global_transformation: nil)
+        def self.to_speckle_schema(_speckle_state, face, units, global_transformation: nil)
           base_line = Geometry::Line.base_line_from_face(face, units, global_transformation: global_transformation)
 
           material = face.material || face.back_material

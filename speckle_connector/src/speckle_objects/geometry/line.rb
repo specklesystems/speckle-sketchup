@@ -34,17 +34,33 @@ module SpeckleConnector
           self[:domain] = domain
           self[:units] = units
           self[:layer] = layer unless layer.nil?
-          self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
+          self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
+        def self.to_speckle_schema(edge:, units:)
+          start_pt = Geometry::Point.from_vertex(edge.start.position, units)
+          end_pt = Geometry::Point.from_vertex(edge.end.position, units)
+          domain = Primitive::Interval.from_numeric(0, Float(edge.length), units)
+          Line.new(
+            start_pt: start_pt,
+            end_pt: end_pt,
+            domain: domain,
+            units: units,
+            layer: SketchupModel::Query::Layer.entity_path(edge),
+            sketchup_attributes: {},
+            speckle_schema: {},
+            application_id: edge.persistent_id.to_s
+          )
+        end
+
         # @param edge [Sketchup::Edge] edge to convert line.
-        def self.from_edge(edge, units, model_preferences, global_transformation: nil)
+        def self.from_edge(speckle_state:, edge:, units:, model_preferences:, global_transformation: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(edge, model_preferences)
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
-          speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(edge)
+          speckle_schema = Mapper.to_speckle(speckle_state, edge, units, global_transformation: global_transformation)
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
           end_pt = Geometry::Point.from_vertex(edge.end.position, units)
           domain = Primitive::Interval.from_numeric(0, Float(edge.length), units)

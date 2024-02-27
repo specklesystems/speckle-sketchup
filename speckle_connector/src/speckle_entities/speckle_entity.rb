@@ -136,6 +136,15 @@ module SpeckleConnector
           next if (entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)) &&
                   !state.user_state.user_preferences[:register_speckle_entity]
 
+          if entity.is_a?(Sketchup::ComponentDefinition)
+            definition = speckle_object['definition'] || speckle_object['@block_definition'] ||
+              speckle_object['block_definition']
+            if definition
+              speckle_id = definition['id']
+              speckle_type = definition['speckle_type']
+            end
+          end
+
           ent = SpeckleEntity.new(entity, speckle_id, application_id, speckle_type, children, [stream_id])
           ent.write_initial_base_data
           speckle_state = speckle_state.with_speckle_entity(ent)
