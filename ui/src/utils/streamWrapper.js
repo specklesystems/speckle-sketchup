@@ -17,9 +17,13 @@ export class StreamWrapper {
         }
     }
 
-    checkIsFE2(streamUrl){
+    matchUrl(streamUrl){
         const fe2UrlRegex = /\/projects\/(?<projectId>[\w\d]+)(?:\/models\/(?<model>[\w\d]+(?:@[\w\d]+)?)(?:,(?<additionalModels>[\w\d]+(?:@[\w\d]+)?))*)?/
-        const match = fe2UrlRegex.exec(streamUrl);
+        return fe2UrlRegex.exec(streamUrl);
+    }
+
+    checkIsFE2(streamUrl){
+        const match = this.matchUrl(streamUrl)
         return match !== null;
     }
 
