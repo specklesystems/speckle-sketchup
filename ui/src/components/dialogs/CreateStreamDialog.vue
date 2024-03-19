@@ -206,6 +206,13 @@ export default {
     async getStream(){
       try {
         const streamWrapper = new StreamWrapper(this.createStreamByIdText, this.accountId, this.serverUrl)
+        const match = streamWrapper.matchUrl(this.createStreamByIdText)
+        if (match.groups.additionalModels !== undefined){
+          this.$eventHub.$emit('error', {
+            text: 'Multi-model URLs are not supported!\nTry to select just one single model in the web app and paste that in.',
+          })
+          return
+        }
         let res = await this.$apollo.query({
           query: gql`
             query Stream($id: String!){
