@@ -19,8 +19,7 @@ module SpeckleConnector
         converter = Converters::ToSpeckle.new(state, @stream_id, model_card.send_filter)
         new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,
                                                                      state.user_state.preferences)
-        id, total_children_count, batches, new_speckle_state = converter.serialize(base, new_speckle_state,
-                                                                                   state.user_state.preferences)
+        id, total_children_count, batches = converter.serialize(base, new_speckle_state, state.user_state.preferences)
 
         puts("converted #{base.count} objects for stream #{@stream_id}")
 

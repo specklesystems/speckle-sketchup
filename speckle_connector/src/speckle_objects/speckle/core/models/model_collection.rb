@@ -2,6 +2,7 @@
 
 require_relative 'collection'
 require_relative 'layer_collection'
+require_relative '../../../object_reference'
 require_relative '../../../built_elements/view3d'
 require_relative '../../../built_elements/revit/direct_shape'
 require_relative '../../../../mapper/mapper'
@@ -28,7 +29,7 @@ module SpeckleConnector
             end
 
             def self.to_native(state, model_collection, layer, entities, &convert_to_native)
-              elements = model_collection['elements']
+              elements = model_collection['@elements']
               views = model_collection['@Views']
               if views
                 views.each do |view|
@@ -59,8 +60,10 @@ module SpeckleConnector
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
-                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
-                  layer_collection[:elements].append(converted_object_with_entity)
+                  layer_collection['@elements'] = [] if layer_collection['@elements'].nil?
+                  layer_collection['@elements'].append(converted_object_with_entity)
+                  # test_reference = ObjectReference.new("test_referenced_id", {"test_closure_1" => 0, "test_closure_2" => 0, "test_closure_3" => 0})
+                  # layer_collection['@elements'].append(test_reference)
                 end
               end
 
@@ -74,22 +77,22 @@ module SpeckleConnector
               )
 
               # Direct shapes will pass directly to elements which are already flattened with all children
-              model_collection[:elements] += collect_mapped_entities(speckle_state, sketchup_model, units,
-                                                                     preferences, &convert)
+              model_collection['@elements'] += collect_mapped_entities(speckle_state, sketchup_model, units,
+                                                                       preferences, &convert)
 
               # Views will pass directly to elements since they don't have any relation with layers and geometries.
-              model_collection[:elements] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
+              model_collection['@elements'] += VIEW3D.from_model(sketchup_model, units) if sketchup_model.pages.any?
 
               # Add layer collections.
-              model_collection[:elements] += LayerCollection.create_layer_collections(sketchup_model)
+              model_collection['@elements'] += LayerCollection.create_layer_collections(sketchup_model)
 
               sketchup_model.selection.each do |entity|
                 layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
-                  layer_collection[:elements] = [] if layer_collection[:elements].nil?
-                  layer_collection[:elements].append(converted_object_with_entity)
+                  layer_collection['@elements'] = [] if layer_collection['@elements'].nil?
+                  layer_collection['@elements'].append(converted_object_with_entity)
                 end
               end
 

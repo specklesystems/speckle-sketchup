@@ -23,7 +23,7 @@ module SpeckleConnector
               )
               self[:name] = name
               self[:collectionType] = collection_type
-              self[:elements] = elements
+              self['@elements'] = elements
             end
 
             def self.to_native(state, collection, layer, entities, &convert_to_native)

@@ -190,7 +190,7 @@ module SpeckleConnector
               speckle_state = new_speckle_state
             end
             # Update mesh overwrites points and polygons into base object.
-            mesh_groups.each { |_, mesh| mesh.first.update_mesh }
+            mesh_groups.each { |_, mesh| mesh.update_mesh }
 
             return speckle_state, lines + nested_blocks + nested_groups + mesh_groups.values
           else
@@ -216,8 +216,8 @@ module SpeckleConnector
           new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
           mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
           mesh_group = mesh_groups[mesh_group_id]
-          mesh_group[0].face_to_mesh(face)
-          mesh_group[1].append(face)
+          mesh_group.face_to_mesh(face)
+          # mesh_group[1].append(face)
           new_speckle_state
         end
         # rubocop:enable Metrics/ParameterLists

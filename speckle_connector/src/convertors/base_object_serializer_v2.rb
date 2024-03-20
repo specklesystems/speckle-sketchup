@@ -5,19 +5,17 @@ require 'securerandom'
 # rubocop:enable SketchupPerformance/OpenSSL
 require 'digest'
 require_relative 'converter'
-require_relative '../speckle_entities/speckle_entity'
 require_relative '../relations/many_to_one_relation'
 
 module SpeckleConnector
   module Converters
     # Serializer of the base object.
     # Responsible to create id (hash) of the objects by holding their lineage and detaching relationships.
-    class BaseObjectSerializer
+    class BaseObjectSerializerV2
       # @return [Integer] default chunk size the determine splitting base prop into chucks
       attr_reader :default_chunk_size
 
-      def initialize(preferences, default_chunk_size = 1000)
-        @preferences = preferences
+      def initialize(default_chunk_size = 1000)
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
@@ -32,7 +30,7 @@ module SpeckleConnector
       def serialize(base)
         id, traversed = traverse_base(base)
         @objects[id] = traversed
-        id
+        return id, traversed
       end
 
       def total_children_count(id)
@@ -45,19 +43,17 @@ module SpeckleConnector
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
 
-        # 2. Get last item from detach_lineage array
-        is_detached = @detach_lineage.pop
-
-        # 3. Initialize traversed base object that will be filled with traversed values or
+        # 2. Initialize traversed base object that will be filled with traversed values or
         # traversed base objects as props.
         traversed_base = SpeckleObjects::Base.new(speckle_type: base[:speckle_type], id: '')
-
-        # 3.1 Remove applicationId if it is nil
         traversed_base.delete(:applicationId)
 
-        # 4. Iterate all entries (key, value) of the base {Base > Hash} object
+        # 3. Iterate all entries (key, value) of the base {Base > Hash} object
         traverse_base_props(base, traversed_base)
         # this is where all props are done for current `traversed_base`
+
+        # 4. Get last item from detach_lineage array
+        is_detached = @detach_lineage.pop
 
         # 5. Add closures
         closure = {}
@@ -106,10 +102,8 @@ module SpeckleConnector
             next
           end
 
-          # 3.3. Determine prop is dynamically detached or not
-          is_detach_prop = prop[0] == '@'
-          is_dynamically_detached = prop[0] == '@' && prop.length > 2 && prop[1] == '@'
-          prop = prop[2..-1] if is_dynamically_detached
+          # 3.3. Determine prop is detached or not
+          is_prop_detach = prop[0] == '@'
 
           # 3.4. Check prop needs to split into chunks
           chunked_detach_match = prop.match(/^@\((\d*)\)/)
@@ -150,7 +144,7 @@ module SpeckleConnector
             chunk_references = []
 
             chunks.each do |chunk_element|
-              @detach_lineage.append(is_detach_prop)
+              @detach_lineage.append(is_prop_detach)
               id, _traversed = traverse_base(chunk_element)
               chunk_references.append(detach_helper(id))
             end
@@ -158,20 +152,17 @@ module SpeckleConnector
             # 3.5.7. Add chunk references to the traversed base prop without @(<chunk_size>)
             traversed_base[prop.to_s.sub(chunked_detach_match[0], '')] = chunk_references
 
-            # 3.5.8. We are done chunking, good to go next property
+            # 3.5.8. We are done chunking, good to go next
             next
           end
 
-          child = traverse_value(value, is_detach_prop)
-
-          is_base = value.is_a?(Hash) && !value[:speckle_type].nil?
-
           # 3.6. traverse value according to value is a speckle object or not
-          traversed_base[prop] = if is_base
-                                   is_detach_prop ? detach_helper(child[:id]) : child
-                                 else
-                                   child
-                                 end
+          if value.is_a?(Hash) && !value[:speckle_type].nil?
+            child = traverse_value(value, is_prop_detach)
+            traversed_base[prop] = is_prop_detach ? detach_helper(child[:id]) : child
+          else
+            traversed_base[prop] = traverse_value(value, is_prop_detach)
+          end
         end
       end
       # rubocop:enable Metrics/MethodLength
@@ -184,59 +175,34 @@ module SpeckleConnector
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Style/OptionalBooleanParameter
-      # rubocop:disable Metrics/AbcSize
       def traverse_value(value, is_detach = false)
         # 1. Return same value if value is primitive type (string, numeric, boolean)
         return value unless value.is_a?(Hash) || value.is_a?(Array)
 
-        # 2. For pure arrays
+        # 2. Arrays
         if value.is_a?(Array)
-
           # 2.1. If it is not detached then iterate array by traversing with their value
-          unless is_detach
-            values = value.collect do |el|
-              el_value = traverse_value(el)
-              el_value
-            end
-            return values
-          end
+          return value.collect { |el| traverse_value(el) } unless is_detach
 
           # 2.2. If it is detached than collect them into detached_list
           detached_list = []
           value.each do |el|
-            if el.is_a?(SpeckleObjects::ObjectReference)
-              el.closure.each_key do |k|
-                detach_helper(k)
-              end
-              detached_list.append(detach_helper(el.referenced_id))
-              next
-            end
-
-            if el.is_a?(Hash) && !el[:speckle_type].nil?
+            if (el.is_a?(Array) || el.is_a?(Hash)) && !el[:speckle_type].nil?
               @detach_lineage.append(is_detach)
               id, _traversed_base = traverse_base(el)
               detached_list.append(detach_helper(id))
             else
-              el_value = traverse_value(el, is_detach)
-              detached_list.append(el_value)
+              detached_list.append(traverse_value(el, is_detach))
             end
           end
           return detached_list
         end
 
-        # 3. ObjectReference
-        if value.is_a?(SpeckleObjects::ObjectReference)
-          value.closure.each_key do |k|
-            detach_helper(k)
-          end
-          return detach_helper(value.referenced_id)
-        end
+        # 3. Hash
+        return value if value[:speckle_type].nil?
 
-        # 4. Hash
-        return value if value.is_a?(Hash) && value[:speckle_type].nil?
-
-        # 5. Base objects
-        if value.is_a?(Hash) && !value[:speckle_type].nil?
+        # 4. Base objects
+        unless value[:speckle_type].nil?
           @detach_lineage.append(is_detach)
           _id, traversed_base = traverse_base(value)
           return traversed_base
@@ -249,7 +215,6 @@ module SpeckleConnector
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
       # rubocop:enable Style/OptionalBooleanParameter
-      # rubocop:enable Metrics/AbcSize
 
       def detach_helper(reference_id)
         @lineage.each do |parent|
@@ -273,12 +238,8 @@ module SpeckleConnector
         Digest::MD5.hexdigest(traversed_base.to_json)
       end
 
-      def batch_objects
-        @objects
-      end
-
       # rubocop:disable Metrics/MethodLength
-      def batch_json_objects(max_batch_size_mb = 1)
+      def batch_objects(max_batch_size_mb = 1)
         max_size = 1000 * 1000 * max_batch_size_mb
         batches = []
         batch = '['

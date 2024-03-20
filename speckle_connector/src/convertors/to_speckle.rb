@@ -71,14 +71,14 @@ module SpeckleConnector
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
       def serialize(base_and_entity, speckle_state, preferences)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, stream_id, preferences)
+        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_json_objects
-        # write_to_speckle_folder(id, batches)
+        write_to_speckle_folder(id, batches)
         puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        return id, base_total_children_count, batches, serializer.speckle_state
+        return id, base_total_children_count, batches
       end
 
       def write_to_speckle_folder(id, batches)
@@ -108,13 +108,13 @@ module SpeckleConnector
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
                                                           units: @units, model_preferences: preferences[:model]).to_h
-          return speckle_state, [line, [entity]]
+          return speckle_state, line
         end
 
         if entity.is_a?(Sketchup::Face)
           mesh = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity, units: @units,
                                                           model_preferences: preferences[:model])
-          return speckle_state, [mesh, [entity]]
+          return speckle_state, mesh
         end
 
         if entity.is_a?(Sketchup::Group)
@@ -122,7 +122,7 @@ module SpeckleConnector
             entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
-          return speckle_state, [block_instance, [entity]]
+          return speckle_state, block_instance
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
@@ -130,19 +130,19 @@ module SpeckleConnector
             entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
-          return speckle_state, [block_instance, [entity]]
+          return speckle_state, block_instance
         end
 
         if entity.is_a?(Sketchup::ComponentDefinition)
           # Local caching
-          return speckle_state, [definitions[entity.guid], [entity]] if definitions.key?(entity.guid)
+          return speckle_state, definitions[entity.guid] if definitions.key?(entity.guid)
 
           new_speckle_state, block_definition = SpeckleObjects::Other::BlockDefinition.from_definition(
             entity, @units, preferences, speckle_state, parent, &convert
           )
           definitions[entity.guid] = block_definition
           speckle_state = new_speckle_state
-          return speckle_state, [block_definition, [entity]]
+          return speckle_state, block_definition
         end
 
         return speckle_state, nil
