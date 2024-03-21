@@ -5,6 +5,8 @@ require 'securerandom'
 # rubocop:enable SketchupPerformance/OpenSSL
 require 'digest'
 require_relative 'converter'
+require_relative '../speckle_objects/base'
+require_relative '../speckle_objects/object_reference'
 require_relative '../speckle_entities/speckle_entity'
 require_relative '../relations/many_to_one_relation'
 
@@ -16,15 +18,17 @@ module SpeckleConnector
       # @return [Integer] default chunk size the determine splitting base prop into chucks
       attr_reader :default_chunk_size
 
+      attr_reader :object_references
+
       def initialize(preferences, default_chunk_size = 1000)
         @preferences = preferences
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
         @family_tree = {}
-        @family_tree_relation = Relations::ManyToOneRelation.new
         @closure_table = {}
         @objects = {}
+        @object_references = {}
       end
 
       # @param base [Object] top base object to populate all children and their relationship
@@ -85,6 +89,12 @@ module SpeckleConnector
 
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
+
+        if traversed_base[:applicationId]
+          @object_references[traversed_base[:applicationId].to_s] = SpeckleObjects::ObjectReference.new(
+            id, traversed_base[:applicationId].to_s, traversed_base[:__closure]
+          )
+        end
 
         return id, traversed_base
       end
@@ -168,7 +178,11 @@ module SpeckleConnector
 
           # 3.6. traverse value according to value is a speckle object or not
           traversed_base[prop] = if is_base
-                                   is_detach_prop ? detach_helper(child[:id]) : child
+                                   if child[:referencedId] && child[:speckle_type] == 'reference'
+                                     is_detach_prop ? detach_helper(child[:referencedId]) : child
+                                   else
+                                     is_detach_prop ? detach_helper(child[:id]) : child
+                                   end
                                  else
                                    child
                                  end

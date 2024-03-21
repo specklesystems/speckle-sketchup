@@ -16,12 +16,13 @@ module SpeckleConnector
       def self.update_state(state, resolve_id, model_card_id)
         model_card = state.speckle_state.send_cards[model_card_id]
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, @stream_id, model_card.send_filter)
+        converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter)
         new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,
                                                                      state.user_state.preferences)
-        id, total_children_count, batches = converter.serialize(base, new_speckle_state, state.user_state.preferences)
+        id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)
+        new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
 
-        puts("converted #{base.count} objects for stream #{@stream_id}")
+        puts("converted #{base.count} objects for stream #{model_card.project_id}")
 
         state = state.with_speckle_state(new_speckle_state)
 

@@ -70,7 +70,7 @@ module SpeckleConnector
       # Serialized and traversed information to send batches.
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
-      def serialize(base_and_entity, speckle_state, preferences)
+      def serialize(base_and_entity, preferences)
         serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
@@ -78,7 +78,7 @@ module SpeckleConnector
         write_to_speckle_folder(id, batches)
         puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
         base_total_children_count = serializer.total_children_count(id)
-        return id, base_total_children_count, batches
+        return id, base_total_children_count, batches, serializer.object_references
       end
 
       def write_to_speckle_folder(id, batches)
@@ -103,8 +103,17 @@ module SpeckleConnector
         return speckle_state, nil
       end
 
+      # @param entity [Sketchup::Entity]
+      # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
+        if !speckle_state.changed_entity_ids.include?(entity.persistent_id) &&
+           speckle_state.object_references_by_project[@stream_id] &&
+           speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
+          reference = speckle_state.object_references_by_project[@stream_id][entity.persistent_id.to_s]
+          return speckle_state, reference
+        end
+
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
                                                           units: @units, model_preferences: preferences[:model]).to_h

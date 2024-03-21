@@ -79,7 +79,7 @@ module SpeckleConnector
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
-            application_id: definition.persistent_id.to_s
+            application_id: definition.persistent_id
           )
           return speckle_state, block_definition
         end

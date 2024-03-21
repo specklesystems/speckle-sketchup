@@ -17,6 +17,9 @@ module SpeckleConnector
       # @return [Immutable::Hash{String=>Cards::ReceiveCard}] receive cards.
       attr_reader :receive_cards
 
+      # @return [Immutable::Hash{String=>Immutable::Hash{String=>SpeckleObjects::ObjectReference}}] object references that sent before server.
+      attr_reader :object_references_by_project
+
       # @return [Immutable::Set] changed entity ids.
       attr_reader :changed_entity_ids
 
@@ -57,6 +60,7 @@ module SpeckleConnector
         @message_queue = queue
         @stream_queue = stream_queue
         @changed_entity_ids = Immutable::EmptySet
+        @object_references_by_project = Immutable::EmptyHash
         @speckle_entities = Immutable::EmptyHash
         @render_materials = Immutable::EmptyHash
         @definitions = Immutable::EmptyHash
@@ -184,6 +188,15 @@ module SpeckleConnector
 
       def with_relation(new_relation)
         with(:@relation => new_relation)
+      end
+
+      def with_object_references(project_id, references)
+        project_references = object_references_by_project[project_id] || Immutable::EmptyHash
+        new_project_references = project_references
+        references.each do |application_id, ref|
+          new_project_references = new_project_references.put(application_id, ref)
+        end
+        with(:@object_references_by_project => object_references_by_project.put(project_id, new_project_references))
       end
 
       def invalid_streams

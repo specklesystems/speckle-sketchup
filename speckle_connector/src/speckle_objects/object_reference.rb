@@ -9,12 +9,13 @@ module SpeckleConnector
     # Object reference to send it to Speckle server. It contains closure table to store children objects.
     class ObjectReference < Base
 
-      attr_reader :closure, :referenced_id
+      attr_reader :closure, :referenced_id, :application_id
 
-      def initialize(referenced_id, closure)
+      def initialize(referenced_id, application_id, closure)
         @speckle_type = 'reference'
         @closure = closure
         @referenced_id = referenced_id
+        @application_id = application_id
         super()
         update(
           {
