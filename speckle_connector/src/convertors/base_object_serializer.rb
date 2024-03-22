@@ -219,8 +219,10 @@ module SpeckleConnector
           detached_list = []
           value.each do |el|
             if el.is_a?(SpeckleObjects::ObjectReference)
-              el.closure.each_key do |k|
-                detach_helper(k)
+              if el.closure
+                el.closure.each_key do |k|
+                  detach_helper(k)
+                end
               end
               detached_list.append(detach_helper(el.referenced_id))
               next
@@ -240,8 +242,10 @@ module SpeckleConnector
 
         # 3. ObjectReference
         if value.is_a?(SpeckleObjects::ObjectReference)
-          value.closure.each_key do |k|
-            detach_helper(k)
+          if value.closure
+            value.closure.each_key do |k|
+              detach_helper(k)
+            end
           end
           return detach_helper(value.referenced_id)
         end
