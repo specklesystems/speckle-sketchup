@@ -47,6 +47,7 @@ module SpeckleConnector
         @progress_bar = TT::Progressbar.new(entity_count, 'Converting to Speckle')
       end
 
+      # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
       def convert_entities_to_base(entity_ids, preferences)
         convert = method(:convert)
         entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
@@ -76,7 +77,7 @@ module SpeckleConnector
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_json_objects
         write_to_speckle_folder(id, batches)
-        puts "Generating traversed object elapsed #{Time.now.to_f - t} s"
+        puts "Generating traversed object elapsed #{(Time.now.to_f - t).round(5)} s"
         base_total_children_count = serializer.total_children_count(id)
         return id, base_total_children_count, batches, serializer.object_references
       end

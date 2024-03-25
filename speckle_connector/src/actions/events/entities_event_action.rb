@@ -25,10 +25,14 @@ module SpeckleConnector
         class OnElementModified
           # @param state [States::State] the current state of the SpeckleConnector Application
           def self.update_state(state, event_data)
-            speckle_state = state.speckle_state
-            modified_entity = event_data[0][1]
-            modified_entities = event_data.collect { |data| data[1] }
-            new_speckle_state = state.speckle_state.with_changed_object_ids(modified_entities.collect(&:persistent_id))
+            # modified_entity = event_data[0][1]
+            modified_entities = event_data.collect { |data| data[1] }.to_a
+            # near_faces = get_near_faces(modified_entities)
+            definition_faces = get_definition_faces(modified_entities)
+            modified_entity_ids = modified_entities.collect(&:persistent_id) + definition_faces.collect(&:persistent_id)
+            parent_ids = parent_ids(state.sketchup_state.sketchup_model)
+            modified_entity_ids += parent_ids
+            new_speckle_state = state.speckle_state.with_changed_object_ids(modified_entity_ids)
             state = state.with_speckle_state(new_speckle_state)
             state = Actions::SendCardExpirationCheck.update_state(state)
             # if modified_entity.is_a?(Sketchup::Face)
@@ -48,6 +52,32 @@ module SpeckleConnector
             state
           end
 
+          def self.get_near_faces(modified_entities)
+            near_faces = []
+            modified_entities.each do |modified_entity|
+              next unless modified_entity.is_a?(Sketchup::Face)
+
+              near_faces += SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
+            end
+            near_faces
+          end
+
+          def self.get_definition_faces(modified_entities)
+            definition_faces = []
+            modified_entities.each do |modified_entity|
+              next unless modified_entity.is_a?(Sketchup::Face)
+              next unless modified_entity.parent.is_a?(Sketchup::ComponentDefinition)
+
+              definition_faces += modified_entity.parent.entities.grep(Sketchup::Face)
+            end
+            definition_faces
+          end
+
+          def self.parent_ids(sketchup_model)
+            path = sketchup_model.active_path
+            path_objects = path.nil? ? [] : path + path.collect(&:definition)
+            path_objects.collect(&:persistent_id)
+          end
           # @param speckle_state [States::SpeckleState] the current state of the Speckle
           def self.speckle_entities_to_invalidate(speckle_state, ids)
             speckle_state.speckle_entities.to_h.select { |id, _| ids.include?(id) }
