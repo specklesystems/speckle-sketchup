@@ -17,6 +17,15 @@ module SpeckleConnector
             modified_entities = event_data.to_a.collect { |e| e[1] }
             # do not copy speckle base object specific attributes, because they are entity specific
             modified_entities.each { |entity| entity.delete_attribute(SPECKLE_BASE_OBJECT) }
+
+            # It is needed for attaching EntityObserver to newly added edges to track them with a hacky way.
+            # This hacky way is because of limitation on Sketchup API that cannot observer changes on Edges
+            # with EntitiesObserver.
+            modified_entities.grep(Sketchup::Edge).each do |edge|
+              edge.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
+              edge.start.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
+              edge.end.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
+            end
             state
           end
         end
@@ -78,6 +87,7 @@ module SpeckleConnector
             path_objects = path.nil? ? [] : path + path.collect(&:definition)
             path_objects.collect(&:persistent_id)
           end
+
           # @param speckle_state [States::SpeckleState] the current state of the Speckle
           def self.speckle_entities_to_invalidate(speckle_state, ids)
             speckle_state.speckle_entities.to_h.select { |id, _| ids.include?(id) }
