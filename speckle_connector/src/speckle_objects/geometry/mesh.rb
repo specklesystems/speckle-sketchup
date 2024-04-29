@@ -85,7 +85,11 @@ module SpeckleConnector
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
-          smooth_flags = is_soften ? 4 : 1
+
+          # MT: Might as well use the constants so we know what we're getting.
+          # MT: I also added the SMOOTH_SOFT_EDGES as it matches the sketchup default behaviour.
+          smooth_flags = is_soften ?  Geom::PolygonMesh::AUTO_SOFTEN|Geom::PolygonMesh::SMOOTH_SOFT_EDGES : Geom::PolygonMesh::HIDE_BASED_ON_INDEX 
+
           # Get native points to add polygon into native mesh.
           points = get_native_points(mesh)
           # Initialize native PolygonMesh object later to add polygon inside it.
@@ -115,24 +119,32 @@ module SpeckleConnector
             material = state.sketchup_state.materials.by_id(material_name)
           end
 
+
+          
+
+          # see: https://ruby.sketchup.com/file.generating_geometry.html for more information about how to make a lot of geometry
+          # Instead we use fill_from_mesh. Also we should put stuff in groups.
+          # Even if we use  add_faces_from_mesh, every mesh should be in it's own group.
+          # If we don't separate into groups it's using a ton of time combining/merging faces with other meshes in the same entities collection.
+          # this creates a more usable result as well as elements are separated and more editable.
+
           # Add faces from mesh with material and smooth setting
-          entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
-          added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
+          mesh_group = entities.add_group
+          mesh_group.entities.fill_from_mesh(native_mesh, true, smooth_flags, material, material)
+          added_faces = mesh_group.entities.grep(Sketchup::Face)
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
+          
+          # MT:Because the mesh is in a group we should apply layers and attributes at the group level.
+          mesh_group.layer = mesh_layer unless mesh_layer.nil?
+          unless mesh['sketchup_attributes'].nil?
+            SketchupModel::Dictionary::BaseDictionaryHandler.attribute_dictionaries_to_native(mesh_group, mesh['sketchup_attributes']['dictionaries'])
+          end
+
           # Merge only added faces in this scope
-          # if model_preferences[:merge_coplanar_faces]
-          #   added_faces = Converters::CleanUp.merge_coplanar_faces(added_faces)
-          # end
-          added_faces.each do |face|
-            face.layer = mesh_layer unless mesh_layer.nil?
-            # Smooth edges if they already soft
-            # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
-            face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
-            unless mesh['sketchup_attributes'].nil?
-              SketchupModel::Dictionary::BaseDictionaryHandler
-                .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
-            end
+          # MT: Because everything is grouped, it's safe to do the cleanup now instead of at the end.
+          if model_preferences[:merge_coplanar_faces]
+              #Converters::CleanUp.merge_coplanar_entities(mesh_group.entities)
           end
 
           return state, added_faces
@@ -263,11 +275,13 @@ module SpeckleConnector
         # @param mesh [Object] speckle mesh object
         # @param entities [Sketchup::Entities] sketchup entities that mesh will be created in it as face.
         def self.get_soften_setting(mesh, entities)
+          #MT: In my work I think is_soften should default to false. It's rare that I would want it true in sketchup.
           unless mesh['sketchup_attributes'].nil?
-            return mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
+            return mesh['sketchup_attributes']['is_soften'].nil? ? false : mesh['sketchup_attributes']['is_soften']
           end
 
-          return DEFINITIONS_WILL_BE_HARD_EDGE.none? { |def_name| entities.parent.name.include?(def_name) }
+          #MT: Maybe we can flip this and only soften in the name is like furniture or something like that.
+          return false;
         end
 
         def self.get_native_points(mesh)
