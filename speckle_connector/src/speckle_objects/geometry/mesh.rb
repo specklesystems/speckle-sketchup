@@ -85,7 +85,8 @@ module SpeckleConnector
           model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
-          smooth_flags = is_soften ? 4 : 1
+          # smooth_flags = is_soften ? 4 : 1
+          smooth_flags = is_soften ? Geom::PolygonMesh::AUTO_SOFTEN|Geom::PolygonMesh::SMOOTH_SOFT_EDGES : Geom::PolygonMesh::HIDE_BASED_ON_INDEX
           # Get native points to add polygon into native mesh.
           points = get_native_points(mesh)
           # Initialize native PolygonMesh object later to add polygon inside it.
@@ -117,8 +118,13 @@ module SpeckleConnector
           end
 
           # Add faces from mesh with material and smooth setting
-          entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
-          added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
+          # entities.add_faces_from_mesh(native_mesh, smooth_flags, material, material)
+          # added_faces = entities.grep(Sketchup::Face).last(native_mesh.polygons.length)
+
+          mesh_group = entities.add_group
+          mesh_group.entities.fill_from_mesh(native_mesh, true, smooth_flags, material, material)
+          added_faces = mesh_group.entities.grep(Sketchup::Face)
+
           mesh_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(mesh['layer'])
           mesh_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == mesh_layer_name }
           # Merge only added faces in this scope
