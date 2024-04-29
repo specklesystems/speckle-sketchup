@@ -12,9 +12,9 @@ module SpeckleConnector
     # Send filters for sketchup connector.
     class SendFilters
       TYPE_CLASSES = {
-        'everything': Filters::Send::EverythingFilter,
+        # 'everything': Filters::Send::EverythingFilter,
         'selection': Filters::Send::SelectionFilter,
-        'tags': Filters::Send::LayerFilter
+        # 'tags': Filters::Send::LayerFilter
       }.freeze
 
       def self.get_filter_from_ui_data(filter)
@@ -30,15 +30,16 @@ module SpeckleConnector
       # Get default send filters.
       # @param sketchup_model [Sketchup::Model] active model.
       def self.get_default(sketchup_model)
-        everything = Filters::Send::EverythingFilter.new
+        # everything = Filters::Send::EverythingFilter.new
         selection = Filters::Send::SelectionFilter.new([])
-        layer_items = sketchup_model.layers.collect do |layer|
-          UiData::Components::Selections::ListSelectionItem.new(
-            layer.persistent_id, layer.display_name, SpeckleObjects::Other::Color.to_rgb(layer.color), ''
-          )
-        end
-        tags = Filters::Send::LayerFilter.new(layer_items, layer_items.collect(&:name))
-        [everything, selection, tags]
+        # layer_items = sketchup_model.layers.collect do |layer|
+        #   UiData::Components::Selections::ListSelectionItem.new(
+        #     layer.persistent_id, layer.display_name, SpeckleObjects::Other::Color.to_rgb(layer.color), ''
+        #   )
+        # end
+        # tags = Filters::Send::LayerFilter.new(layer_items, layer_items.collect(&:name))
+        # [everything, selection, tags]
+        [selection]
       end
 
       def self.get_filters_from_model(filters)
