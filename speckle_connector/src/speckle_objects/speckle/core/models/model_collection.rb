@@ -29,7 +29,7 @@ module SpeckleConnector
             end
 
             def self.to_native(state, model_collection, layer, entities, &convert_to_native)
-              elements = model_collection['@elements']
+              elements = model_collection['@elements'] || model_collection['elements']
               views = model_collection['@Views']
               if views
                 views.each do |view|
@@ -60,8 +60,9 @@ module SpeckleConnector
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
-                  layer_collection['@elements'] = [] if layer_collection['@elements'].nil?
-                  layer_collection['@elements'].append(converted_object_with_entity)
+                  coll = layer_collection['@elements'] || layer_collection['elements']
+                  coll = [] if coll.nil?
+                  coll.append(converted_object_with_entity)
                   # test_reference = ObjectReference.new("test_referenced_id", {"test_closure_1" => 0, "test_closure_2" => 0, "test_closure_3" => 0})
                   # layer_collection['@elements'].append(test_reference)
                 end
