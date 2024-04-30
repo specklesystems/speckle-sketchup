@@ -23,10 +23,13 @@ module SpeckleConnector
         model_name = data['modelName']
         expired = data['expired']
         selected_version_id = data['selectedVersionId']
+        latest_version_id = data['latestVersionId']
+        has_dismissed_update_warning = data['hasDismissedUpdateWarning']
         receive_card = Cards::ReceiveCard.new(model_card_id, account_id,
                                               project_id, model_id,
                                               project_name, model_name,
-                                              selected_version_id, expired)
+                                              selected_version_id, latest_version_id,
+                                              has_dismissed_update_warning, expired)
         SketchupModel::Dictionary::ModelCardDictionaryHandler
           .save_receive_card_to_model(receive_card, state.sketchup_state.sketchup_model)
         new_speckle_state = state.speckle_state.with_receive_card(receive_card)

@@ -37,7 +37,7 @@ module SpeckleConnector
         receive_cards = receive_cards_hash.collect do |id, card|
           receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['project_id'], card['model_id'],
                                                 card['project_name'], card['model_name'], card['selected_version_id'],
-                                                card['expired'])
+                                                card['latest_version_id'], card['has_dismissed_update_warning'], card['expired'])
 
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)
           state = state.with_speckle_state(new_speckle_state)
@@ -49,6 +49,8 @@ module SpeckleConnector
             projectName: receive_card.project_name,
             modelName: receive_card.model_name,
             selectedVersionId: receive_card.selected_version_id,
+            latestVersionId: receive_card.latest_version_id,
+            hasDismissedUpdateWarning: receive_card.has_dismissed_update_warning,
             expired: receive_card.expired,
             typeDiscriminator: receive_card.type_discriminator
           }

@@ -14,6 +14,12 @@ module SpeckleConnector
       # @return [String] selected version id to receive
       attr_reader :selected_version_id
 
+      # @return [String] latest version id to receive
+      attr_reader :latest_version_id
+
+      # @return [Boolean] whether new version notification is dismissed or not
+      attr_reader :has_dismissed_update_warning
+
       # @return [String] name of the project
       attr_reader :project_name
 
@@ -23,10 +29,25 @@ module SpeckleConnector
       # @return [String] whether card is expired or not
       attr_reader :expired
 
-      def initialize(card_id, account_id, project_id, model_id, project_name, model_name, selected_version_id, expired)
+      def initialize(
+        card_id,
+        account_id,
+        project_id,
+        model_id,
+        project_name,
+        model_name,
+        selected_version_id,
+        latest_version_id,
+        has_dismissed_update_warning,
+        expired
+      )
         super(card_id, account_id, project_id, model_id)
         @selected_version_id = selected_version_id
+        @latest_version_id = latest_version_id
+        @has_dismissed_update_warning = has_dismissed_update_warning
         self[:selected_version_id] = selected_version_id
+        self[:has_dismissed_update_warning] = has_dismissed_update_warning
+        self[:latest_version_id] = latest_version_id
         self[:model_name] = model_name
         self[:project_name] = project_name
         self[:expired] = expired
