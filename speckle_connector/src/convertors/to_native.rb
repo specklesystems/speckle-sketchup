@@ -36,12 +36,15 @@ module SpeckleConnector
 
       attr_reader :converted_faces
 
+      attr_reader :converted_entities
+
       def initialize(state, stream_id, stream_name, branch_name, source_app)
         super(state, stream_id)
         @stream_name = stream_name
         @branch_name = branch_name
         @source_app = source_app.downcase
         @converted_faces = []
+        @converted_entities = []
       end
 
       # Module aliases
@@ -146,6 +149,7 @@ module SpeckleConnector
       def try_create_instance
         if !from_sketchup && (!@is_update_commit || @branch_definition.instances.empty?)
           instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+          @converted_entities += instance
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
       end
@@ -325,6 +329,7 @@ module SpeckleConnector
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
         state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        @converted_entities += converted_entities
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?
         if from_revit

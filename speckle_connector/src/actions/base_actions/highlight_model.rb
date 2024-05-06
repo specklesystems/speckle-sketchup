@@ -10,15 +10,15 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, model_card_id)
-        # objects_to_highlight = if data['typeDiscriminator'] == 'ReceiverModelCard'
-        #                          # model_card = state.speckle_state.receive_cards[model_card_id]
-        #                          # TODO: return received objects
-        #                          []
-        #                        else
-        #                          model_card = state.speckle_state.send_cards[model_card_id]
-        #                          model_card.send_filter.selected_object_ids
-        #                        end
-        objects_to_highlight = state.speckle_state.send_cards[model_card_id].send_filter.selected_object_ids
+        receiver_card = state.speckle_state.receive_cards[model_card_id]
+        sender_card = state.speckle_state.send_cards[model_card_id]
+        card = receiver_card || sender_card
+
+        objects_to_highlight = if card.type_discriminator == 'ReceiverModelCard'
+                                 state.speckle_state.receive_cards[model_card_id].receive_result.baked_object_ids
+                               else
+                                 state.speckle_state.send_cards[model_card_id].send_filter.selected_object_ids
+                               end
 
         state.sketchup_state.sketchup_model.selection.clear
 

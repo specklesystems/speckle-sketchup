@@ -2,6 +2,7 @@
 
 require_relative '../action'
 require_relative '../../convertors/to_native'
+require_relative '../../cards/receive_result'
 require_relative '../../ext/TT_Lib2/progressbar'
 
 module SpeckleConnector
@@ -22,6 +23,16 @@ module SpeckleConnector
         state.sketchup_state.sketchup_model.commit_operation
         puts "==== Converting to Native executed in #{elapsed_time} sec ===="
         puts "==== Source application is #{@source_app}. ===="
+
+        # Where we send info about received top level (for the sake of handling with less) objects.
+        top_objects = converter.converted_entities.reject(&:deleted?).select { |e| e.parent.is_a?(Sketchup::Model) }
+        top_object_ids = top_objects.collect(&:persistent_id)
+        args = {
+          modelCardId: model_card_id,
+          receiveResult: Cards::ReceiveResult.new(top_object_ids, true)
+        }
+        receive_result_js_script = "receiveBinding.emit('setModelReceiveResult', #{args.to_json})"
+        state = state.with_add_queue_js_command('setModelReceiveResult', receive_result_js_script)
 
         resolve_js_script = "receiveBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('receive', resolve_js_script)

@@ -15,8 +15,6 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, model_card_id)
         model_card = state.speckle_state.receive_cards[model_card_id]
-        account = Accounts.get_account_by_id(model_card.account_id)
-
         resolve_js_script = "receiveBinding.receiveResponse('#{resolve_id}')"
         state = state.with_add_queue_js_command('receive', resolve_js_script)
         args = {

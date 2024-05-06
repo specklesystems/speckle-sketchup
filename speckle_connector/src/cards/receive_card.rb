@@ -29,6 +29,9 @@ module SpeckleConnector
       # @return [String] whether card is expired or not
       attr_reader :expired
 
+      # @return [SpeckleConnector::Cards::ReceiveResult] result of the result
+      attr_reader :receive_result
+
       def initialize(
         card_id,
         account_id,
@@ -39,7 +42,8 @@ module SpeckleConnector
         selected_version_id,
         latest_version_id,
         has_dismissed_update_warning,
-        expired
+        expired,
+        receive_result = nil
       )
         super(card_id, account_id, project_id, model_id)
         @selected_version_id = selected_version_id
@@ -51,6 +55,8 @@ module SpeckleConnector
         self[:model_name] = model_name
         self[:project_name] = project_name
         self[:expired] = expired
+        self[:receive_result] = receive_result
+        @receive_result = receive_result
         @expired = expired
         @model_name = model_name
         @project_name = project_name
