@@ -15,6 +15,17 @@ module SpeckleConnector
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, model_card_id)
         model_card = state.speckle_state.send_cards[model_card_id]
+        unless model_card.send_filter.selected_object_ids.any?
+          resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
+          state = state.with_add_queue_js_command('resolveSend', resolve_js_script)
+          args = {
+            modelCardId: model_card_id,
+            error: 'No objects were found. Please update your send filter!'
+          }
+          js_script = "sendBinding.emit('setModelError', #{args.to_json})"
+          return state.with_add_queue_js_command('setModelsError', js_script)
+        end
+
         account = Accounts.get_account_by_id(model_card.account_id)
         converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter)
         new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,

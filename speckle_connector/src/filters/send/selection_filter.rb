@@ -9,7 +9,7 @@ module SpeckleConnector
       class SelectionFilter < UiData::Components::Selections::ListSelectionItem
         DEFAULT_SUMMARY = 'User based selection filter. UI should replace this summary with the selection info summary!'
 
-        # @return [Array<Integer>]
+        # @return [Array<Integer>] object ids that logged into selection filter.
         attr_reader :selected_object_ids
 
         def initialize(selected_object_ids, summary = DEFAULT_SUMMARY)
