@@ -5,6 +5,7 @@ require_relative '../../constants/path_constants'
 
 require_relative '../../actions/base_actions/get_source_app_name'
 require_relative '../../actions/base_actions/get_source_app_version'
+require_relative '../../actions/base_actions/get_connector_version'
 require_relative '../../actions/get_document_info'
 require_relative '../../actions/base_actions/add_model'
 require_relative '../../actions/base_actions/highlight_model'
@@ -28,6 +29,7 @@ module SpeckleConnector
           updateModel: Commands::ActionCommand.new(@app, self, Actions::AddModel),
           getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName),
           getSourceApplicationVersion: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppVersion),
+          getConnectorVersion: Commands::ActionCommand.new(@app, self, Actions::GetConnectorVersion),
           getDocumentInfo: Commands::ActionCommand.new(@app, self, Actions::GetDocumentInfo),
           updateSendFilter: Commands::ActionCommand.new(@app, self, Actions::UpdateSendFilter),
           getDocumentState: Commands::ActionCommand.new(@app, self, Actions::GetDocumentState)
