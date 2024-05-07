@@ -19,12 +19,7 @@ module SpeckleConnector
             modified_entities.each { |entity| entity.delete_attribute(SPECKLE_BASE_OBJECT) }
 
             wrapped_entity_ids = wrapped_entity_ids(modified_entities)
-
-            if wrapped_entity_ids.any?
-              new_speckle_state = state.speckle_state.with_changed_object_ids(wrapped_entity_ids)
-              state = state.with_speckle_state(new_speckle_state)
-              state = Actions::SendCardExpirationCheck.update_state(state)
-            end
+            state = EntitiesEventAction.run_expiration_checks(state, wrapped_entity_ids) if wrapped_entity_ids.any?
 
             attach_edge_entity_observer(modified_entities.grep(Sketchup::Edge), state.speckle_state.observers[ENTITY_OBSERVER])
             state
@@ -61,9 +56,7 @@ module SpeckleConnector
             modified_entity_ids = modified_entities.collect(&:persistent_id) + definition_faces.collect(&:persistent_id)
             parent_ids = parent_ids(state.sketchup_state.sketchup_model)
             modified_entity_ids += parent_ids
-            new_speckle_state = state.speckle_state.with_changed_object_ids(modified_entity_ids)
-            state = state.with_speckle_state(new_speckle_state)
-            state = Actions::SendCardExpirationCheck.update_state(state)
+            state = EntitiesEventAction.run_expiration_checks(state, modified_entity_ids)
             # if modified_entity.is_a?(Sketchup::Face)
             #   path = state.sketchup_state.sketchup_model.active_path
             #   modified_faces = SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
@@ -131,6 +124,14 @@ module SpeckleConnector
             # TODO: Do state updates when element removed
             state
           end
+        end
+
+        # @param state [States::State] the current state of the SpeckleConnector Application
+        # @param changed_entity_ids [Array<Integer> | Array<String>] list of changed entity ids
+        def self.run_expiration_checks(state, changed_entity_ids)
+          new_speckle_state = state.speckle_state.with_changed_object_ids(changed_entity_ids)
+          state = state.with_speckle_state(new_speckle_state)
+          Actions::SendCardExpirationCheck.update_state(state)
         end
 
         # Handlers that are used to handle specific events
