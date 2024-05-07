@@ -49,12 +49,14 @@ module SpeckleConnector
               return state, []
             end
 
-            def self.from_entities(entities, sketchup_model, speckle_state, units, preferences, &convert)
+            def self.from_entities(entities, sketchup_model, state, units, preferences, model_card_id, &convert)
+              speckle_state = state.speckle_state
               model_collection = ModelCollection.new(
                 name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,
                 application_id: sketchup_model.guid
               )
 
+              count = 0
               entities.each do |entity|
                 layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, preferences, speckle_state)
@@ -66,6 +68,17 @@ module SpeckleConnector
                   # test_reference = ObjectReference.new("test_referenced_id", {"test_closure_1" => 0, "test_closure_2" => 0, "test_closure_3" => 0})
                   # layer_collection['@elements'].append(test_reference)
                 end
+                count += 1
+                progress = count / sketchup_model.selection.count.to_f
+                sender_progress_args = {
+                  modelCardId: model_card_id,
+                  progress: {
+                    progress: progress,
+                    status: progress == 1 ? 'Completed' : 'Converting'
+                  }
+                }
+                state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
+
               end
 
               return speckle_state, model_collection
