@@ -27,7 +27,7 @@ module SpeckleConnector
         end
 
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter)
+        converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter, model_card_id)
         new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,
                                                                      state.user_state.preferences)
         id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)

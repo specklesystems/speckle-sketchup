@@ -17,9 +17,6 @@ require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
-require_relative '../ext/TT_Lib2/progressbar'
-require_relative '../ext/TT_Lib2/model'
-require_relative '../ext/TT_Lib2/entities'
 
 module SpeckleConnector
   module Converters
@@ -30,21 +27,11 @@ module SpeckleConnector
       SPECKLE_ENTITIES_READER = SketchupModel::Reader::SpeckleEntitiesReader
       VIEW3D = SpeckleObjects::BuiltElements::View3d
 
-      # @return [TT::ProgressBar]
-      attr_reader :progress_bar
-
       attr_reader :send_filter
 
-      def initialize(state, stream_id, send_filter)
-        super(state, stream_id)
+      def initialize(state, stream_id, send_filter, model_card_id)
+        super(state, stream_id, model_card_id)
         @send_filter = send_filter
-        model = state.sketchup_state.sketchup_model
-        entity_count = if send_filter.name == 'Selection'
-                         TT::Model.count_unique_entity(model)
-                       else
-                         TT::Entities.count_unique_entity(model.selection)
-                       end
-        @progress_bar = TT::Progressbar.new(entity_count, 'Converting to Speckle')
       end
 
       # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
@@ -62,8 +49,9 @@ module SpeckleConnector
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
       def convert_selection_to_base(preferences)
         convert = method(:convert)
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, speckle_state,
-                                                                                   @units, preferences, &convert)
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, state,
+                                                                                   @units, preferences, model_card_id,
+                                                                                   &convert)
 
         return new_speckle_state, model_collection
       end
@@ -93,7 +81,6 @@ module SpeckleConnector
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
       def convert(entity, preferences, speckle_state, parent = :base)
-        progress_bar.next
         convert = method(:convert)
 
         unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity) &&
