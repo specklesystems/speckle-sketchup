@@ -205,6 +205,10 @@ module SpeckleConnector
         with(:@relation => new_relation)
       end
 
+      def with_empty_object_references
+        with(:@object_references_by_project => Immutable::EmptySet)
+      end
+
       def with_object_references(project_id, references)
         project_references = object_references_by_project[project_id] || Immutable::EmptyHash
         new_project_references = project_references
