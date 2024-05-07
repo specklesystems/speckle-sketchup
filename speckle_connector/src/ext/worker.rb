@@ -53,7 +53,7 @@ module SpeckleConnector
       job.status = PENDING
       job = @jobs.select {|job| job.status == PENDING }.last
       job.run
-      puts "Working on #{job}"
+      # puts "Working on #{job}"
       # sleep 0.01
     end
 
@@ -84,11 +84,11 @@ module SpeckleConnector
 
       work while (Time.now.to_f - last_update_time < 0.2) && not_started_jobs?
 
-      puts 'Stop working to update status'
+      #puts 'Stop working to update status'
       action.call
       last_update_time = Time.now.to_f
       UI.start_timer(0, false) do
-        puts 'Resuming work from a timer'
+        # puts 'Resuming work from a timer'
         do_work(last_update_time, &action)
       end
     end

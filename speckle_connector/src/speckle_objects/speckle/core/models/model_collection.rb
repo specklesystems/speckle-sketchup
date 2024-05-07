@@ -77,8 +77,13 @@ module SpeckleConnector
                     status: progress == 1 ? 'Completed' : 'Converting'
                   }
                 }
-                state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
 
+                action = Proc.new do
+                  state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
+                end
+
+                state.worker.add_job(Job.new(entity.persistent_id, &action))
+                state.worker.do_work(Time.now.to_f, &action)
               end
 
               return speckle_state, model_collection
