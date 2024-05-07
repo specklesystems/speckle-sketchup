@@ -206,7 +206,7 @@ module SpeckleConnector
       end
 
       def with_empty_object_references
-        with(:@object_references_by_project => Immutable::EmptySet)
+        with(:@object_references_by_project => Immutable::EmptyHash)
       end
 
       def with_object_references(project_id, references)
