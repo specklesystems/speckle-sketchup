@@ -149,7 +149,7 @@ module SpeckleConnector
       def try_create_instance
         if !from_sketchup && (!@is_update_commit || @branch_definition.instances.empty?)
           instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
-          @converted_entities += instance
+          @converted_entities.append(instance)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
       end
