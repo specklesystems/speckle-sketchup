@@ -32,7 +32,8 @@ module SpeckleConnector
                                                                      state.user_state.preferences)
         id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
-        new_speckle_state = new_speckle_state.with_empty_changed_object_ids
+        new_speckle_state = new_speckle_state.with_empty_changed_entity_persistent_ids
+        new_speckle_state = new_speckle_state.with_empty_changed_entity_ids
 
         puts("converted #{base.count} objects for stream #{model_card.project_id}")
 

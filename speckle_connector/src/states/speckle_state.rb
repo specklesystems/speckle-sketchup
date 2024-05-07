@@ -21,6 +21,9 @@ module SpeckleConnector
       attr_reader :object_references_by_project
 
       # @return [Immutable::Set] changed entity ids.
+      attr_reader :changed_entity_persistent_ids
+
+      # @return [Immutable::Set] changed entity ids.
       attr_reader :changed_entity_ids
 
       # @return [States::SpeckleMapperState] state of the mapper.
@@ -59,6 +62,7 @@ module SpeckleConnector
         @observers = observers
         @message_queue = queue
         @stream_queue = stream_queue
+        @changed_entity_persistent_ids = Immutable::EmptySet
         @changed_entity_ids = Immutable::EmptySet
         @object_references_by_project = Immutable::EmptyHash
         @speckle_entities = Immutable::EmptyHash
@@ -177,11 +181,22 @@ module SpeckleConnector
         with(:@receive_cards => new_receive_cards)
       end
 
-      def with_empty_changed_object_ids
+      def with_empty_changed_entity_persistent_ids
+        with(:@changed_entity_persistent_ids => Immutable::EmptySet)
+      end
+
+      def with_changed_entity_persistent_ids(ids)
+        new_ids = changed_entity_persistent_ids + Immutable::Set.new(ids)
+        with(:@changed_entity_persistent_ids => new_ids)
+      end
+
+      def with_empty_changed_entity_ids
         with(:@changed_entity_ids => Immutable::EmptySet)
       end
 
-      def with_changed_object_ids(ids)
+      # POC: Not happy with it. We need to log also entity.entityID property since
+      # onElementRemoved observer only return them! :/ Reconsider this in BETA!
+      def with_changed_entity_ids(ids)
         new_ids = changed_entity_ids + Immutable::Set.new(ids)
         with(:@changed_entity_ids => new_ids)
       end

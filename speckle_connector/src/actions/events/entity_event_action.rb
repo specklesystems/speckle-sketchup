@@ -18,17 +18,18 @@ module SpeckleConnector
             edges = []
             event_data.each do |event_d|
               event_d.each do |d|
+                next if d.deleted?
+
                 edges.append(d) if d.is_a?(Sketchup::Edge)
                 edges += d.edges if d.is_a?(Sketchup::Vertex) && d.edges
               end
             end
             edges.uniq!
             edge_ids = edges.collect(&:persistent_id)
-            new_speckle_state = state.speckle_state.with_changed_object_ids(edge_ids)
+            new_speckle_state = state.speckle_state.with_changed_entity_persistent_ids(edge_ids)
             state.with_speckle_state(new_speckle_state)
           end
         end
-
 
         # Handlers that are used to handle specific events
         ACTIONS = {

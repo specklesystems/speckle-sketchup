@@ -18,8 +18,11 @@ module SpeckleConnector
         def self.update_state(state, event_data)
           return state unless event_data&.any?
 
-          selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id)
-          summary = "Selected #{selected_object_ids.length} objects."
+          # POC: Not happy with it. We log also entity.entityID property since
+          # onElementRemoved observer only return them! :/ Reconsider this in BETA!
+          selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id) +
+                                state.sketchup_state.sketchup_model.selection.collect(&:entityID)
+          summary = "Selected #{selected_object_ids.length / 2} objects." # POC: OFFF. I'll fix it
           selection_info = UiData::Sketchup::SelectionInfo.new(selected_object_ids, summary)
           js_script = "selectionBinding.emit('setSelection', #{selection_info.to_json})"
           state.with_add_queue_js_command('setSelection', js_script)

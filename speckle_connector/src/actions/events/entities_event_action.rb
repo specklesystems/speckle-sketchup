@@ -120,16 +120,18 @@ module SpeckleConnector
         # Event action when element removed.
         class OnElementRemoved
           # @param state [States::State] the current state of the SpeckleConnector Application
-          def self.update_state(state, _event_data)
-            # TODO: Do state updates when element removed
-            state
+          def self.update_state(state, event_data)
+            modified_entity_ids = event_data.collect { |data| data[1] }.to_a
+            new_speckle_state = state.speckle_state.with_changed_entity_ids(modified_entity_ids)
+            state = state.with_speckle_state(new_speckle_state)
+            Actions::SendCardExpirationCheck.update_state(state)
           end
         end
 
         # @param state [States::State] the current state of the SpeckleConnector Application
         # @param changed_entity_ids [Array<Integer> | Array<String>] list of changed entity ids
         def self.run_expiration_checks(state, changed_entity_ids)
-          new_speckle_state = state.speckle_state.with_changed_object_ids(changed_entity_ids)
+          new_speckle_state = state.speckle_state.with_changed_entity_persistent_ids(changed_entity_ids)
           state = state.with_speckle_state(new_speckle_state)
           Actions::SendCardExpirationCheck.update_state(state)
         end
