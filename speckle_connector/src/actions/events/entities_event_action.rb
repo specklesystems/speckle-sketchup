@@ -18,15 +18,35 @@ module SpeckleConnector
             # do not copy speckle base object specific attributes, because they are entity specific
             modified_entities.each { |entity| entity.delete_attribute(SPECKLE_BASE_OBJECT) }
 
-            # It is needed for attaching EntityObserver to newly added edges to track them with a hacky way.
-            # This hacky way is because of limitation on Sketchup API that cannot observer changes on Edges
-            # with EntitiesObserver.
-            modified_entities.grep(Sketchup::Edge).each do |edge|
-              edge.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
-              edge.start.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
-              edge.end.add_observer(state.speckle_state.observers[ENTITY_OBSERVER])
+            wrapped_entity_ids = wrapped_entity_ids(modified_entities)
+
+            if wrapped_entity_ids.any?
+              new_speckle_state = state.speckle_state.with_changed_object_ids(wrapped_entity_ids)
+              state = state.with_speckle_state(new_speckle_state)
+              state = Actions::SendCardExpirationCheck.update_state(state)
             end
+
+            attach_edge_entity_observer(modified_entities.grep(Sketchup::Edge), state.speckle_state.observers[ENTITY_OBSERVER])
             state
+          end
+
+          def self.wrapped_entity_ids(modified_entities)
+            wrapped_entity_ids = []
+            modified_entities.select { |e| e.respond_to?(:definition) }.each do |c|
+              wrapped_entity_ids += c.definition.entities.collect(&:persistent_id)
+            end
+            wrapped_entity_ids
+          end
+
+          # It is needed for attaching EntityObserver to newly added edges to track them with a hacky way.
+          # This hacky way is because of limitation on Sketchup API that observer cannot catch changes on Edges
+          # with EntitiesObserver.
+          def self.attach_edge_entity_observer(edges, observer)
+            edges.each do |edge|
+              edge.add_observer(observer)
+              edge.start.add_observer(observer)
+              edge.end.add_observer(observer)
+            end
           end
         end
 

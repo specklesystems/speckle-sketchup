@@ -108,6 +108,7 @@ module SpeckleConnector
       # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
+        # Where we do send caching!
         if !speckle_state.changed_entity_ids.include?(entity.persistent_id) &&
            speckle_state.object_references_by_project[@stream_id] &&
            speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
