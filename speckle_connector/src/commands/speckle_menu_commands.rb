@@ -26,9 +26,9 @@ module SpeckleConnector
         speckle_menu = sketchup_ui.speckle_menu
         speckle_toolbar = sketchup_ui.speckle_toolbar
 
-        commands[CMD_INITIALIZE_SPECKLE] = initialize_speckle_command(app)
-        commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
-        commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
+        # commands[CMD_INITIALIZE_SPECKLE] = initialize_speckle_command(app)
+        # commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
+        # commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
 
         commands[CMD_RESET_WINDOW_LOCATION_SPECKLE] = reset_window_location_command(app)
         commands.add_to_menu!(CMD_RESET_WINDOW_LOCATION_SPECKLE, speckle_menu)
