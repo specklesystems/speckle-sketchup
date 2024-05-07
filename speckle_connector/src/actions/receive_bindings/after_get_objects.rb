@@ -3,7 +3,6 @@
 require_relative '../action'
 require_relative '../../convertors/to_native'
 require_relative '../../cards/receive_result'
-require_relative '../../ext/TT_Lib2/progressbar'
 
 module SpeckleConnector
   module Actions

@@ -5,7 +5,6 @@ require_relative '../../accounts/accounts'
 require_relative '../../convertors/units'
 require_relative '../../convertors/to_speckle'
 require_relative '../../operations/send'
-require_relative '../../ext/TT_Lib2/progressbar'
 
 module SpeckleConnector
   module Actions
