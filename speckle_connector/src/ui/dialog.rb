@@ -81,8 +81,9 @@ module SpeckleConnector
         dialog.set_can_close do
           true
         end
-        File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
+        # File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:8081')
         # dialog.set_url('http://localhost:8081') # uncomment this line if you want to use your local version of ui
+        dialog.set_url('https://development--speckle-sketchup-dui2.netlify.app/')
         add_exec_callback(dialog)
         dialog
       end
