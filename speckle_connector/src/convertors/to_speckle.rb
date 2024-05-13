@@ -81,12 +81,12 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity] sketchup entity to convert Speckle.
       # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
       # @param parent [Symbol, String] parent of the Sketchup Entity to be converted.
-      def convert(entity, preferences, speckle_state, parent = :base)
+      def convert(entity, preferences, speckle_state, parent = :base, ignore_cache = false)
         convert = method(:convert)
 
         unless SketchupModel::Reader::MapperReader.mapped_with_schema?(entity) &&
                !entity.is_a?(Sketchup::ComponentDefinition)
-          return from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
+          return from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         end
 
         return speckle_state, nil
@@ -101,9 +101,9 @@ module SpeckleConnector
       # @param entity [Sketchup::Entity]
       # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
-      def from_native_to_speckle(entity, preferences, speckle_state, parent, &convert)
+      def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         # Where we do send caching!
-        if !entity_has_changed?(entity) &&
+        if !ignore_cache && !entity_has_changed?(entity) &&
            speckle_state.object_references_by_project[@stream_id] &&
            speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
           reference = speckle_state.object_references_by_project[@stream_id][entity.persistent_id.to_s]
