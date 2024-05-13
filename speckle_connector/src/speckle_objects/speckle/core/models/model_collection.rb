@@ -69,7 +69,8 @@ module SpeckleConnector
                   # layer_collection['@elements'].append(test_reference)
                 end
                 count += 1
-                progress = count / sketchup_model.selection.count.to_f
+                # User might click the Update button without any selection
+                progress = sketchup_model.selection.count == 0 ? nil : count / sketchup_model.selection.count.to_f
                 sender_progress_args = {
                   modelCardId: model_card_id,
                   progress: {
