@@ -13,6 +13,8 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, model_card_id)
+        # Set active path always to model to be safe always. Later we can address it
+        state.sketchup_state.sketchup_model.active_path = nil
         model_card = state.speckle_state.send_cards[model_card_id]
         unless model_card.send_filter.selected_object_ids.any?
           resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
