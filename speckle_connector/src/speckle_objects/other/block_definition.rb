@@ -214,9 +214,13 @@ module SpeckleConnector
           # convert material
           mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model])
           new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
-          mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
-          mesh_group = mesh_groups[mesh_group_id]
-          mesh_group.face_to_mesh(face) unless mesh_group.is_a?(ObjectReference)
+          if converted.is_a?(ObjectReference)
+            mesh_groups[converted.referenced_id] = converted
+          else
+            mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
+            mesh_group = mesh_groups[mesh_group_id]
+            mesh_group.face_to_mesh(face)
+          end
           # mesh_group[1].append(face)
           new_speckle_state
         end
