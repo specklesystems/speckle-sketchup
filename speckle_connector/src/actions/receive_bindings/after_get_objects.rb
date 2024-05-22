@@ -18,6 +18,9 @@ module SpeckleConnector
         start_time = Time.now.to_f
         # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
         state = converter.receive_commit_object(root_obj)
+        if state.user_state.model_preferences[:merge_coplanar_faces]
+          Converters::CleanUp.merge_coplanar_faces(converter.converted_faces)
+        end
         elapsed_time = (Time.now.to_f - start_time).round(3)
         state.sketchup_state.sketchup_model.commit_operation
         puts "==== Converting to Native executed in #{elapsed_time} sec ===="
