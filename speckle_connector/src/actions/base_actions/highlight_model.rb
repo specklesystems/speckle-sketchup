@@ -20,21 +20,7 @@ module SpeckleConnector
                                  state.speckle_state.send_cards[model_card_id].send_filter.selected_object_ids
                                end
 
-        state.sketchup_state.sketchup_model.selection.clear
-
-        # Flat entities to select entities on card
-        flat_entities = SketchupModel::Query::Entity.flat_entities(state.sketchup_state.sketchup_model.entities)
-
-        flat_entities.each do |entity|
-          next unless objects_to_highlight.include?(entity.persistent_id)
-
-          if entity.is_a?(Sketchup::ComponentDefinition)
-            state.sketchup_state.sketchup_model.selection.add(entity.instances)
-          end
-          state.sketchup_state.sketchup_model.selection.add(entity)
-        end
-
-        state.sketchup_state.sketchup_model.active_view.zoom(state.sketchup_state.sketchup_model.selection)
+        SketchupModel::Utils::ViewUtils.highlight_entities(state.sketchup_state.sketchup_model, objects_to_highlight)
 
         # Resolve promise
         js_script = "baseBinding.receiveResponse('#{resolve_id}')"

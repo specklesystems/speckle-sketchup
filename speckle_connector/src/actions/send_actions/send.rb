@@ -50,6 +50,7 @@ module SpeckleConnector
           serverUrl: account['serverInfo']['url'],
           accountId: model_card.account_id,
           message: model_card.message,
+          sendConversionResults: converter.conversion_results,
           sendObject: {
             id: id,
             totalChildrenCount: total_children_count,

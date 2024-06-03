@@ -17,6 +17,7 @@ require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
+require_relative '../ui_data/report/send_conversion_result'
 
 module SpeckleConnector
   module Converters
@@ -29,9 +30,12 @@ module SpeckleConnector
 
       attr_reader :send_filter
 
+      attr_reader :conversion_results
+
       def initialize(state, stream_id, send_filter, model_card_id)
         super(state, stream_id, model_card_id)
         @send_filter = send_filter
+        @conversion_results = []
       end
 
       # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
@@ -88,7 +92,8 @@ module SpeckleConnector
                !entity.is_a?(Sketchup::ComponentDefinition)
           return from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         end
-
+      rescue StandardError => e
+        @conversion_results.push(UiData::Report::SendConversionResult.new(entity, entity.class, entity.persistent_id, nil, e))
         return speckle_state, nil
       end
 
@@ -96,6 +101,11 @@ module SpeckleConnector
       def entity_has_changed?(entity)
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
           speckle_state.changed_entity_ids.include?(entity.entityID)
+      end
+
+      def add_to_report(entity, converted)
+        @conversion_results.push(UiData::Report::SendConversionResult.new(entity, entity.class,
+                                                                          entity.persistent_id, converted))
       end
 
       # @param entity [Sketchup::Entity]
@@ -107,18 +117,21 @@ module SpeckleConnector
            speckle_state.object_references_by_project[@stream_id] &&
            speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
           reference = speckle_state.object_references_by_project[@stream_id][entity.persistent_id.to_s]
+          add_to_report(entity, reference)
           return speckle_state, reference
         end
 
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
                                                           units: @units, model_preferences: preferences[:model]).to_h
+          add_to_report(entity, line)
           return speckle_state, line
         end
 
         if entity.is_a?(Sketchup::Face)
           mesh = SpeckleObjects::Geometry::Mesh.from_face(speckle_state: speckle_state, face: entity, units: @units,
                                                           model_preferences: preferences[:model])
+          add_to_report(entity, mesh)
           return speckle_state, mesh
         end
 
@@ -127,6 +140,7 @@ module SpeckleConnector
             entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
+          add_to_report(entity, block_instance)
           return speckle_state, block_instance
         end
 
@@ -135,6 +149,7 @@ module SpeckleConnector
             entity, @units, preferences, speckle_state, &convert
           )
           speckle_state = new_speckle_state
+          add_to_report(entity, block_instance)
           return speckle_state, block_instance
         end
 
@@ -147,10 +162,11 @@ module SpeckleConnector
           )
           definitions[entity.guid] = block_definition
           speckle_state = new_speckle_state
+          add_to_report(entity, block_definition)
           return speckle_state, block_definition
         end
 
-        return speckle_state, nil
+        raise StandardError.new("No conversion found for #{entity.class}.")
       end
       # rubocop:enable Metrics/MethodLength
     end
