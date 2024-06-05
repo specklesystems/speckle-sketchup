@@ -22,7 +22,7 @@ module SpeckleConnector
         def initialize(error)
           super()
           @message = error.message
-          @stack_trace = error.backtrace
+          @stack_trace = error.backtrace.join("\n")
           self[:message] = @message
           self[:stackTrace] = @stack_trace
         end
