@@ -23,6 +23,8 @@ module SpeckleConnector
           super()
           @message = error.message
           @stack_trace = error.backtrace
+          self[:message] = @message
+          self[:stackTrace] = @stack_trace
         end
       end
 
