@@ -3,7 +3,6 @@
 require_relative '../action'
 require_relative '../../cards/send_card'
 require_relative '../../cards/receive_card'
-require_relative '../../cards/receive_result'
 require_relative '../../filters/send/everything_filter'
 require_relative '../../filters/send/selection_filter'
 require_relative '../../filters/send_filters'
@@ -26,19 +25,13 @@ module SpeckleConnector
         selected_version_id = data['selectedVersionId']
         latest_version_id = data['latestVersionId']
         has_dismissed_update_warning = data['hasDismissedUpdateWarning']
-        if data['receiveResult']
-          receive_result = Cards::ReceiveResult.new(
-            data['receiveResult']['bakedObjectIds'].values, # NOTE: IDK why UI sends it as object...
-            data['receiveResult']['conversionResults'],
-            data['receiveResult']['display']
-          )
-        end
+        baked_object_ids = data['bakedObjectIds']
 
         receive_card = Cards::ReceiveCard.new(model_card_id, account_id,
                                               project_id, model_id,
                                               project_name, model_name,
                                               selected_version_id, latest_version_id,
-                                              has_dismissed_update_warning, expired, receive_result)
+                                              has_dismissed_update_warning, expired, baked_object_ids)
         SketchupModel::Dictionary::ModelCardDictionaryHandler
           .save_receive_card_to_model(receive_card, state.sketchup_state.sketchup_model)
         new_speckle_state = state.speckle_state.with_receive_card(receive_card)

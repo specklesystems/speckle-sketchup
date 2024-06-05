@@ -2,7 +2,6 @@
 
 require_relative '../action'
 require_relative '../../filters/send_filters'
-require_relative '../../cards/receive_result'
 require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector
@@ -36,15 +35,10 @@ module SpeckleConnector
                              .get_receive_cards_from_dict(state.sketchup_state.sketchup_model)
 
         receive_cards = receive_cards_hash.collect do |id, card|
-          receive_result = Cards::ReceiveResult.new(
-            card['receive_result']['bakedObjectIds'],
-            card['receiveResult']['conversionResults'],
-            card['receive_result']['display']
-          )
           receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['project_id'], card['model_id'],
                                                 card['project_name'], card['model_name'], card['selected_version_id'],
                                                 card['latest_version_id'], card['has_dismissed_update_warning'],
-                                                card['expired'], receive_result)
+                                                card['expired'], card['bakedObjectIds'])
 
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)
           state = state.with_speckle_state(new_speckle_state)
@@ -59,7 +53,7 @@ module SpeckleConnector
             latestVersionId: receive_card.latest_version_id,
             hasDismissedUpdateWarning: receive_card.has_dismissed_update_warning,
             expired: receive_card.expired,
-            receiveResult: receive_card.receive_result,
+            bakedObjectIds: receive_card.baked_object_ids,
             typeDiscriminator: receive_card.type_discriminator
           }
         end

@@ -2,7 +2,6 @@
 
 require_relative '../action'
 require_relative '../../convertors/to_native'
-require_relative '../../cards/receive_result'
 
 module SpeckleConnector
   module Actions
