@@ -13,12 +13,14 @@ module SpeckleConnector
       attr_reader :baked_object_ids
 
       # @param baked_object_ids [Array<Integer>]  object ids that baked after receive.
-      def initialize(baked_object_ids, display)
+      def initialize(baked_object_ids, conversion_results, display)
         super()
         @baked_object_ids = baked_object_ids
         @display = display
+        @conversion_results = conversion_results
         self[:bakedObjectIds] = baked_object_ids
         self[:display] = display
+        self[:conversionResults] = conversion_results
       end
     end
   end

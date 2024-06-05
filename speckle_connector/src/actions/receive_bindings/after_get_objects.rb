@@ -31,8 +31,12 @@ module SpeckleConnector
         top_object_ids = top_objects.collect(&:persistent_id)
         args = {
           modelCardId: model_card_id,
-          receiveResult: Cards::ReceiveResult.new(top_object_ids, true)
+          bakedObjectIds: top_object_ids,
+          conversionResults: converter.conversion_results
         }
+
+        # TODO: set here bakedObjectIds when we get rid of patching model as post receive action.
+
         receive_result_js_script = "receiveBinding.emit('setModelReceiveResult', #{args.to_json})"
         state = state.with_add_queue_js_command('setModelReceiveResult', receive_result_js_script)
 

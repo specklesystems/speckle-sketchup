@@ -29,6 +29,7 @@ module SpeckleConnector
         if data['receiveResult']
           receive_result = Cards::ReceiveResult.new(
             data['receiveResult']['bakedObjectIds'].values, # NOTE: IDK why UI sends it as object...
+            data['receiveResult']['conversionResults'],
             data['receiveResult']['display']
           )
         end

@@ -17,7 +17,7 @@ require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
-require_relative '../ui_data/report/send_conversion_result'
+require_relative '../ui_data/report/conversion_result'
 
 module SpeckleConnector
   module Converters
@@ -93,7 +93,12 @@ module SpeckleConnector
           return from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         end
       rescue StandardError => e
-        @conversion_results.push(UiData::Report::SendConversionResult.new(entity, entity.class, entity.persistent_id, nil, e))
+        @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
+                                                                      entity.persistent_id,
+                                                                      entity.class,
+                                                                      nil,
+                                                                      nil,
+                                                                      e))
         return speckle_state, nil
       end
 
@@ -104,8 +109,11 @@ module SpeckleConnector
       end
 
       def add_to_report(entity, converted)
-        @conversion_results.push(UiData::Report::SendConversionResult.new(entity, entity.class,
-                                                                          entity.persistent_id, converted))
+        @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
+                                                                      entity.persistent_id,
+                                                                      entity.class,
+                                                                      converted[:id],
+                                                                      converted[:speckle_type]))
       end
 
       # @param entity [Sketchup::Entity]

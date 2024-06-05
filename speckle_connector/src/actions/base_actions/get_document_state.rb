@@ -38,6 +38,7 @@ module SpeckleConnector
         receive_cards = receive_cards_hash.collect do |id, card|
           receive_result = Cards::ReceiveResult.new(
             card['receive_result']['bakedObjectIds'],
+            card['receiveResult']['conversionResults'],
             card['receive_result']['display']
           )
           receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['project_id'], card['model_id'],
