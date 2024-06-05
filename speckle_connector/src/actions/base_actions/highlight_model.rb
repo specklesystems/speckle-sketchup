@@ -15,7 +15,7 @@ module SpeckleConnector
         card = receiver_card || sender_card
 
         objects_to_highlight = if card.type_discriminator == 'ReceiverModelCard'
-                                 state.speckle_state.receive_cards[model_card_id].receive_result.baked_object_ids
+                                 state.speckle_state.receive_cards[model_card_id].baked_object_ids
                                else
                                  state.speckle_state.send_cards[model_card_id].send_filter.selected_object_ids
                                end

@@ -25,7 +25,7 @@ module SpeckleConnector
         selected_version_id = data['selectedVersionId']
         latest_version_id = data['latestVersionId']
         has_dismissed_update_warning = data['hasDismissedUpdateWarning']
-        baked_object_ids = data['bakedObjectIds']
+        baked_object_ids = data['bakedObjectIds'].nil? ? nil : data['bakedObjectIds'].values
 
         receive_card = Cards::ReceiveCard.new(model_card_id, account_id,
                                               project_id, model_id,

@@ -38,7 +38,7 @@ module SpeckleConnector
           receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['project_id'], card['model_id'],
                                                 card['project_name'], card['model_name'], card['selected_version_id'],
                                                 card['latest_version_id'], card['has_dismissed_update_warning'],
-                                                card['expired'], card['bakedObjectIds'])
+                                                card['expired'], card['baked_object_ids'])
 
           new_speckle_state = state.speckle_state.with_receive_card(receive_card)
           state = state.with_speckle_state(new_speckle_state)
