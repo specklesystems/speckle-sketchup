@@ -23,7 +23,7 @@ jobs:
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: output-3.0.0-fake
+        name: sketchup-3.0.0-fake
         path: |
           speckle_connector.rb
           speckle_connector/**/*
