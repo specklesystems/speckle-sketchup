@@ -10,6 +10,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
 
     steps:
     - uses: actions/checkout@v4
@@ -28,3 +30,26 @@ jobs:
           speckle_connector.rb
           speckle_connector/**/*
         compression-level: 0 # no compression
+    - id: set-version
+      name: Set version to output
+      run: echo "version=3.0.0-fake" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
+        
+
+  deploy-installers:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🔫 Trigger Build Installers
+        uses: ALEEF02/workflow-dispatch@v3.0.0
+        with:
+          workflow: Build Sketchup
+          repo: specklesystems/connector-installers
+          token: ${{ secrets.CONNECTORS_GH_TOKEN }}
+          inputs: '{ "run_id": "${{ github.run_id }}", "version": "${{ needs.build.outputs.version }}" }'
+          ref: main
+          wait-for-completion: true
+          wait-for-completion-interval: 10s
+          wait-for-completion-timeout: 10m
+          display-workflow-run-url: true
+          display-workflow-run-url-interval: 10s
+      
