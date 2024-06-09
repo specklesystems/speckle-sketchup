@@ -25,6 +25,6 @@ jobs:
       with:
         name: output-3.0.0-fake
         path: |
-          sketchup_connector.rb
-          sketchup_connector/**/*
+          speckle_connector.rb
+          speckle_connector/**/*
         compression-level: 0 # no compression
