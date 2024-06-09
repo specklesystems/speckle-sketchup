@@ -4,7 +4,8 @@
 name: Python application
 
 on:
-  pull_request:
+  push:
+    branches: ["oguzhan/dui3"]
 
 jobs:
   build:
