@@ -45,7 +45,7 @@ def main():
 
     print(f"Patching version: {tag}")
     patch_connector(tag)
-    patch_installer(tag)
+    # patch_installer(tag)
 
 
 if __name__ == "__main__":
