@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require_relative '../../speckle_objects/instance_proxy'
+require_relative '../../speckle_objects/instance_definition_proxy'
+
 module SpeckleConnector
   # Operations related to {SketchupModel}.
   module SketchupModel
@@ -44,7 +47,7 @@ module SpeckleConnector
             definition_id,
             entity.transformation.to_a,
             depth,
-            instance_id
+            application_id: instance_id
           )
 
           unless instance_proxies_by_definition_id.key?(definition_id)
@@ -52,7 +55,7 @@ module SpeckleConnector
           end
 
           instance_proxies_with_same_definition = instance_proxies_by_definition_id[definition_id]
-          instance_proxies_with_same_definition.each { |ipwsm| ipwsm[:MaxDepth] = depth }
+          instance_proxies_with_same_definition.each { |item| item[:MaxDepth] = depth }
           instance_proxies_with_same_definition.append(instance_proxies[instance_id])
 
           if definition_proxies.key?(definition_id)
@@ -60,7 +63,7 @@ module SpeckleConnector
             return
           end
 
-          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new([], depth, definition_id)
+          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new([], depth, application_id: definition_id)
           definition_proxy[:name] = entity.definition.name
           definition_proxy[:description] = entity.definition.description
 
@@ -68,7 +71,7 @@ module SpeckleConnector
 
           entity.definition.entities.each do |sub_ent|
             definition_proxy[:Objects].append(sub_ent.persistent_id.to_s)
-            unpack_instance(sub_ent) if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
+            unpack_instance(sub_ent, depth + 1) if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
           end
         end

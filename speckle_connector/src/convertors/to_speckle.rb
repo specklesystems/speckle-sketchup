@@ -17,6 +17,7 @@ require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
+require_relative '../sketchup_model/definitions/definition_manager'
 require_relative '../ui_data/report/conversion_result'
 
 module SpeckleConnector
@@ -36,6 +37,16 @@ module SpeckleConnector
         super(state, stream_id, model_card_id)
         @send_filter = send_filter
         @conversion_results = []
+      end
+
+      def convert_entities_to_base_blocks_poc(entities, preferences)
+        convert = method(:convert)
+
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, sketchup_model, state,
+                                                                             @units, preferences, model_card_id,
+                                                                             &convert)
+
+        return new_speckle_state, model_collection
       end
 
       # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
