@@ -33,16 +33,21 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
-      def initialize(state, stream_id, send_filter, model_card_id)
+      # @return [SketchupModel::Definitions::UnpackResult]
+      attr_reader :unpacked_entities
+
+      def initialize(state, unpacked_entities, stream_id, send_filter, model_card_id)
         super(state, stream_id, model_card_id)
         @send_filter = send_filter
         @conversion_results = []
+        @unpacked_entities = unpacked_entities
       end
 
       def convert_entities_to_base_blocks_poc(entities, preferences)
         convert = method(:convert)
 
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, sketchup_model, state,
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(unpacked_entities.atomic_objects,
+                                                                             sketchup_model, state,
                                                                              @units, preferences, model_card_id,
                                                                              &convert)
 
@@ -164,12 +169,15 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
-          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
-            entity, @units, preferences, speckle_state, &convert
-          )
-          speckle_state = new_speckle_state
-          add_to_report(entity, block_instance)
-          return speckle_state, block_instance
+          proxy = unpacked_entities.instance_proxies[entity.persistent_id.to_s]
+          add_to_report(entity, proxy)
+          return speckle_state, proxy
+          # new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
+          #   entity, @units, preferences, speckle_state, &convert
+          # )
+          # speckle_state = new_speckle_state
+          # add_to_report(entity, block_instance)
+          # return speckle_state, block_instance
         end
 
         if entity.is_a?(Sketchup::ComponentDefinition)

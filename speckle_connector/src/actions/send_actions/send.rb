@@ -35,7 +35,7 @@ module SpeckleConnector
         unpacked_entities = SketchupModel::Definitions::DefinitionManager.new.unpack_entities(entities)
 
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter, model_card_id)
+        converter = Converters::ToSpeckle.new(state, unpacked_entities, model_card.project_id, model_card.send_filter, model_card_id)
         # new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,
         #                                                              state.user_state.preferences)
 

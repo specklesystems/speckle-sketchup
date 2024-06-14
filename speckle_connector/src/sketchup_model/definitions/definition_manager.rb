@@ -72,6 +72,7 @@ module SpeckleConnector
           entity.definition.entities.each do |sub_ent|
             definition_proxy[:Objects].append(sub_ent.persistent_id.to_s)
             unpack_instance(sub_ent, depth + 1) if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
+            # FIXME: probably will need here local to global coordinate mapping
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
           end
         end
