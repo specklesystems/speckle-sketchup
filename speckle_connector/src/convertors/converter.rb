@@ -31,7 +31,7 @@ module SpeckleConnector
         @sketchup_model = state.sketchup_state.sketchup_model
         @stream_id = stream_id
         su_unit = state.sketchup_state.length_units
-        @units =  Converters::SKETCHUP_UNITS[su_unit]
+        @units = Converters::SKETCHUP_UNITS[su_unit]
         @definitions = {}
       end
     end

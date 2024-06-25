@@ -2,6 +2,7 @@
 
 require_relative '../../speckle_objects/instance_proxy'
 require_relative '../../speckle_objects/instance_definition_proxy'
+require_relative '../../speckle_objects/other/transform'
 
 module SpeckleConnector
   # Operations related to {SketchupModel}.
@@ -22,11 +23,12 @@ module SpeckleConnector
         # @return [Hash{String=>Sketchup::Entity}] atomic objects.
         attr_reader :flat_atomic_objects
 
-        def initialize
+        def initialize(units)
           @instance_proxies = {}
           @definition_proxies = {}
           @instance_proxies_by_definition_id = {}
           @flat_atomic_objects = {}
+          @units = units
         end
 
         # @param entities [Array<Sketchup::Entity>] entities to unpack
@@ -45,7 +47,7 @@ module SpeckleConnector
 
           instance_proxies[instance_id] = SpeckleObjects::InstanceProxy.new(
             definition_id,
-            entity.transformation.to_a,
+            SpeckleObjects::Other::Transform.from_transformation(entity.transformation, @units).value,
             depth,
             application_id: instance_id
           )

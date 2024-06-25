@@ -9,6 +9,8 @@ module SpeckleConnector
       class Transform < Base
         SPECKLE_TYPE = 'Objects.Other.Transform'
 
+        attr_reader :value
+
         # @param units [String] units of the transform.
         # @param value [Array<Numeric>] values of the transform.
         def initialize(units:, value:)
@@ -20,6 +22,7 @@ module SpeckleConnector
           )
           self[:units] = units
           self[:value] = value
+          @value = value
         end
 
         def self.from_transformation(transformation, units)

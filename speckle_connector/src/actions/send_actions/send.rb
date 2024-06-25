@@ -32,7 +32,9 @@ module SpeckleConnector
           model_card.send_filter.selected_object_ids.any?(e.persistent_id)
         end
 
-        unpacked_entities = SketchupModel::Definitions::DefinitionManager.new.unpack_entities(entities)
+        unpacked_entities = SketchupModel::Definitions::DefinitionManager
+                            .new(Converters::SKETCHUP_UNITS[state.sketchup_state.length_units])
+                            .unpack_entities(entities)
 
         account = Accounts.get_account_by_id(model_card.account_id)
         converter = Converters::ToSpeckle.new(state, unpacked_entities, model_card.project_id, model_card.send_filter, model_card_id)
