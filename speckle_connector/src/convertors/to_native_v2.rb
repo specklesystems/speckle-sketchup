@@ -45,9 +45,7 @@ module SpeckleConnector
 
       def initialize(state, definition_proxies, source_app, model_card)
         super(state, model_card)
-        @stream_name = stream_name
         @definition_proxies = definition_proxies
-        @branch_name = branch_name
         @source_app = source_app.downcase
         @converted_faces = []
         @converted_entities = []
@@ -226,7 +224,7 @@ module SpeckleConnector
 
       # @return [Sketchup::ComponentDefinition] branch definition to fill objects in it.
       def branch_definition
-        @definition_name = "#{@branch_name}-#{project_name}"
+        @definition_name = "#{model_card.project_name}-#{model_card.model_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         @is_update_commit = !definition.nil?
         definition = sketchup_model.definitions.add(@definition_name) if definition.nil?
@@ -236,7 +234,7 @@ module SpeckleConnector
       def entities_to_fill(_obj)
         return sketchup_model.entities unless from_revit
 
-        @definition_name = "#{@branch_name}-#{@stream_name}"
+        @definition_name = "#{model_card.project_name}-#{model_card.model_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         if definition.nil?
           definition = sketchup_model.definitions.add(@definition_name)
@@ -368,7 +366,7 @@ module SpeckleConnector
                                                                         converted.class))
 
         end
-        SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, stream_id)
+        SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, model_card.project_id)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
@@ -417,7 +415,7 @@ module SpeckleConnector
         section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
         section_plane.name = level_name
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
-          section_plane, level['applicationId'], level['id'], level['speckle_type'], [], @stream_id
+          section_plane, level['applicationId'], level['id'], level['speckle_type'], [], model_card.project_id
         )
         state
       end
