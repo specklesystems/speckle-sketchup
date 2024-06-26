@@ -13,14 +13,13 @@ module SpeckleConnector
       # @return [Sketchup::Model] active sketchup model.
       attr_reader :sketchup_model
 
-      # @return [String] stream id that conversion happening with it
-      attr_reader :stream_id
+      # @return [Cards::Card] card that conversion happening with it
+      attr_reader :model_card
 
       # @return [String] speckle units
       attr_reader :units
 
-      attr_reader :model_card_id
-
+      # @return [String] prefix that structured from Project and Model name
       attr_reader :model_prefix
 
       attr_accessor :definitions
@@ -29,11 +28,10 @@ module SpeckleConnector
       # @param model_card [Cards::Card] model card that holds info for operation
       def initialize(state, model_card)
         @state = state
-        @model_prefix = "Project: #{model_card.project_name}, Model: #{model_card.model_name}"
-        @model_card_id = model_card.model_card_id
+        @model_card = model_card
+        @model_prefix = "Project: #{model_card.project_name} Model: #{model_card.model_name}"
         @speckle_state = state.speckle_state
         @sketchup_model = state.sketchup_state.sketchup_model
-        @project_id = model_card.project_id
         su_unit = state.sketchup_state.length_units
         @units = Converters::SKETCHUP_UNITS[su_unit]
         @definitions = {}

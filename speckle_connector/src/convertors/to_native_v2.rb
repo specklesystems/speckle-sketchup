@@ -43,8 +43,8 @@ module SpeckleConnector
 
       attr_reader :definition_proxies
 
-      def initialize(state, definition_proxies, stream_id, stream_name, branch_name, source_app, model_card_id)
-        super(state, stream_id, model_card_id)
+      def initialize(state, definition_proxies, source_app, model_card)
+        super(state, model_card)
         @stream_name = stream_name
         @definition_proxies = definition_proxies
         @branch_name = branch_name
@@ -226,7 +226,7 @@ module SpeckleConnector
 
       # @return [Sketchup::ComponentDefinition] branch definition to fill objects in it.
       def branch_definition
-        @definition_name = "#{@branch_name}-#{@stream_name}"
+        @definition_name = "#{@branch_name}-#{project_name}"
         definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
         @is_update_commit = !definition.nil?
         definition = sketchup_model.definitions.add(@definition_name) if definition.nil?

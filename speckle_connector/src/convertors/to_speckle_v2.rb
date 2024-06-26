@@ -23,7 +23,7 @@ require_relative '../ui_data/report/conversion_result'
 module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
-    class ToSpeckleV2 < Converter
+    class ToSpeckleV2 < ConverterV2
       MODEL_COLLECTION = SpeckleObjects::Speckle::Core::Models::ModelCollection
       DIRECT_SHAPE = SpeckleObjects::BuiltElements::Revit::DirectShape
       SPECKLE_ENTITIES_READER = SketchupModel::Reader::SpeckleEntitiesReader
@@ -36,8 +36,8 @@ module SpeckleConnector
       # @return [SketchupModel::Definitions::UnpackResult]
       attr_reader :unpacked_entities
 
-      def initialize(state, unpacked_entities, stream_id, send_filter, model_card_id)
-        super(state, stream_id, model_card_id)
+      def initialize(state, unpacked_entities, send_filter, model_card)
+        super(state, model_card)
         @send_filter = send_filter
         @conversion_results = []
         @unpacked_entities = unpacked_entities
@@ -138,9 +138,9 @@ module SpeckleConnector
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         # Where we do send caching!
         if !ignore_cache && !entity_has_changed?(entity) &&
-           speckle_state.object_references_by_project[@stream_id] &&
-           speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
-          reference = speckle_state.object_references_by_project[@stream_id][entity.persistent_id.to_s]
+           speckle_state.object_references_by_project[model_card.project_id] &&
+           speckle_state.object_references_by_project[model_card.project_id].keys.include?(entity.persistent_id.to_s)
+          reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
           add_to_report(entity, reference)
           return speckle_state, reference
         end
