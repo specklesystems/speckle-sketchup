@@ -14,7 +14,7 @@ module SpeckleConnector
         model_card = state.speckle_state.receive_cards[model_card_id]
         state.sketchup_state.sketchup_model.start_operation('Receive Speckle Objects', true)
         converter = if root_obj['instanceDefinitionProxies']
-                      Converters::ToNativeV2.new(state, root_obj['@instanceDefinitionProxies'], model_card.model_id, model_card.project_name,
+                      Converters::ToNativeV2.new(state, root_obj['instanceDefinitionProxies'], model_card.model_id, model_card.project_name,
                                                  model_card.model_name, source_application, model_card_id)
                     else
                       Converters::ToNative.new(state, model_card.model_id, model_card.project_name,

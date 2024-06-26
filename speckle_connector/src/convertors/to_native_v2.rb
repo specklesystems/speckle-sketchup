@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'converter'
+require_relative 'converter_v2'
 require_relative '../constants/type_constants'
 require_relative '../speckle_entities/speckle_entity'
 require_relative '../speckle_objects/gis/polygon_element'
@@ -28,7 +28,7 @@ module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
     # rubocop:disable Metrics/ClassLength
-    class ToNativeV2 < Converter
+    class ToNativeV2 < ConverterV2
       # @return [States::SpeckleState] the current speckle state of the {States::State}
       attr_accessor :speckle_state
 
@@ -46,12 +46,13 @@ module SpeckleConnector
       def initialize(state, definition_proxies, stream_id, stream_name, branch_name, source_app, model_card_id)
         super(state, stream_id, model_card_id)
         @stream_name = stream_name
-        @definition_proxies  = definition_proxies
+        @definition_proxies = definition_proxies
         @branch_name = branch_name
         @source_app = source_app.downcase
         @converted_faces = []
         @converted_entities = []
         @conversion_results = []
+        @created_definitions = []
       end
 
       # Module aliases
@@ -120,11 +121,23 @@ module SpeckleConnector
         @from_qgis ||= source_app.include?('qgis')
       end
 
+      def create_definitions
+        definition_proxies.each do |proxy|
+          definition_name = proxy['name']
+          definition = state.sketchup_state.sketchup_model.definitions.add(definition_name)
+          definition.entities.add_text(definition_name, Geom::Point3d.new(0, 0, 0), Geom::Vector3d.new(0, 0, 0))
+          @created_definitions.append(definition)
+        end
+      end
+
       # ReceiveObjects action call this method by giving everything that comes from server.
       # Upcoming object is a referencedObject of selected commit to receive.
       # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
       # @param obj [Object] speckle commit object.
       def receive_commit_object(obj)
+        # TODO
+        create_definitions
+
         unless from_revit
           # Create layers and it's folders from layers relation on the model collection.
           SpeckleObjects::Relations::Layers.to_native(obj, source_app, sketchup_model)

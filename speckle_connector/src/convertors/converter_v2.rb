@@ -3,7 +3,7 @@
 module SpeckleConnector
   module Converters
     # Helper class to convert geometries between server and Sketchup.
-    class Converter
+    class ConverterV2
       # @return [States::State] the current state of the {SpeckleConnector::App}
       attr_reader :state
 
@@ -26,13 +26,14 @@ module SpeckleConnector
       attr_accessor :definitions
 
       # @param state [States::State] the current state of the {SpeckleConnector::App}
-      def initialize(state, stream_id, model_card_id)
+      # @param model_card [Cards::Card] model card that holds info for operation
+      def initialize(state, model_card)
         @state = state
-        @model_prefix =
-        @model_card_id = model_card_id
+        @model_prefix = "Project: #{model_card.project_name}, Model: #{model_card.model_name}"
+        @model_card_id = model_card.model_card_id
         @speckle_state = state.speckle_state
         @sketchup_model = state.sketchup_state.sketchup_model
-        @stream_id = stream_id
+        @project_id = model_card.project_id
         su_unit = state.sketchup_state.length_units
         @units = Converters::SKETCHUP_UNITS[su_unit]
         @definitions = {}

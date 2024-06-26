@@ -41,8 +41,8 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
-      def initialize(state, stream_id, stream_name, branch_name, source_app, model_card_id)
-        super(state, stream_id, model_card_id)
+      def initialize(state, source_app, model_card)
+        super(state, stream_id, model_card.model_card_id)
         @stream_name = stream_name
         @branch_name = branch_name
         @source_app = source_app.downcase

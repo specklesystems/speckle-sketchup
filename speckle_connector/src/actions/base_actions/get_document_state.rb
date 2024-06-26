@@ -16,7 +16,17 @@ module SpeckleConnector
 
         send_cards = send_cards_hash.collect do |id, card|
           filter = Filters::SendFilters.get_filter_from_document(card['sendFilter'])
-          send_card = Cards::SendCard.new(id, card['account_id'], card['project_id'], card['model_id'], card['latest_created_version_id'], filter, {})
+          send_card = Cards::SendCard.new(
+            id,
+            card['account_id'],
+            card['project_id'],
+            card['project_name'],
+            card['model_id'],
+            card['model_name'],
+            card['latest_created_version_id'],
+            filter,
+            {}
+          )
 
           new_speckle_state = state.speckle_state.with_send_card(send_card)
           state = state.with_speckle_state(new_speckle_state)
