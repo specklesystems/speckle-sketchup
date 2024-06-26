@@ -21,6 +21,7 @@ require_relative '../speckle_objects/built_elements/view3d'
 require_relative '../speckle_objects/built_elements/network'
 require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
+require_relative '../speckle_objects/instance_definition_proxy'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 require_relative '../ui_data/report/conversion_result'
 
@@ -41,16 +42,17 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
-      attr_reader :definition_proxies
+      attr_reader :root_definition_proxies
 
       def initialize(state, definition_proxies, source_app, model_card)
         super(state, model_card)
-        @definition_proxies = definition_proxies
+        @root_definition_proxies = definition_proxies
+        @definition_proxies = {}
         @source_app = source_app.downcase
         @converted_faces = []
         @converted_entities = []
         @conversion_results = []
-        @created_definitions = []
+        @created_definitions = {}
       end
 
       # Module aliases
@@ -119,12 +121,15 @@ module SpeckleConnector
         @from_qgis ||= source_app.include?('qgis')
       end
 
-      def create_definitions
-        definition_proxies.each do |proxy|
+      def create_definition_proxies
+        root_definition_proxies.each do |proxy|
           definition_name = proxy['name']
           definition = state.sketchup_state.sketchup_model.definitions.add(definition_name)
-          definition.entities.add_text(definition_name, Geom::Point3d.new(0, 0, 0), Geom::Vector3d.new(0, 0, 0))
-          @created_definitions.append(definition)
+          @definition_proxies[proxy['applicationId']] = SpeckleObjects::InstanceDefinitionProxy.new(
+            definition,
+            proxy['Objects'],
+            proxy['MaxDepth']
+          )
         end
       end
 
@@ -134,7 +139,7 @@ module SpeckleConnector
       # @param obj [Object] speckle commit object.
       def receive_commit_object(obj)
         # TODO
-        create_definitions
+        create_definition_proxies
 
         unless from_revit
           # Create layers and it's folders from layers relation on the model collection.
@@ -315,6 +320,7 @@ module SpeckleConnector
       end
 
       SPECKLE_OBJECT_TO_NATIVE = {
+        SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY => SpeckleObjects::InstanceProxy.method(:to_native),
         OBJECTS_GEOMETRY_LINE => LINE.method(:to_native),
         OBJECTS_GEOMETRY_POLYLINE => LINE.method(:to_native),
         OBJECTS_GEOMETRY_POLYCURVE => POLYCURVE.method(:to_native),
@@ -338,15 +344,33 @@ module SpeckleConnector
         SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER => GIS_LAYER_COLLECTION.method(:to_native)
       }.freeze
 
+      def entities_to_bake(obj, entities)
+        entities_to_bake = entities
+        object_id = obj['applicationId']
+        @definition_proxies.each do |_id, proxy|
+          if proxy.object_ids.include?(object_id)
+            entities_to_bake = proxy.definition.entities
+            break
+          end
+        end
+        entities_to_bake
+      end
+
       # @param state [States::State] state of the speckle application
       def convert_to_native(state, obj, layer, entities = sketchup_model.entities)
+        entities = entities_to_bake(obj, entities)
         # store this method as parameter to re-call it inner callstack
         convert_to_native = method(:convert_to_native)
         # Get 'to_native' method to convert upcoming speckle object to native sketchup entity
         to_native_method = speckle_object_to_native(obj)
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
-        state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        state, converted_entities = if obj['speckle_type'] == SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY
+                                      to_native_method.call(state, obj, layer, entities, @definition_proxies, &convert_to_native)
+                                    else
+                                      to_native_method.call(state, obj, layer, entities, &convert_to_native)
+                                    end
+        # state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
         @converted_entities += converted_entities
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?

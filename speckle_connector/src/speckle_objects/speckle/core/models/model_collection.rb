@@ -49,6 +49,10 @@ module SpeckleConnector
               return state, []
             end
 
+            # @param entities [Array<Sketchup::Entity>] entities to convert by creating model collections with their
+            # layers
+            # @param state [States::State] state of the application
+            # @param model_card_id [String] id of the model card to send progress update back to UI
             def self.from_entities(entities, state, model_card_id, &convert)
               speckle_state = state.speckle_state
               sketchup_model = state.sketchup_state.sketchup_model

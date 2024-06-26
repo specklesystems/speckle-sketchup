@@ -49,6 +49,7 @@ module SpeckleConnector
             definition_id,
             SpeckleObjects::Other::Transform.from_transformation(entity.transformation, @units).value,
             depth,
+            @units,
             application_id: instance_id
           )
 
@@ -65,15 +66,17 @@ module SpeckleConnector
             return
           end
 
-          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new([], depth, application_id: definition_id)
+          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new(entity.definition, [], depth, application_id: definition_id)
           definition_proxy[:name] = entity.definition.name
           definition_proxy[:description] = entity.definition.description
 
           definition_proxies[definition_id] = definition_proxy
 
           entity.definition.entities.each do |sub_ent|
-            definition_proxy[:Objects].append(sub_ent.persistent_id.to_s)
-            unpack_instance(sub_ent, depth + 1) if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
+            definition_proxy.add_object_id(sub_ent.persistent_id.to_s)
+            if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
+              unpack_instance(sub_ent, depth + 1)
+            end
             # FIXME: probably will need here local to global coordinate mapping
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
           end
