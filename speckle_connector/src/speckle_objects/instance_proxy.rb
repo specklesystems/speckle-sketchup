@@ -24,7 +24,7 @@ module SpeckleConnector
       def self.to_native(state, instance_proxy, layer, entities, definition_proxies, &_convert_to_native)
         definition_id = instance_proxy['DefinitionId']
         proxy_transform = instance_proxy['Transform']
-        transform = Other::Transform.to_native(proxy_transform, instance_proxy['units'])
+        transform = Other::Transform.to_native(proxy_transform, instance_proxy['units'] || instance_proxy['Units'])
         definition = definition_proxies[definition_id].definition
         instance = entities.add_instance(definition, transform)
         instance.layer = layer if layer # TODO: CONVERTER_V2 check
