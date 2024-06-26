@@ -32,19 +32,19 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
-      def initialize(state, stream_id, send_filter, model_card_id)
-        super(state, stream_id, model_card_id)
+      def initialize(state, stream_id, send_filter)
+        super(state, stream_id)
         @send_filter = send_filter
         @conversion_results = []
       end
 
       # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
-      def convert_entities_to_base(entity_ids, preferences)
+      def convert_entities_to_base(entity_ids)
         convert = method(:convert)
         entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
 
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, sketchup_model, state,
-                                                                             @units, preferences, model_card_id,
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, state,
+                                                                             '',
                                                                              &convert)
 
         return new_speckle_state, model_collection
@@ -52,10 +52,10 @@ module SpeckleConnector
 
       # Convert selected objects by putting them into related array that grouped by layer.
       # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
-      def convert_selection_to_base(preferences)
+      def convert_selection_to_base
         convert = method(:convert)
         new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, state,
-                                                                                   @units, preferences, model_card_id,
+                                                                                   @units, '',
                                                                                    &convert)
 
         return new_speckle_state, model_collection

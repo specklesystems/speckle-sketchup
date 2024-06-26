@@ -19,17 +19,11 @@ module SpeckleConnector
       # @return [String] speckle units
       attr_reader :units
 
-      attr_reader :model_card_id
-
-      attr_reader :model_prefix
-
       attr_accessor :definitions
 
       # @param state [States::State] the current state of the {SpeckleConnector::App}
-      def initialize(state, stream_id, model_card_id)
+      def initialize(state, stream_id)
         @state = state
-        @model_prefix =
-        @model_card_id = model_card_id
         @speckle_state = state.speckle_state
         @sketchup_model = state.sketchup_state.sketchup_model
         @stream_id = stream_id

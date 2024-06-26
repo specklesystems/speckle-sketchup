@@ -36,43 +36,19 @@ module SpeckleConnector
       # @return [SketchupModel::Definitions::UnpackResult]
       attr_reader :unpacked_entities
 
-      def initialize(state, unpacked_entities, send_filter, model_card)
+      # @param model_card [Cards::SendCard] sender card
+      def initialize(state, unpacked_entities, model_card)
         super(state, model_card)
-        @send_filter = send_filter
+        @send_filter = model_card.send_filter
         @conversion_results = []
         @unpacked_entities = unpacked_entities
       end
 
-      def convert_entities_to_base_blocks_poc(entities, preferences)
+      def convert_entities_to_base_blocks_poc
         convert = method(:convert)
 
         new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(unpacked_entities.atomic_objects,
-                                                                             sketchup_model, state,
-                                                                             @units, preferences, model_card_id,
-                                                                             &convert)
-
-        return new_speckle_state, model_collection
-      end
-
-      # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
-      def convert_entities_to_base(entity_ids, preferences)
-        convert = method(:convert)
-        entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
-
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, sketchup_model, state,
-                                                                             @units, preferences, model_card_id,
-                                                                             &convert)
-
-        return new_speckle_state, model_collection
-      end
-
-      # Convert selected objects by putting them into related array that grouped by layer.
-      # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
-      def convert_selection_to_base(preferences)
-        convert = method(:convert)
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, state,
-                                                                                   @units, preferences, model_card_id,
-                                                                                   &convert)
+                                                                             state, model_card.model_card_id, &convert)
 
         return new_speckle_state, model_collection
       end

@@ -20,7 +20,7 @@ module SpeckleConnector
       def update_state(state)
         state = DeactivateDiffing.update_state(state, nil, {})
         converter = Converters::ToSpeckle.new(state, @stream_id, {})
-        new_speckle_state, base = converter.convert_selection_to_base(state.user_state.preferences)
+        new_speckle_state, base = converter.convert_selection_to_base
         id, total_children_count, batches = converter.serialize(base, state.user_state.preferences)
         # TODO: Later active send operation.
         # Operations.send(@stream_id, batches)
