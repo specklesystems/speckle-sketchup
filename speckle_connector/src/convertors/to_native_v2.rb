@@ -346,7 +346,7 @@ module SpeckleConnector
 
       def entities_to_bake(obj, entities)
         entities_to_bake = entities
-        object_id = obj['applicationId']
+        object_id = obj['applicationId'].to_s # TODO: CONVERTER_V2: faces have integer application id..!!?
         @definition_proxies.each do |_id, proxy|
           if proxy.object_ids.include?(object_id)
             entities_to_bake = proxy.definition.entities

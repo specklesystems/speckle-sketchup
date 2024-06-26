@@ -82,7 +82,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         # rubocop:disable Metrics/PerceivedComplexity:
         def self.to_native(state, mesh, layer, entities, &convert_to_native)
-          model_preferences = state.user_state.preferences[:model]
+          # model_preferences = state.user_state.preferences[:model]
           # Get soft? flag of {Sketchup::Edge} object to understand smoothness of edge.
           is_soften = get_soften_setting(mesh, entities)
           smooth_flags = is_soften ? 4 : 1

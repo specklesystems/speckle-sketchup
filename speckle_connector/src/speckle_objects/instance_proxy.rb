@@ -29,6 +29,7 @@ module SpeckleConnector
         instance = entities.add_instance(definition, transform)
         instance.layer = layer if layer # TODO: CONVERTER_V2 check
         # TODO: CONVERTER_V2 handle groups
+        return state, [instance, definition]
       end
     end
   end
