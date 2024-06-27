@@ -44,6 +44,8 @@ module SpeckleConnector
   OBJECTS_OTHER_DISPLAYSTYLE = 'Objects.Other.DisplayStyle'
 
   SPECKLE_CORE_MODELS_COLLECTION = 'Speckle.Core.Models.Collection'
+  SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY = 'Speckle.Core.Models.Instances.InstanceProxy'
+  SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_DEFINITION_PROXY = 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'
   SPECKLE_CORE_MODELS_COLLECTION_RASTER_LAYER = 'Speckle.Core.Models.Collection:Objects.GIS.RasterLayer'
   SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER = 'Speckle.Core.Models.Collection:Objects.GIS.VectorLayer'
 end

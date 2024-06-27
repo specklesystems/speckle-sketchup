@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'converter'
+require_relative 'converter_v2'
 require_relative 'base_object_serializer'
 require_relative '../speckle_objects/base'
 require_relative '../speckle_objects/geometry/line'
@@ -17,12 +17,13 @@ require_relative '../constants/path_constants'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
+require_relative '../sketchup_model/definitions/definition_manager'
 require_relative '../ui_data/report/conversion_result'
 
 module SpeckleConnector
   module Converters
     # Converts sketchup entities to speckle objects.
-    class ToSpeckle < Converter
+    class ToSpeckleV2 < ConverterV2
       MODEL_COLLECTION = SpeckleObjects::Speckle::Core::Models::ModelCollection
       DIRECT_SHAPE = SpeckleObjects::BuiltElements::Revit::DirectShape
       SPECKLE_ENTITIES_READER = SketchupModel::Reader::SpeckleEntitiesReader
@@ -32,31 +33,22 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
-      def initialize(state, stream_id, send_filter)
-        super(state, stream_id)
-        @send_filter = send_filter
+      # @return [SketchupModel::Definitions::UnpackResult]
+      attr_reader :unpacked_entities
+
+      # @param model_card [Cards::SendCard] sender card
+      def initialize(state, unpacked_entities, model_card)
+        super(state, model_card)
+        @send_filter = model_card.send_filter
         @conversion_results = []
+        @unpacked_entities = unpacked_entities
       end
 
-      # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
-      def convert_entities_to_base(entity_ids)
+      def convert_entities_to_base_blocks_poc
         convert = method(:convert)
-        entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
 
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, state,
-                                                                             '',
-                                                                             &convert)
-
-        return new_speckle_state, model_collection
-      end
-
-      # Convert selected objects by putting them into related array that grouped by layer.
-      # @return [Hash{Symbol=>Array}] layers -which only have objects- to hold it's objects under the base object.
-      def convert_selection_to_base
-        convert = method(:convert)
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_sketchup_model(sketchup_model, state,
-                                                                                   @units, '',
-                                                                                   &convert)
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(unpacked_entities.atomic_objects,
+                                                                             state, model_card.model_card_id, &convert)
 
         return new_speckle_state, model_collection
       end
@@ -122,9 +114,9 @@ module SpeckleConnector
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         # Where we do send caching!
         if !ignore_cache && !entity_has_changed?(entity) &&
-           speckle_state.object_references_by_project[@stream_id] &&
-           speckle_state.object_references_by_project[@stream_id].keys.include?(entity.persistent_id.to_s)
-          reference = speckle_state.object_references_by_project[@stream_id][entity.persistent_id.to_s]
+           speckle_state.object_references_by_project[model_card.project_id] &&
+           speckle_state.object_references_by_project[model_card.project_id].keys.include?(entity.persistent_id.to_s)
+          reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
           add_to_report(entity, reference)
           return speckle_state, reference
         end
@@ -153,12 +145,15 @@ module SpeckleConnector
         end
 
         if entity.is_a?(Sketchup::ComponentInstance)
-          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
-            entity, @units, preferences, speckle_state, &convert
-          )
-          speckle_state = new_speckle_state
-          add_to_report(entity, block_instance)
-          return speckle_state, block_instance
+          proxy = unpacked_entities.instance_proxies[entity.persistent_id.to_s]
+          add_to_report(entity, proxy)
+          return speckle_state, proxy
+          # new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_component_instance(
+          #   entity, @units, preferences, speckle_state, &convert
+          # )
+          # speckle_state = new_speckle_state
+          # add_to_report(entity, block_instance)
+          # return speckle_state, block_instance
         end
 
         if entity.is_a?(Sketchup::ComponentDefinition)

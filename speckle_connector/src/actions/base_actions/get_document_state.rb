@@ -14,9 +14,20 @@ module SpeckleConnector
         send_cards_hash = SketchupModel::Dictionary::ModelCardDictionaryHandler
                           .get_send_cards_from_dict(state.sketchup_state.sketchup_model)
 
+        # TODO: CONVERTER_V2: Extract into new actions
         send_cards = send_cards_hash.collect do |id, card|
           filter = Filters::SendFilters.get_filter_from_document(card['sendFilter'])
-          send_card = Cards::SendCard.new(id, card['account_id'], card['project_id'], card['model_id'], card['latest_created_version_id'], filter, {})
+          send_card = Cards::SendCard.new(
+            id,
+            card['account_id'],
+            card['project_id'],
+            card['project_name'],
+            card['model_id'],
+            card['model_name'],
+            card['latest_created_version_id'],
+            filter,
+            {}
+          )
 
           new_speckle_state = state.speckle_state.with_send_card(send_card)
           state = state.with_speckle_state(new_speckle_state)
@@ -34,6 +45,7 @@ module SpeckleConnector
         receive_cards_hash = SketchupModel::Dictionary::ModelCardDictionaryHandler
                              .get_receive_cards_from_dict(state.sketchup_state.sketchup_model)
 
+        # TODO: CONVERTER_V2: Extract into new actions
         receive_cards = receive_cards_hash.collect do |id, card|
           receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['project_id'], card['model_id'],
                                                 card['project_name'], card['model_name'], card['selected_version_id'],

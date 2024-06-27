@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require_relative '../immutable/immutable'
-require_relative '../sketchup_model/materials/materials'
-require_relative '../sketchup_model/definitions/definitions'
+require_relative '../sketchup_model/materials/speckle_materials'
+require_relative '../sketchup_model/definitions/speckle_definitions'
 
 module SpeckleConnector
   module States
@@ -12,17 +12,17 @@ module SpeckleConnector
       # @return [Sketchup::Model] active model on the sketchup
       attr_reader :sketchup_model
 
-      # @return [SketchupModel::Materials] materials by their id
+      # @return [SketchupModel::Materials::SpeckleMaterials] materials by their id
       attr_reader :materials
 
-      # @return [SketchupModel::Definitions] definitions by their guid and name
+      # @return [SketchupModel::Definitions::SpeckleDefinitions] definitions by their guid and name
       attr_reader :definitions
 
       # @param sketchup_model [Sketchup::Model] active model on the sketchup
       def initialize(sketchup_model)
         @sketchup_model = sketchup_model
-        @materials = SketchupModel::Materials.from_sketchup_model(sketchup_model)
-        @definitions = SketchupModel::Definitions.from_sketchup_model(sketchup_model)
+        @materials = SketchupModel::Materials::SpeckleMaterials.from_sketchup_model(sketchup_model)
+        @definitions = SketchupModel::Definitions::SpeckleDefinitions.from_sketchup_model(sketchup_model)
       end
 
       # @return [Integer] length units code of the sketchup model.

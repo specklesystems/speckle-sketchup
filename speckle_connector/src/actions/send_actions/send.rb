@@ -3,8 +3,9 @@
 require_relative '../action'
 require_relative '../../accounts/accounts'
 require_relative '../../convertors/units'
-require_relative '../../convertors/to_speckle'
+require_relative '../../convertors/to_speckle_v2'
 require_relative '../../operations/send'
+require_relative '../../sketchup_model/definitions/definition_manager'
 
 module SpeckleConnector
   module Actions
@@ -27,10 +28,21 @@ module SpeckleConnector
           return state.with_add_queue_js_command('setModelsError', js_script)
         end
 
+        entities = state.sketchup_state.sketchup_model.entities.select do |e|
+          model_card.send_filter.selected_object_ids.any?(e.persistent_id)
+        end
+
+        unpacked_entities = SketchupModel::Definitions::DefinitionManager
+                            .new(Converters::SKETCHUP_UNITS[state.sketchup_state.length_units])
+                            .unpack_entities(entities)
+
         account = Accounts.get_account_by_id(model_card.account_id)
-        converter = Converters::ToSpeckle.new(state, model_card.project_id, model_card.send_filter, model_card_id)
-        new_speckle_state, base = converter.convert_entities_to_base(model_card.send_filter.selected_object_ids,
-                                                                     state.user_state.preferences)
+        converter = Converters::ToSpeckleV2.new(state, unpacked_entities, model_card)
+
+        new_speckle_state, base = converter.convert_entities_to_base_blocks_poc
+
+        base[:instanceDefinitionProxies] = unpacked_entities.instance_definition_proxies
+
         id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
         new_speckle_state = new_speckle_state.with_empty_changed_entity_persistent_ids

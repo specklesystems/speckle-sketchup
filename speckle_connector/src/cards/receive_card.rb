@@ -32,8 +32,9 @@ module SpeckleConnector
       # @return [Array<Integer>] object ids that baked after receive.
       attr_reader :baked_object_ids
 
+      # rubocop:disable Metrics/ParameterLists
       def initialize(
-        card_id,
+        model_card_id,
         account_id,
         project_id,
         model_id,
@@ -45,7 +46,7 @@ module SpeckleConnector
         expired,
         baked_object_ids = nil
       )
-        super(card_id, account_id, project_id, model_id)
+        super(model_card_id, account_id, project_id, project_name, model_id, model_name)
         @selected_version_id = selected_version_id
         @latest_version_id = latest_version_id
         @has_dismissed_update_warning = has_dismissed_update_warning
@@ -63,6 +64,7 @@ module SpeckleConnector
         @type_discriminator = 'ReceiverModelCard'
         self[:type_discriminator] = @type_discriminator
       end
+      # rubocop:enable Metrics/ParameterLists
     end
   end
 end

@@ -22,8 +22,19 @@ module SpeckleConnector
 
       attr_reader :latest_created_version_id
 
-      def initialize(model_card_id, account_id, project_id, model_id, latest_created_version_id, send_filter, send_settings)
-        super(model_card_id, account_id, project_id, model_id)
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(
+        model_card_id,
+        account_id,
+        project_id,
+        project_name,
+        model_id,
+        model_name,
+        latest_created_version_id,
+        send_filter,
+        send_settings
+      )
+        super(model_card_id, account_id, project_id, project_name, model_id, model_name)
         @send_filter = send_filter
         @send_settings = send_settings
         @latest_created_version_id = latest_created_version_id
@@ -33,6 +44,7 @@ module SpeckleConnector
         self[:latestCreatedVersionId] = latest_created_version_id
         self[:type_discriminator] = @type_discriminator
       end
+      # rubocop:enable Metrics/ParameterLists
     end
   end
 end

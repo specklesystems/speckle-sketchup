@@ -5,7 +5,6 @@ require_relative 'action_command'
 require_relative 'initialize_speckle'
 require_relative 'reset_window_location'
 require_relative 'initialize_dui3_speckle'
-require_relative '../actions/one_click_send'
 
 module SpeckleConnector
   module Commands
