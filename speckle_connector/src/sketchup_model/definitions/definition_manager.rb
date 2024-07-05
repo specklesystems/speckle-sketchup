@@ -58,13 +58,19 @@ module SpeckleConnector
           end
 
           instance_proxies_with_same_definition = instance_proxies_by_definition_id[definition_id]
-          instance_proxies_with_same_definition.each { |item| item[:MaxDepth] = depth }
+          instance_proxies_with_same_definition.each do |item|
+            item[:MaxDepth] = depth if item[:MaxDepth] < depth # only set if given depth is higher.
+          end
           instance_proxies_with_same_definition.append(instance_proxies[instance_id])
 
-          if definition_proxies.key?(definition_id)
-            definition_proxies[definition_id][:MaxDepth] = depth
-            return
-          end
+          # NOTE: we should let it create new proxy, otherwise we set depth value wrong in some cases.
+          # It is not guaranteed definitions will be handled from max -> min or min -> max from selection.
+          # if definition_proxies.key?(definition_id)
+          #   if definition_proxies[definition_id][:MaxDepth] < depth
+          #     definition_proxies[definition_id][:MaxDepth] = depth
+          #   end
+          #   return
+          # end
 
           definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new(entity.definition, [], depth, application_id: definition_id)
           definition_proxy[:name] = entity.definition.name
