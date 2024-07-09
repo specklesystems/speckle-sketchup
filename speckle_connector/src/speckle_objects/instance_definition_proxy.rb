@@ -16,6 +16,10 @@ module SpeckleConnector
       # source host app. On receive, they will be mapped to corresponding newly created definition ids.
       attr_reader :object_ids
 
+      # @param definition [Sketchup::ComponentDefinition]
+      # @param object_ids [Array<String>]
+      # @param max_depth [Integer]
+      # @param application_id [String | NilClass]
       def initialize(definition, object_ids, max_depth, application_id: nil)
         super(
           speckle_type: SPECKLE_TYPE,
