@@ -63,14 +63,11 @@ module SpeckleConnector
           end
           instance_proxies_with_same_definition.append(instance_proxies[instance_id])
 
-          # NOTE: we should let it create new proxy, otherwise we set depth value wrong in some cases.
-          # It is not guaranteed definitions will be handled from max -> min or min -> max from selection.
-          # if definition_proxies.key?(definition_id)
-          #   if definition_proxies[definition_id][:MaxDepth] < depth
-          #     definition_proxies[definition_id][:MaxDepth] = depth
-          #   end
-          #   return
-          # end
+          if definition_proxies.key?(definition_id)
+            diff = depth - definition_proxies[definition_id][:MaxDepth]
+            update_children_max_depth(definition_proxies[definition_id], diff) if diff > 0
+            return
+          end
 
           definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new(entity.definition, [], depth, application_id: definition_id)
           definition_proxy[:name] = entity.definition.name
@@ -85,6 +82,32 @@ module SpeckleConnector
             end
             # FIXME: probably will need here local to global coordinate mapping
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
+          end
+        end
+
+        # @param definition_proxy [SpeckleObjects::InstanceDefinitionProxy]
+        # @param depth_difference [Integer]
+        def update_children_max_depth(definition_proxy, depth_difference)
+          # Increase depth of definition
+          definition_proxy[:MaxDepth] += depth_difference
+
+          # Find instance proxies of given definition
+          definition_instance_proxies = definition_proxy[:Objects].collect { |id| instance_proxies[id] }.compact
+
+          # Break the loop if no instance proxy found under definition.
+          return if definition_instance_proxies.empty?
+
+          sub_definitions = {}
+          definition_instance_proxies.each do |instance_proxy|
+            # Increase depth of instance
+            instance_proxy[:MaxDepth] += depth_difference
+            # Collect sub definitions
+            sub_definitions[instance_proxy[:DefinitionId]] = definition_proxies[instance_proxy[:DefinitionId]]
+          end
+
+          # Iterate through sub definitions
+          sub_definitions.each_value do |sub_definition|
+            update_children_max_depth(sub_definition, depth_difference)
           end
         end
       end
