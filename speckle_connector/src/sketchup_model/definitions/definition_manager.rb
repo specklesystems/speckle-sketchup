@@ -76,11 +76,14 @@ module SpeckleConnector
           definition_proxies[definition_id] = definition_proxy
 
           entity.definition.entities.each do |sub_ent|
+            # sketchup specific logic that we exclude edges that belongs to any face.
+            next if sub_ent.is_a?(Sketchup::Edge) && sub_ent.faces.any?
+
             definition_proxy.add_object_id(sub_ent.persistent_id.to_s)
             if sub_ent.is_a?(Sketchup::ComponentInstance) || sub_ent.is_a?(Sketchup::Group)
               unpack_instance(sub_ent, depth + 1)
             end
-            # FIXME: probably will need here local to global coordinate mapping
+
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
           end
         end
