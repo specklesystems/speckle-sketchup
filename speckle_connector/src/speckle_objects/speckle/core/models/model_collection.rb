@@ -53,7 +53,7 @@ module SpeckleConnector
             # layers
             # @param state [States::State] state of the application
             # @param model_card_id [String] id of the model card to send progress update back to UI
-            def self.from_entities(entities, state, model_card_id, &convert)
+            def self.from_atomic_entities(entities, state, model_card_id, &convert)
               speckle_state = state.speckle_state
               sketchup_model = state.sketchup_state.sketchup_model
               model_collection = ModelCollection.new(
@@ -75,7 +75,7 @@ module SpeckleConnector
                 end
                 count += 1
                 # User might click the Update button without any selection
-                progress = sketchup_model.selection.count == 0 ? nil : count / sketchup_model.selection.count.to_f
+                progress = entities.count == 0 ? nil : count / entities.count.to_f
                 sender_progress_args = {
                   modelCardId: model_card_id,
                   progress: {
@@ -90,6 +90,33 @@ module SpeckleConnector
 
                 state.worker.add_job(Job.new(entity.persistent_id, &action))
                 state.worker.do_work(Time.now.to_f, &action)
+              end
+
+              return speckle_state, model_collection
+            end
+
+            # @param entities [Array<Sketchup::Entity>] entities to convert by creating model collections with their
+            # layers
+            # @param state [States::State] state of the application
+            # @param model_card_id [String] id of the model card to send progress update back to UI
+            def self.from_entities(entities, state, &convert)
+              speckle_state = state.speckle_state
+              sketchup_model = state.sketchup_state.sketchup_model
+              model_collection = ModelCollection.new(
+                name: 'Sketchup Model', active_layer: sketchup_model.active_layer.display_name,
+                application_id: sketchup_model.guid
+              )
+
+              entities.each do |entity|
+                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
+                new_speckle_state, converted_object_with_entity = convert.call(entity, state.user_state.preferences, speckle_state)
+                speckle_state = new_speckle_state
+
+                unless converted_object_with_entity.nil?
+                  coll = layer_collection['@elements'] || layer_collection['elements']
+                  coll = [] if coll.nil?
+                  coll.append(converted_object_with_entity)
+                end
               end
 
               return speckle_state, model_collection
