@@ -47,8 +47,13 @@ module SpeckleConnector
       def convert_entities_to_base_blocks_poc
         convert = method(:convert)
 
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(unpacked_entities.atomic_objects,
-                                                                             state, model_card.model_card_id, &convert)
+        # start_time = Time.now.to_f
+        # puts "Number of atomic objects: #{unpacked_entities.atomic_objects.length}"
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_atomic_entities(unpacked_entities.atomic_objects,
+                                                                                    state, model_card.model_card_id,
+                                                                                    &convert)
+        # elapsed_time = (Time.now.to_f - start_time).round(3)
+        # puts "==== New Blocks: Converting to Speckle executed in #{elapsed_time} sec ===="
 
         return new_speckle_state, model_collection
       end

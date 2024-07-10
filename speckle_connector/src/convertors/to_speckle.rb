@@ -43,9 +43,7 @@ module SpeckleConnector
         convert = method(:convert)
         entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
 
-        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, state,
-                                                                             '',
-                                                                             &convert)
+        new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, state, &convert)
 
         return new_speckle_state, model_collection
       end
