@@ -19,6 +19,7 @@ require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
 require_relative '../sketchup_model/definitions/definition_manager'
 require_relative '../ui_data/report/conversion_result'
+require_relative '../speckle_objects/geometry/grouped_mesh'
 
 module SpeckleConnector
   module Converters
@@ -91,7 +92,7 @@ module SpeckleConnector
         end
       rescue StandardError => e
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
-                                                                      entity.persistent_id,
+                                                                      entity.is_a?(Array) ? entity.first.persistent_id : entity.persistent_id, # FIXME: GROUPED MESHES
                                                                       entity.class,
                                                                       nil,
                                                                       nil,
@@ -101,6 +102,9 @@ module SpeckleConnector
 
       # @param entity [Sketchup::Entity]
       def entity_has_changed?(entity)
+        # FIXME: GROUPED MESHES
+        return false if entity.is_a?(Array)
+
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
           speckle_state.changed_entity_ids.include?(entity.entityID)
       end
@@ -113,17 +117,21 @@ module SpeckleConnector
                                                                       converted[:speckle_type]))
       end
 
-      # @param entity [Sketchup::Entity]
+      # @param entity [Sketchup::Entity | SpeckleObjects::Geometry::GroupedMesh]
       # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         # Where we do send caching!
-        if !ignore_cache && !entity_has_changed?(entity) &&
+        if !entity.is_a?(Array) && !ignore_cache && !entity_has_changed?(entity) &&
            speckle_state.object_references_by_project[model_card.project_id] &&
            speckle_state.object_references_by_project[model_card.project_id].keys.include?(entity.persistent_id.to_s)
           reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
           add_to_report(entity, reference)
           return speckle_state, reference
+        end
+
+        if entity.is_a?(Array)
+          return SpeckleObjects::Geometry::GroupedMesh.to_speckle(entity, speckle_state, preferences, parent, &convert)
         end
 
         if entity.is_a?(Sketchup::Edge)

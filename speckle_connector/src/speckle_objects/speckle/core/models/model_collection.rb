@@ -63,7 +63,13 @@ module SpeckleConnector
 
               count = 0
               entities.each do |entity|
-                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
+                # FIXME: GROUPED MESHES
+                layer = if entity.is_a?(Array)
+                          entity.first.layer
+                        else
+                          entity.layer
+                        end
+                layer_collection = LayerCollection.get_or_create_layer_collection(layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, state.user_state.preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
@@ -88,7 +94,8 @@ module SpeckleConnector
                   state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
                 end
 
-                state.worker.add_job(Job.new(entity.persistent_id, &action))
+                # FIXME: GROUPED MESHES
+                state.worker.add_job(Job.new(entity.is_a?(Array) ? entity.first.persistent_id : entity.persistent_id, &action))
                 state.worker.do_work(Time.now.to_f, &action)
               end
 
