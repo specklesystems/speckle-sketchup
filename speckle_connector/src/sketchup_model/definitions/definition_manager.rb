@@ -3,6 +3,7 @@
 require_relative '../../speckle_objects/instance_proxy'
 require_relative '../../speckle_objects/instance_definition_proxy'
 require_relative '../../speckle_objects/other/transform'
+require_relative '../../speckle_objects/geometry/grouped_mesh'
 
 module SpeckleConnector
   # Operations related to {SketchupModel}.
@@ -75,7 +76,19 @@ module SpeckleConnector
 
           definition_proxies[definition_id] = definition_proxy
 
-          entity.definition.entities.each do |sub_ent|
+          # Group meshes
+          faces = entity.definition.entities.grep(Sketchup::Face)
+          unless faces.empty?
+            grouped_meshes = faces.group_by { |face| [face.layer, face.material || face.back_material] }
+            grouped_meshes.each do |(layer, mat), faces|
+              material_id = mat.nil? ? 'none' : mat.persistent_id.to_s
+              grouped_mesh_id = "#{layer.name} - #{material_id}"
+              grouped_mesh = SpeckleObjects::Geometry::GroupedMesh.new(faces, layer, mat, grouped_mesh_id)
+              flat_atomic_objects[grouped_mesh.persistent_id] = grouped_mesh
+            end
+          end
+
+          entity.definition.entities.reject { |e| e.is_a?(Sketchup::Face) }.each do |sub_ent|
             # sketchup specific logic that we exclude edges that belongs to any face.
             next if sub_ent.is_a?(Sketchup::Edge) && sub_ent.faces.any?
 

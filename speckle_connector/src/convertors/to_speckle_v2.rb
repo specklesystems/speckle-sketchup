@@ -19,6 +19,7 @@ require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/query/entity'
 require_relative '../sketchup_model/definitions/definition_manager'
 require_relative '../ui_data/report/conversion_result'
+require_relative '../speckle_objects/geometry/grouped_mesh'
 
 module SpeckleConnector
   module Converters
@@ -101,6 +102,9 @@ module SpeckleConnector
 
       # @param entity [Sketchup::Entity]
       def entity_has_changed?(entity)
+        # We do not necessarily consider grouped meshes for caching?
+        return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
+
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
           speckle_state.changed_entity_ids.include?(entity.entityID)
       end
@@ -113,7 +117,7 @@ module SpeckleConnector
                                                                       converted[:speckle_type]))
       end
 
-      # @param entity [Sketchup::Entity]
+      # @param entity [Sketchup::Entity | SpeckleObjects::Geometry::GroupedMesh]
       # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
@@ -124,6 +128,13 @@ module SpeckleConnector
           reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
           add_to_report(entity, reference)
           return speckle_state, reference
+        end
+
+        if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
+          mesh = SpeckleObjects::Geometry::Mesh.from_faces(speckle_state: speckle_state, faces: entity.faces,
+                                                           units: @units, model_preferences: preferences[:model])
+          add_to_report(entity, mesh)
+          return speckle_state, mesh
         end
 
         if entity.is_a?(Sketchup::Edge)
