@@ -63,8 +63,7 @@ module SpeckleConnector
 
               count = 0
               entities.each do |entity|
-                layer = entity.layer
-                layer_collection = LayerCollection.get_or_create_layer_collection(layer, model_collection)
+                layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
                 new_speckle_state, converted_object_with_entity = convert.call(entity, state.user_state.preferences, speckle_state)
                 speckle_state = new_speckle_state
                 unless converted_object_with_entity.nil?
