@@ -131,9 +131,8 @@ module SpeckleConnector
         end
 
         if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
-          mesh = SpeckleObjects::Geometry::Mesh.from_faces(speckle_state: speckle_state, faces: entity.faces, units: @units,
-                                                           model_preferences: preferences[:model])
-          # new_speckle_state, mesh = SpeckleObjects::Geometry::GroupedMesh.to_speckle(entity.faces, speckle_state, preferences, parent, &convert)
+          mesh = SpeckleObjects::Geometry::Mesh.from_faces(speckle_state: speckle_state, faces: entity.faces,
+                                                           units: @units, model_preferences: preferences[:model])
           add_to_report(entity, mesh)
           return speckle_state, mesh
         end

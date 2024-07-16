@@ -149,6 +149,7 @@ module SpeckleConnector
         # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
         #  into any component.
         # rubocop:disable Style/MultilineTernaryOperator
+        # rubocop:disable Metrics/ParameterLists
         def self.from_face(speckle_state:, face:, units:, model_preferences:, global_transform: nil, parent_material: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(face, model_preferences)
@@ -171,7 +172,10 @@ module SpeckleConnector
         end
         # rubocop:enable Style/MultilineTernaryOperator
 
-        def self.from_faces(speckle_state:, faces:, units:, model_preferences:, global_transform: nil, parent_material: nil)
+        # Create single mesh from multiple faces.
+        # This function takes the material of the first face in the list.
+        def self.from_faces(speckle_state:, faces:, units:, model_preferences:,
+                            global_transform: nil, parent_material: nil)
           mesh = from_face(speckle_state: speckle_state, face: faces.first, units: units,
                            model_preferences: model_preferences, global_transform: global_transform,
                            parent_material: parent_material)
@@ -179,6 +183,7 @@ module SpeckleConnector
           mesh.update_mesh
           mesh
         end
+        # rubocop:enable Metrics/ParameterLists
 
         # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
         #  into any component. So it's mesh will be transformed into global coordinates to represent it correctly in

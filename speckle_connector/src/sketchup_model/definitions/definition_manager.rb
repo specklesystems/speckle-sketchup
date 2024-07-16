@@ -98,7 +98,6 @@ module SpeckleConnector
               unpack_instance(sub_ent, depth + 1)
             end
 
-
             flat_atomic_objects[sub_ent.persistent_id.to_s] = sub_ent
           end
         end
