@@ -79,8 +79,14 @@ module SpeckleConnector
           # Group meshes
           faces = entity.definition.entities.grep(Sketchup::Face)
           unless faces.empty?
-            group_mesh_id = "definition_faces_#{entity.definition.persistent_id}"
-            flat_atomic_objects[group_mesh_id] = faces
+            # FIXME: Back material?
+            grouped_meshes = faces.group_by { |face| [face.layer, face.material] }
+            grouped_meshes.each do |(layer, mat), faces|
+              material_id = mat.nil? ? 'none' : mat.persistent_id.to_s
+              grouped_mesh_id = "#{layer.name} - #{material_id}"
+              grouped_mesh = SpeckleObjects::Geometry::GroupedMesh.new(faces, layer, mat, grouped_mesh_id)
+              flat_atomic_objects[grouped_mesh.persistent_id] = grouped_mesh
+            end
           end
 
           entity.definition.entities.reject { |e| e.is_a?(Sketchup::Face) }.each do |sub_ent|

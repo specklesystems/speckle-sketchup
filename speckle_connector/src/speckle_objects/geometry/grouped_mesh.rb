@@ -21,14 +21,20 @@ module SpeckleConnector
       class GroupedMesh
         attr_reader :faces
 
+        attr_reader :layer
+
+        attr_reader :material
+
         attr_reader :persistent_id
 
         # @return Hash{String=>Sketchup::Face}
         attr_reader :mesh_groups
 
-        def initialize(faces, persistent_id)
+        def initialize(faces, layer, material, persistent_id)
           @faces = faces
           @persistent_id = persistent_id
+          @layer = layer
+          @material = material
           @mesh_groups = {}
         end
 
@@ -36,6 +42,7 @@ module SpeckleConnector
         def self.to_speckle(faces, speckle_state, preferences, parent, &convert)
           mesh_groups = {}
           faces.collect do |face|
+            # FIXME: GROUPED MESHES
             next unless SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(face).nil?
 
             new_speckle_state = group_meshes_by_material(

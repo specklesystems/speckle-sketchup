@@ -92,7 +92,7 @@ module SpeckleConnector
         end
       rescue StandardError => e
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
-                                                                      entity.is_a?(Array) ? entity.first.persistent_id : entity.persistent_id, # FIXME: GROUPED MESHES
+                                                                      entity.persistent_id,
                                                                       entity.class,
                                                                       nil,
                                                                       nil,
@@ -102,8 +102,8 @@ module SpeckleConnector
 
       # @param entity [Sketchup::Entity]
       def entity_has_changed?(entity)
-        # FIXME: GROUPED MESHES
-        return false if entity.is_a?(Array)
+        # We do not necessarily consider grouped meshes for caching?
+        return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
 
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
           speckle_state.changed_entity_ids.include?(entity.entityID)
@@ -122,7 +122,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
         # Where we do send caching!
-        if !entity.is_a?(Array) && !ignore_cache && !entity_has_changed?(entity) &&
+        if !ignore_cache && !entity_has_changed?(entity) &&
            speckle_state.object_references_by_project[model_card.project_id] &&
            speckle_state.object_references_by_project[model_card.project_id].keys.include?(entity.persistent_id.to_s)
           reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
@@ -130,8 +130,12 @@ module SpeckleConnector
           return speckle_state, reference
         end
 
-        if entity.is_a?(Array)
-          return SpeckleObjects::Geometry::GroupedMesh.to_speckle(entity, speckle_state, preferences, parent, &convert)
+        if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
+          mesh = SpeckleObjects::Geometry::Mesh.from_faces(speckle_state: speckle_state, faces: entity.faces, units: @units,
+                                                           model_preferences: preferences[:model])
+          # new_speckle_state, mesh = SpeckleObjects::Geometry::GroupedMesh.to_speckle(entity.faces, speckle_state, preferences, parent, &convert)
+          add_to_report(entity, mesh)
+          return speckle_state, mesh
         end
 
         if entity.is_a?(Sketchup::Edge)

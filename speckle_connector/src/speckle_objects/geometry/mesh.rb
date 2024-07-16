@@ -171,6 +171,15 @@ module SpeckleConnector
         end
         # rubocop:enable Style/MultilineTernaryOperator
 
+        def self.from_faces(speckle_state:, faces:, units:, model_preferences:, global_transform: nil, parent_material: nil)
+          mesh = from_face(speckle_state: speckle_state, face: faces.first, units: units,
+                           model_preferences: model_preferences, global_transform: global_transform,
+                           parent_material: parent_material)
+          faces[1..-1].each { |f| mesh.face_to_mesh(f, global_transform) }
+          mesh.update_mesh
+          mesh
+        end
+
         # @param global_transform [Geom::Transformation, nil] global transformation value of face if it is not included
         #  into any component. So it's mesh will be transformed into global coordinates to represent it correctly in
         #  Speckle viewer or other connectors.

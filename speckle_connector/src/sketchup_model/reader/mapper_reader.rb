@@ -24,8 +24,8 @@ module SpeckleConnector
 
         # @param entity [Sketchup::Entity] sketchup entity to check whether mapped with speckle schema or not.
         def self.mapped_with_schema?(entity)
-          # FIXME: GROUPED MESHES
-          return false if entity.is_a?(Array)
+          # We do not necessarily consider grouped meshes for mappings
+          return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
 
           is_entity_mapped = !Dictionary::SpeckleSchemaDictionaryHandler.attribute_dictionary(entity).nil?
           return is_entity_mapped if is_entity_mapped
