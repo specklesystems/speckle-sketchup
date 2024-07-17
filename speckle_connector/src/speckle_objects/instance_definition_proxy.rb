@@ -29,13 +29,13 @@ module SpeckleConnector
         )
         @definition = definition
         @object_ids = object_ids
-        self[:Objects] = object_ids
-        self[:MaxDepth] = max_depth
+        self[:objects] = object_ids
+        self[:maxDepth] = max_depth
       end
 
       def add_object_id(object_id)
         object_ids.append(object_id)
-        self[:Objects] = object_ids
+        self[:objects] = object_ids
       end
     end
   end

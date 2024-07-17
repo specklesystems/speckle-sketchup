@@ -16,15 +16,15 @@ module SpeckleConnector
           id: nil
         )
         self[:units] = units
-        self[:DefinitionId] = definition_id
-        self[:MaxDepth] = max_depth
-        self[:Transform] = transform
+        self[:definitionId] = definition_id
+        self[:maxDepth] = max_depth
+        self[:transform] = transform
       end
 
       def self.to_native(state, instance_proxy, layer, entities, definition_proxies, &_convert_to_native)
-        definition_id = instance_proxy['DefinitionId']
-        proxy_transform = instance_proxy['Transform']
-        transform = Other::Transform.to_native(proxy_transform, instance_proxy['units'] || instance_proxy['Units'])
+        definition_id = instance_proxy['definitionId']
+        proxy_transform = instance_proxy['transform']
+        transform = Other::Transform.to_native(proxy_transform, instance_proxy['units'])
         definition = definition_proxies[definition_id].definition
         instance = entities.add_instance(definition, transform)
         instance.layer = layer if layer # TODO: CONVERTER_V2 check

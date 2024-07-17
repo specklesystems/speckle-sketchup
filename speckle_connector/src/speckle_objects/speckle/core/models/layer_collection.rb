@@ -12,7 +12,7 @@ module SpeckleConnector
         module Models
           # LayerCollection object that collect other speckle objects under it's elements.
           class LayerCollection < Collection
-            SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
+            SPECKLE_TYPE = 'Speckle.Core.Models.Collections.Collection'
             # rubocop:disable Metrics/ParameterLists
             def initialize(name:, visible:, is_folder:, display_style: nil, color: nil, elements: [],
                            application_id: nil)
