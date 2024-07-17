@@ -60,12 +60,12 @@ module SpeckleConnector
 
           instance_proxies_with_same_definition = instance_proxies_by_definition_id[definition_id]
           instance_proxies_with_same_definition.each do |item|
-            item[:MaxDepth] = depth if item[:MaxDepth] < depth # only set if given depth is higher.
+            item[:maxDepth] = depth if item[:maxDepth] < depth # only set if given depth is higher.
           end
           instance_proxies_with_same_definition.append(instance_proxies[instance_id])
 
           if definition_proxies.key?(definition_id)
-            diff = depth - definition_proxies[definition_id][:MaxDepth]
+            diff = depth - definition_proxies[definition_id][:maxDepth]
             update_children_max_depth(definition_proxies[definition_id], diff) if diff > 0
             return
           end
@@ -106,10 +106,10 @@ module SpeckleConnector
         # @param depth_difference [Integer]
         def update_children_max_depth(definition_proxy, depth_difference)
           # Increase depth of definition
-          definition_proxy[:MaxDepth] += depth_difference
+          definition_proxy[:maxDepth] += depth_difference
 
           # Find instance proxies of given definition
-          definition_instance_proxies = definition_proxy[:Objects].collect { |id| instance_proxies[id] }.compact
+          definition_instance_proxies = definition_proxy[:objects].collect { |id| instance_proxies[id] }.compact
 
           # Break the loop if no instance proxy found under definition.
           return if definition_instance_proxies.empty?
@@ -117,9 +117,9 @@ module SpeckleConnector
           sub_definitions = {}
           definition_instance_proxies.each do |instance_proxy|
             # Increase depth of instance
-            instance_proxy[:MaxDepth] += depth_difference
+            instance_proxy[:maxDepth] += depth_difference
             # Collect sub definitions
-            sub_definitions[instance_proxy[:DefinitionId]] = definition_proxies[instance_proxy[:DefinitionId]]
+            sub_definitions[instance_proxy[:definitionId]] = definition_proxies[instance_proxy[:definitionId]]
           end
 
           # Iterate through sub definitions

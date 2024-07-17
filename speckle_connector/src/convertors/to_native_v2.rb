@@ -100,7 +100,7 @@ module SpeckleConnector
         Objects.BuiltElements.Network
         Objects.GIS.PolygonElement
         Objects.GIS.LineElement
-        Speckle.Core.Models.Collection
+        Speckle.Core.Models.Collections.Collection
         Speckle.Core.Models.Collection:Objects.GIS.RasterLayer
         Speckle.Core.Models.Collection:Objects.GIS.VectorLayer
       ].freeze
@@ -123,12 +123,14 @@ module SpeckleConnector
 
       def create_definition_proxies
         root_definition_proxies.each do |proxy|
+          next if proxy['name'].nil?
+
           definition_name = proxy['name']
           definition = state.sketchup_state.sketchup_model.definitions.add(definition_name)
           @definition_proxies[proxy['applicationId']] = SpeckleObjects::InstanceDefinitionProxy.new(
             definition,
-            proxy['Objects'],
-            proxy['MaxDepth']
+            proxy['objects'],
+            proxy['maxDepth'].nil? ? 0 : proxy['maxDepth']
           )
         end
       end
