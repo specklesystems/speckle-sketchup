@@ -79,6 +79,7 @@ module SpeckleConnector
       POLYGON_ELEMENT = GIS::PolygonElement
       LINE_ELEMENT = GIS::LineElement
       COLLECTION = SpeckleObjects::Speckle::Core::Models::Collection
+      LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::LayerCollection
       GIS_LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::GisLayerCollection
 
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
@@ -101,6 +102,7 @@ module SpeckleConnector
         Objects.GIS.PolygonElement
         Objects.GIS.LineElement
         Speckle.Core.Models.Collections.Collection
+        Speckle.Core.Models.Collections.Collection:Speckle.Core.Models.Collections.Layer
         Speckle.Core.Models.Collection:Objects.GIS.RasterLayer
         Speckle.Core.Models.Collection:Objects.GIS.VectorLayer
       ].freeze
@@ -342,6 +344,7 @@ module SpeckleConnector
         OBJECTS_GIS_POLYGONELEMENT => POLYGON_ELEMENT.method(:to_native),
         OBJECTS_GIS_LINEELEMENT => LINE_ELEMENT.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION => COLLECTION.method(:to_native),
+        SPECKLE_CORE_MODELS_LAYER_COLLECTION => LAYER_COLLECTION.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION_RASTER_LAYER => GIS_LAYER_COLLECTION.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER => GIS_LAYER_COLLECTION.method(:to_native)
       }.freeze

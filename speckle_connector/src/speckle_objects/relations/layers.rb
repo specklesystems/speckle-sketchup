@@ -44,7 +44,7 @@ module SpeckleConnector
         # rubocop:disable Metrics/CyclomaticComplexity
         def self.element_to_relation(elements, source_app, parent_layers)
           elements.collect do |element|
-            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
+            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION
 
             layers_tree = parent_layers.dup.append(element['name'])
             full_path = ''
@@ -53,8 +53,8 @@ module SpeckleConnector
             # Add this info to commit object to check later layer_collection conversion
             element['full_path'] = full_path if source_app.include?('rhino')
 
-            is_folder = (element['@elements'] || element['elements']).any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
-            color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
+            is_folder = (element['@elements'] || element['elements']).any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION }
+            color = element['color'] || element['displayStyle']['color']
             Layer.new(
               name: element['name'], visible: element['visible'], is_folder: is_folder,
               color: color, full_path: full_path,
