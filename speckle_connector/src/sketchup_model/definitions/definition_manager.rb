@@ -82,7 +82,7 @@ module SpeckleConnector
             grouped_meshes = faces.group_by { |face| [face.layer, face.material || face.back_material] }
             grouped_meshes.each do |(layer, mat), faces|
               material_id = mat.nil? ? 'none' : mat.persistent_id.to_s
-              grouped_mesh_id = "#{layer.name} - #{material_id}"
+              grouped_mesh_id = "#{layer.name} - #{material_id} - #{entity.definition.persistent_id.to_s}"
               grouped_mesh = SpeckleObjects::Geometry::GroupedMesh.new(faces, layer, mat, grouped_mesh_id)
               flat_atomic_objects[grouped_mesh.persistent_id] = grouped_mesh
               definition_proxy.add_object_id(grouped_mesh.faces.first.persistent_id.to_s)
