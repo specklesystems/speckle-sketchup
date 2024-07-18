@@ -51,6 +51,7 @@ module SpeckleConnector
             SpeckleObjects::Other::Transform.from_transformation(entity.transformation, @units).value,
             depth,
             @units,
+            entity.is_a?(Sketchup::Group),
             application_id: instance_id
           )
 
