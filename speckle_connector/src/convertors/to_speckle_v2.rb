@@ -151,16 +151,16 @@ module SpeckleConnector
           return speckle_state, mesh
         end
 
-        if entity.is_a?(Sketchup::Group)
-          new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_group(
-            entity, @units, preferences, speckle_state, &convert
-          )
-          speckle_state = new_speckle_state
-          add_to_report(entity, block_instance)
-          return speckle_state, block_instance
-        end
+        # if entity.is_a?(Sketchup::Group)
+        #   new_speckle_state, block_instance = SpeckleObjects::Other::BlockInstance.from_group(
+        #     entity, @units, preferences, speckle_state, &convert
+        #   )
+        #   speckle_state = new_speckle_state
+        #   add_to_report(entity, block_instance)
+        #   return speckle_state, block_instance
+        # end
 
-        if entity.is_a?(Sketchup::ComponentInstance)
+        if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
           proxy = unpacked_entities.instance_proxies[entity.persistent_id.to_s]
           add_to_report(entity, proxy)
           return speckle_state, proxy
