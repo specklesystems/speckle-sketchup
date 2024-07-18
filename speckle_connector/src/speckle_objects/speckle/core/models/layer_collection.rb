@@ -2,6 +2,7 @@
 
 require_relative 'collection'
 require_relative '../../../../sketchup_model/query/layer'
+require_relative '../../../../constants/type_constants'
 require_relative '../../../other/color'
 require_relative '../../../other/display_style'
 
@@ -12,7 +13,7 @@ module SpeckleConnector
         module Models
           # LayerCollection object that collect other speckle objects under it's elements.
           class LayerCollection < Collection
-            SPECKLE_TYPE = 'Speckle.Core.Models.Collections.Collection'
+            SPECKLE_TYPE = SPECKLE_CORE_MODELS_LAYER_COLLECTION
             # rubocop:disable Metrics/ParameterLists
             def initialize(name:, visible:, is_folder:, display_style: nil, color: nil, elements: [],
                            application_id: nil)
@@ -22,6 +23,7 @@ module SpeckleConnector
                 elements: elements,
                 application_id: application_id
               )
+              self[:speckle_type] = SPECKLE_TYPE
               self[:visible] = visible
               self[:is_folder] =  is_folder
               self[:color] = color unless color.nil?
@@ -80,7 +82,7 @@ module SpeckleConnector
                     el[:name] == folder.display_name
                 end
                 if collection_candidate.nil?
-                  color = folder.respond_to?(:color) ? SpeckleObjects::Other::Color.to_speckle(folder.color) : nil
+                  color = folder.respond_to?(:color) ? SpeckleObjects::Other::Color.to_int(folder.color) : nil
                   collection_candidate = LayerCollection.new(
                     name: folder.display_name, visible: folder.visible?,
                     is_folder: folder.is_a?(Sketchup::LayerFolder), color: color
