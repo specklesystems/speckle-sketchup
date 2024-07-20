@@ -85,7 +85,7 @@ jobs:
 
   build-connector-mac:
     macos:
-      xcode: 12.5.1
+      xcode: 13.4.1
     parameters:
       projname:
         type: string
