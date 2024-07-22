@@ -44,6 +44,7 @@ module SpeckleConnector
 
       attr_reader :root_definition_proxies
 
+      # @param model_card [SpeckleConnector::Cards::ReceiveCard]
       def initialize(state, definition_proxies, source_app, model_card)
         super(state, model_card)
         @root_definition_proxies = definition_proxies
@@ -147,7 +148,7 @@ module SpeckleConnector
 
         unless from_revit
           # Create layers and it's folders from layers relation on the model collection.
-          SpeckleObjects::Relations::Layers.to_native(obj, source_app, sketchup_model)
+          SpeckleObjects::Relations::Layers.to_native(obj, sketchup_model, source_app, model_card.project_id, model_card.model_id)
         end
 
         # By default entities to fill is sketchup model's entities.
