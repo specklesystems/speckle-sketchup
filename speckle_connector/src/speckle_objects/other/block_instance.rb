@@ -27,7 +27,7 @@ module SpeckleConnector
         # @param sketchup_attributes [Hash{Symbol=>Object}] sketchup attributes of the block instance.
         # @param application_id [String] application id of the block instance.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, is_sketchup_group:, name:, render_material:, transform:, block_definition:, layer:,
+        def initialize(units:, is_sketchup_group:, name:, transform:, block_definition:, layer:,
                        sketchup_attributes: {}, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -39,7 +39,7 @@ module SpeckleConnector
           self[:name] = name
           self[:layer] = layer
           self[:is_sketchup_group] = is_sketchup_group
-          self[:renderMaterial] = render_material
+          # self[:renderMaterial] = render_material
           self[:transform] = transform
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
           self[:speckle_schema] = speckle_schema if speckle_schema.any?
@@ -61,7 +61,7 @@ module SpeckleConnector
             units: units,
             is_sketchup_group: true,
             name: group.name == '' ? nil : group.name,
-            render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
+            # render_material: group.material.nil? ? nil : RenderMaterial.from_material(group.material),
             transform: Other::Transform.from_transformation(group.transformation, units),
             block_definition: block_definition,
             layer: SketchupModel::Query::Layer.entity_path(group),
@@ -102,11 +102,11 @@ module SpeckleConnector
             units: units,
             is_sketchup_group: false,
             name: component_instance.name == '' ? nil : component_instance.name,
-            render_material: if component_instance.material.nil?
-                               nil
-                             else
-                               RenderMaterial.from_material(component_instance.material)
-                             end,
+            # render_material: if component_instance.material.nil?
+            #                    nil
+            #                  else
+            #                    RenderMaterial.from_material(component_instance.material)
+            #                  end,
             transform: Other::Transform.from_transformation(transformation, units),
             block_definition: block_definition,
             layer: SketchupModel::Query::Layer.entity_path(component_instance),

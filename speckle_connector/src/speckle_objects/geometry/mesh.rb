@@ -30,12 +30,11 @@ module SpeckleConnector
         attr_reader :units
 
         # @param units [String] units of the speckle mesh.
-        # @param render_material [Other::RenderMaterial, nil] render material of the speckle mesh.
         # @param vertices [Array] vertices of the speckle mesh.
         # @param faces [Array] faces of the speckle mesh.
         # @param sketchup_attributes [Hash] additional information about speckle mesh.
         # rubocop:disable Metrics/ParameterLists
-        def initialize(units:, render_material:, vertices:, faces:,
+        def initialize(units:, vertices:, faces:,
                        sketchup_attributes:, layer:, speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
@@ -48,7 +47,7 @@ module SpeckleConnector
           @units = units
           self[:units] = units
           self[:layer] = layer
-          self[:renderMaterial] = render_material
+          # self[:renderMaterial] = render_material
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
           self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
@@ -160,7 +159,7 @@ module SpeckleConnector
           material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(
             units: units,
-            render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
+            # render_material: material.nil? ? nil : Other::RenderMaterial.from_material(material),
             vertices: [], faces: [], sketchup_attributes: att,
             layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
