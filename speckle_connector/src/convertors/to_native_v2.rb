@@ -42,12 +42,19 @@ module SpeckleConnector
 
       attr_reader :conversion_results
 
+      # @return [Array<SpeckleObjects::InstanceDefinitionProxy>]
       attr_reader :root_definition_proxies
 
+      # @return [Array<SpeckleObjects::RenderMaterialProxy>]
+      attr_accessor :root_render_material_proxies
+
+      # @param definition_proxies [Array<SpeckleObjects::InstanceDefinitionProxy>]
+      # @param render_material_proxies [Array<SpeckleObjects::RenderMaterialProxy>]
       # @param model_card [SpeckleConnector::Cards::ReceiveCard]
-      def initialize(state, definition_proxies, source_app, model_card)
+      def initialize(state, definition_proxies, render_material_proxies, source_app, model_card)
         super(state, model_card)
         @root_definition_proxies = definition_proxies
+        @root_render_material_proxies = render_material_proxies
         @definition_proxies = {}
         @source_app = source_app.downcase
         @converted_faces = []
@@ -124,6 +131,18 @@ module SpeckleConnector
         @from_qgis ||= source_app.include?('qgis')
       end
 
+      def create_render_materials
+        return if root_render_material_proxies.nil?
+
+        converted_render_material_proxies = []
+        root_render_material_proxies.each do |proxy|
+          material = SpeckleObjects::Other::RenderMaterial.to_native_from_proxy(sketchup_model, proxy["value"])
+          render_material_proxy = SpeckleObjects::RenderMaterialProxy.new(material, proxy["value"], proxy["objects"])
+          converted_render_material_proxies.append(render_material_proxy)
+        end
+        @root_render_material_proxies = converted_render_material_proxies
+      end
+
       def create_definition_proxies
         root_definition_proxies.each do |proxy|
           next if proxy['name'].nil?
@@ -145,6 +164,7 @@ module SpeckleConnector
       def receive_commit_object(obj)
         # TODO
         create_definition_proxies
+        create_render_materials
 
         unless from_revit
           # Create layers and it's folders from layers relation on the model collection.
@@ -378,6 +398,10 @@ module SpeckleConnector
                                     end
         # state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
         @converted_entities += converted_entities
+        converted_entities.each do |e|
+          material_to_assign = find_material_from_proxies(obj['applicationId'])
+          e.material = material_to_assign if material_to_assign
+        end
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?
         if from_revit
@@ -407,6 +431,15 @@ module SpeckleConnector
                                                                       nil,
                                                                       e))
         return state, []
+      end
+
+      def find_material_from_proxies(id)
+        root_render_material_proxies.each do |proxy|
+          if proxy.object_ids.include?(id)
+            return proxy.sketchup_material
+          end
+        end
+        nil
       end
 
       # rubocop:disable Metrics/CyclomaticComplexity

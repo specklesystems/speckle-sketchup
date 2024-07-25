@@ -69,6 +69,15 @@ module SpeckleConnector
           new_sketchup_state = state.sketchup_state.with_materials(materials.add_material(name, material))
           return state.with_sketchup_state(new_sketchup_state), [material]
         end
+
+        def self.to_native_from_proxy(sketchup_model, render_material)
+          name = render_material['name'] || render_material['id'] || render_material['diffuse'].to_s
+          material = sketchup_model.materials.add(name)
+          material.alpha = render_material['opacity']
+          argb = render_material['diffuse']
+          material.color = Color.from_int(argb)
+          material
+        end
       end
     end
   end

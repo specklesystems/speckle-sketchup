@@ -11,6 +11,7 @@ module SpeckleConnector
           # entities.
           # @param entities_to_flat [Sketchup::Entities] entities to flat their children, grandchildren and so on..
           # @param classes [Array<Class>] objects types to collect as flat list.
+          # @return [Array<Sketchup::Entity>]
           def flat_entities(entities_to_flat,
                             classes = [Sketchup::Edge, Sketchup::Face, Sketchup::ComponentInstance,
                                        Sketchup::Group, Sketchup::ComponentDefinition])
