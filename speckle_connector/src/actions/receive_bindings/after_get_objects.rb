@@ -14,8 +14,12 @@ module SpeckleConnector
         model_card = state.speckle_state.receive_cards[model_card_id]
         state.sketchup_state.sketchup_model.start_operation('Receive Speckle Objects', true)
         # TODO: CONVERTER_V2: Remove later if statement and make V2 default.
+        # FIXME: we will figure it out root commit structure later. It is hacky now.
         converter = if root_obj['instanceDefinitionProxies']
-                      Converters::ToNativeV2.new(state, root_obj['instanceDefinitionProxies'], source_application,
+                      Converters::ToNativeV2.new(state,
+                                                 root_obj['instanceDefinitionProxies'],
+                                                 root_obj['renderMaterialProxies'],
+                                                 source_application,
                                                  model_card)
                     else
                       Converters::ToNative.new(state, model_card.model_id, model_card.project_name,

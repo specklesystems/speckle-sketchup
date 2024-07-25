@@ -25,6 +25,7 @@ module SpeckleConnector
           )
           flat_entities.each do |entity|
             next if entity.material.nil?
+
             if render_material_proxies.has_key?(entity.material.persistent_id.to_s)
               render_material_proxies[entity.material.persistent_id.to_s].add_object_id(entity.persistent_id.to_s)
             else
