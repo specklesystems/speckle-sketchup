@@ -3,6 +3,7 @@
 module SpeckleConnector
   module Actions
     # Action to return error message to UI.
+    # It is "TopLevelExceptionHandler" equivalent of C#.
     class HandleError < Action
       # @param error [String] error
       # @param view_name [String] name of the view (binding)
@@ -19,6 +20,7 @@ module SpeckleConnector
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def update_state(state)
+        # TODO: Log here when it is ready!!!
         error_message = "Error: #{@error}\nBinding: #{@view_name}\nAction:#{@action}\nArgs: #{@args}\n"
         error = {
           error: error_message
