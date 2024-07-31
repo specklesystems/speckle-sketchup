@@ -27,7 +27,7 @@ module SpeckleConnector3
   puts("Loading Speckle Connector v#{CONNECTOR_VERSION} from #{DEV_MODE ? 'dev' : 'build'}")
 
   unless file_loaded?(__FILE__)
-    ex = SketchupExtension.new('Speckle SketchUp', File.join(PATH, 'bootstrap'))
+    ex = SketchupExtension.new('Speckle SketchUp v3', File.join(PATH, 'bootstrap'))
     ex.description = 'Speckle Connector for SketchUp'
     ex.version     = CONNECTOR_VERSION
     ex.copyright   = 'AEC Systems Ltd.'
