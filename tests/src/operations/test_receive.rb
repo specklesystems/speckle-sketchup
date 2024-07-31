@@ -3,9 +3,9 @@
 require 'net/http'
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/accounts/accounts'
+require_relative '../../../speckle_connector_3/src/accounts/accounts'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     class ReceiveTest < Minitest::Test
 

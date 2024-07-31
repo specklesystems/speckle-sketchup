@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/states/speckle_state'
-require_relative '../../../speckle_connector/src/speckle_objects/geometry/point'
-require_relative '../../../speckle_connector/src/speckle_objects/geometry/line'
-require_relative '../../../speckle_connector/src/convertors/base_object_serializer'
-require_relative '../../../speckle_connector/src/convertors/base_object_serializer_v2'
+require_relative '../../../speckle_connector_3/src/states/speckle_state'
+require_relative '../../../speckle_connector_3/src/speckle_objects/geometry/point'
+require_relative '../../../speckle_connector_3/src/speckle_objects/geometry/line'
+require_relative '../../../speckle_connector_3/src/convertors/base_object_serializer'
+require_relative '../../../speckle_connector_3/src/convertors/base_object_serializer_v2'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     class BaseObjectSerializerTest < Minitest::Test
       def setup

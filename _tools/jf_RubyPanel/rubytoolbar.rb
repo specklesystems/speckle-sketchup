@@ -24,7 +24,7 @@ module JF_RubyToolbar
   def self.load_toolbar
     @last_dir = "#{$LOAD_PATH[0]}/"
     @last_dir = @last_dir.gsub('/', '\\\\\\\\')
-    @last_dir = File.join($JF_RUBYTOOLBAR, 'speckle_connector')
+    @last_dir = File.join($JF_RUBYTOOLBAR, 'speckle_connector_3')
     curdir = File.dirname __FILE__
 
     # create toolbar

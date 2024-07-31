@@ -21,7 +21,7 @@ jobs:
       - persist_to_workspace:
           root: ./
           paths:
-            - speckle_connector/vue_ui
+            - speckle_connector_3/vue_ui
 
   build-connector: # Reusable job for basic connectors
     executor:
@@ -137,7 +137,7 @@ jobs:
       - run:
           name: Zip Connector files
           command: |
-            zip -r << parameters.slug >>-mac.zip "./speckle_connector" "./speckle_connector.rb"
+            zip -r << parameters.slug >>-mac.zip "./speckle_connector_3" "./speckle_connector_3.rb"
             # Copy installer files
       - run:
           name: Copy files to installer

@@ -10,8 +10,8 @@
 settings.json
 
 # vue app build dist folder
-speckle_connector/vue_ui
-speckle_connector/html
+speckle_connector_3/vue_ui
+speckle_connector_3/html
 
 # speckle-sharp-ci-tools
 /speckle-sharp-ci-tools

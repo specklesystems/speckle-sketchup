@@ -2,9 +2,9 @@
 
 require 'json'
 require_relative '../../../test_helper'
-require_relative '../../../../speckle_connector/src/speckle_objects/geometry/plane'
+require_relative '../../../../speckle_connector_3/src/speckle_objects/geometry/plane'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       class PlaneTest < Minitest::Test
