@@ -7,6 +7,8 @@ on:
   push:
     branches: ["dui3/alpha"] # Continuous delivery on every long-lived branch
     tags: ["3.*"] # Manual delivery on every 3.x tag
+  pull_request:
+    branches: [ "dui3/alpha" ] # Run on pull requests targeting the specific branch
 
 jobs:
   build:
