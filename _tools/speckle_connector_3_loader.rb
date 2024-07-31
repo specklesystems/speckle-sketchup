@@ -10,7 +10,7 @@
 # Create a link to Plugins folder with this command
 
 # rubocop:disable Layout/LineLength
-# New-Item -ItemType SymbolicLink -Path '~\AppData\Roaming\SketchUp\SketchUp 2022\SketchUp\Plugins\speckle_connector3_loader.rb' -Target ~\Git\Speckle\speckle-sketchup\_tools\speckle_connector3_loader.rb
+# New-Item -ItemType SymbolicLink -Path '~\AppData\Roaming\SketchUp\SketchUp 2022\SketchUp\Plugins\speckle_connector_3_loader.rb' -Target ~\Git\Speckle\speckle-sketchup\_tools\speckle_connector_3_loader.rb
 # rubocop:enable Layout/LineLength
 
 SKETCHUP_CONSOLE.show # if you want to show Ruby console on startup

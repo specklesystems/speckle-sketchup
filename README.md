@@ -117,7 +117,7 @@ If you will use VS Code, make sure you've installed the Ruby extension for VS Co
 
 ### Loading the Speckle Connector Plugin
 
-1. Find already prepared `speckle_connector3_loader.rb` file on the `_tools`
+1. Find already prepared `speckle_connector_3_loader.rb` file on the `_tools`
 folder.
 2. Copy this Ruby file into your SketchUp Plugins directory. You will likely find this at:
     `C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 20XX\SketchUp\Plugins`
