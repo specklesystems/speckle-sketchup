@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/speckle_objects/base'
+require_relative '../../../speckle_connector_3/src/speckle_objects/base'
 
 module SpeckleConnector3
   module SpeckleObjects

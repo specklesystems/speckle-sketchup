@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/ext/sqlite3'
-require_relative '../../../speckle_connector/src/constants/path_constants'
+require_relative '../../../speckle_connector_3/src/ext/sqlite3'
+require_relative '../../../speckle_connector_3/src/constants/path_constants'
 
 module SpeckleConnector3
   class Sqlite3Test < Minitest::Test

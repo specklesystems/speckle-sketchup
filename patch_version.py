@@ -4,7 +4,7 @@ import sys
 
 def patch_connector(tag):
     """Patches the connector version within the connector file"""
-    rb_file = "speckle_connector.rb"
+    rb_file = "speckle_connector_3.rb"
 
     with open(rb_file, "r") as file:
         lines = file.readlines()

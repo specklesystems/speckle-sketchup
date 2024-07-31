@@ -32,7 +32,7 @@ $LOAD_PATH << File.join(speckle_path, '_tools')
 $JF_RUBYTOOLBAR = speckle_path
 # rubocop:enable Style/GlobalVars
 
-files = %w[speckle_connector jf_RubyPanel su_attributes]
+files = %w[speckle_connector_3 jf_RubyPanel su_attributes]
 
 files.each do |ruby_file|
   puts "Loading #{ruby_file}"

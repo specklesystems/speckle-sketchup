@@ -2,7 +2,7 @@
 
 require 'sketchup'
 require 'pathname'
-require 'speckle_connector/debug'
+require 'speckle_connector_3/debug'
 require_relative 'src/log/log'
 require_relative 'src/ui/sketchup_ui'
 require_relative 'src/ui/ui_controller'

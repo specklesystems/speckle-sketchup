@@ -2,7 +2,7 @@
 
 require 'json'
 require_relative '../../../test_helper'
-require_relative '../../../../speckle_connector/src/speckle_objects/geometry/vector'
+require_relative '../../../../speckle_connector_3/src/speckle_objects/geometry/vector'
 
 module SpeckleConnector3
   module SpeckleObjects

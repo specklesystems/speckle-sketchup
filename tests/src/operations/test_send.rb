@@ -6,13 +6,13 @@ require 'uri'
 require 'zlib'
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/states/speckle_state'
-require_relative '../../../speckle_connector/src/accounts/accounts'
-require_relative '../../../speckle_connector/src/speckle_objects/geometry/point'
-require_relative '../../../speckle_connector/src/speckle_objects/geometry/line'
-require_relative '../../../speckle_connector/src/convertors/base_object_serializer'
-require_relative '../../../speckle_connector/src/immutable/immutable'
-require_relative '../../../speckle_connector/src/operations/send'
+require_relative '../../../speckle_connector_3/src/states/speckle_state'
+require_relative '../../../speckle_connector_3/src/accounts/accounts'
+require_relative '../../../speckle_connector_3/src/speckle_objects/geometry/point'
+require_relative '../../../speckle_connector_3/src/speckle_objects/geometry/line'
+require_relative '../../../speckle_connector_3/src/convertors/base_object_serializer'
+require_relative '../../../speckle_connector_3/src/immutable/immutable'
+require_relative '../../../speckle_connector_3/src/operations/send'
 
 module SpeckleConnector3
   module Converters
