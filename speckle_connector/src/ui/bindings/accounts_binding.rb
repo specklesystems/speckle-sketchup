@@ -3,7 +3,7 @@
 require_relative 'binding'
 require_relative '../../actions/get_accounts'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     ACCOUNTS_BINDING_NAME = 'accountsBinding'
 

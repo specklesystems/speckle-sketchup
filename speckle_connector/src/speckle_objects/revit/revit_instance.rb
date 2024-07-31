@@ -3,7 +3,7 @@
 require_relative 'revit_definition'
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Revit
       module Other

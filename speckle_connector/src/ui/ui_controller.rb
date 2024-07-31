@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     # The class that handle communication between ruby code and different user interfaces.
     class UiController

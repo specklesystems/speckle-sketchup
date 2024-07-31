@@ -2,7 +2,7 @@
 
 require_relative 'enumerable'
 
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
 
   # A `SortedSet` is a collection of ordered values with no duplicates. Unlike a
@@ -52,7 +52,7 @@ module Immutable
   # is a constant time operation.
   #
   class SortedSet
-    include SpeckleConnector::Immutable::Enumerable
+    include SpeckleConnector3::Immutable::Enumerable
 
     class << self
       # Create a new `SortedSet` populated with the given items. This method does not
@@ -1501,6 +1501,6 @@ module Immutable
   # this one rather than creating many empty sorted sets using `SortedSet.new`.
   #
   # @private
-  EmptySortedSet = SpeckleConnector::Immutable::SortedSet.empty
+  EmptySortedSet = SpeckleConnector3::Immutable::SortedSet.empty
 end
 end

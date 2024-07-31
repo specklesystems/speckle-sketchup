@@ -9,16 +9,16 @@ require_relative '../preferences/preferences'
 require_relative '../constants/observer_constants'
 require_relative '../ext/worker'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Initialization of the real state of the speckle.
     class InitializeSpeckle < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
       def self.update_state(state, observers, instant_message_sender)
-        worker = SpeckleConnector::Worker.new([])
+        worker = SpeckleConnector3::Worker.new([])
         attach_app_observer!(observers[APP_OBSERVER])
-        accounts = SpeckleConnector::Accounts.load_accounts
+        accounts = SpeckleConnector3::Accounts.load_accounts
         speckle_state = States::SpeckleState.new(accounts, observers, {}, {})
         # This should be the only point that `Sketchup_active_model` passed to application state.
         sketchup_state = States::SketchupState.new(Sketchup.active_model)

@@ -5,7 +5,7 @@ require_relative '../callbacks/callback_message'
 require_relative '../speckle_entities/speckle_entity'
 require_relative '../mapper/mapper_source'
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # State of the speckle on ruby.
     class SpeckleMapperState

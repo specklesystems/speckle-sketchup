@@ -3,7 +3,7 @@
 # rubocop:disable Metrics/CyclomaticComplexity
 # rubocop:disable Metrics/PerceivedComplexity
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # CleanUp is a plugin developed by [Thomas Thomassen](https://github.com/thomthom).
     module CleanUp

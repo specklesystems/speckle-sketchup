@@ -4,7 +4,7 @@ require_relative 'base_dictionary_handler'
 require_relative '../../constants/dict_constants'
 require_relative '../../constants/type_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SketchupModel
     module Dictionary
       # Dictionary handler of the speckle entity.

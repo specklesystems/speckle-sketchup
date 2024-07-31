@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/activate_diffing'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to activate diffing for stream.
     class ActivateDiffing < Command

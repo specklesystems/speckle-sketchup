@@ -6,7 +6,7 @@ require_relative '../ui/legacy_binding'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to initialize old Speckle UI and register it to ui_controller.
     # This is the command where we show UI to user.
@@ -44,7 +44,7 @@ module SpeckleConnector
           height: 950,
           width: 300
         }
-        legacy_ui_dialog = SpeckleConnector::Ui::Dialog.new(**dialog_specs)
+        legacy_ui_dialog = SpeckleConnector3::Ui::Dialog.new(**dialog_specs)
         legacy_binding = Ui::LegacyBinding.new(app, 'legacy_ui')
         legacy_ui_dialog.bindings[Ui::SPECKLE_LEGACY_BINDING_NAME] = legacy_binding
         app.ui_controller.register_ui(SPECKLE_LEGACY_UI, legacy_ui_dialog)

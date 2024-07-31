@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 require_relative '../../../speckle_connector/src/ext/sqlite3'
 require_relative '../../../speckle_connector/src/constants/path_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   class Sqlite3Test < Minitest::Test
     TABLE_NAME = "sketchup_test"
     TABLE_COLUMNS = "(hash TEXT PRIMARY KEY NOT NULL, content TEXT NOT NULL);"

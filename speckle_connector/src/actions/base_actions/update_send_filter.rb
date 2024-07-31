@@ -3,7 +3,7 @@
 require_relative '../action'
 require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to update send filter.
     class UpdateSendFilter < Action

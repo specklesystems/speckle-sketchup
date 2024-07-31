@@ -11,7 +11,7 @@ require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 require_relative '../../sketchup_model/query/layer'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # BlockInstance object definition for Speckle.

@@ -5,7 +5,7 @@ require_relative '../ext/sqlite3'
 require_relative '../accounts/accounts'
 require_relative '../constants/path_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # When preference updated by UI.
     class UserPreferencesUpdated < Action

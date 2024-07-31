@@ -2,7 +2,7 @@
 
 require_relative 'selection'
 
-module SpeckleConnector
+module SpeckleConnector3
   module UiData
     module Components
       module Selections

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   BASE_OBJECT = 'Base'
 
   OBJECTS_GIS_POLYGONELEMENT = 'Objects.GIS.PolygonElement'

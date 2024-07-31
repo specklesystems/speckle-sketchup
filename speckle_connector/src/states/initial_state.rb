@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # Initial state of the application.
     class InitialState

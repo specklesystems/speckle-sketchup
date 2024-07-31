@@ -5,7 +5,7 @@ require_relative '../../actions/send_actions/send'
 require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/update_send_filter'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     SEND_BINDING_NAME = 'sendBinding'
 

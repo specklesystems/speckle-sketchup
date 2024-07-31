@@ -2,7 +2,7 @@
 
 require_relative '../ext/immutable_ruby/core'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Relations
     # An immutable class that model a binary relation. It supports querying for both objects. For example
     # `A has child B` is Many to One relationship. Each person can have only one parent,

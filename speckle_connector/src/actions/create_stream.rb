@@ -6,7 +6,7 @@ require_relative '../actions/save_stream'
 require_relative '../actions/queue_send'
 require_relative '../convertors/converter'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Create stream.
     class CreateStream < Action

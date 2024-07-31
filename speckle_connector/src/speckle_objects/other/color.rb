@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # Color object transformations between sketchup and speckle.

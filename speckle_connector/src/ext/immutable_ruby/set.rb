@@ -4,7 +4,7 @@ require_relative 'trie'
 require_relative 'sorted_set'
 require 'set'
 
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
 
   # `Immutable::Set` is a collection of unordered values with no duplicates. Testing whether
@@ -47,7 +47,7 @@ module Immutable
   #   set1.subset?(set3)        # => true
   #
   class Set
-    include SpeckleConnector::Immutable::Enumerable
+    include SpeckleConnector3::Immutable::Enumerable
 
     class << self
       # Create a new `Set` populated with the given items.
@@ -288,7 +288,7 @@ module Immutable
     # @param other [Enumerable] The collection to merge with
     # @return [Set]
     def union(other)
-      if other.is_a?(SpeckleConnector::Immutable::Set)
+      if other.is_a?(SpeckleConnector3::Immutable::Set)
         if other.size > size
           small_set_pairs = @trie
           large_set_trie = other.instance_variable_get(:@trie)
@@ -322,7 +322,7 @@ module Immutable
     # @return [Set]
     def intersection(other)
       if other.size < @trie.size
-        if other.is_a?(SpeckleConnector::Immutable::Set)
+        if other.is_a?(SpeckleConnector3::Immutable::Set)
           trie = other.instance_variable_get(:@trie).select { |key, _| include?(key) }
         else
           trie = Trie.new(0)
@@ -344,7 +344,7 @@ module Immutable
     # @param other [Enumerable] The collection to subtract from this set
     # @return [Set]
     def difference(other)
-      trie = if (@trie.size <= other.size) && (other.is_a?(SpeckleConnector::Immutable::Set) || (defined?(::Set) && other.is_a?(::Set)))
+      trie = if (@trie.size <= other.size) && (other.is_a?(SpeckleConnector3::Immutable::Set) || (defined?(::Set) && other.is_a?(::Set)))
         @trie.select { |key, _| !other.include?(key) }
       else
         @trie.bulk_delete(other)
@@ -386,7 +386,7 @@ module Immutable
       # After doing some benchmarking to estimate the constants, it appears break-even is at ~190 items
       # We also check other.size, to avoid the more expensive #is_a? checks in cases where it doesn't matter
       #
-      if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector::Immutable::Set) || other.is_a?(::Set))
+      if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector3::Immutable::Set) || other.is_a?(::Set))
         other = ::Set.new(other)
       end
       all? { |item| other.include?(item) }
@@ -417,7 +417,7 @@ module Immutable
     def proper_subset?(other)
       return false if other.size <= size
       # See comments above
-      if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector::Immutable::Set) || other.is_a?(::Set))
+      if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector3::Immutable::Set) || other.is_a?(::Set))
         other = ::Set.new(other)
       end
       all? { |item| other.include?(item) }
@@ -450,7 +450,7 @@ module Immutable
         other.each { |item| return false if include?(item) }
       else
         # See comment on #subset?
-        if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector::Immutable::Set) || other.is_a?(::Set))
+        if other.size >= 150 && @trie.size >= 190 && !(other.is_a?(SpeckleConnector3::Immutable::Set) || other.is_a?(::Set))
           other = ::Set.new(other)
         end
         each { |item| return false if other.include?(item) }
@@ -584,6 +584,6 @@ module Immutable
   # one rather than creating many empty sets using `Set.new`.
   #
   # @private
-  EmptySet = SpeckleConnector::Immutable::Set.empty
+  EmptySet = SpeckleConnector3::Immutable::Set.empty
 end
 end

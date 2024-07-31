@@ -3,7 +3,7 @@
 require 'json'
 require_relative '../immutable/immutable'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     # Dynamic Base object to send it to Speckle server.
     class Base < Hash

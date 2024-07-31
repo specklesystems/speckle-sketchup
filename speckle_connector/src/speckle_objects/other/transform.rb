@@ -2,7 +2,7 @@
 
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # Transform object definition for Speckle.

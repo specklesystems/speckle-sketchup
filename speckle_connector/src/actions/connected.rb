@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to update connected state of application.
     class Connected < Action

@@ -3,7 +3,7 @@
 require_relative '../action'
 require_relative '../user_preferences_updated'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to update config.
     class UpdateConfig < Action

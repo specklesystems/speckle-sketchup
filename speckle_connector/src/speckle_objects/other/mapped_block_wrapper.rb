@@ -2,7 +2,7 @@
 
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # MappedBlockWrapper object definition for Speckle.

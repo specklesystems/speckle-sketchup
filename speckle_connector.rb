@@ -4,7 +4,7 @@ require 'sketchup'
 require 'extensions'
 
 # Speckle connector module to enable multiplayer mode ON!
-module SpeckleConnector
+module SpeckleConnector3
   # Version - patched by CI
   CONNECTOR_VERSION = '0.0.0'
 

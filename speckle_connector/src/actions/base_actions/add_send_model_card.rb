@@ -8,7 +8,7 @@ require_relative '../../filters/send/selection_filter'
 require_relative '../../filters/send_filters'
 require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to add send model card.
     class AddSendModelCard < Action

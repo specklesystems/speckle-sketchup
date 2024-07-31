@@ -6,7 +6,7 @@ require_relative 'length'
 require_relative '../base'
 require_relative '../../constants/type_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # Circle object definition for Speckle.

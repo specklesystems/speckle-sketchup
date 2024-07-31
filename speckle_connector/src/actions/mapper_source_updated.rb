@@ -5,7 +5,7 @@ require_relative '../constants/type_constants'
 require_relative '../mapper/mapper_source'
 require_relative '../speckle_objects/built_elements/revit/revit_element_type'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to update mapper source.
     class MapperSourceUpdated < Action

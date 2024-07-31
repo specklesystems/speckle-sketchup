@@ -2,7 +2,7 @@
 
 require_relative '../immutable/immutable'
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # State of the application.
     class State < InitialState

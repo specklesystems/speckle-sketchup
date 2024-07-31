@@ -8,7 +8,7 @@ require_relative '../primitive/interval'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # Line object definition for Speckle.

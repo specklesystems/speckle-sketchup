@@ -3,7 +3,7 @@
 require_relative 'length'
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # Point object definition for Speckle.

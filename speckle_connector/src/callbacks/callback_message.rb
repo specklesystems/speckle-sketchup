@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Callbacks
     # Helper class to serialize messages to send dialog.
     class CallbackMessage

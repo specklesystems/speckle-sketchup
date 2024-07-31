@@ -2,7 +2,7 @@
 
 require_relative '../../constants/dict_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Definition related utilities.

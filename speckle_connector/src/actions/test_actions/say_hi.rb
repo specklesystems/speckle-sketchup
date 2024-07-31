@@ -2,7 +2,7 @@
 
 require_relative '../action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Test purpose action.
     class SayHi < Action

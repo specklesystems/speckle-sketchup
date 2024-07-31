@@ -3,7 +3,7 @@
 require_relative 'color'
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # RenderMaterial object definition for Speckle.

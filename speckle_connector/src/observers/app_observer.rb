@@ -2,7 +2,7 @@
 
 require_relative 'event_observer'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # App observer.
     class AppObserver < Sketchup::AppObserver

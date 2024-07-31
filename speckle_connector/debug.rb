@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Speckle connector module to enable multiplayer mode ON!
-module SpeckleConnector
+module SpeckleConnector3
   # from thomthom
   # https://github.com/thomthom/true-bend/blob/master/src/tt_truebend/debug.rb
 

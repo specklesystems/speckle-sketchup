@@ -2,7 +2,7 @@
 
 require_relative 'filter'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     # Search filters for sketchup connector.
     # TODO: LATER!

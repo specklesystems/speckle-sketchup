@@ -2,7 +2,7 @@
 
 require_relative '../speckle_objects/other/color'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Cards
     # Card for sketchup connector to communicate speckle.
     class Card < Hash

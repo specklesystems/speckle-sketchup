@@ -2,7 +2,7 @@
 
 require_relative '../accounts/accounts'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations between server and connector.
   module Operations
     # Receive operation. (WIP)

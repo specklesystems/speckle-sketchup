@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # rubocop:disable Style/Documentation
-module SpeckleConnector
+module SpeckleConnector3
   host_os = RbConfig::CONFIG['host_os']
   OS_WIN = :windows
   OS_MAC = :macos

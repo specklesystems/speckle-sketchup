@@ -3,7 +3,7 @@
 require_relative 'event_hash'
 require_relative '../actions/on_events_action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Event handler class.
     class EventHandler

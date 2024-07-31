@@ -4,7 +4,7 @@ require_relative 'event_action'
 require_relative '../../constants/dict_constants'
 require_relative '../../sketchup_model/query/path'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     module Events
       PATH = SketchupModel::Query::Path

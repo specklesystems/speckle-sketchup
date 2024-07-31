@@ -4,7 +4,7 @@ require_relative '../immutable/immutable'
 require_relative '../sketchup_model/materials/speckle_materials'
 require_relative '../sketchup_model/definitions/speckle_definitions'
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # Sketchup model state holds information about sketchup related objects like model, layers, materials etc.
     class SketchupState

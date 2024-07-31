@@ -6,7 +6,7 @@ require_relative '../constants/path_constants'
 require_relative '../constants/pref_constants'
 require_relative '../sketchup_model/dictionary/speckle_model_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Preferences that stored on config database and sketchup_model.
   module Preferences
     include Immutable::ImmutableUtils

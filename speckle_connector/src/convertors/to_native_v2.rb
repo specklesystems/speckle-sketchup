@@ -25,7 +25,7 @@ require_relative '../speckle_objects/instance_definition_proxy'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 require_relative '../ui_data/report/conversion_result'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # Converts sketchup entities to speckle objects.
     # rubocop:disable Metrics/ClassLength
@@ -50,7 +50,7 @@ module SpeckleConnector
 
       # @param definition_proxies [Array<SpeckleObjects::InstanceDefinitionProxy>]
       # @param render_material_proxies [Array<SpeckleObjects::RenderMaterialProxy>]
-      # @param model_card [SpeckleConnector::Cards::ReceiveCard]
+      # @param model_card [SpeckleConnector3::Cards::ReceiveCard]
       def initialize(state, definition_proxies, render_material_proxies, source_app, model_card)
         super(state, model_card)
         @root_definition_proxies = definition_proxies

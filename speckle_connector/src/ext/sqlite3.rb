@@ -2,7 +2,7 @@
 
 require_relative '../constants/platform_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   extension = if OPERATING_SYSTEM == OS_WIN
                 'so'
               else

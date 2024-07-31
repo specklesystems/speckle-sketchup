@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module SketchupModel
     # Query operations in sketchup model.
     module Query

@@ -7,7 +7,7 @@ require_relative '../other/block_instance'
 require_relative '../../constants/type_constants'
 require_relative '../../sketchup_model/dictionary/dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module GIS
       def self.get_definition_name(obj, attributes)

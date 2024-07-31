@@ -4,7 +4,7 @@ require_relative '../base'
 require_relative '../primitive/interval'
 require_relative '../geometry/plane'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # BoundingBox object definition for Speckle.

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Works directly with/on SketchUp Entities of different kinds (Groups, Faces, Edges, ...).

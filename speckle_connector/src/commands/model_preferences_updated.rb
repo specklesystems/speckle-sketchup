@@ -4,7 +4,7 @@ require_relative 'command'
 require_relative '../accounts/accounts'
 require_relative '../actions/model_preference_updated'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to update theme.
     class ModelPreferencesUpdated < Command

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     # The abstract class for binding to send data to a user interface.
     class Binding

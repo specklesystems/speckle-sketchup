@@ -14,7 +14,7 @@ require_relative '../../../speckle_connector/src/convertors/base_object_serializ
 require_relative '../../../speckle_connector/src/immutable/immutable'
 require_relative '../../../speckle_connector/src/operations/send'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     class SendTest < Minitest::Test
       include Immutable::ImmutableUtils
@@ -77,7 +77,7 @@ module SpeckleConnector
         entity = FakeEntity.new('persistent_id', 'application_id', nil, {})
         base_and_entities = [line, [entity]]
 
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(speckle_state, TEST_STREAM_ID, TEST_PREFERENCES)
+        serializer = SpeckleConnector3::Converters::BaseObjectSerializer.new(speckle_state, TEST_STREAM_ID, TEST_PREFERENCES)
         id = serializer.serialize(base_and_entities)
         batches = serializer.batch_json_objects
         send_batch(batches)

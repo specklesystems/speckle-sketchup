@@ -9,7 +9,7 @@ require_relative 'enumerable'
 require_relative 'hash'
 require_relative 'set'
 
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
   class << self
 
@@ -120,7 +120,7 @@ module Immutable
   # traversed to find the element.
   #
   module List
-    include SpeckleConnector::Immutable::Enumerable
+    include SpeckleConnector3::Immutable::Enumerable
 
     # @private
     CADR = /^c([ad]+)r$/

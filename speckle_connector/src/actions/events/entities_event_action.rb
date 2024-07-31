@@ -6,7 +6,7 @@ require_relative '../../sketchup_model/utils/face_utils'
 require_relative '../../constants/dict_constants'
 require_relative '../../sketchup_model/query/path'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     module Events
       # Event actions related to entities.

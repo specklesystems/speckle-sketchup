@@ -2,7 +2,7 @@
 
 require_relative '../actions/handle_error'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Base command schema to wrap common operations for all commands.
     class Command

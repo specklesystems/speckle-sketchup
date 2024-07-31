@@ -8,7 +8,7 @@ require_relative '../../operations/send'
 require_relative '../../sketchup_model/definitions/definition_manager'
 require_relative '../../sketchup_model/materials/material_manager'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Send to server.
     class Send < Action

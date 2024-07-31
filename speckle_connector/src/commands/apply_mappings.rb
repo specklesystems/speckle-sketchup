@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/apply_mappings'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to apply mapping for selected entities.
     class ApplyMappings < Command

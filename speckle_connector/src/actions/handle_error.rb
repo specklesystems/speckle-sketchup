@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to return error message to UI.
     # It is "TopLevelExceptionHandler" equivalent of C#.

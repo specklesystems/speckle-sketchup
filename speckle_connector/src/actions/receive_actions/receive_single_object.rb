@@ -6,7 +6,7 @@ require_relative '../action'
 require_relative '../../convertors/units'
 require_relative '../../convertors/to_native'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Clear mappings for selected entities.
     class ReceiveSingleObject < Action

@@ -10,7 +10,7 @@ require_relative '../../../sketchup_model/query/entity'
 require_relative '../../../sketchup_model/reader/mapper_reader'
 require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module BuiltElements
       module Revit

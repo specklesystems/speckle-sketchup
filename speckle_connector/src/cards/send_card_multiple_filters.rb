@@ -2,7 +2,7 @@
 
 require_relative 'card'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Cards
     # Send card for sketchup connector to communicate speckle.
     class SendCardMultipleFilters < Card

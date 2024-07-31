@@ -2,7 +2,7 @@
 
 require_relative 'action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Clear queue from state.
     class ClearQueue < Action

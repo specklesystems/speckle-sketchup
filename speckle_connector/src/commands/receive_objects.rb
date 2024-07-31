@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/receive_objects'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to receive objects from Speckle Server.
     class ReceiveObjects < Command

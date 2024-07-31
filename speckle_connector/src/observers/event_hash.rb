@@ -2,7 +2,7 @@
 
 require_relative '../ext/immutable_ruby/core'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Collection of events.
     class EventHash < Immutable::Hash

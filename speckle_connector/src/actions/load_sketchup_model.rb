@@ -9,7 +9,7 @@ require_relative '../states/state'
 require_relative '../states/sketchup_state'
 require_relative '../constants/observer_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Switch sketchup model wit a new one
     class LoadSketchupModel < Action

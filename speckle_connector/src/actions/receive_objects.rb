@@ -6,7 +6,7 @@ require_relative '../convertors/to_native'
 require_relative '../operations/receive'
 require_relative '../convertors/clean_up'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to receive objects from Speckle Server.
     class ReceiveObjects < Action

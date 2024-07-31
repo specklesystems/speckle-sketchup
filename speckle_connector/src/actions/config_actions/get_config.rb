@@ -2,7 +2,7 @@
 
 require_relative '../action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to get config.
     class GetConfig < Action

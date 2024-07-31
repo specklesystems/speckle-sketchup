@@ -21,7 +21,7 @@ require_relative '../sketchup_model/definitions/definition_manager'
 require_relative '../ui_data/report/conversion_result'
 require_relative '../speckle_objects/geometry/grouped_mesh'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # Converts sketchup entities to speckle objects.
     class ToSpeckleV2 < ConverterV2
@@ -63,7 +63,7 @@ module SpeckleConnector
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
       # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
       def serialize(base_and_entity, preferences)
-        serializer = SpeckleConnector::Converters::BaseObjectSerializer.new(preferences)
+        serializer = SpeckleConnector3::Converters::BaseObjectSerializer.new(preferences)
         t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_json_objects

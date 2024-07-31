@@ -4,7 +4,7 @@ require_relative 'color'
 require_relative '../base'
 require_relative '../../constants/type_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # DisplayStyle object for layer.

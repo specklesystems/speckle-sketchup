@@ -7,7 +7,7 @@ require_relative '../sketchup_model/reader/mapper_reader'
 require_relative '../sketchup_model/reader/speckle_entities_reader'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Collects mapper selection info.
     class MapperSelectionChanged < Action

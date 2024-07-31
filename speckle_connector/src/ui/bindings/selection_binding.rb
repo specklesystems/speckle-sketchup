@@ -3,7 +3,7 @@
 require_relative 'binding'
 require_relative '../../actions/selection_actions/get_selection'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     SELECTION_BINDING_NAME = 'selectionBinding'
 

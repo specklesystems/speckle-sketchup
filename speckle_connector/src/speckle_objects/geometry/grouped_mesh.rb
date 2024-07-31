@@ -12,7 +12,7 @@ require_relative '../../sketchup_model/dictionary/dictionary_handler'
 require_relative '../../sketchup_model/utils/plane_utils'
 require_relative '../../sketchup_model/query/layer'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     # Geometry objects in the Speckleverse.
     module Geometry

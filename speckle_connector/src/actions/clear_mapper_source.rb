@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Clear mapper source.
     class ClearMapperSource < Action

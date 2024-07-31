@@ -2,7 +2,7 @@
 
 require_relative '../actions/clear_queue'
 
-module SpeckleConnector
+module SpeckleConnector3
   module App
     # Application for the Speckle Connector.
     class SpeckleConnectorApp

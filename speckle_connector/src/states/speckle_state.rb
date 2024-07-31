@@ -5,7 +5,7 @@ require_relative '../immutable/immutable'
 require_relative '../callbacks/callback_message'
 require_relative '../speckle_entities/speckle_entity'
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # State of the speckle on ruby.
     class SpeckleState

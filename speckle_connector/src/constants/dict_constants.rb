@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   SPECKLE_BASE_OBJECT = 'Speckle_Base_Object'
   SPECKLE_MAPPING_TOOL_SCHEMA = 'Speckle_Mapping_Tool_Schema'
   SPECKLE_SCHEMA = 'Speckle_Schema'

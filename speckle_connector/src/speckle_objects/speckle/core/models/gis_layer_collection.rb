@@ -2,7 +2,7 @@
 
 require_relative 'collection'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Speckle
       module Core

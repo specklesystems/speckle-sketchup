@@ -4,7 +4,7 @@ require 'pathname'
 require_relative 'platform_constants'
 
 # Speckle connector module to enable multiplayer mode ON!
-module SpeckleConnector
+module SpeckleConnector3
   dir = __dir__.dup
   dir.force_encoding('UTF-8') if dir.respond_to?(:force_encoding)
   HOME_PATH = (ENV['HOME']).to_s

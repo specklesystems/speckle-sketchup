@@ -3,7 +3,7 @@
 require_relative '../../../base'
 require_relative '../../../../constants/type_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Speckle
       module Core

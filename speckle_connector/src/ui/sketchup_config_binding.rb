@@ -4,7 +4,7 @@ require_relative 'bindings/binding'
 require_relative '../actions/sketchup_config_actions/get_user_config'
 require_relative '../actions/sketchup_config_actions/update_user_config'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     CONNECTOR_CONFIG_BINDING_NAME = 'connectorConfigBinding'
 

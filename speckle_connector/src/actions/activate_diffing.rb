@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative 'deactivate_diffing'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Deactivate diffing for stream.
     class ActivateDiffing < Action

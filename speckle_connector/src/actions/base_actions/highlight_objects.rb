@@ -4,7 +4,7 @@ require_relative '../action'
 require_relative '../../sketchup_model/query/entity'
 require_relative '../../sketchup_model/utils/view_utils'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to add send card.
     class HighlightObjects < Action

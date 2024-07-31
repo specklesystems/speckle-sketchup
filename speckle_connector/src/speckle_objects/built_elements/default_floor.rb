@@ -8,7 +8,7 @@ require_relative '../geometry/polyline'
 require_relative '../../constants/type_constants'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module BuiltElements
       # Default Floor object.

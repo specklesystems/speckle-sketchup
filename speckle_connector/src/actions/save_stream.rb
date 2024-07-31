@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative '../accounts/accounts'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Save stream.
     # Currently it is not a state changer.

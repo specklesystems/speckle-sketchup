@@ -6,7 +6,7 @@ require_relative '../../../../constants/type_constants'
 require_relative '../../../other/color'
 require_relative '../../../other/display_style'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Speckle
       module Core
@@ -71,7 +71,7 @@ module SpeckleConnector
             # @param collection [Array] collection to search elements for entity's layer.
             # rubocop:disable Metrics/CyclomaticComplexity
             def self.get_or_create_layer_collection(entity_layer, collection)
-              folder_path = SpeckleConnector::SketchupModel::Query::Layer.path(entity_layer)
+              folder_path = SpeckleConnector3::SketchupModel::Query::Layer.path(entity_layer)
               entity_layer_path = folder_path + [entity_layer]
               entity_layer_path.each do |folder|
                 coll = collection['@elements'] || collection['elements']

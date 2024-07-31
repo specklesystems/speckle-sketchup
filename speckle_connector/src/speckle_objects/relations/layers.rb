@@ -3,7 +3,7 @@
 require_relative 'layer'
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Relations
       # Sketchup layers (tag) tree relation. The difference between Layer is, this is the top object that holds

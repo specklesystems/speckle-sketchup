@@ -2,7 +2,7 @@
 
 require_relative 'color'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Other
       # Rendering options for scenes.

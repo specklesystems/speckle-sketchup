@@ -6,7 +6,7 @@ require_relative '../../speckle_objects/geometry/length'
 require_relative '../../speckle_objects/geometry/point'
 require_relative '../../speckle_objects/geometry/vector'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module BuiltElements
       # View3d object represents scenes on Sketchup.

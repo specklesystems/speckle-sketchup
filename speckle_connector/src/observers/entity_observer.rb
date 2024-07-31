@@ -2,7 +2,7 @@
 
 require_relative 'event_observer'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Entity observer.
     class EntityObserver < Sketchup::EntityObserver

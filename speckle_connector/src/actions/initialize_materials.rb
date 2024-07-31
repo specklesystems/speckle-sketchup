@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative 'add_material'
 require_relative '../constants/mat_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to initialize materials
     class InitializeMaterials < Action

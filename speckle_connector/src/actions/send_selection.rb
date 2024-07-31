@@ -6,7 +6,7 @@ require_relative '../convertors/units'
 require_relative '../convertors/to_speckle'
 require_relative '../operations/send'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Send selection to server.
     class SendSelection < Action

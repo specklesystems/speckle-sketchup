@@ -9,7 +9,7 @@ require_relative '../actions/test_actions/get_complex_type'
 require_relative '../actions/test_actions/trigger_event'
 
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     TEST_BINDINGS_NAME = 'testBinding'
 

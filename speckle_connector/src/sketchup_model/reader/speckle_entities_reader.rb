@@ -5,7 +5,7 @@ require_relative '../../speckle_entities/speckle_entity'
 require_relative '../../mapper/category/revit_category'
 require_relative '../../constants/dict_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Reader model for sketchup model.

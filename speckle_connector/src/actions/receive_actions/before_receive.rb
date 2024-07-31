@@ -2,7 +2,7 @@
 
 require_relative '../action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to let sketchup know receive will be started.
     class BeforeReceive < Action

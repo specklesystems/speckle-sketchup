@@ -9,7 +9,7 @@ require_relative 'event_handler'
 require_relative 'selection_observer'
 require_relative '../constants/observer_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Factory class to create observers and it's handler
     module Factory

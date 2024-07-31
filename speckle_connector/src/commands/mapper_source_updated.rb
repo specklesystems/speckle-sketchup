@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/mapper_source_updated'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to update mapper source.
     class MapperSourceUpdated < Command

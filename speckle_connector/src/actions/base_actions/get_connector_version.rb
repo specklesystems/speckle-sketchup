@@ -2,7 +2,7 @@
 
 require_relative '../action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Get connector version.
     class GetConnectorVersion < Action

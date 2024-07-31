@@ -3,7 +3,7 @@
 require_relative '../action'
 require_relative '../../filters/send_filters'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to get send filter.
     class GetSendFilters < Action

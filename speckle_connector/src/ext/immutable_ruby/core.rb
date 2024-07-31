@@ -6,7 +6,7 @@ require_relative 'vector'
 # Add json conversion methods
 require_relative 'json'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Immutable
     class Hash
       # Return a new {Set} containing the keys from this `Hash`.

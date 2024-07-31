@@ -6,7 +6,7 @@ require_relative 'bounding_box'
 require_relative '../base'
 require_relative '../primitive/interval'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # Polyline object definition for Speckle.

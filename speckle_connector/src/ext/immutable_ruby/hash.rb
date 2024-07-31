@@ -4,7 +4,7 @@ require_relative 'undefined'
 require_relative 'enumerable'
 require_relative 'trie'
 
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
 
   # An `Immutable::Hash` maps a set of unique keys to corresponding values, much
@@ -59,7 +59,7 @@ module Immutable
   #     hash = Immutable::Hash.new { |missing_key| missing_key * 10 }
   #     hash[5] # => 50
   class Hash
-    include SpeckleConnector::Immutable::Enumerable
+    include SpeckleConnector3::Immutable::Enumerable
 
     class << self
       # Create a new `Hash` populated with the given key/value pairs.
@@ -916,6 +916,6 @@ module Immutable
   # one rather than creating many empty hashes using `Hash.new`.
   #
   # @private
-  EmptyHash = SpeckleConnector::Immutable::Hash.empty
+  EmptyHash = SpeckleConnector3::Immutable::Hash.empty
 end
 end

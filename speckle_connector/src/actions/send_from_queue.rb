@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative '../accounts/accounts'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Send already converted objects from queue if exist on stream.
     class SendFromQueue < Action

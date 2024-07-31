@@ -4,7 +4,7 @@ require_relative '../immutable/immutable'
 require_relative '../speckle_objects/built_elements/level'
 require_relative '../speckle_objects/built_elements/revit/revit_element_type'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Mapper is a tool to convert SketchUp entities to other applications' native objects.
   module Mapper
     # Mapper source object that collects information about stream id and commit id to identify source in the branch,

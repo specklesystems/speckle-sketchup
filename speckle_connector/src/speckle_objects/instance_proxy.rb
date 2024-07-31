@@ -4,7 +4,7 @@ require_relative 'base'
 require_relative '../constants/type_constants'
 require_relative '../speckle_objects/other/transform'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     class InstanceProxy < Base
       SPECKLE_TYPE = SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY

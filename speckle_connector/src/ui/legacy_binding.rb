@@ -32,7 +32,7 @@ require_relative '../actions/select_mappings_from_table'
 require_relative '../actions/show_all_entities'
 require_relative '../actions/clear_mapper_source'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     SPECKLE_LEGACY_BINDING_NAME = 'speckle_legacy_binding'
     VUE_UI_HTML = Pathname.new(File.join(SPECKLE_SRC_PATH, '..', 'vue_ui', 'index.html')).cleanpath.to_s

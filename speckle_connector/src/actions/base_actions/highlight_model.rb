@@ -3,7 +3,7 @@
 require_relative '../action'
 require_relative '../../sketchup_model/query/entity'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to add send card.
     class HighlightModel < Action

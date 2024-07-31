@@ -2,7 +2,7 @@
 
 require 'json'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     # Command structure to handle it with dialog.exec_callback
     CommandData = Struct.new(:name, :binding_name, :resolve_id, :data)

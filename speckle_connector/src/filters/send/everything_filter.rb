@@ -2,7 +2,7 @@
 
 require_relative '../../ui_data/components/selections/list_selection_item'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     module Send
       # Everything filter for sketchup connector to send all.

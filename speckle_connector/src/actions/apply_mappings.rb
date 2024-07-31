@@ -5,7 +5,7 @@ require_relative 'mapped_entities_updated'
 require_relative 'events/selection_event_action'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Apply mappings for selected entities.
     class ApplyMappings < Action

@@ -2,7 +2,7 @@
 
 require_relative 'action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Adds material to speckle state and Sketchup.
     class AddMaterial < Action

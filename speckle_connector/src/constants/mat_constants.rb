@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   MAT_DICTIONARY = 'Speckle_Connector_Materials'
   MAT_ID = 'Speckle_Connector_Material_Id'
 

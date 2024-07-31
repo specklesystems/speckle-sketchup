@@ -4,7 +4,7 @@ require 'json'
 require_relative '../immutable/immutable'
 require_relative 'base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     # Object reference to send it to Speckle server. It contains closure table to store children objects.
     class ObjectReference < Base

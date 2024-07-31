@@ -3,7 +3,7 @@
 require_relative 'event_action'
 require_relative '../load_sketchup_model'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     module Events
       # Handle events that are triggered by the {ModelObserver}.

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     # An interface to Sketchup user interface. This object controls the menu `Extensions->Speckle` in Sketchup's menu,
     # the Speckle toolbar and sending message to the user via Sketchup.

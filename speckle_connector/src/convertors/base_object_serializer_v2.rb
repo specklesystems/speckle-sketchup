@@ -7,7 +7,7 @@ require 'digest'
 require_relative 'converter'
 require_relative '../relations/many_to_one_relation'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # Serializer of the base object.
     # Responsible to create id (hash) of the objects by holding their lineage and detaching relationships.
@@ -233,7 +233,7 @@ module SpeckleConnector
         }
       end
 
-      # @param traversed_base [SpeckleConnector::SpeckleObjects::Base] traversed base object.
+      # @param traversed_base [SpeckleConnector3::SpeckleObjects::Base] traversed base object.
       def get_id(traversed_base)
         Digest::MD5.hexdigest(traversed_base.to_json)
       end

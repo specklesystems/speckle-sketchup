@@ -4,7 +4,7 @@ require_relative '../immutable/immutable'
 require_relative '../convertors/units'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleEntities
     module SpeckleEntityStatus
       # Speckle Entity created first time with {Sketchup::Entity} before sent to server.

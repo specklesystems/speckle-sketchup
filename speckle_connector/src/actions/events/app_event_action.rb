@@ -5,7 +5,7 @@ require_relative 'on_document_changed'
 require_relative '../load_sketchup_model'
 require_relative '../collect_preferences'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     module Events
       # Handle events that are triggered by the {AppObserver}.

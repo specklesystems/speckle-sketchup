@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   # Helper module for logging.
   module Log
     def self.write_to_file(text, file_name = 'log', path = "#{ENV['HOME']}/Desktop")

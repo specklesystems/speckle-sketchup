@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # This module contains actions that are performed to handle events triggered by observers in Sketchup.
     module Events

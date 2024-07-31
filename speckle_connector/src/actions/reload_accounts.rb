@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative '../accounts/accounts'
 require_relative 'load_saved_streams'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to reload accounts from database.
     class ReloadAccounts < Action

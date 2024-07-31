@@ -2,7 +2,7 @@
 
 require_relative '../immutable/immutable'
 
-module SpeckleConnector
+module SpeckleConnector3
   module States
     # User specific states.
     class UserState

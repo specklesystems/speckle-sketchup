@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     # @return [Array] available speckle object types.
     AVAILABLE_SPECKLE_OBJECTS = %w[

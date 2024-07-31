@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to collect preferences from database to UI.
     class CollectPreferences < Action

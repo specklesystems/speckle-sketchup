@@ -4,7 +4,7 @@ require_relative 'point'
 require_relative 'vector'
 require_relative '../base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Geometry
       # Plane object definition for Speckle.

@@ -3,7 +3,7 @@
 require_relative '../base'
 require_relative '../other/color'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Relations
       # Sketchup layer (tag) tree relation.

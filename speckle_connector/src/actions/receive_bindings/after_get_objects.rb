@@ -4,7 +4,7 @@ require_relative '../action'
 require_relative '../../convertors/to_native'
 require_relative '../../convertors/to_native_v2'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Receive from server.
     class AfterGetObjects < Action

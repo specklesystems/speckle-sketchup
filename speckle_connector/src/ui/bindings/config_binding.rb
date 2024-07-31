@@ -4,7 +4,7 @@ require_relative 'binding'
 require_relative '../../actions/config_actions/get_config'
 require_relative '../../actions/config_actions/update_config'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     CONFIG_BINDING_NAME = 'configBinding'
 

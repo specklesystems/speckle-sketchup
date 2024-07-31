@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Helper class to register, handle menu and toolbar commands.
     class MenuCommandHandler

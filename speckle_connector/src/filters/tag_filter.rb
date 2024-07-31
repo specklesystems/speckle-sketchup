@@ -3,7 +3,7 @@
 require_relative 'tag'
 require_relative 'filter'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     # Tag filters for sketchup connector.
     class TagFilter < Filter

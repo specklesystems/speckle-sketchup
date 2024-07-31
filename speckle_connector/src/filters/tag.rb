@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     # Tag definition for filters for sketchup connector.
     class Tag < Hash

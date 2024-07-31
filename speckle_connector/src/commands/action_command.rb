@@ -2,7 +2,7 @@
 
 require_relative 'command'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to update state of the application.
     class ActionCommand < Command

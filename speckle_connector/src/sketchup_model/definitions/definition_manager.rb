@@ -5,7 +5,7 @@ require_relative '../../speckle_objects/instance_definition_proxy'
 require_relative '../../speckle_objects/other/transform'
 require_relative '../../speckle_objects/geometry/grouped_mesh'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Definition related utilities.

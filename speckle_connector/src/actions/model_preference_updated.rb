@@ -6,7 +6,7 @@ require_relative '../accounts/accounts'
 require_relative '../constants/path_constants'
 require_relative '../sketchup_model/dictionary/speckle_model_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # When preference updated by UI.
     class ModelPreferencesUpdated < Action

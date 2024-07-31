@@ -6,7 +6,7 @@ require_relative 'initialize_speckle'
 require_relative 'reset_window_location'
 require_relative 'initialize_dui3_speckle'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Speckle menu commands that adds them to Sketchup menu and toolbar.
     class SpeckleMenuCommands

@@ -4,7 +4,7 @@ require_relative 'command'
 require_relative '../actions/connected'
 require_relative '../actions/send_from_queue'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to notify connected.
     class NotifyConnected < Command

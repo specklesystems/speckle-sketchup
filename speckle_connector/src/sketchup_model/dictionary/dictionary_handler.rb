@@ -3,7 +3,7 @@
 require 'delegate'
 require_relative '../../constants/dict_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SketchupModel
     module Dictionary
       # Read and write attributes from the groups and other entities that represents Speckle objects on SketchUp model.

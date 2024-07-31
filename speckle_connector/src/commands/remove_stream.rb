@@ -4,7 +4,7 @@ require_relative 'command'
 require_relative '../actions/remove_stream'
 require_relative '../actions/load_saved_streams'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to remove stream.
     class RemoveStream < Command

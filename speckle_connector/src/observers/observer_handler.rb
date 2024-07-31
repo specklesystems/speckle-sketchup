@@ -2,7 +2,7 @@
 
 require_relative 'event_hash'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Class to handle observer events.
     class ObserverHandler

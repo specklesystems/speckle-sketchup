@@ -3,7 +3,7 @@
 require_relative '../action'
 require_relative '../../ui_data/sketchup/selection_info'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to get selection.
     class GetSelection < Action

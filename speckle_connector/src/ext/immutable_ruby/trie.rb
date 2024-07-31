@@ -1,4 +1,4 @@
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
   # @private
   class Trie

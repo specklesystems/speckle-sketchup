@@ -8,7 +8,7 @@ require_relative 'events/model_event_action'
 require_relative 'events/selection_event_action'
 require_relative '../constants/observer_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Handle events that were collected by observers
     class OnEventsAction < Action

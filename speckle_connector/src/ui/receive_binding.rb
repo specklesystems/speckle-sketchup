@@ -5,7 +5,7 @@ require_relative '../actions/receive_actions/before_receive'
 require_relative '../actions/receive_actions/receive_single_object'
 require_relative '../actions/receive_actions/after_receive'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     RECEIVE_BINDING_NAME = 'sketchupReceiveBinding'
 

@@ -9,7 +9,7 @@ require_relative '../../../constants/type_constants'
 require_relative '../../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 require_relative '../../../sketchup_model/utils/face_utils'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module BuiltElements
       # Revit wall object.

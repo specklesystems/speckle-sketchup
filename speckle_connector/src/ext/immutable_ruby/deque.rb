@@ -2,7 +2,7 @@
 
 require_relative 'list'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Immutable
 
   # A `Deque` (or double-ended queue) is an ordered, sequential collection of
@@ -288,6 +288,6 @@ module SpeckleConnector
     # one rather than creating many empty deques using `Deque.new`.
     #
     # @private
-    EmptyDeque = SpeckleConnector::Immutable::Deque.empty
+    EmptyDeque = SpeckleConnector3::Immutable::Deque.empty
   end
 end

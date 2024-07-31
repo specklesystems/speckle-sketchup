@@ -2,7 +2,7 @@
 
 require_relative 'event_observer'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # @see https://ruby.sketchup.com/Sketchup/SelectionObserver.html
     class SelectionObserver < Sketchup::SelectionObserver

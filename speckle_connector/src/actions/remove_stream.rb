@@ -5,7 +5,7 @@ require_relative '../accounts/accounts'
 require_relative '../convertors/units'
 require_relative '../convertors/converter'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to remove stream.
     # Currently it is not a state changer.

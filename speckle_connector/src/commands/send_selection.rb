@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/send_selection'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to send selection to Speckle Server.
     class SendSelection < Command

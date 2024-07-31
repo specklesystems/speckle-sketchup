@@ -15,7 +15,7 @@ require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/update_send_filter'
 require_relative '../../actions/base_actions/get_document_state'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     BASE_BINDING_NAME = 'baseBinding'
 

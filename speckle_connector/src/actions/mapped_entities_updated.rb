@@ -3,7 +3,7 @@
 require_relative 'action'
 require_relative '../sketchup_model/reader/mapper_reader'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Triggers when mapped entities updated.
     class MappedEntitiesUpdated < Action

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # Helper class to convert geometries between server and Sketchup.
     class Converter
-      # @return [States::State] the current state of the {SpeckleConnector::App}
+      # @return [States::State] the current state of the {SpeckleConnector3::App}
       attr_reader :state
 
       # @return [States::SpeckleState] the current speckle state of the {States::State}
@@ -21,7 +21,7 @@ module SpeckleConnector
 
       attr_accessor :definitions
 
-      # @param state [States::State] the current state of the {SpeckleConnector::App}
+      # @param state [States::State] the current state of the {SpeckleConnector3::App}
       def initialize(state, stream_id)
         @state = state
         @speckle_state = state.speckle_state

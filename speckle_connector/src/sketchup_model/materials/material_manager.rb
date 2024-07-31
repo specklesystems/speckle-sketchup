@@ -4,7 +4,7 @@ require_relative '../../sketchup_model/query/entity'
 require_relative '../../speckle_objects/other/render_material'
 require_relative '../../speckle_objects/render_material_proxy'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Material related utilities.

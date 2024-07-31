@@ -2,7 +2,7 @@
 
 require_relative '../speckle_objects/geometry/length'
 
-module SpeckleConnector
+module SpeckleConnector3
   COMBINE_FACES_BY_MATERIAL = :combine_faces_by_material
   INCLUDE_ENTITY_ATTRIBUTES = :include_entity_attributes
   INCLUDE_FACE_ENTITY_ATTRIBUTES = :include_face_entity_attributes

@@ -5,7 +5,7 @@ require_relative '../states/state'
 require_relative '../states/speckle_state'
 require_relative '../actions/send_from_queue'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Send queue from state.
     class QueueSend < Action

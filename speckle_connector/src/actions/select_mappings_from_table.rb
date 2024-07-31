@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative 'events/selection_event_action'
 require_relative '../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Select entities that selected from mapped elements table.
     class SelectMappingsFromTable < Action

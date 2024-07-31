@@ -2,7 +2,7 @@
 
 # Define the method to export immutable structures to JSON. Default exporter would only export the name of the class as
 # a string. In order to export it properly, we need to add `to_json` methods to the classes we want to serialize as JSON.
-module SpeckleConnector
+module SpeckleConnector3
   module Immutable
     class Vector
       # Convert the object to JSON

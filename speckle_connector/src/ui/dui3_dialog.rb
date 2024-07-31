@@ -2,7 +2,7 @@
 
 require_relative 'command_data'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Ui
     # DUI3 dialog to wrap {UI::HTMLDialog}.
     class DUI3Dialog

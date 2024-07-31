@@ -4,7 +4,7 @@ require_relative 'action'
 require_relative '../mapper/category/revit_category'
 require_relative '../mapper/category/revit_family_category'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Collects mapper selection info.
     class MapperInitialized < Action

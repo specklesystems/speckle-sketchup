@@ -15,7 +15,7 @@ require_relative '../ui/sketchup_config_binding'
 require_relative '../actions/initialize_speckle'
 require_relative '../observers/factory'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to initialize Speckle UI and register it to ui_controller.
     # This is the command where we show UI to user.
@@ -64,7 +64,7 @@ module SpeckleConnector
         connector_config_bindings = Ui::SketchupConfigBinding.new(app, Ui::CONNECTOR_CONFIG_BINDING_NAME)
 
         # Init dialog
-        dui3_dialog = SpeckleConnector::Ui::DUI3Dialog.new(**dialog_specs)
+        dui3_dialog = SpeckleConnector3::Ui::DUI3Dialog.new(**dialog_specs)
 
         # Register bindings to dialog
         dui3_dialog.bindings[Ui::BASE_BINDING_NAME] = base_binding

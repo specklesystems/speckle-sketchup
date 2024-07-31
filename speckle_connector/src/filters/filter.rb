@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     # Base filters for sketchup connector.
     class Filter < Hash

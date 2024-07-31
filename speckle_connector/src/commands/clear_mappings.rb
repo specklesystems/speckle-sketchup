@@ -3,7 +3,7 @@
 require_relative 'command'
 require_relative '../actions/clear_mappings'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to clear mapping for selected entities.
     class ClearMappings < Command

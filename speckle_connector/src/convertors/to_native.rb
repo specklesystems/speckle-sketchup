@@ -24,7 +24,7 @@ require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 require_relative '../ui_data/report/conversion_result'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Converters
     # Converts sketchup entities to speckle objects.
     # rubocop:disable Metrics/ClassLength

@@ -2,7 +2,7 @@
 
 require_relative 'action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     # Action to collect versions from sketchup and connector to track user's version by mixpanel.
     class CollectVersions < Action
@@ -11,7 +11,7 @@ module SpeckleConnector
       def self.update_state(state, _resolve_id, _data)
         versions = {
           sketchup: Sketchup.version.to_i,
-          speckle: SpeckleConnector::CONNECTOR_VERSION
+          speckle: SpeckleConnector3::CONNECTOR_VERSION
         }
         state.with_add_queue('collectVersions', versions.to_json, [])
       end

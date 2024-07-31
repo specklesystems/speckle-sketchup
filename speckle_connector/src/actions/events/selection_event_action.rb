@@ -8,7 +8,7 @@ require_relative '../../sketchup_model/reader/speckle_entities_reader'
 require_relative '../../sketchup_model/reader/mapper_reader'
 require_relative '../../sketchup_model/query/entity'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Actions
     module Events
       # Update selected speckle objects when the selection changes for mapper tool.

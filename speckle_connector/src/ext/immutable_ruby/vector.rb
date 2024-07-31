@@ -3,7 +3,7 @@
 require_relative 'enumerable'
 require_relative 'hash'
 
-module SpeckleConnector
+module SpeckleConnector3
 module Immutable
 
   # A `Vector` is an ordered, integer-indexed collection of objects. Like
@@ -39,7 +39,7 @@ module Immutable
   #     vector + [6, 7]          # => Immutable::Vector[1, 2, 3, 4, 5, 6, 7]
   #
   class Vector
-    include SpeckleConnector::Immutable::Enumerable
+    include SpeckleConnector3::Immutable::Enumerable
 
     # @private
     BLOCK_SIZE = 32
@@ -206,7 +206,7 @@ module Immutable
       if key_path.size == 1
         new_value = block.call(get(key))
       else
-        value = fetch(key, SpeckleConnector::Immutable::EmptyHash)
+        value = fetch(key, SpeckleConnector3::Immutable::EmptyHash)
         new_value = value.update_in(*key_path[1..-1], &block)
       end
       set(key, new_value)
@@ -1569,6 +1569,6 @@ module Immutable
   # one rather than creating many empty vectors using `Vector.new`.
   #
   # @private
-  EmptyVector = SpeckleConnector::Immutable::Vector.empty
+  EmptyVector = SpeckleConnector3::Immutable::Vector.empty
 end
 end

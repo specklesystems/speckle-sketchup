@@ -7,7 +7,7 @@ require_relative '../../../built_elements/view3d'
 require_relative '../../../built_elements/revit/direct_shape'
 require_relative '../../../../mapper/mapper'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Speckle
       module Core

@@ -1,4 +1,4 @@
-module SpeckleConnector
+module SpeckleConnector3
   module Immutable
 
     # Helper module for immutable-ruby's sequential collections
@@ -74,7 +74,7 @@ module SpeckleConnector
       # with an added element.
       def group_by_with(empty_group, &block)
         block ||= lambda { |item| item }
-        reduce(SpeckleConnector::Immutable::EmptyHash) do |hash, item|
+        reduce(SpeckleConnector3::Immutable::EmptyHash) do |hash, item|
           key = block.call(item)
           group = hash.get(key) || empty_group
           hash.put(key, group.add(item))
@@ -126,7 +126,7 @@ module SpeckleConnector
 
       # Convert this collection to a {Set}.
       def to_set
-        SpeckleConnector::Immutable::Set.new(self)
+        SpeckleConnector3::Immutable::Set.new(self)
       end
 
       # Convert this collection to a programmer-readable `String` representation.

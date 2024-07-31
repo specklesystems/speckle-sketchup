@@ -7,7 +7,7 @@ require_relative '../ui_data/components/selections/list_selection'
 require_relative '../ui_data/components/selections/list_selection_item'
 require_relative '../speckle_objects/other/color'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Filters
     # Send filters for sketchup connector.
     class SendFilters

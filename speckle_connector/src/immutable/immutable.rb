@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
   module Immutable
     # Mixin module with utilities for immutable objects
     module ImmutableUtils

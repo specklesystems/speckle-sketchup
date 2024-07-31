@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module SpeckleConnector
+module SpeckleConnector3
 
   NOT_STARTED = 0
   PENDING = 1

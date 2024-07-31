@@ -5,7 +5,7 @@ require_relative '../accounts/accounts'
 require_relative '../actions/save_stream'
 require_relative '../actions/load_saved_streams'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Commands
     # Command to saved stream.
     class SaveStream < Command

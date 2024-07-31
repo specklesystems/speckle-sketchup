@@ -4,7 +4,7 @@ require 'JSON'
 require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Accounts to communicate with models on user's account.
   module Accounts
     # Load accounts from user's app data.

@@ -2,7 +2,7 @@
 
 require_relative '../../constants/mat_constants'
 
-module SpeckleConnector
+module SpeckleConnector3
   # Operations related to {SketchupModel}.
   module SketchupModel
     # Material related utilities.

@@ -3,7 +3,7 @@
 require_relative 'event_hash'
 require_relative '../actions/on_events_action'
 
-module SpeckleConnector
+module SpeckleConnector3
   module Observers
     # Observer classes includes it to check common operations for all observer classes.
     module EventObserver

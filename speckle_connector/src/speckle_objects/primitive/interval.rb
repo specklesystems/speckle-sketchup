@@ -3,7 +3,7 @@
 require_relative '../base'
 require_relative '../../speckle_objects/geometry/length'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     module Primitive
       # Interval object definition for Speckle.
