@@ -30,7 +30,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: output-3.0.0-fake
-        path: speckle_connector_3/**
+        path: speckle_connector_3/**/*
         compression-level: 0 # no compression
     - id: set-version
       name: Set version to output
