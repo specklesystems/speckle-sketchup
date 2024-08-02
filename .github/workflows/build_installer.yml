@@ -28,12 +28,12 @@ jobs:
         python patch_version.py 3.0.0-fake
     - uses: montudor/action-zip@v1
       with:
-        args: zip -q -r output-3.0.0-fake.zip vendor speckle_connector_3/ speckle_connector_3.rb
+        args: zip -q -r sketchup.zip vendor speckle_connector_3/ speckle_connector_3.rb
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: output-3.0.0-fake
-        path: output-3.0.0-fake.zip
+        path: sketchup.zip
         compression-level: 0 # no compression
     - id: set-version
       name: Set version to output
