@@ -25,19 +25,19 @@ jobs:
         python-version: "3.10"
     - name: Set connector version
       run: |
-        python patch_version.py 3.0.0-fake
+        python patch_version.py ${{ env.GitVersion_FullSemVer }}
     - uses: montudor/action-zip@v1
       with:
         args: zip -q -r sketchup.zip vendor speckle_connector_3/ speckle_connector_3.rb
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: output-3.0.0-fake
+        name: output-${{ env.GitVersion_FullSemVer }}
         path: sketchup.zip
         compression-level: 0 # no compression
     - id: set-version
       name: Set version to output
-      run: echo "version=3.0.0-fake" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
+      run: echo "version=${{ env.GitVersion_FullSemVer }}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
         
 
   deploy-installers:
