@@ -29,11 +29,11 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: ⚒️ Run GitVersion
-      id: gitversion
-      run: |
-        gitversion /output json > gitversion.json
-        echo "GitVersion_FullSemVer=$(jq -r .FullSemVer gitversion.json)" >> $GITHUB_ENV
+    #- name: ⚒️ Run GitVersion
+    #  id: gitversion
+    #  run: |
+    #    gitversion /output json > gitversion.json
+    #    echo "GitVersion_FullSemVer=$(jq -r .FullSemVer gitversion.json)" >> $GITHUB_ENV
 
     - name: Set connector version
       run: |
