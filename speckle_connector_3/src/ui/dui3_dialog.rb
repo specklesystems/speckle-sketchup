@@ -96,12 +96,12 @@ module SpeckleConnector3
           exec_callback(data)
         end
 
-        html_dialog.add_action_callback('getCommands') do |_, data|
-          get_commands(data)
+        html_dialog.add_action_callback('getBindingsMethodNames') do |_, data|
+          get_bindings_method_names(data)
         end
       end
 
-      def get_commands(binding_name)
+      def get_bindings_method_names(binding_name)
         if @bindings[binding_name]
           commands_string = JSON.generate(@bindings[binding_name].commands.keys)
           html_dialog.execute_script("bindings.receiveCommandsAndInitializeBridge('#{commands_string}')")
