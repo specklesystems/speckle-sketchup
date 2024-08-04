@@ -14,11 +14,8 @@ module SpeckleConnector3
 
       def _run
         app = self.app
-        vue_view = app.ui_controller.user_interfaces[Ui::SPECKLE_LEGACY_UI]
-        if vue_view
-          vue_view.dialog.reset_dialog_location
-        else
-          puts "Speckle UI didn't initialized!"
+        app.ui_controller.user_interfaces.values.each do |interface|
+          interface.reset_dialog_location
         end
       end
     end
