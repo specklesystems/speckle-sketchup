@@ -37,9 +37,11 @@ module SpeckleConnector3
         def self.to_native_layer(speckle_layer, color_proxies, folder, sketchup_model, project_id, model_id)
           layer = sketchup_model.layers.add_layer(speckle_layer[:name])
           layer.visible = speckle_layer[:visible] unless speckle_layer[:visible].nil?
-          color_proxy = color_proxies.find { |proxy| proxy["objects"].include?(speckle_layer.application_id) }
-          if color_proxy
-            layer.color = SpeckleObjects::Other::Color.from_int(color_proxy["value"])
+          if color_proxies
+            color_proxy = color_proxies.find { |proxy| proxy["objects"].include?(speckle_layer.application_id) }
+            if color_proxy
+              layer.color = SpeckleObjects::Other::Color.from_int(color_proxy["value"])
+            end
           end
           if speckle_layer[:line_style]
             line_style = sketchup_model.line_styles.find { |ls| ls.name == speckle_layer[:line_style] }
