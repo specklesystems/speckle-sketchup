@@ -68,9 +68,9 @@ module SpeckleConnector3
             next if previous_project_id.nil? || previous_model_id.nil?
 
             if previous_project_id == project_id && previous_model_id == model_id
-              puts "deep clean needed here"
               flat = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
               flat.each do |e|
+                next if e.is_a?(Sketchup::ComponentDefinition)
                 if !e.deleted? && e.layer == layer
                   e.erase!
                 end
@@ -78,7 +78,9 @@ module SpeckleConnector3
               layers_to_remove.append(layer)
             end
           end
-          layers_to_remove.each { |l| sketchup_model.layers.remove_layer(l) }
+          layers_to_remove.each do |l|
+            sketchup_model.layers.remove_layer(l) unless l == sketchup_model.active_layer
+          end
         end
 
         # Flat layer conversion.
