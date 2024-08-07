@@ -53,4 +53,5 @@ module SpeckleConnector3
   SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY = 'Speckle.Core.Models.Instances.InstanceProxy'
   SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_DEFINITION_PROXY = 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'
   SPECKLE_CORE_OTHER_RENDER_MATERIAL_PROXY = 'Objects.Other.RenderMaterialProxy'
+  SPECKLE_CORE_OTHER_COLOR_PROXY = 'Speckle.Core.Models.Proxies.ColorProxy'
 end

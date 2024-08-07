@@ -82,10 +82,10 @@ module SpeckleConnector3
                     el[:name] == folder.display_name
                 end
                 if collection_candidate.nil?
-                  color = folder.respond_to?(:color) ? SpeckleObjects::Other::Color.to_int(folder.color) : nil
+                  # color = folder.respond_to?(:color) ? SpeckleObjects::Other::Color.to_int(folder.color) : nil
                   collection_candidate = LayerCollection.new(
                     name: folder.display_name, visible: folder.visible?,
-                    is_folder: folder.is_a?(Sketchup::LayerFolder), color: color
+                    is_folder: folder.is_a?(Sketchup::LayerFolder), color: nil, application_id: folder.persistent_id
                   )
                   # Before switching collection with the new one, we should add it to current collection's elements
                   coll.append(collection_candidate)
