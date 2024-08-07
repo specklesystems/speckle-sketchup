@@ -31,6 +31,7 @@ module SpeckleConnector3
         @object_ids = object_ids
         self[:objects] = object_ids
         self[:maxDepth] = max_depth
+        self[:alwaysFaceCamera] = definition.behavior.always_face_camera?
       end
 
       def add_object_id(object_id)
