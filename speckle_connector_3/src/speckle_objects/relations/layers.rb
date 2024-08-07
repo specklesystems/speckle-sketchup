@@ -11,7 +11,7 @@ module SpeckleConnector3
       class Layers < Base
         SPECKLE_TYPE = 'Speckle.Core.Models.Collection'
 
-        def initialize(active:, layers:)
+        def initialize(active:, layers:, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             total_children_count: 0,
@@ -57,8 +57,10 @@ module SpeckleConnector3
             # color = element['color'] || element['displayStyle']['color'] # FIXME: with colors implementation
             Layer.new(
               name: element['name'], visible: element['visible'], is_folder: is_folder,
-              color: nil, full_path: full_path,
-              layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree)
+              color: nil,
+              full_path: full_path,
+              layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree),
+              application_id: element['applicationId'],
             )
           end.compact
         end
