@@ -96,6 +96,7 @@ module SpeckleConnector3
                                                                       entity.class,
                                                                       nil,
                                                                       nil,
+                                                                      "",
                                                                       e))
         return speckle_state, nil
       end
@@ -112,9 +113,10 @@ module SpeckleConnector3
       def add_to_report(entity, converted)
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
                                                                       entity.persistent_id,
-                                                                      entity.class,
+                                                                      entity.class.to_s.split("::").last,
                                                                       converted[:id],
-                                                                      converted[:speckle_type]))
+                                                                      converted[:speckle_type],
+                                                                      ""))
       end
 
       # @param entity [Sketchup::Entity | SpeckleObjects::Geometry::GroupedMesh]

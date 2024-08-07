@@ -350,6 +350,7 @@ module SpeckleConnector3
         OBJECTS_GEOMETRY_LINE => LINE.method(:to_native),
         OBJECTS_GEOMETRY_POLYLINE => LINE.method(:to_native),
         OBJECTS_GEOMETRY_POLYCURVE => POLYCURVE.method(:to_native),
+        OBJECTS_GEOMETRY_AUTOCAD_POLYCURVE => POLYCURVE.method(:to_native),
         OBJECTS_GEOMETRY_ARC => ARC.method(:to_native),
         OBJECTS_GEOMETRY_CIRCLE => CIRCLE.method(:to_native),
         OBJECTS_GEOMETRY_MESH => MESH.method(:to_native),
@@ -418,18 +419,20 @@ module SpeckleConnector3
                                                                         obj['id'],
                                                                         obj['speckle_type'],
                                                                         converted.persistent_id,
-                                                                        converted.class))
+                                                                        converted.class, ""))
 
         end
         SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, model_card.project_id)
       rescue StandardError => e
-        puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
+        message = "#{obj['speckle_type']} (id: #{obj['id']}) failed to convert."
+        puts(message)
         puts(e)
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
                                                                       obj['id'],
                                                                       obj['speckle_type'],
                                                                       nil,
                                                                       nil,
+                                                                      message,
                                                                       e))
         return state, []
       end

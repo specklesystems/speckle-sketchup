@@ -129,6 +129,9 @@ module SpeckleConnector3
             end_pt = Point.to_native(line['end']['x'], line['end']['y'], line['end']['z'], line['units'])
             edges = entities.add_edges(start_pt, end_pt)
           end
+
+          raise StandardError.new('Start and end points of line overlaps.') if edges.nil?
+
           line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
           line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
           edges.each do |edge|
