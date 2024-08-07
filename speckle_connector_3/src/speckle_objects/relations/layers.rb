@@ -54,10 +54,10 @@ module SpeckleConnector3
             element['full_path'] = full_path if source_app.include?('rhino')
 
             is_folder = (element['@elements'] || element['elements']).any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION }
-            color = element['color'] || element['displayStyle']['color']
+            # color = element['color'] || element['displayStyle']['color'] # FIXME: with colors implementation
             Layer.new(
               name: element['name'], visible: element['visible'], is_folder: is_folder,
-              color: color, full_path: full_path,
+              color: nil, full_path: full_path,
               layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree)
             )
           end.compact

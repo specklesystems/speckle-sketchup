@@ -19,10 +19,10 @@ module SpeckleConnector3
         attr_reader :stack_trace
 
         # @param error [Exception] error to convert data
-        def initialize(error)
+        def initialize(message, error = nil)
           super()
-          @message = error.message
-          @stack_trace = error.backtrace.join("\n")
+          @message = message
+          @stack_trace = error.message + "\n" + error.backtrace.join("\n") if error
           self[:message] = @message
           self[:stackTrace] = @stack_trace
         end
@@ -53,14 +53,14 @@ module SpeckleConnector3
         # @return [ConversionError, NilClass] the exception data if any.
         attr_reader :error
 
-        def initialize(status, source_id, source_type, result_id, result_type, exception = nil)
+        def initialize(status, source_id, source_type, result_id, result_type, message, exception = nil)
           super()
           @status = status
           @source_id = source_id
           @source_type = source_type
           @result_id = result_id
           @result_type = result_type
-          @error = ConversionException.new(exception) if exception
+          @error = ConversionException.new(message, exception) if exception
           self[:status] = @status
           self[:sourceId] = @source_id
           self[:sourceType] = @source_type

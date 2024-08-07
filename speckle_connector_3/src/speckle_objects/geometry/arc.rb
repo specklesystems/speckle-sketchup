@@ -21,7 +21,19 @@ module SpeckleConnector3
           normal = Vector.to_native(plane['normal']['x'], plane['normal']['y'], plane['normal']['z'], units)
           x_axis = Vector.to_native(plane['xdir']['x'], plane['xdir']['y'], plane['xdir']['z'], units)
           radius = Geometry.length_to_native(arc['radius'], units)
-          edges = entities.add_arc(origin, x_axis, normal, radius, arc['startAngle'], arc['endAngle'])
+          start_angle = arc['startAngle']
+          end_angle = arc['endAngle']
+
+          # Normalize angles to range 0 to 2π
+          start_angle %= 2 * Math::PI
+          end_angle %= 2 * Math::PI
+
+          # Ensure start angle is less than end angle for proper drawing
+          if start_angle > end_angle
+            end_angle += 2 * Math::PI
+          end
+
+          edges = entities.add_arc(origin, x_axis, normal, radius, start_angle, end_angle)
           edges.each { |edge| edge.layer = layer }
           return state, edges
         end
