@@ -7,6 +7,7 @@ require_relative '../../convertors/to_speckle_v2'
 require_relative '../../operations/send'
 require_relative '../../sketchup_model/definitions/definition_manager'
 require_relative '../../sketchup_model/materials/material_manager'
+require_relative '../../sketchup_model/colors/color_manager'
 
 module SpeckleConnector3
   module Actions
@@ -39,6 +40,8 @@ module SpeckleConnector3
 
         unpacked_materials = SketchupModel::Materials::MaterialManager.new.unpack_materials(entities)
 
+        unpacked_colors = SketchupModel::Colors::ColorManager.new.unpack_colors(state.sketchup_state.sketchup_model)
+
         account = Accounts.get_account_by_id(model_card.account_id)
         converter = Converters::ToSpeckleV2.new(state, unpacked_entities, model_card)
 
@@ -46,6 +49,7 @@ module SpeckleConnector3
 
         base[:instanceDefinitionProxies] = unpacked_entities.instance_definition_proxies
         base[:renderMaterialProxies] = unpacked_materials
+        base[:colorProxies] = unpacked_colors
 
         id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
