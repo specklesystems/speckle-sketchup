@@ -399,7 +399,7 @@ module SpeckleConnector3
         # state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
         @converted_entities += converted_entities
         converted_entities.each do |e|
-          material_to_assign = find_material_from_proxies(obj['applicationId'])
+          material_to_assign = find_material_from_proxies(obj['applicationId'].to_s)
           e.material = material_to_assign if material_to_assign
         end
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
