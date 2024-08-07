@@ -169,7 +169,7 @@ module SpeckleConnector3
 
         unless from_revit
           # Create layers and it's folders from layers relation on the model collection.
-          SpeckleObjects::Relations::Layers.to_native(obj, sketchup_model, source_app, model_card.project_id, model_card.model_id)
+          SpeckleObjects::Relations::Layers.to_native(obj, obj["colorProxies"], sketchup_model, source_app, model_card.project_id, model_card.model_id)
         end
 
         # By default entities to fill is sketchup model's entities.

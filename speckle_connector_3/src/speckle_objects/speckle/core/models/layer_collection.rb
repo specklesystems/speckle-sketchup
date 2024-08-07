@@ -108,6 +108,7 @@ module SpeckleConnector3
               layer_or_folder = layer if layer
 
               elements.each do |element|
+                # NOTE: this is where we switch the target layer for conversions.
                 new_state, _converted_entities = convert_to_native.call(state, element, layer_or_folder, entities)
                 state = new_state
               end
