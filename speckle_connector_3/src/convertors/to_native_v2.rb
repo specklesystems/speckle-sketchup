@@ -435,6 +435,8 @@ module SpeckleConnector3
       end
 
       def find_material_from_proxies(id)
+        return nil if root_render_material_proxies.nil?
+
         root_render_material_proxies.each do |proxy|
           if proxy.object_ids.include?(id)
             return proxy.sketchup_material
