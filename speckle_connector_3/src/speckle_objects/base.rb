@@ -9,18 +9,16 @@ module SpeckleConnector3
     class Base < Hash
       include Immutable::ImmutableUtils
 
-      attr_reader :speckle_type, :application_id, :total_children_count, :id
+      attr_reader :speckle_type, :application_id, :id
 
-      def initialize(speckle_type: 'Base', total_children_count: 0, application_id: nil, id: '')
+      def initialize(speckle_type: 'Base', application_id: nil, id: '')
         @speckle_type = speckle_type
-        @total_children_count = total_children_count
         @application_id = application_id
         @id = id
         super()
         update(
           {
             speckle_type: speckle_type,
-            totalChildrenCount: total_children_count,
             applicationId: application_id,
             id: id
           }

@@ -12,7 +12,6 @@ module SpeckleConnector3
         def initialize(name:, color:, line_type:)
           super(
             speckle_type: OBJECTS_OTHER_DISPLAYSTYLE,
-            total_children_count: 0,
             application_id: nil,
             id: nil
           )

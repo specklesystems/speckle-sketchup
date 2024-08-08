@@ -51,7 +51,7 @@ module SpeckleConnector3
         base[:renderMaterialProxies] = unpacked_materials
         base[:colorProxies] = unpacked_colors
 
-        id, total_children_count, batches, refs = converter.serialize(base, state.user_state.preferences)
+        id, batches, refs = converter.serialize(base, state.user_state.preferences)
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
         new_speckle_state = new_speckle_state.with_empty_changed_entity_persistent_ids
         new_speckle_state = new_speckle_state.with_empty_changed_entity_ids
@@ -73,7 +73,6 @@ module SpeckleConnector3
           sendConversionResults: converter.conversion_results,
           sendObject: {
             id: id,
-            totalChildrenCount: total_children_count,
             batches: batches
           }
         }

@@ -21,7 +21,7 @@ module SpeckleConnector3
         state = DeactivateDiffing.update_state(state, nil, {})
         converter = Converters::ToSpeckle.new(state, @stream_id, {})
         new_speckle_state, base = converter.convert_selection_to_base
-        id, total_children_count, batches = converter.serialize(base, state.user_state.preferences)
+        id, batches = converter.serialize(base, state.user_state.preferences)
         # TODO: Later active send operation.
         # Operations.send(@stream_id, batches)
 
@@ -35,7 +35,7 @@ module SpeckleConnector3
         new_state.with_add_queue('convertedFromSketchup', @stream_id, [
                                    { is_string: false, val: batches },
                                    { is_string: true, val: id },
-                                   { is_string: false, val: total_children_count }
+                                   { is_string: false, val: 0 }
                                  ])
       end
     end

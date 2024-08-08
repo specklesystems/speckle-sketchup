@@ -27,7 +27,6 @@ module SpeckleConnector3
       def initialize(sketchup_color, value, object_ids, application_id: nil)
         super(
           speckle_type: SPECKLE_TYPE,
-          total_children_count: 0,
           application_id: application_id,
           id: nil
         )

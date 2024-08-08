@@ -26,7 +26,6 @@ module SpeckleConnector3
                        speckle_schema: {}, application_id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
-            total_children_count: 0,
             application_id: application_id,
             id: nil
           )
