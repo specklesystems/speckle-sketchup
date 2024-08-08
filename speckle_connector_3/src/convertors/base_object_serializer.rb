@@ -39,10 +39,6 @@ module SpeckleConnector3
         id
       end
 
-      def total_children_count(id)
-        @objects[id][:totalChildrenCount]
-      end
-
       # @param base [Object] base object to populate all children and their relationship
       # rubocop:disable Metrics/MethodLength
       def traverse_base(base)
@@ -72,9 +68,6 @@ module SpeckleConnector3
           end
         end
 
-        # 6. Add total children count
-        traversed_base[:totalChildrenCount] = closure.keys.length
-
         # 7. Finally create id
         id = get_id(traversed_base)
 
@@ -82,7 +75,7 @@ module SpeckleConnector3
         traversed_base[:id] = id
 
         # 9. Update __closure table on the traversed base
-        unless traversed_base[:totalChildrenCount].nil?
+        unless closure.empty?
           @closure_table[id] = closure
           traversed_base[:__closure] = closure unless closure.empty?
         end

@@ -17,7 +17,6 @@ module SpeckleConnector3
             def initialize(name:, collection_type:, elements: [], application_id: nil)
               super(
                 speckle_type: SPECKLE_CORE_MODELS_COLLECTION,
-                total_children_count: 0,
                 application_id: application_id,
                 id: nil
               )

@@ -22,9 +22,6 @@ module SpeckleConnector3
       # @return [String] id of the Speckle Base Object
       attr_reader :id
 
-      # @return [Integer] total children count of the Speckle Base Object
-      attr_reader :total_children_count
-
       # @return [Hash{String=>SpeckleObjects::Base}] Speckle objects belongs to edge
       attr_reader :speckle_children_objects
 
@@ -51,7 +48,6 @@ module SpeckleConnector3
         @sketchup_entity = sketchup_entity
         @application_id = application_id
         @id = speckle_id
-        @total_children_count = children.nil? ? 0 : children.length
         @speckle_type = speckle_type
         @speckle_children_objects = children.nil? ? [] : children
       end

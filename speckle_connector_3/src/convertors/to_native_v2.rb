@@ -90,7 +90,7 @@ module SpeckleConnector3
       LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::LayerCollection
       GIS_LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::GisLayerCollection
 
-      BASE_OBJECT_PROPS = %w[applicationId id speckle_type totalChildrenCount].freeze
+      BASE_OBJECT_PROPS = %w[applicationId id speckle_type].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
         Objects.Geometry.Line
         Objects.Geometry.Polyline

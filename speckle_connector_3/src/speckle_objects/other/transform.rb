@@ -16,7 +16,6 @@ module SpeckleConnector3
         def initialize(units:, value:)
           super(
             speckle_type: SPECKLE_TYPE,
-            total_children_count: 0,
             application_id: nil,
             id: nil
           )

@@ -20,7 +20,7 @@ module SpeckleConnector3
 
       def self.get_qgis_attributes(obj)
         attributes = obj['attributes'].to_h
-        speckle_properties = %w[id speckle_type totalChildrenCount units applicationId]
+        speckle_properties = %w[id speckle_type units applicationId]
         speckle_properties.each { |key| attributes.delete(key) }
         attributes
       end

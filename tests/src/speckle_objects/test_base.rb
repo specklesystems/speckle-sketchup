@@ -18,7 +18,7 @@ module SpeckleConnector3
         base = Base.new
         json = base.to_json
 
-        base_obj = {"speckle_type":"Base","totalChildrenCount":0,"applicationId":nil,"id":nil}
+        base_obj = {"speckle_type":"Base","applicationId":nil,"id":nil}
         serialized = JSON.generate(base_obj)
 
         assert_equal(json, serialized)
@@ -29,7 +29,7 @@ module SpeckleConnector3
         base[:sketchup_attributes] = {soften_edge: true}
         base[:id] = 'idididididid'
 
-        base_obj = {"speckle_type":"Base","totalChildrenCount":0,"applicationId":nil,"id":'idididididid', "sketchup_attributes": {"soften_edge": true }}
+        base_obj = {"speckle_type":"Base","applicationId":nil,"id":'idididididid', "sketchup_attributes": {"soften_edge": true }}
         serialized = JSON.generate(base_obj)
         hash = JSON.parse(serialized, { symbolize_names: true })
 

@@ -61,7 +61,7 @@ module SpeckleConnector3
 
       # Serialized and traversed information to send batches.
       # @param base_and_entity [SpeckleObjects::Base] base object to serialize.
-      # @return [String, Integer, Array<Object>] base id, total_children_count of base and batches
+      # @return [String, Integer, Array<Object>] base id of base and batches
       def serialize(base_and_entity, preferences)
         serializer = SpeckleConnector3::Converters::BaseObjectSerializer.new(preferences)
         t = Time.now.to_f
@@ -69,8 +69,7 @@ module SpeckleConnector3
         batches = serializer.batch_json_objects
         write_to_speckle_folder(id, batches)
         puts "Generating traversed object elapsed #{(Time.now.to_f - t).round(5)} s"
-        base_total_children_count = serializer.total_children_count(id)
-        return id, base_total_children_count, batches, serializer.object_references
+        return id, batches, serializer.object_references
       end
 
       def write_to_speckle_folder(id, batches)
