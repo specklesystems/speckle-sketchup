@@ -106,7 +106,7 @@ module SpeckleConnector3
         return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
 
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id.to_s) ||
-          speckle_state.changed_entity_ids.include?(entity.entityID)
+          speckle_state.changed_entity_ids.include?(entity.entityID.to_s)
       end
 
       def add_to_report(entity, converted)

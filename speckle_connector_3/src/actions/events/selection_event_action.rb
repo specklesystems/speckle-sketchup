@@ -20,8 +20,8 @@ module SpeckleConnector3
 
           # POC: Not happy with it. We log also entity.entityID property since
           # onElementRemoved observer only return them! :/ Reconsider this in BETA!
-          selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id) +
-                                state.sketchup_state.sketchup_model.selection.collect(&:entityID)
+          selected_object_ids = state.sketchup_state.sketchup_model.selection.collect(&:persistent_id).collect(&:to_s) +
+                                state.sketchup_state.sketchup_model.selection.collect(&:entityID).collect(&:to_s)
           summary = "Selected #{selected_object_ids.length / 2} objects." # POC: OFFF. I'll fix it
           selection_info = UiData::Sketchup::SelectionInfo.new(selected_object_ids, summary)
           js_script = "selectionBinding.emit('setSelection', #{selection_info.to_json})"

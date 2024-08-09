@@ -304,7 +304,7 @@ module SpeckleConnector3
           layer_name = face.layer.display_name
           return layer_name if material.nil?
 
-          return material.entityID.to_s + layer_name
+          return material.persistent_id.to_s + layer_name
         end
 
         def self.attribute_dictionary?(face)
