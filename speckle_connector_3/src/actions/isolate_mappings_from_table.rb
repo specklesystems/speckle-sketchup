@@ -38,13 +38,13 @@ module SpeckleConnector3
 
         faces_or_edges_ids = faces_or_edges.collect { |e| e['entityId'] }
 
-        face_edge_flat_entities.select { |e| faces_or_edges_ids.include?(e.persistent_id) }.each do |entity|
+        face_edge_flat_entities.select { |e| faces_or_edges_ids.include?(e.persistent_id.to_s) }.each do |entity|
           entity.hidden = false
         end
 
         comps_or_groups_ids = comps_or_groups.collect { |e| e['entityId'] }
 
-        comp_flat_entities.select { |e| comps_or_groups_ids.include?(e.persistent_id) }.each do |entity|
+        comp_flat_entities.select { |e| comps_or_groups_ids.include?(e.persistent_id.to_s) }.each do |entity|
           if entity.is_a?(Sketchup::ComponentDefinition)
             entity.instances.each do |instance|
               instance.hidden = false

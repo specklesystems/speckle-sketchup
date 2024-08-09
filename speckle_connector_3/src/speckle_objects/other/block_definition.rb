@@ -65,7 +65,7 @@ module SpeckleConnector3
 
                          new_speckle_state, converted = convert.call(entity, preferences,
                                                                      speckle_state,
-                                                                     definition.persistent_id)
+                                                                     definition.persistent_id.to_s)
                          speckle_state = new_speckle_state
                          converted
                        end
@@ -78,7 +78,7 @@ module SpeckleConnector3
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
-            application_id: definition.persistent_id
+            application_id: definition.persistent_id.to_s
           )
           return speckle_state, block_definition
         end

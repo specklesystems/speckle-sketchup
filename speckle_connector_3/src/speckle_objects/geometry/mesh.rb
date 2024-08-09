@@ -162,7 +162,7 @@ module SpeckleConnector3
             vertices: [], faces: [], sketchup_attributes: att,
             layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
-            application_id: face.persistent_id
+            application_id: face.persistent_id.to_s
           )
           speckle_mesh.face_to_mesh(face, global_transform)
           speckle_mesh.update_mesh

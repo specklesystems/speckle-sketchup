@@ -22,7 +22,7 @@ module SpeckleConnector3
 
         # Store speckle state to update with mapped entities.
         flat_entities.each do |entity|
-          next unless entity_ids.include?(entity.persistent_id)
+          next unless entity_ids.include?(entity.persistent_id.to_s)
 
           if entity.is_a?(Sketchup::ComponentDefinition)
             state.sketchup_state.sketchup_model.selection.add(entity.instances)

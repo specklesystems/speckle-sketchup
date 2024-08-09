@@ -29,7 +29,7 @@ module SpeckleConnector3
           DefaultColumn.new(
             base_line: base_line,
             units: units,
-            application_id: edge.persistent_id
+            application_id: edge.persistent_id.to_s
           )
         end
       end

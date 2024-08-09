@@ -88,7 +88,7 @@ module SpeckleConnector3
                   state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
                 end
 
-                state.worker.add_job(Job.new(entity.persistent_id, &action))
+                state.worker.add_job(Job.new(entity.persistent_id.to_s, &action))
                 state.worker.do_work(Time.now.to_f, &action)
               end
 

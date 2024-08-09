@@ -37,7 +37,7 @@ module SpeckleConnector3
                    end
 
         # Collect entities from entity ids that comes from UI as list
-        entities_to_map = entities.select { |e| @entities_to_map.include?(e.persistent_id) }
+        entities_to_map = entities.select { |e| @entities_to_map.include?(e.persistent_id.to_s) }
 
         # Switch to definitions if all entities are component instance and UI flag shows that
         if entities_to_map.all? { |e| e.is_a?(Sketchup::ComponentInstance) } && @is_definition

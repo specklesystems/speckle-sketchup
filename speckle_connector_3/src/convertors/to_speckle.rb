@@ -41,7 +41,7 @@ module SpeckleConnector3
       # @return [States::SpeckleState, SpeckleObjects::Speckle::Core::Models::ModelCollection]
       def convert_entities_to_base(entity_ids)
         convert = method(:convert)
-        entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id) }
+        entities = sketchup_model.entities.select { |e| entity_ids.any?(e.persistent_id.to_s) }
 
         new_speckle_state, model_collection = MODEL_COLLECTION.from_entities(entities, state, &convert)
 
@@ -91,7 +91,7 @@ module SpeckleConnector3
         end
       rescue StandardError => e
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
-                                                                      entity.persistent_id,
+                                                                      entity.persistent_id.to_s,
                                                                       entity.class,
                                                                       nil,
                                                                       nil,
@@ -101,13 +101,13 @@ module SpeckleConnector3
 
       # @param entity [Sketchup::Entity]
       def entity_has_changed?(entity)
-        speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
+        speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id.to_s) ||
           speckle_state.changed_entity_ids.include?(entity.entityID)
       end
 
       def add_to_report(entity, converted)
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
-                                                                      entity.persistent_id,
+                                                                      entity.persistent_id.to_s,
                                                                       entity.class,
                                                                       converted[:id],
                                                                       converted[:speckle_type]))

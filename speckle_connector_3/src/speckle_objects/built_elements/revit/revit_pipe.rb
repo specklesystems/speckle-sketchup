@@ -55,7 +55,7 @@ module SpeckleConnector3
             level: level,
             units: units,
             parameters: parameters,
-            application_id: edge.persistent_id
+            application_id: edge.persistent_id.to_s
           )
         end
       end

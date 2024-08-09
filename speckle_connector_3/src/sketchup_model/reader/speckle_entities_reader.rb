@@ -17,11 +17,11 @@ module SpeckleConnector3
         def self.read(entities)
           speckle_entities = {}
           entities.each do |entity|
-            speckle_entities[entity.persistent_id] = read_speckle_entity(entity) if speckle_entity?(entity)
+            speckle_entities[entity.persistent_id.to_s] = read_speckle_entity(entity) if speckle_entity?(entity)
             next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
 
             if speckle_entity?(entity.definition)
-              speckle_entities[entity.definition.persistent_id] = read_speckle_entity(entity.definition)
+              speckle_entities[entity.definition.persistent_id.to_s] = read_speckle_entity(entity.definition)
             end
             definition_speckle_entities = read(entity.definition.entities)
             speckle_entities = speckle_entities.merge(definition_speckle_entities)

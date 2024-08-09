@@ -17,7 +17,7 @@ module SpeckleConnector3
         def self.read_mapped_entities(entities)
           mapped_entities = {}
           Query::Entity.flat_entities(entities).each do |entity|
-            mapped_entities[entity.persistent_id] = entity if mapped_with_schema?(entity)
+            mapped_entities[entity.persistent_id.to_s] = entity if mapped_with_schema?(entity)
           end
           mapped_entities
         end
@@ -58,7 +58,7 @@ module SpeckleConnector3
           {
             name: speckle_schema['name'],
             entityName: entity.respond_to?(:name) ? entity.name : '',
-            entityId: entity.persistent_id,
+            entityId: entity.persistent_id.to_s,
             entityType: entity_type,
             schema: speckle_schema,
             numberOfInstances: is_definition ? entity.instances.length : 1
@@ -78,7 +78,7 @@ module SpeckleConnector3
               categoryName: category.nil? ? '' : reverse_category_dictionary[category],
               method: get_map_attribute(speckle_schema, speckle_schema_definition, 'method'),
               entityName: entity.respond_to?(:name) ? entity.name : '',
-              entityId: entity.persistent_id,
+              entityId: entity.persistent_id.to_s,
               entityType: entity.is_a?(Sketchup::ComponentDefinition) ? 'Definition' : entity_type,
               schema: speckle_schema,
               definitionSchema: speckle_schema_definition

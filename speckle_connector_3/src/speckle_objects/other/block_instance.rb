@@ -50,7 +50,7 @@ module SpeckleConnector3
         # @param group [Sketchup::Group] group to convert Speckle BlockInstance
         def self.from_group(group, units, preferences, speckle_state, &convert)
           new_speckle_state, block_definition = convert.call(group.definition, preferences, speckle_state,
-                                                             group.persistent_id)
+                                                             group.persistent_id.to_s)
           speckle_state = new_speckle_state
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle(group, preferences[:model])
@@ -78,7 +78,7 @@ module SpeckleConnector3
             component_instance.definition,
             preferences,
             speckle_state,
-            component_instance.persistent_id
+            component_instance.persistent_id.to_s
           )
           speckle_state = new_speckle_state
 
@@ -111,7 +111,7 @@ module SpeckleConnector3
             layer: SketchupModel::Query::Layer.entity_path(component_instance),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
-            application_id: component_instance.persistent_id
+            application_id: component_instance.persistent_id.to_s
           )
 
           if speckle_schema
@@ -123,7 +123,7 @@ module SpeckleConnector3
                 category: speckle_schema['category'],
                 units: units,
                 instance: copy_block_instance,
-                application_id: component_instance.persistent_id
+                application_id: component_instance.persistent_id.to_s
               )
             when 'Family Instance'
               level = speckle_state.speckle_mapper_state.mapper_source
@@ -140,7 +140,7 @@ module SpeckleConnector3
                   units
                 ),
                 rotation: calculate_rotation(transformation.to_a),
-                application_id: component_instance.persistent_id
+                application_id: component_instance.persistent_id.to_s
               )
             end
           end

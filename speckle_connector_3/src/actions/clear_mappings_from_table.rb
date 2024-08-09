@@ -20,7 +20,7 @@ module SpeckleConnector3
         # Store speckle state to update with mapped entities.
         speckle_state = state.speckle_state
         flat_entities.each do |entity|
-          next unless entity_ids.include?(entity.persistent_id)
+          next unless entity_ids.include?(entity.persistent_id.to_s)
 
           SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.remove_dictionary(entity)
           speckle_state = speckle_state.with_removed_mapped_entity(entity)

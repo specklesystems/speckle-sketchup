@@ -31,7 +31,7 @@ module SpeckleConnector3
         end
 
         entities = state.sketchup_state.sketchup_model.entities.select do |e|
-          model_card.send_filter.selected_object_ids.any?(e.persistent_id)
+          model_card.send_filter.selected_object_ids.any?(e.persistent_id.to_s)
         end
 
         unpacked_entities = SketchupModel::Definitions::DefinitionManager
