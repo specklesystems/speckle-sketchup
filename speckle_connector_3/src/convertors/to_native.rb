@@ -348,7 +348,7 @@ module SpeckleConnector3
           @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
                                                                         obj['id'],
                                                                         obj['speckle_type'],
-                                                                        converted.persistent_id,
+                                                                        converted.persistent_id.to_s,
                                                                         converted.class))
 
         end

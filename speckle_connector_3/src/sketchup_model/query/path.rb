@@ -9,7 +9,7 @@ module SpeckleConnector3
         class << self
           # @param sketchup_model [Sketchup::Model] active sketchup model.
           def parent_ids(sketchup_model)
-            parents(sketchup_model).collect(&:persistent_id)
+            parents(sketchup_model).collect(&:persistent_id).collect(&:to_s)
           end
 
           # @param sketchup_model [Sketchup::Model] active sketchup model.
@@ -44,7 +44,7 @@ module SpeckleConnector3
 
           # @param sketchup_model [Sketchup::Model] active sketchup model.
           def instance_ids(sketchup_model)
-            instances(sketchup_model).collect(&:persistent_id)
+            instances(sketchup_model).collect(&:persistent_id).collect(&:to_s)
           end
 
           # @param entity [Sketchup::Entity] entity to get its definition instances

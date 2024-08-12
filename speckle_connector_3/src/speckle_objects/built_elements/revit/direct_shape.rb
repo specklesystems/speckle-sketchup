@@ -112,7 +112,7 @@ module SpeckleConnector3
                               end
             DirectShape.new(
               name: schema[:name], category: schema[:category], units: units,
-              base_geometries: base_geometries, application_id: entity.persistent_id
+              base_geometries: base_geometries, application_id: entity.persistent_id.to_s
             )
           end
 

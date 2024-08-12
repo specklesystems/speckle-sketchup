@@ -23,12 +23,12 @@ module SpeckleConnector3
       end
 
       def with_mapped_entity(entity)
-        new_mapped_entities = mapped_entities.put(entity.persistent_id, entity)
+        new_mapped_entities = mapped_entities.put(entity.persistent_id.to_s, entity)
         with_mapped_entities(new_mapped_entities)
       end
 
       def with_removed_mapped_entity(entity)
-        new_mapped_entities = mapped_entities.delete(entity.persistent_id)
+        new_mapped_entities = mapped_entities.delete(entity.persistent_id.to_s)
         with_mapped_entities(new_mapped_entities)
       end
 

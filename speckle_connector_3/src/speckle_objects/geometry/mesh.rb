@@ -162,7 +162,7 @@ module SpeckleConnector3
             vertices: [], faces: [], sketchup_attributes: att,
             layer: SketchupModel::Query::Layer.entity_path(face),
             speckle_schema: speckle_schema,
-            application_id: face.persistent_id
+            application_id: face.persistent_id.to_s
           )
           speckle_mesh.face_to_mesh(face, global_transform)
           speckle_mesh.update_mesh
@@ -304,7 +304,7 @@ module SpeckleConnector3
           layer_name = face.layer.display_name
           return layer_name if material.nil?
 
-          return material.entityID.to_s + layer_name
+          return material.persistent_id.to_s + layer_name
         end
 
         def self.attribute_dictionary?(face)

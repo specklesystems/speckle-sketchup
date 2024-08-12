@@ -40,7 +40,7 @@ module SpeckleConnector3
 
         # Where we send info about received top level (for the sake of handling with less) objects.
         top_objects = converter.converted_entities.reject(&:deleted?).select { |e| e.parent.is_a?(Sketchup::Model) }
-        top_object_ids = top_objects.collect(&:persistent_id)
+        top_object_ids = top_objects.collect(&:persistent_id).collect(&:to_s)
         args = {
           modelCardId: model_card_id,
           bakedObjectIds: top_object_ids,

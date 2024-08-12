@@ -43,7 +43,7 @@ module SpeckleConnector3
             voids: voids,
             units: units,
             material: material.nil? ? nil : Other::RenderMaterial.from_material(face.material || face.back_material),
-            application_id: face.persistent_id
+            application_id: face.persistent_id.to_s
           )
         end
       end

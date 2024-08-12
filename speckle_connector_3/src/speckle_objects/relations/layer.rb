@@ -124,7 +124,7 @@ module SpeckleConnector3
             visible: folder.visible?,
             is_folder: true,
             layers_and_folders: layers + sub_folders,
-            application_id: folder.persistent_id
+            application_id: folder.persistent_id.to_s
           )
         end
 
@@ -136,7 +136,7 @@ module SpeckleConnector3
             is_folder: false,
             line_style: layer.line_style.nil? ? nil : layer.line_style.name,
             color: SpeckleObjects::Other::Color.to_speckle(layer.color),
-            application_id: layer.persistent_id
+            application_id: layer.persistent_id.to_s
           )
         end
       end

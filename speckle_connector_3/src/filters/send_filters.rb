@@ -34,7 +34,7 @@ module SpeckleConnector3
         selection = Filters::Send::SelectionFilter.new([])
         # layer_items = sketchup_model.layers.collect do |layer|
         #   UiData::Components::Selections::ListSelectionItem.new(
-        #     layer.persistent_id, layer.display_name, SpeckleObjects::Other::Color.to_rgb(layer.color), ''
+        #     layer.persistent_id.to_s, layer.display_name, SpeckleObjects::Other::Color.to_rgb(layer.color), ''
         #   )
         # end
         # tags = Filters::Send::LayerFilter.new(layer_items, layer_items.collect(&:name))

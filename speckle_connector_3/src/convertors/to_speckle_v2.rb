@@ -91,7 +91,7 @@ module SpeckleConnector3
         end
       rescue StandardError => e
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
-                                                                      entity.persistent_id,
+                                                                      entity.persistent_id.to_s,
                                                                       entity.class,
                                                                       nil,
                                                                       nil,
@@ -105,13 +105,13 @@ module SpeckleConnector3
         # We do not necessarily consider grouped meshes for caching?
         return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
 
-        speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id) ||
-          speckle_state.changed_entity_ids.include?(entity.entityID)
+        speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id.to_s) ||
+          speckle_state.changed_entity_ids.include?(entity.entityID.to_s)
       end
 
       def add_to_report(entity, converted)
         @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
-                                                                      entity.persistent_id,
+                                                                      entity.persistent_id.to_s,
                                                                       entity.class.to_s.split("::").last,
                                                                       converted[:id],
                                                                       converted[:speckle_type],

@@ -27,11 +27,11 @@ module SpeckleConnector3
               end
             end
 
-            parent_ids = PATH.parents_with_definitions(state.sketchup_state.sketchup_model).collect(&:persistent_id)
-            path_instance_ids = PATH.instances(state.sketchup_state.sketchup_model).collect(&:persistent_id)
+            parent_ids = PATH.parents_with_definitions(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
+            path_instance_ids = PATH.instances(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
 
             edges.uniq!
-            edge_ids = edges.collect(&:persistent_id)
+            edge_ids = edges.collect(&:persistent_id).collect(&:to_s)
             new_speckle_state = state.speckle_state.with_changed_entity_persistent_ids(edge_ids + parent_ids + path_instance_ids)
             state.with_speckle_state(new_speckle_state)
           end

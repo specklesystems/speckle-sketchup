@@ -22,9 +22,9 @@ module SpeckleConnector3
           sketchup_model.layers.each do |layer|
             value = SpeckleObjects::Other::Color.to_int(layer.color)
             if color_proxies[value.to_s].nil?
-              color_proxies[value.to_s] = SpeckleObjects::ColorProxy.new(layer.color, value, [layer.persistent_id])
+              color_proxies[value.to_s] = SpeckleObjects::ColorProxy.new(layer.color, value, [layer.persistent_id.to_s])
             else
-              color_proxies[value.to_s].add_object_id(layer.persistent_id)
+              color_proxies[value.to_s].add_object_id(layer.persistent_id.to_s)
             end
           end
 
