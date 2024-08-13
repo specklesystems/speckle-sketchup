@@ -5,7 +5,8 @@ branches:
   main:
     regex: ^main$
     tag: rc
-  development:
+  develop:
+    regex: ^development$
     tag: dev
   pull-request:
     tag: pr
