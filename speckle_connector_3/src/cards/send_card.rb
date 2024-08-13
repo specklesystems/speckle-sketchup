@@ -9,7 +9,7 @@ module SpeckleConnector3
       # @return [Filters::Send::EverythingFilter | Filters::Send::SelectionFilter | Filters::Send::LayerFilter] filter of the card.
       attr_reader :send_filter
 
-      # @return [Object] send settings of the card.
+      # @return [Array<Settings::CardSetting>] send settings of the card.
       attr_reader :send_settings
 
       attr_reader :type_discriminator

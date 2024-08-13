@@ -31,7 +31,7 @@ module SpeckleConnector3
           obj.each do |key, value|
             # value = obj.instance_variable_get(var)
             # var_name = var.to_s[1..-1]
-            if value.is_a?(Hash)
+            if value.is_a?(Hash) # FIXME or not depends: This doesn't cover arrays that has objects in it.
               serialize_obj_to_dict(key.to_s, value, dict_to_write)
             else
               dict_to_write[key] = value

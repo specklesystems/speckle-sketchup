@@ -17,6 +17,7 @@ module SpeckleConnector3
         # TODO: CONVERTER_V2: Extract into new actions
         send_cards = send_cards_hash.collect do |id, card|
           filter = Filters::SendFilters.get_filter_from_document(card['sendFilter'])
+          settings = Settings::CardSetting.get_filter_from_document(card['sendSettings'])
           send_card = Cards::SendCard.new(
             id,
             card['account_id'],
@@ -26,7 +27,7 @@ module SpeckleConnector3
             card['model_name'],
             card['latest_created_version_id'],
             filter,
-            {}
+            settings
           )
 
           new_speckle_state = state.speckle_state.with_send_card(send_card)
@@ -37,6 +38,7 @@ module SpeckleConnector3
             projectId: send_card.project_id,
             modelId: send_card.model_id,
             sendFilter: send_card.send_filter,
+            settings: send_card.send_settings,
             latestCreatedVersionId: send_card.latest_created_version_id,
             typeDiscriminator: send_card.type_discriminator
           }

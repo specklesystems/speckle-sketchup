@@ -6,6 +6,7 @@ require_relative '../../cards/receive_card'
 require_relative '../../filters/send/everything_filter'
 require_relative '../../filters/send/selection_filter'
 require_relative '../../filters/send_filters'
+require_relative '../../settings/card_settings'
 require_relative '../../sketchup_model/dictionary/model_card_dictionary_handler'
 
 module SpeckleConnector3
@@ -16,6 +17,7 @@ module SpeckleConnector3
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, data)
         send_filter = Filters::SendFilters.get_filter_from_ui_data(data['sendFilter'])
+        settings = Settings::CardSetting.get_setting_from_ui_data(data['settings'])
         # Init card and add to the state
         send_card = Cards::SendCard.new(
           data['modelCardId'],
@@ -26,7 +28,7 @@ module SpeckleConnector3
           data['modelName'],
           data['latestCreatedVersionId'],
           send_filter,
-          {}
+          data['settings']
         )
 
         SketchupModel::Dictionary::ModelCardDictionaryHandler
