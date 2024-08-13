@@ -12,6 +12,7 @@ on:
     outputs:
       version:
         description: "The computed version number for this run"
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:
