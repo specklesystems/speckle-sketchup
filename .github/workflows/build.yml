@@ -5,7 +5,6 @@ name: Build
 
 on:
   pull_request:
-    branches: ["*"]
   workflow_call:
     outputs:
       version:
