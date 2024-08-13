@@ -4,8 +4,6 @@
 name: Build
 
 on:
-  push:
-    branches-ignore: ["dui3/alpha", "main", "development"]
   pull_request:
     branches: ["*"]
   workflow_call:
