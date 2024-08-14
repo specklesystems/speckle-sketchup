@@ -81,7 +81,7 @@ module SpeckleConnector3
             if l == sketchup_model.active_layer
               sketchup_model.active_layer = sketchup_model.layers.find { |ly| ly.name == "Layer0" }
             end
-            sketchup_model.layers.remove_layer(l) unless l == sketchup_model.active_layer
+            sketchup_model.layers.remove_layer(l) unless l.name == "Layer0"
           end
         end
 
