@@ -9,16 +9,16 @@ on:
     outputs:
       semver:
         description: "The computed version number for this run"
-        value: ${{ jobs.build.outputs.version }}
+        value: ${{ jobs.build.outputs.semver }}
       file_version:
         description: "The assembly info version for this run"
-        value: ${{ jobs.build.outputs.info_version }}
+        value: ${{ jobs.build.outputs.file_version }}
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.set-version.outputs.version }}
-      info_version: ${{ steps.set-info-version.outputs.info-version }}
+      semver: ${{ steps.set-version.outputs.semver }}
+      file_version: ${{ steps.set-info-version.outputs.file-version }}
 
     steps:
       - uses: actions/checkout@v4
