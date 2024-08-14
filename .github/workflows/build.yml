@@ -10,12 +10,15 @@ on:
       version:
         description: "The computed version number for this run"
         value: ${{ jobs.build.outputs.version }}
-
+      info_version:
+        description: "The assembly info version for this run"
+        value: ${{ jobs.build.outputs.info_version }}
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-version.outputs.version }}
+      info_version: ${{ steps.set-info-version.outputs.info-version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -51,3 +54,6 @@ jobs:
       - id: set-version
         name: Set version to output
         run: echo "version=${{steps.gitversion.outputs.semVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
+      - id: set-info-version
+        name: Set version to output
+        run: echo "info-version=${{steps.gitversion.outputs.AssemblySemVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
