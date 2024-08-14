@@ -22,7 +22,7 @@ jobs:
           workflow: Build Sketchup
           repo: specklesystems/connector-installers
           token: ${{ secrets.CONNECTORS_GH_TOKEN }}
-          inputs: '{ "run_id": "${{ github.run_id }}", "version": "${{ needs.build.outputs.version }}", "info_version": "${{ needs.build.outputs.info_version }}" }'
+          inputs: '{ "run_id": "${{ github.run_id }}", "semver": "${{ needs.build.outputs.semver }}", "file_version": "${{ needs.build.outputs.file_version }}" }'
           ref: sketchup-installer-fix
           wait-for-completion: true
           wait-for-completion-interval: 10s

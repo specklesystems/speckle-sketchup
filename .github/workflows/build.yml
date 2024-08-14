@@ -7,10 +7,10 @@ on:
   pull_request:
   workflow_call:
     outputs:
-      version:
+      semver:
         description: "The computed version number for this run"
         value: ${{ jobs.build.outputs.version }}
-      info_version:
+      file_version:
         description: "The assembly info version for this run"
         value: ${{ jobs.build.outputs.info_version }}
 jobs:
@@ -53,7 +53,7 @@ jobs:
           compression-level: 0 # no compression
       - id: set-version
         name: Set version to output
-        run: echo "version=${{steps.gitversion.outputs.semVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
+        run: echo "semver=${{steps.gitversion.outputs.semVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
       - id: set-info-version
         name: Set version to output
-        run: echo "info-version=${{steps.gitversion.outputs.AssemblySemVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
+        run: echo "file-version=${{steps.gitversion.outputs.AssemblySemVer}}" >> "$GITHUB_OUTPUT" # version will be retrieved from tag?
