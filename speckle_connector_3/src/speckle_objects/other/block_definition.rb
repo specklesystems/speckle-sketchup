@@ -103,16 +103,17 @@ module SpeckleConnector3
           # FIXME: Check later this is a valid check or not. Maybe unnecessary? If necessary document it!
           # Check definitions from sketchup_model with name and application id
           definition_name = get_definition_name(definition_obj)
-          application_id = definition_obj['applicationId']
           definition = sketchup_model.definitions[definition_name]
 
+          # FIXME: Nice old friend. Bye bye for now. I'll miss you.
+          # application_id = definition_obj['applicationId']
           # Check any entities of definition changed
-          entities_updated = entities_updated?(definition, definition_obj)
+          # entities_updated = entities_updated?(definition, definition_obj)
 
-          if definition && !entities_updated &&
-             (definition.name == definition_name || definition.guid == application_id)
-            return state, [definition]
-          end
+          # if definition && !entities_updated &&
+          #    (definition.name == definition_name || definition.guid == application_id)
+          #   return state, [definition]
+          # end
 
           geometry = definition_obj['geometry'] || definition_obj['@geometry'] || definition_obj['displayValue']
 
