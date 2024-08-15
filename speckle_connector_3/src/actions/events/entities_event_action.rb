@@ -59,7 +59,10 @@ module SpeckleConnector3
           def self.update_state(state, event_data)
             modified_entities = event_data.collect { |data| data[1] }.to_a
             definition_faces = get_definition_faces(modified_entities)
-            modified_entity_ids = modified_entities.collect(&:persistent_id).collect(&:to_s) + definition_faces.collect(&:persistent_id).collect(&:to_s)
+            near_faces = get_near_faces(modified_entities)
+            modified_entity_ids = modified_entities.collect(&:persistent_id).collect(&:to_s) +
+              definition_faces.collect(&:persistent_id).collect(&:to_s) +
+              near_faces.collect(&:persistent_id).collect(&:to_s)
 
             parent_ids = PATH.parents_with_definitions(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
 
