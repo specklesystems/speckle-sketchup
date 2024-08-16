@@ -26,7 +26,8 @@ module SpeckleConnector3
             # All instances that changed potentially because of potential definition update
             path_instance_ids = PATH.instances(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
             wrapped_entity_ids = wrapped_entity_ids(modified_entities)
-            ids_to_check = parent_ids + wrapped_entity_ids + path_instance_ids
+            ids_to_check = parent_ids + wrapped_entity_ids + path_instance_ids +
+              modified_entities.collect(&:persistent_id).collect(&:to_s) # NOTE: It fixes the same weird face problems. Ideally the push-pull result should hit the OnElementModified but for some cases we found the edge here......
             state = EntitiesEventAction.run_expiration_checks(state, ids_to_check) if ids_to_check.any?
 
             attach_edge_entity_observer(modified_entities.grep(Sketchup::Edge), state.speckle_state.observers[ENTITY_OBSERVER])
@@ -60,15 +61,15 @@ module SpeckleConnector3
             modified_entities = event_data.collect { |data| data[1] }.to_a
             definition_faces = get_definition_faces(modified_entities)
             near_faces = get_near_faces(modified_entities)
-            modified_entity_ids = modified_entities.collect(&:persistent_id).collect(&:to_s) +
+            modified_persistent_ids = modified_entities.collect(&:persistent_id).collect(&:to_s) +
               definition_faces.collect(&:persistent_id).collect(&:to_s) +
               near_faces.collect(&:persistent_id).collect(&:to_s)
 
             parent_ids = PATH.parents_with_definitions(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
 
             path_instance_ids = PATH.instances(state.sketchup_state.sketchup_model).collect(&:persistent_id).collect(&:to_s)
-            modified_entity_ids += parent_ids + path_instance_ids
-            state = EntitiesEventAction.run_expiration_checks(state, modified_entity_ids)
+            modified_persistent_ids += parent_ids + path_instance_ids
+            state = EntitiesEventAction.run_expiration_checks(state, modified_persistent_ids)
             # if modified_entity.is_a?(Sketchup::Face)
             #   path = state.sketchup_state.sketchup_model.active_path
             #   modified_faces = SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
@@ -89,9 +90,11 @@ module SpeckleConnector3
           def self.get_near_faces(modified_entities)
             near_faces = []
             modified_entities.each do |modified_entity|
-              next unless modified_entity.is_a?(Sketchup::Face)
-
-              near_faces += SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
+              if modified_entity.is_a?(Sketchup::Face)
+                near_faces += SketchupModel::Utils::FaceUtils.near_faces(modified_entity.edges)
+              elsif modified_entity.is_a?(Sketchup::Edge)
+                near_faces += modified_entity.faces
+              end
             end
             near_faces
           end
@@ -127,7 +130,7 @@ module SpeckleConnector3
         class OnElementRemoved
           # @param state [States::State] the current state of the SpeckleConnector Application
           def self.update_state(state, event_data)
-            modified_entity_ids = event_data.collect { |data| data[1] }.to_a
+            modified_entity_ids = event_data.collect { |data| data[1] }.to_a.collect(&:to_s)
             new_speckle_state = state.speckle_state.with_changed_entity_ids(modified_entity_ids)
             state = state.with_speckle_state(new_speckle_state)
             Actions::SendCardExpirationCheck.update_state(state)
@@ -135,9 +138,9 @@ module SpeckleConnector3
         end
 
         # @param state [States::State] the current state of the SpeckleConnector Application
-        # @param changed_entity_ids [Array<Integer> | Array<String>] list of changed entity ids
-        def self.run_expiration_checks(state, changed_entity_ids)
-          new_speckle_state = state.speckle_state.with_changed_entity_persistent_ids(changed_entity_ids)
+        # @param changed_persistent_ids [Array<String>] list of changed persistent ids
+        def self.run_expiration_checks(state, changed_persistent_ids)
+          new_speckle_state = state.speckle_state.with_changed_entity_persistent_ids(changed_persistent_ids)
           state = state.with_speckle_state(new_speckle_state)
           Actions::SendCardExpirationCheck.update_state(state)
         end
