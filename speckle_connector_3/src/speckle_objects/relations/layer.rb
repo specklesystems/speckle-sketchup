@@ -34,7 +34,8 @@ module SpeckleConnector3
         # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
         # @param sketchup_model [Sketchup::Model] sketchup active model.
         def self.to_native_layer(speckle_layer, color_proxies, folder, sketchup_model, project_id, model_id)
-          layer = sketchup_model.layers.add_layer(speckle_layer[:name])
+          layer_name = SketchupModel::Query::Layer.get_increment_layer_name(sketchup_model, speckle_layer[:name])
+          layer = sketchup_model.layers.add_layer(layer_name)
           layer.visible = speckle_layer[:visible] unless speckle_layer[:visible].nil?
           if color_proxies
             color_proxy = color_proxies.find { |proxy| proxy["objects"].include?(speckle_layer.application_id) }

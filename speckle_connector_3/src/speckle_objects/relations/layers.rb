@@ -65,9 +65,15 @@ module SpeckleConnector3
         end
         # rubocop:enable Metrics/CyclomaticComplexity
 
-        def self.to_native(obj, color_proxies, sketchup_model, source_app, project_id, model_id)
+        # @param sketchup_model [Sketchup::Model]
+        # @param model_card [Cards::Card] model card
+        def self.to_native(obj, color_proxies, sketchup_model, source_app, model_card)
           layers_relation = extract_relations(obj, source_app)
           return if layers_relation.nil?
+          model_id = model_card.model_id
+          project_id = model_card.project_id
+
+          model_folder = sketchup_model.layers.add_folder("#{model_card.project_name}-#{model_card.model_name}")
 
           folder = sketchup_model.layers
           is_flat = source_app.include?('rhino') # flat by meaning -> adds :: for children
@@ -78,7 +84,7 @@ module SpeckleConnector3
           if is_flat
             SpeckleObjects::Relations::Layer.to_native_flat_layers(layers_relation, color_proxies, sketchup_model, project_id, model_id)
           else
-            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, color_proxies, folder, sketchup_model, project_id, model_id)
+            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, color_proxies, model_folder, sketchup_model, project_id, model_id)
           end
 
           active_layer = folder.to_a.find { |layer| layer.display_name == layers_relation['active_layer'] }

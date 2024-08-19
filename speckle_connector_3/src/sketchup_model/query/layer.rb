@@ -37,6 +37,38 @@ module SpeckleConnector3
 
             string_layer_path.split(separation).last
           end
+
+          # @param sketchup_model [Sketchup::Model] active model
+          # @param layer_name [String] layer name to get the next one if exists.
+          def get_increment_layer_name(sketchup_model, layer_name)
+            return layer_name if sketchup_model.layers.any? { |l| l.display_name != layer_name }
+
+            counter = 1
+            new_layer_name = layer_name
+            while true
+              new_layer_name = "#{layer_name} (#{counter})"
+              layer = sketchup_model.layers.find { |l| l.display_name == new_layer_name }
+              break if layer.nil?
+              counter += 1
+            end
+            new_layer_name
+          end
+
+          # @param sketchup_model [Sketchup::Model] active model
+          # @param layer_name [String] layer name to get the next one if exists.
+          def get_last_increment_layer(sketchup_model, layer_name)
+            counter = 1
+            previous_layer_name = layer_name
+            next_layer_name = layer_name
+            while true
+              layer = sketchup_model.layers.find { |l| l.display_name == next_layer_name }
+              break if layer.nil?
+              next_layer_name = "#{layer_name} (#{counter})"
+              previous_layer_name = counter - 1 == 0 ? layer_name : "#{layer_name} (#{counter - 1})"
+              counter += 1
+            end
+            previous_layer_name
+          end
         end
       end
     end
