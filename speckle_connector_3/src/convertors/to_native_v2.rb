@@ -24,6 +24,7 @@ require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
 require_relative '../speckle_objects/instance_definition_proxy'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 require_relative '../ui_data/report/conversion_result'
+require_relative '../convertors/conversion_error'
 
 module SpeckleConnector3
   module Converters
@@ -423,6 +424,18 @@ module SpeckleConnector3
 
         end
         SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, model_card.project_id)
+      rescue Converters::ConverterError => e
+        message = "#{obj['speckle_type']} (id: #{obj['id']}) failed to convert."
+        puts(message)
+        puts(e)
+        @conversion_results.push(UiData::Report::ConversionResult.new(e.level,
+                                                                      obj['id'],
+                                                                      obj['speckle_type'],
+                                                                      nil,
+                                                                      nil,
+                                                                      message,
+                                                                      e))
+        return state, []
       rescue StandardError => e
         message = "#{obj['speckle_type']} (id: #{obj['id']}) failed to convert."
         puts(message)

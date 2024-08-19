@@ -5,6 +5,8 @@ require_relative 'point'
 require_relative 'bounding_box'
 require_relative '../base'
 require_relative '../primitive/interval'
+require_relative '../../convertors/conversion_error'
+require_relative '../../ui_data/report/conversion_result'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
 
@@ -129,7 +131,10 @@ module SpeckleConnector3
             edges = entities.add_edges(start_pt, end_pt)
           end
 
-          raise StandardError.new('Start and end points of line overlaps.') if edges.nil?
+          if edges.nil?
+            raise Converters::ConverterError.new('Start and end points of line overlaps.',
+                                                 UiData::Report::ConversionStatus::WARNING)
+          end
 
           line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
           line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
