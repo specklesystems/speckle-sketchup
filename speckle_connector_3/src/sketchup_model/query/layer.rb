@@ -41,7 +41,7 @@ module SpeckleConnector3
           # @param sketchup_model [Sketchup::Model] active model
           # @param layer_name [String] layer name to get the next one if exists.
           def get_increment_layer_name(sketchup_model, layer_name)
-            return layer_name if sketchup_model.layers.any? { |l| l.display_name != layer_name }
+            return layer_name unless sketchup_model.layers.any? { |l| l.display_name == layer_name }
 
             counter = 1
             new_layer_name = layer_name
