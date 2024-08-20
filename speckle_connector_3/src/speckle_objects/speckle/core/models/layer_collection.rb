@@ -103,7 +103,7 @@ module SpeckleConnector3
               elements = layer_collection['@elements'] || layer_collection['elements']
               name = layer_collection['name']
               name = layer_collection['full_path'] if layer_collection['full_path']
-              name = SketchupModel::Query::Layer.get_last_increment_layer(sketchup_model, layer_collection['name'])
+              name = SketchupModel::Query::Layer.get_last_increment_layer(sketchup_model, name)
 
               layer = sketchup_model.layers.find { |l| l.display_name == name }
               layer_or_folder = layer if layer
