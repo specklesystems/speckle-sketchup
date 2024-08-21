@@ -13,11 +13,11 @@ module SpeckleConnector3
 
         # rubocop:disable Metrics/ParameterLists
         def initialize(name:, visible:, is_folder:, full_path: nil, line_style: nil, color: nil, layers_and_folders: [],
-                       application_id: nil)
+                       application_id: nil, id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             application_id: application_id,
-            id: nil
+            id: id
           )
           self[:name] = name
           self[:color] = color
@@ -50,6 +50,7 @@ module SpeckleConnector3
           # NOTE: Deep clean purpose!
           BASE_DICT.set_hash(
             layer, {
+              speckle_id: speckle_layer[:id],
               project_id: project_id,
               model_id: model_id
             }

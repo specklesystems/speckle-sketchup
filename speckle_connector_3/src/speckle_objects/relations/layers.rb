@@ -43,7 +43,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/CyclomaticComplexity
         def self.element_to_relation(elements, source_app, parent_layers)
           elements.collect do |element|
-            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION
+            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION || element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
             layers_tree = parent_layers.dup.append(element['name'])
             full_path = ''
@@ -59,7 +59,7 @@ module SpeckleConnector3
               color: nil,
               full_path: full_path,
               layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree),
-              application_id: element['applicationId'],
+              application_id: element['applicationId'], id: element['id']
             )
           end.compact
         end
