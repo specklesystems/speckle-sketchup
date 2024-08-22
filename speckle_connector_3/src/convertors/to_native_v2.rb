@@ -406,6 +406,7 @@ module SpeckleConnector3
         converted_entities.each do |e|
           material_to_assign = find_material_from_proxies(obj['applicationId'].to_s)
           e.material = material_to_assign if material_to_assign
+          e.back_material = material_to_assign if material_to_assign
           if from_sketchup && e.is_a?(Sketchup::Face)
             back_material_to_assign = find_material_from_proxies("#{obj['applicationId'].to_s}_back")
             e.back_material = back_material_to_assign if back_material_to_assign
