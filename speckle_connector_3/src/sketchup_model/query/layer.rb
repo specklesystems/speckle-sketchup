@@ -19,6 +19,13 @@ module SpeckleConnector3
             parent_folders.reverse
           end
 
+          # @param folder [Sketchup::LayerFolder] folder to get folder its all subfolders as flat list
+          def flat_folders(folder, flat_folders = [])
+            flat_folders.append(folder)
+            folder.folders.each { |sub| flat_folders(sub, flat_folders) }
+            flat_folders
+          end
+
           # @param entity [Sketchup::Entity] entity to find path.
           def entity_path(entity, separation = '::')
             path = path(entity.layer)

@@ -75,7 +75,10 @@ module SpeckleConnector3
 
           folder_name = "#{model_card.project_name}-#{model_card.model_name}"
           existing_folder = sketchup_model.layers.folders.find { |f| f.display_name == folder_name }
-          sketchup_model.layers.remove_folder(existing_folder) if existing_folder
+          if existing_folder # folders cleanup!
+            subfolders = SketchupModel::Query::Layer.flat_folders(existing_folder)
+            subfolders.each { |f| sketchup_model.layers.remove_folder(f) }
+          end
           model_folder = sketchup_model.layers.add_folder("#{model_card.project_name}-#{model_card.model_name}")
 
           is_flat = source_app.include?('rhino') # flat by meaning -> adds :: for children
