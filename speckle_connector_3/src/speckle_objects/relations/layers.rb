@@ -43,7 +43,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/CyclomaticComplexity
         def self.element_to_relation(elements, source_app, parent_layers)
           elements.collect do |element|
-            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION
+            next unless element['speckle_type'] == SPECKLE_CORE_MODELS_LAYER_COLLECTION || element['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
             layers_tree = parent_layers.dup.append(element['name'])
             full_path = ''
@@ -59,29 +59,40 @@ module SpeckleConnector3
               color: nil,
               full_path: full_path,
               layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree),
-              application_id: element['applicationId'],
+              application_id: element['applicationId'], id: element['id']
             )
           end.compact
         end
         # rubocop:enable Metrics/CyclomaticComplexity
 
-        def self.to_native(obj, color_proxies, sketchup_model, source_app, project_id, model_id)
+        # @param sketchup_model [Sketchup::Model]
+        # @param model_card [Cards::Card] model card
+        def self.to_native(obj, color_proxies, sketchup_model, source_app, model_card)
           layers_relation = extract_relations(obj, source_app)
           return if layers_relation.nil?
+          model_id = model_card.model_id
+          project_id = model_card.project_id
 
-          folder = sketchup_model.layers
+          folder_name = "#{model_card.project_name}-#{model_card.model_name}"
+          existing_folder = sketchup_model.layers.folders.find { |f| f.display_name == folder_name }
+          if existing_folder # folders cleanup!
+            subfolders = SketchupModel::Query::Layer.flat_folders(existing_folder)
+            subfolders.each { |f| sketchup_model.layers.remove_folder(f) }
+          end
+          model_folder = sketchup_model.layers.add_folder("#{model_card.project_name}-#{model_card.model_name}")
+
           is_flat = source_app.include?('rhino') # flat by meaning -> adds :: for children
 
           # FIXME: UPDATE BEHAVIOR: !!! NOT SURE it is a good idea !!!
           SpeckleObjects::Relations::Layer.deep_clean(sketchup_model, project_id, model_id)
 
           if is_flat
-            SpeckleObjects::Relations::Layer.to_native_flat_layers(layers_relation, color_proxies, sketchup_model, project_id, model_id)
+            SpeckleObjects::Relations::Layer.to_native_flat_layers(layers_relation, color_proxies, model_folder, sketchup_model, project_id, model_id)
           else
-            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, color_proxies, folder, sketchup_model, project_id, model_id)
+            SpeckleObjects::Relations::Layer.to_native_layer_folder(layers_relation, color_proxies, model_folder, sketchup_model, project_id, model_id)
           end
 
-          active_layer = folder.to_a.find { |layer| layer.display_name == layers_relation['active_layer'] }
+          active_layer = sketchup_model.layers.to_a.find { |layer| layer.display_name == layers_relation['active_layer'] }
           sketchup_model.active_layer = active_layer unless active_layer.nil?
         end
 

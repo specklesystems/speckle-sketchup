@@ -136,10 +136,11 @@ module SpeckleConnector3
                                                  UiData::Report::ConversionStatus::WARNING)
           end
 
-          line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
-          line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
+          # line_layer_name = SketchupModel::Query::Layer.entity_layer_from_path(line['layer'])
+          # line_layer = state.sketchup_state.sketchup_model.layers.to_a.find { |l| l.display_name == line_layer_name }
           edges.each do |edge|
-            edge.layer = line_layer.nil? ? layer : line_layer
+            edge.layer = layer
+            # edge.layer = line_layer.nil? ? layer : line_layer
             unless line['sketchup_attributes'].nil?
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])

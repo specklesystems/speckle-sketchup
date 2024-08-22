@@ -26,13 +26,8 @@ module SpeckleConnector3
             end
 
             def self.to_native(state, collection, layer, entities, &convert_to_native)
-              collection_type = collection['collectionType']
-
-              if collection_type && collection_type.include?('layer')
-                return LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
-              end
-
-              ModelCollection.to_native(state, collection, layer, entities, &convert_to_native)
+              # Always iterate as layer collection with V3
+              LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
             end
           end
         end

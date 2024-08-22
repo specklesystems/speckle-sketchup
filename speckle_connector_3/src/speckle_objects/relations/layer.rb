@@ -13,11 +13,11 @@ module SpeckleConnector3
 
         # rubocop:disable Metrics/ParameterLists
         def initialize(name:, visible:, is_folder:, full_path: nil, line_style: nil, color: nil, layers_and_folders: [],
-                       application_id: nil)
+                       application_id: nil, id: nil)
           super(
             speckle_type: SPECKLE_TYPE,
             application_id: application_id,
-            id: nil
+            id: id
           )
           self[:name] = name
           self[:color] = color
@@ -34,7 +34,8 @@ module SpeckleConnector3
         # @param folder [Sketchup::Layers, Sketchup::LayerFolder] folder to create layers in it.
         # @param sketchup_model [Sketchup::Model] sketchup active model.
         def self.to_native_layer(speckle_layer, color_proxies, folder, sketchup_model, project_id, model_id)
-          layer = sketchup_model.layers.add_layer(speckle_layer[:name])
+          layer_name = SketchupModel::Query::Layer.get_increment_layer_name(sketchup_model, speckle_layer[:name])
+          layer = sketchup_model.layers.add_layer(layer_name)
           layer.visible = speckle_layer[:visible] unless speckle_layer[:visible].nil?
           if color_proxies
             color_proxy = color_proxies.find { |proxy| proxy["objects"].include?(speckle_layer.application_id) }
@@ -49,6 +50,7 @@ module SpeckleConnector3
           # NOTE: Deep clean purpose!
           BASE_DICT.set_hash(
             layer, {
+              speckle_id: speckle_layer[:id],
               project_id: project_id,
               model_id: model_id
             }
@@ -86,18 +88,18 @@ module SpeckleConnector3
         end
 
         # Flat layer conversion.
-        def self.to_native_flat_layers(layers_relation, color_proxies, sketchup_model, project_id, model_id)
+        def self.to_native_flat_layers(layers_relation, color_proxies, folder, sketchup_model, project_id, model_id)
           speckle_layers = layers_relation[:elements]
 
-          elements_to_layers(speckle_layers, color_proxies, sketchup_model, project_id, model_id)
+          elements_to_layers(speckle_layers, color_proxies, folder, sketchup_model, project_id, model_id)
         end
 
         # Converts elements to layers with it's full path.
-        def self.elements_to_layers(elements, color_proxies, sketchup_model, project_id, model_id)
+        def self.elements_to_layers(elements, color_proxies, folder, sketchup_model, project_id, model_id)
           elements.each do |element|
             element[:name] = element[:full_path]
-            to_native_layer(element, color_proxies, sketchup_model.layers, sketchup_model, project_id, model_id)
-            elements_to_layers(element[:elements], color_proxies, sketchup_model, project_id, model_id) unless element[:elements].nil?
+            to_native_layer(element, color_proxies, folder, sketchup_model, project_id, model_id)
+            elements_to_layers(element[:elements], color_proxies, folder, sketchup_model, project_id, model_id) unless element[:elements].nil?
           end
         end
 

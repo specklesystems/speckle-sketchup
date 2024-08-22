@@ -14,6 +14,7 @@ module SpeckleConnector3
           # LayerCollection object that collect other speckle objects under it's elements.
           class LayerCollection < Collection
             SPECKLE_TYPE = SPECKLE_CORE_MODELS_LAYER_COLLECTION
+            BASE_DICT = SketchupModel::Dictionary::SpeckleEntityDictionaryHandler
             # rubocop:disable Metrics/ParameterLists
             def initialize(name:, visible:, is_folder:, display_style: nil, color: nil, elements: [],
                            application_id: nil)
@@ -101,10 +102,16 @@ module SpeckleConnector3
             def self.to_native(state, layer_collection, layer_or_folder, entities, &convert_to_native)
               sketchup_model = state.sketchup_state.sketchup_model
               elements = layer_collection['@elements'] || layer_collection['elements']
-              name = layer_collection['name']
-              name = layer_collection['full_path'] if layer_collection['full_path']
+              # name = layer_collection['name']
+              # name = layer_collection['full_path'] if layer_collection['full_path']
+              # name = SketchupModel::Query::Layer.get_last_increment_layer(sketchup_model, name)
 
-              layer = sketchup_model.layers.find { |l| l.display_name == name }
+              # NOTE: this is a v3 way of finding layers since we have incremented layer numberings
+              layer = sketchup_model.layers.find do |l|
+                BASE_DICT.get_attribute(l, :speckle_id) == layer_collection['id']
+              end
+
+              # layer = sketchup_model.layers.find { |l| l.display_name == name }
               layer_or_folder = layer if layer
 
               elements.each do |element|

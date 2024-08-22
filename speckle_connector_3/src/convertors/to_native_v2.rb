@@ -168,10 +168,12 @@ module SpeckleConnector3
         create_definition_proxies
         create_render_materials
 
-        unless from_revit
-          # Create layers and it's folders from layers relation on the model collection.
-          SpeckleObjects::Relations::Layers.to_native(obj, obj["colorProxies"], sketchup_model, source_app, model_card.project_id, model_card.model_id)
-        end
+        #unless from_revit
+        #  # Create layers and it's folders from layers relation on the model collection.
+        #  SpeckleObjects::Relations::Layers.to_native(obj, obj["colorProxies"], sketchup_model, source_app, model_card)
+        #end
+
+        SpeckleObjects::Relations::Layers.to_native(obj, obj["colorProxies"], sketchup_model, source_app, model_card)
 
         # By default entities to fill is sketchup model's entities.
         @entities_to_fill = sketchup_model.entities
@@ -415,7 +417,7 @@ module SpeckleConnector3
           # Create levels as section planes if they exists
           create_levels(state, obj)
           # Create layers from category of object and place object in it
-          create_layers_from_categories(state, obj, converted_entities)
+          # create_layers_from_categories(state, obj, converted_entities)
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
 
