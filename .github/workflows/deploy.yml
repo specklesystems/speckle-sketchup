@@ -15,6 +15,8 @@ jobs:
   deploy-installers:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      IS_TAG_BUILD: ${{ github.ref_type == 'tag' }}
     steps:
       - name: 🔫 Trigger Build Installers
         uses: ALEEF02/workflow-dispatch@v3.0.0
@@ -22,7 +24,7 @@ jobs:
           workflow: Build Sketchup
           repo: specklesystems/connector-installers
           token: ${{ secrets.CONNECTORS_GH_TOKEN }}
-          inputs: '{ "run_id": "${{ github.run_id }}", "semver": "${{ needs.build.outputs.semver }}", "file_version": "${{ needs.build.outputs.file_version }}" }'
+          inputs: '{ "run_id": "${{ github.run_id }}", "semver": "${{ needs.build.outputs.semver }}", "file_version": "${{ needs.build.outputs.file_version }}", "public_release": ${{ env.IS_TAG_BUILD }} }'
           ref: sketchup-installer-fix
           wait-for-completion: true
           wait-for-completion-interval: 10s
