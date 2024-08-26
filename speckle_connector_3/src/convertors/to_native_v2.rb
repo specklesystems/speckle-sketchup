@@ -511,6 +511,7 @@ module SpeckleConnector3
 
         section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
         section_plane.name = level_name
+        section_plane.layer = levels_layer
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
           section_plane, level['applicationId'], level['id'], level['speckle_type'], [], model_card.project_id
         )
