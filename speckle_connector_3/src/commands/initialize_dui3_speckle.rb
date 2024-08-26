@@ -3,7 +3,6 @@
 require_relative 'command'
 require_relative '../ui/dui3_dialog'
 require_relative '../states/initial_state'
-require_relative '../ui/legacy_binding'
 require_relative '../ui/bindings/accounts_binding'
 require_relative '../ui/bindings/base_binding'
 require_relative '../ui/bindings/send_binding'

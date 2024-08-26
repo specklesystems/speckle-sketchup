@@ -20,8 +20,6 @@ module SpeckleConnector3
                                                root_obj['renderMaterialProxies'] || [],
                                                source_application,
                                                model_card)
-        # converter = Converters::ToNative.new(state, model_card.model_id, model_card.project_name,
-        #                                      model_card.model_name, source_application, model_card_id)
         start_time = Time.now.to_f
         # Have side effects on the sketchup model. It effects directly on the entities by adding new objects.
         state = converter.receive_commit_object(root_obj)

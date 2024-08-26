@@ -43,6 +43,8 @@ module SpeckleConnector3
 
       attr_reader :conversion_results
 
+      attr_reader :project_model_name
+
       # @return [Array<SpeckleObjects::InstanceDefinitionProxy>]
       attr_reader :root_definition_proxies
 
@@ -62,6 +64,7 @@ module SpeckleConnector3
         @converted_entities = []
         @conversion_results = []
         @created_definitions = {}
+        @project_model_name = "#{model_card.project_name}-#{model_card.model_name}"
       end
 
       # Module aliases
@@ -180,8 +183,8 @@ module SpeckleConnector3
 
         # Navigate to branch entities if commit doesn't come from sketchup
         unless from_sketchup
-          @branch_definition = branch_definition
-          @entities_to_fill = @branch_definition.entities
+          @project_model_definition = project_model_definition
+          @entities_to_fill = @project_model_definition.entities
         end
 
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
@@ -193,22 +196,50 @@ module SpeckleConnector3
         @state
       end
 
-      # Creating instance from @branch_definition only available for non-sketchup commits since we wrap commits
+      # Creating instance from @project_model_definition only available for non-sketchup commits since we wrap commits
       # under instance.
       # There is also another use case that maybe definition is exist in file but user might be deleted it before.
       # If this is the case we can add instance by checking number of instances.
       # rubocop:disable Style/GuardClause
       def try_create_instance
-        if !from_sketchup && (!@is_update_commit || @branch_definition.instances.empty?)
-          instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+        if !from_sketchup && (!@is_update_commit || @project_model_definition.instances.empty?)
+          if project_model_folder
+            SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.set_hash(
+              project_model_layer, {
+              project_id: model_card.project_id,
+              model_id: model_card.model_id
+            }
+            )
+            project_model_folder.add_layer(project_model_layer)
+          end
+          instance = sketchup_model.entities.add_instance(@project_model_definition, Geom::Transformation.new)
+          instance.layer = project_model_layer if project_model_layer
           @converted_entities.append(instance)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
       end
       # rubocop:enable Style/GuardClause
 
+      # @return [Sketchup::LayerFolder]
+      def project_model_folder
+        project_model_folder = sketchup_model.layers.folders.find { |f| f.display_name == @project_model_name }
+        unless project_model_folder
+          project_model_folder = sketchup_model.layers.add_folder(@project_model_name)
+        end
+        @project_model_folder = project_model_folder
+      end
+
+      def project_model_layer
+        @project_model_layer ||= sketchup_model.layers.add_layer(@project_model_name)
+      end
+
       def levels_layer
-        @levels_layer ||= sketchup_model.layers.add('Levels')
+        @levels_layer ||= sketchup_model.layers.add("#{@project_model_name}-Levels")
+        model_folder = sketchup_model.layers.folders.find { |f| f.display_name == @project_model_name }
+        if model_folder
+          model_folder.add_layer(@levels_layer)
+        end
+        @levels_layer
       end
 
       def clear_levels
@@ -235,7 +266,7 @@ module SpeckleConnector3
         c_3 = bbox.corner(3)
         c_4 = bbox.corner(2)
         section_planes.each do |section_plane|
-          level_name = "#{@definition_name}-#{section_plane.name}"
+          level_name = "#{@project_model_name}-#{section_plane.name}"
           definition = sketchup_model.definitions.add(level_name)
           instance = @entities_to_fill.add_instance(definition, Geom::Transformation.new)
           att = section_plane.attribute_dictionary(SPECKLE_BASE_OBJECT).to_h
@@ -257,21 +288,19 @@ module SpeckleConnector3
       # rubocop:enable Metrics/MethodLength
 
       # @return [Sketchup::ComponentDefinition] branch definition to fill objects in it.
-      def branch_definition
-        @definition_name = "#{model_card.project_name}-#{model_card.model_name}"
-        definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
+      def project_model_definition
+        definition = sketchup_model.definitions.find { |d| d.name == @project_model_name }
         @is_update_commit = !definition.nil?
-        definition = sketchup_model.definitions.add(@definition_name) if definition.nil?
+        definition = sketchup_model.definitions.add(@project_model_name) if definition.nil?
         definition
       end
 
       def entities_to_fill(_obj)
         return sketchup_model.entities unless from_revit
 
-        @definition_name = "#{model_card.project_name}-#{model_card.model_name}"
-        definition = sketchup_model.definitions.find { |d| d.name == @definition_name }
+        definition = sketchup_model.definitions.find { |d| d.name == @project_model_name }
         if definition.nil?
-          definition = sketchup_model.definitions.add(@definition_name)
+          definition = sketchup_model.definitions.add(@project_model_name)
           sketchup_model.entities.add_instance(definition, Geom::Transformation.new)
         end
         definition
@@ -468,27 +497,6 @@ module SpeckleConnector3
         nil
       end
 
-      # rubocop:disable Metrics/CyclomaticComplexity
-      # rubocop:disable Metrics/PerceivedComplexity
-      def create_layers_from_categories(state, speckle_object, entities)
-        return state if speckle_object['category'].nil?
-
-        layer = sketchup_model.layers.find { |l| l.display_name == speckle_object['category'] }
-        unless layer.nil?
-          entities.each { |entity| entity.layer = layer if entity.respond_to?(:layer) } if layer
-          return state
-        end
-
-        layer = sketchup_model.layers.add(speckle_object['category'])
-        unless layer.nil?
-          entities.each { |entity| entity.layer = layer if entity.respond_to?(:layer) } if layer
-          state
-        end
-        state
-      end
-      # rubocop:enable Metrics/CyclomaticComplexity
-      # rubocop:enable Metrics/PerceivedComplexity
-
       # @param state [States::State] state of the speckle application
       def create_levels(state, speckle_object)
         level = speckle_object['level']
@@ -503,15 +511,11 @@ module SpeckleConnector3
 
         section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
         section_plane.name = level_name
+        section_plane.layer = levels_layer
         SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
           section_plane, level['applicationId'], level['id'], level['speckle_type'], [], model_card.project_id
         )
         state
-      end
-
-      # @param state [States::State] state of the application
-      def convert_to_speckle_entities(state, speckle_objects_with_entities)
-        return state if speckle_objects_with_entities.empty?
       end
     end
     # rubocop:enable Metrics/ClassLength
