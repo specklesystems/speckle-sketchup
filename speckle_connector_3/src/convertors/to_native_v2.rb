@@ -203,26 +203,35 @@ module SpeckleConnector3
       # rubocop:disable Style/GuardClause
       def try_create_instance
         if !from_sketchup && (!@is_update_commit || @project_model_definition.instances.empty?)
-          model_folder = sketchup_model.layers.folders.find { |f| f.display_name == @project_model_name }
-          model_layer = nil
-          if model_folder
-            model_layer = sketchup_model.layers.add_layer(@project_model_name)
+          if project_model_folder
             SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.set_hash(
-              model_layer, {
+              project_model_layer, {
               project_id: model_card.project_id,
               model_id: model_card.model_id
             }
             )
-            model_folder.add_layer(model_layer)
+            project_model_folder.add_layer(project_model_layer)
           end
-          # @project_model_definition.entities.each { |e| e.layer = model_layer } if model_layer
           instance = sketchup_model.entities.add_instance(@project_model_definition, Geom::Transformation.new)
-          instance.layer = model_layer if model_layer
+          instance.layer = project_model_layer if project_model_layer
           @converted_entities.append(instance)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
       end
       # rubocop:enable Style/GuardClause
+
+      # @return [Sketchup::LayerFolder]
+      def project_model_folder
+        project_model_folder = sketchup_model.layers.folders.find { |f| f.display_name == @project_model_name }
+        unless project_model_folder
+          project_model_folder = sketchup_model.layers.add_folder(@project_model_name)
+        end
+        @project_model_folder = project_model_folder
+      end
+
+      def project_model_layer
+        @project_model_layer ||= sketchup_model.layers.add_layer(@project_model_name)
+      end
 
       def levels_layer
         @levels_layer ||= sketchup_model.layers.add("#{@project_model_name}-Levels")
