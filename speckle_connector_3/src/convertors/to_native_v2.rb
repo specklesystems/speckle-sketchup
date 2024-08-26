@@ -115,8 +115,8 @@ module SpeckleConnector3
         Objects.GIS.LineElement
         Speckle.Core.Models.Collections.Collection
         Speckle.Core.Models.Collections.Collection:Speckle.Core.Models.Collections.Layer
-        Speckle.Core.Models.Collection:Objects.GIS.RasterLayer
-        Speckle.Core.Models.Collection:Objects.GIS.VectorLayer
+        Speckle.Core.Models.Collections.Collection:Objects.GIS.RasterLayer
+        Speckle.Core.Models.Collections.Collection:Objects.GIS.VectorLayer
       ].freeze
 
       def from_revit
