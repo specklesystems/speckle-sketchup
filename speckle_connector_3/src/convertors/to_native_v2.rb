@@ -215,7 +215,7 @@ module SpeckleConnector3
             )
             model_folder.add_layer(model_layer)
           end
-          @project_model_definition.entities.each { |e| e.layer = model_layer } if model_layer
+          # @project_model_definition.entities.each { |e| e.layer = model_layer } if model_layer
           instance = sketchup_model.entities.add_instance(@project_model_definition, Geom::Transformation.new)
           instance.layer = model_layer if model_layer
           @converted_entities.append(instance)
