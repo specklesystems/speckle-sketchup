@@ -17,7 +17,7 @@ module SpeckleConnector3
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, data)
         send_filter = Filters::SendFilters.get_filter_from_ui_data(data['sendFilter'])
-        settings = Settings::CardSetting.get_setting_from_ui_data(data['settings'])
+        # settings = Settings::CardSetting.get_setting_from_ui_data(data['settings'])
         # Init card and add to the state
         send_card = Cards::SendCard.new(
           data['modelCardId'],
