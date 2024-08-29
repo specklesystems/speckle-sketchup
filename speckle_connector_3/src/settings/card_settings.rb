@@ -42,6 +42,7 @@ module SpeckleConnector3
       end
 
       def self.get_filter_from_document(data)
+        return nil if data.nil?
         data.values.collect do |d|
           CardSetting.new(id: d['id'], title: d['title'], type: d['type'],
                           value: d['value'], enum: d['enum'] ? d['enum'].values : nil) # UI give array as object damn!
