@@ -65,10 +65,10 @@ module SpeckleConnector3
 
       def self.initialize_dui3_speckle_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          InitializeDUI3Speckle.new(app, nil), 'Initialize Speckle with New UI'
+          InitializeDUI3Speckle.new(app, nil), 'Initialize Speckle (Beta)'
         )
-        cmd.tooltip = 'Launch Connector with New UI'
-        cmd.status_bar_text = 'Opens the Speckle Connector with New UI'
+        cmd.tooltip = 'Speckle (Beta) for SketchUp'
+        cmd.status_bar_text = 'Opens the Speckle Connector (Beta)'
         cmd.small_icon  = '../../img/s2logo_dui3.png'
         cmd.large_icon  = '../../img/s2logo_dui3.png'
         cmd
