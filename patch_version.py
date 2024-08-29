@@ -15,6 +15,12 @@ def patch_connector(tag):
                 print(f"Patched connector version number in {rb_file}")
                 break
 
+        for (index, line) in enumerate(lines):
+            if 'DEV_MODE = ' in line:
+                lines[index] = f'    DEV_MODE = false\n'
+                print(f"Patched dev mode to false in {rb_file}")
+                break
+
         with open(rb_file, "w") as file:
             file.writelines(lines)
 
