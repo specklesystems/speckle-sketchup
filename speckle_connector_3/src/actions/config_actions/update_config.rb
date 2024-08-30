@@ -15,7 +15,7 @@ module SpeckleConnector3
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, config)
         config.each do |key, value|
-          state = Actions::UserPreferencesUpdated.new('Sketchup', key, value).update_state(state)
+          state = Actions::UserPreferencesUpdated.new('Sketchup', KEY_VALUES[key], value).update_state(state)
         end
 
         js_script = "configBinding.receiveResponse('#{resolve_id}')"

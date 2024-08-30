@@ -12,9 +12,9 @@ module SpeckleConnector3
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
     # rubocop:disable Layout/LineLength
-    DEFAULT_CONFIG = "('Sketchup', '{\"darkTheme\":false}');"
+    DEFAULT_CONFIG = "('Sketchup', '{\"dark_theme\":false}');"
     # rubocop:enable Layout/LineLength
-    DEFAULT_PREFERENCES = '{"darkTheme":false}'
+    DEFAULT_PREFERENCES = '{"dark_theme":false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
@@ -36,7 +36,7 @@ module SpeckleConnector3
 
       begin
         data = JSON.parse(row_data.first.first)
-        if data['darkTheme'].nil? # || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
+        if data['dark_theme'].nil? # || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
           return false
         end
 
@@ -70,7 +70,7 @@ module SpeckleConnector3
       # Parse string to hash
       data_hash = JSON.parse(row_data).to_h
       # Get current theme value
-      dark_theme = data_hash['darkTheme']
+      dark_theme = data_hash['dark_theme']
 
       {
         dark_theme: dark_theme,
