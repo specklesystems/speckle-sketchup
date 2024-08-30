@@ -12,9 +12,9 @@ module SpeckleConnector3
     include Immutable::ImmutableUtils
     DICT_HANDLER = SketchupModel::Dictionary::SpeckleModelDictionaryHandler
     # rubocop:disable Layout/LineLength
-    DEFAULT_CONFIG = "('configSketchup', '{\"dark_theme\":false, \"diffing\":false, \"register_speckle_entity\":false, \"fe2\":true}');"
+    DEFAULT_CONFIG = "('Sketchup', '{\"darkTheme\":false}');"
     # rubocop:enable Layout/LineLength
-    DEFAULT_PREFERENCES = '{"dark_theme":false, "diffing":false, "register_speckle_entity": false, "fe2": true}'
+    DEFAULT_PREFERENCES = '{"darkTheme":false}'
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
@@ -36,7 +36,7 @@ module SpeckleConnector3
 
       begin
         data = JSON.parse(row_data.first.first)
-        if data['dark_theme'].nil? || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
+        if data['darkTheme'].nil? # || data['fe2'].nil? || data['diffing'].nil? || data['register_speckle_entity'].nil?
           return false
         end
 
@@ -50,14 +50,14 @@ module SpeckleConnector3
     # @param database [Sqlite3::Database] database for queries.
     # rubocop:disable Metrics/MethodLength
     def self.validate_user_preferences(database)
-      row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'")
+      row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'Sketchup'")
       is_config_sketchup_exist = !row_data.empty?
       is_data_complete = data_complete?(row_data)
       if !is_config_sketchup_exist || !is_data_complete
         if is_config_sketchup_exist
           unless is_data_complete
             # Update table with default preferences
-            database.exec("UPDATE 'objects' SET content = '#{DEFAULT_PREFERENCES}' WHERE hash = 'configSketchup'")
+            database.exec("UPDATE 'objects' SET content = '#{DEFAULT_PREFERENCES}' WHERE hash = 'Sketchup'")
           end
         else
           # Insert configSketchup completely to objects.
@@ -66,20 +66,14 @@ module SpeckleConnector3
       end
 
       # Select data
-      row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'configSketchup'").first.first
+      row_data = database.exec("SELECT content FROM 'objects' WHERE hash = 'Sketchup'").first.first
       # Parse string to hash
       data_hash = JSON.parse(row_data).to_h
       # Get current theme value
-      dark_theme = data_hash['dark_theme']
-      fe2 = data_hash['fe2']
-      diffing = data_hash['diffing']
-      register_speckle_entity = data_hash['register_speckle_entity']
+      dark_theme = data_hash['darkTheme']
 
       {
         dark_theme: dark_theme,
-        fe2: fe2,
-        diffing: diffing,
-        register_speckle_entity: register_speckle_entity
       }.freeze
     end
     # rubocop:enable Metrics/MethodLength
