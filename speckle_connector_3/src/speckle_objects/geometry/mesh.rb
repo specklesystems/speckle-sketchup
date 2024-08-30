@@ -266,12 +266,13 @@ module SpeckleConnector3
         end
 
         DEFINITIONS_WILL_BE_HARD_EDGE = %w[
-          Walls
-          Floors
-          Stairs
+          Wall
+          Floor
+          Stair
           Structural Foundations
-          Doors
-          Windows
+          Door
+          Window
+          Roof
         ].freeze
 
         # @param mesh [Object] speckle mesh object
@@ -286,8 +287,9 @@ module SpeckleConnector3
 
         def self.get_native_points(mesh)
           points = []
+          units = mesh['units']
           mesh['vertices'].each_slice(3) do |pt|
-            points.push(Point.to_native(pt[0], pt[1], pt[2], mesh['units']))
+            points.push(Point.to_native(pt[0], pt[1], pt[2], units))
           end
           points
         end
