@@ -6,7 +6,7 @@ name: Build and deploy
 on:
   push:
     branches: ["dui3/alpha", "deploy/*"] # Continuous delivery on every long-lived branch
-    tags: ["3.*"] # Manual delivery on every 3.x tag
+    tags: ["v3.*"] # Manual delivery on every 3.x tag
 
 jobs:
   build:
