@@ -10,3 +10,9 @@ branches:
     tag: dev
   pull-request:
     tag: pr
+  beta:
+    regex: ^dui3/alpha$
+    tag: beta
+    source-branches:
+      - develop
+      - main
