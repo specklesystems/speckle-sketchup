@@ -18,6 +18,11 @@ module SpeckleConnector3
 
     # @param sketchup_model [Sketchup::Model] active model.
     def self.read_preferences(sketchup_model)
+      unless File.exist?(SPECKLE_CONFIG_DB_PATH)
+        File.new(SPECKLE_CONFIG_DB_PATH, "w")
+        db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
+        create_objects_table(db)
+      end
       db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
       user_preferences = validate_user_preferences(db)
       model_preferences = validate_model_preferences(sketchup_model)
@@ -27,6 +32,17 @@ module SpeckleConnector3
           model: model_preferences
         }
       )
+    end
+
+    # Creates the 'objects' table in the database if it doesn't already exist.
+    # @param db [Sqlite3::Database] the SQLite3 database instance.
+    def self.create_objects_table(db)
+      db.exec <<-SQL
+    CREATE TABLE IF NOT EXISTS objects (
+      hash TEXT PRIMARY KEY,
+      content TEXT
+    );
+  SQL
     end
 
     # Whether row data is complete with preference or not.
