@@ -23,14 +23,19 @@ module SpeckleConnector3
         model_name = data['modelName']
         expired = data['expired']
         selected_version_id = data['selectedVersionId']
+        selected_version_source_app = data['selectedVersionSourceApp']
+        selected_version_user_id = data['selectedVersionUserId']
         latest_version_id = data['latestVersionId']
+        latest_version_source_app = data['latestVersionSourceApp']
+        latest_version_user_id = data['latestVersionUserId']
         has_dismissed_update_warning = data['hasDismissedUpdateWarning']
         baked_object_ids = data['bakedObjectIds'].nil? ? nil : data['bakedObjectIds'].values
 
         receive_card = Cards::ReceiveCard.new(model_card_id, account_id,
                                               project_id, model_id,
                                               project_name, model_name,
-                                              selected_version_id, latest_version_id,
+                                              selected_version_id, selected_version_source_app, selected_version_user_id,
+                                              latest_version_id, latest_version_source_app, latest_version_user_id,
                                               has_dismissed_update_warning, expired, baked_object_ids)
         SketchupModel::Dictionary::ModelCardDictionaryHandler
           .save_receive_card_to_model(receive_card, state.sketchup_state.sketchup_model)
