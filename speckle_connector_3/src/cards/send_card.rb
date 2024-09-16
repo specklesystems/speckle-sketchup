@@ -26,6 +26,7 @@ module SpeckleConnector3
       def initialize(
         model_card_id,
         account_id,
+        workspace_id,
         project_id,
         project_name,
         model_id,
@@ -34,7 +35,7 @@ module SpeckleConnector3
         send_filter,
         send_settings
       )
-        super(model_card_id, account_id, project_id, project_name, model_id, model_name)
+        super(model_card_id, account_id, workspace_id, project_id, project_name, model_id, model_name)
         @send_filter = send_filter
         @send_settings = send_settings
         @latest_created_version_id = latest_created_version_id

@@ -17,6 +17,7 @@ module SpeckleConnector3
       def self.update_state(state, resolve_id, data)
         model_card_id = data['modelCardId']
         account_id = data['accountId']
+        workspace_id = data['workspaceId']
         project_id = data['projectId']
         model_id = data['modelId']
         project_name = data['projectName']
@@ -31,7 +32,7 @@ module SpeckleConnector3
         has_dismissed_update_warning = data['hasDismissedUpdateWarning']
         baked_object_ids = data['bakedObjectIds'].nil? ? nil : data['bakedObjectIds'].values
 
-        receive_card = Cards::ReceiveCard.new(model_card_id, account_id,
+        receive_card = Cards::ReceiveCard.new(model_card_id, account_id, workspace_id,
                                               project_id, model_id,
                                               project_name, model_name,
                                               selected_version_id, selected_version_source_app, selected_version_user_id,

@@ -24,14 +24,18 @@ module SpeckleConnector3
       # @return [String] model name of the card.
       attr_reader :model_name
 
+      # @return [String] workspace id of the card.
+      attr_reader :workspace_id
+
       # @return [Boolean] card is valid or not.
       attr_reader :valid
 
       # rubocop:disable Metrics/ParameterLists
-      def initialize(model_card_id, account_id, project_id, project_name, model_id, model_name)
+      def initialize(model_card_id, account_id, workspace_id, project_id, project_name, model_id, model_name)
         super()
         @model_card_id = model_card_id
         @account_id = account_id
+        @workspace_id = workspace_id
         @project_id = project_id
         @project_name = project_name
         @model_id = model_id
@@ -39,6 +43,7 @@ module SpeckleConnector3
         @valid = true
         self[:model_card_id] = model_card_id
         self[:account_id] = account_id
+        self[:workspace_id] = workspace_id
         self[:project_id] = project_id
         self[:project_name] = project_name
         self[:model_id] = model_id
