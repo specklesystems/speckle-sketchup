@@ -18,6 +18,7 @@ module SpeckleConnector3
       def self.update_state(state, resolve_id, model_card_id)
         # Set active path always to model to be safe always. Later we can address it
         state.sketchup_state.sketchup_model.active_path = nil
+        units = Converters::SKETCHUP_UNITS[state.sketchup_state.length_units]
         model_card = state.speckle_state.send_cards[model_card_id]
         unless model_card.send_filter.selected_object_ids.any?
           resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
@@ -35,7 +36,7 @@ module SpeckleConnector3
         end
 
         unpacked_entities = SketchupModel::Definitions::DefinitionManager
-                            .new(Converters::SKETCHUP_UNITS[state.sketchup_state.length_units])
+                            .new(units)
                             .unpack_entities(entities)
 
         unpacked_materials = SketchupModel::Materials::MaterialManager.new.unpack_materials(entities)
@@ -50,6 +51,7 @@ module SpeckleConnector3
         base[:instanceDefinitionProxies] = unpacked_entities.instance_definition_proxies
         base[:renderMaterialProxies] = unpacked_materials
         base[:colorProxies] = unpacked_colors
+        base[:units] = units
 
         id, batches, refs = converter.serialize(base, state.user_state.preferences)
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
