@@ -19,7 +19,7 @@ module SpeckleConnector
             id: nil
           )
           self[:units] = units
-          self[:value] = value
+          self[:matrix] = value
         end
 
         def self.from_transformation(transformation, units)
