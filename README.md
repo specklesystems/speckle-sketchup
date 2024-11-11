@@ -115,6 +115,20 @@ You can now open up the repo in VS Code or you can use JetBrains' tools RubyMine
 
 If you will use VS Code, make sure you've installed the Ruby extension for VS Code.
 
+#### RubyMine
+
+To debug: 
+- Add configuration as **'Ruby remote debug'**
+  - Remote host: localhost
+  - Remote port: 7000
+  - Remote root folder: <repo_path>
+  - Local port: 26162
+  - Local root folder: <repo_path>
+- Run below script
+
+      bundle exec skippy sketchup:debug 2024
+- When sketchup opened, click Debug button on RubyMine
+
 ### Loading the Speckle Connector Plugin
 
 1. Find already prepared `speckle_connector_3_loader.rb` file on the `_tools`
