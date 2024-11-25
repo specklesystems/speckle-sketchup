@@ -85,13 +85,8 @@ module SpeckleConnector3
         new_speckle_state = state.speckle_state.with_conversion_results(model_card_id, converter.conversion_results)
         state = state.with_speckle_state(new_speckle_state)
 
-        temp_batches = []
-        50.times do
-          temp_batches.append(batches[0])
-        end
-
-        total_batch_count = temp_batches.count
-        temp_batches.each_with_index do |batch, i|
+        total_batch_count = batches.count
+        batches.each_with_index do |batch, i|
           current_batch = i + 1
           args = {
             modelCardId: model_card_id,
