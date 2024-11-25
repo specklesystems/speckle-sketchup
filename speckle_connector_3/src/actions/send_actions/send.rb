@@ -64,22 +64,49 @@ module SpeckleConnector3
 
         resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state = state.with_add_queue_js_command('send', resolve_js_script)
-        args = {
-          modelCardId: model_card_id,
-          projectId: model_card.project_id,
-          modelId: model_card.model_id,
-          token: account['token'],
-          serverUrl: account['serverInfo']['url'],
-          accountId: model_card.account_id,
-          message: model_card.message,
-          sendConversionResults: converter.conversion_results,
-          sendObject: {
-            id: id,
-            batches: batches
+        # args = {
+        #   modelCardId: model_card_id,
+        #   projectId: model_card.project_id,
+        #   modelId: model_card.model_id,
+        #   token: account['token'],
+        #   serverUrl: account['serverInfo']['url'],
+        #   accountId: model_card.account_id,
+        #   message: model_card.message,
+        #   sendConversionResults: converter.conversion_results,
+        #   sendObject: {
+        #     id: id,
+        #     batches: batches
+        #   }
+        # }
+        # js_script = "sendBinding.emit('sendViaBrowser', #{args.to_json})"
+        # state.with_add_queue_js_command('sendViaBrowser', js_script)
+
+        # store conversion results in state to pick up later
+        new_speckle_state = state.speckle_state.with_conversion_results(model_card_id, converter.conversion_results)
+        state = state.with_speckle_state(new_speckle_state)
+
+        temp_batches = []
+        50.times do
+          temp_batches.append(batches[0])
+        end
+
+        total_batch_count = temp_batches.count
+        temp_batches.each_with_index do |batch, i|
+          current_batch = i + 1
+          args = {
+            modelCardId: model_card_id,
+            projectId: model_card.project_id,
+            token: account['token'],
+            serverUrl: account['serverInfo']['url'],
+            batch: batch,
+            currentBatch:current_batch,
+            totalBatch: total_batch_count,
+            referencedObjectId: id
           }
-        }
-        js_script = "sendBinding.emit('sendViaBrowser', #{args.to_json})"
-        state.with_add_queue_js_command('sendViaBrowser', js_script)
+          js_script = "sendBinding.emit('sendBatchViaBrowser', #{args.to_json})"
+          state = state.with_add_queue_js_command("sendBatchViaBrowser_#{current_batch}", js_script)
+        end
+        state
       end
     end
   end

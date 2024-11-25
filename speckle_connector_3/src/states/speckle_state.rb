@@ -17,6 +17,9 @@ module SpeckleConnector3
       # @return [Immutable::Hash{String=>Cards::ReceiveCard}] receive cards.
       attr_reader :receive_cards
 
+      # @return [Immutable::Hash{String=>Array<UiData::Report::ConversionResult>}] receive cards.
+      attr_reader :conversion_results
+
       # @return [Immutable::Hash{String=>Immutable::Hash{String=>SpeckleObjects::ObjectReference}}] object references that sent before server.
       attr_reader :object_references_by_project
 
@@ -70,6 +73,7 @@ module SpeckleConnector3
         @definitions = Immutable::EmptyHash
         @send_cards = Immutable::EmptyHash
         @receive_cards = Immutable::EmptyHash
+        @conversion_results = Immutable::EmptyHash
         @relation = Relations::ManyToOneRelation.new
         @speckle_mapper_state = SpeckleMapperState.new
       end
@@ -216,6 +220,16 @@ module SpeckleConnector3
           new_project_references = new_project_references.put(application_id, ref)
         end
         with(:@object_references_by_project => object_references_by_project.put(project_id, new_project_references))
+      end
+
+      def with_conversion_results(model_card_id, results)
+        new_conversion_results = conversion_results.put(model_card_id, results)
+        with(:@conversion_results => new_conversion_results)
+      end
+
+      def without_conversion_results(model_card_id)
+        new_conversion_results = conversion_results.delete(model_card_id)
+        with(:@conversion_results => new_conversion_results)
       end
 
       def invalid_streams
