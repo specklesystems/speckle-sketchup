@@ -19,9 +19,17 @@ module SpeckleConnector3
         end
 
         # @param entities [Sketchup::Entities, Array<Sketchup::Entity>] entities to unpack their materials
-        def unpack_materials(entities)
+        def unpack_materials(entities, sketchup_model)
+          unpacked_group_meshes_and_entities = []
+          entities.each do |entity|
+            if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
+              unpacked_group_meshes_and_entities += entity.faces
+            else
+              unpacked_group_meshes_and_entities << entity
+            end
+          end
           flat_entities = SketchupModel::Query::Entity.flat_entities(
-            entities, [Sketchup::ComponentInstance, Sketchup::Group, Sketchup::Face]
+            unpacked_group_meshes_and_entities, [Sketchup::ComponentInstance, Sketchup::Group, Sketchup::Face]
           )
           flat_entities.each do |entity|
             material = entity.material
@@ -30,7 +38,12 @@ module SpeckleConnector3
               back_material = entity.back_material
             end
 
-            next if material.nil? && back_material.nil?
+            if material.nil? && back_material.nil?
+              next unless entity.parent.is_a?(Sketchup::ComponentDefinition)
+              path = SketchupModel::Query::Entity.path_from_bottom_to_top(entity)
+              parent_material = SketchupModel::Query::Entity.parent_material(path.reverse)
+              material = parent_material
+            end
 
             unless material.nil?
               if render_material_proxies.has_key?(material.persistent_id.to_s)

@@ -39,7 +39,7 @@ module SpeckleConnector3
                             .new(units)
                             .unpack_entities(entities)
 
-        unpacked_materials = SketchupModel::Materials::MaterialManager.new.unpack_materials(entities)
+        unpacked_materials = SketchupModel::Materials::MaterialManager.new.unpack_materials(unpacked_entities.atomic_objects, state.sketchup_state.sketchup_model)
 
         unpacked_colors = SketchupModel::Colors::ColorManager.new.unpack_colors(state.sketchup_state.sketchup_model)
 

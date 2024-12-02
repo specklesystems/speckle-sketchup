@@ -84,6 +84,16 @@ module SpeckleConnector3
             transformation
           end
 
+          def path_from_bottom_to_top(entity)
+            parents = []
+            parent = parent_or_model(entity)
+            parents.push(parent) unless parent.is_a?(Sketchup::Model)
+            until parent.is_a?(Sketchup::Model) || parent.nil?
+              parent = parent_or_model(parent)
+            end
+            parents
+          end
+
           # Parent search for entity from bottom to top. It is not ideal if entity lives in different instances.
           def parent_or_model(entity)
             parent = entity.parent
