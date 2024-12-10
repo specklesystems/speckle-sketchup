@@ -1,51 +1,53 @@
 query Streams($cursor: String) {
-  streams(cursor: $cursor) {
-    totalCount
-    cursor
-    items {
-      id
-      name
-      description
-      role
-      isPublic
-      createdAt
-      updatedAt
-      collaborators {
+  activeUser {
+    streams(cursor: $cursor) {
+      totalCount
+      cursor
+      items {
         id
         name
-        company
-        avatar
+        description
         role
-      }
-      commits(limit: 1) {
-        totalCount
-        items {
-          id
-          createdAt
-          message
-          authorId
-          branchName
-          authorName
-          authorAvatar
-          referencedObject
-        }
-      }
-      branches {
-        totalCount
-        items {
+        isPublic
+        createdAt
+        updatedAt
+        collaborators {
           id
           name
-          commits(limit: 10) {
-            totalCount
-            items {
-              id
-              createdAt
-              message
-              authorId
-              branchName
-              authorName
-              authorAvatar
-              referencedObject
+          company
+          avatar
+          role
+        }
+        commits(limit: 1) {
+          totalCount
+          items {
+            id
+            createdAt
+            message
+            authorId
+            branchName
+            authorName
+            authorAvatar
+            referencedObject
+          }
+        }
+        branches {
+          totalCount
+          items {
+            id
+            name
+            commits(limit: 10) {
+              totalCount
+              items {
+                id
+                createdAt
+                message
+                authorId
+                branchName
+                authorName
+                authorAvatar
+                referencedObject
+              }
             }
           }
         }
