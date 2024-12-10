@@ -1,5 +1,5 @@
 query User($id: String!) {
-  otherUser(id: $id) {
+  user:otherUser(id: $id) {
     id
     name
     bio

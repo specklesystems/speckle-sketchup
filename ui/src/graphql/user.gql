@@ -1,5 +1,5 @@
 query {
-  activeUser {
+  user:activeUser {
     id
     email
     name
