@@ -20,20 +20,22 @@ module SpeckleConnector3
           origin = Point.to_native(plane['origin']['x'], plane['origin']['y'], plane['origin']['z'], units)
           start_point = Point.to_native(arc['startPoint']['x'], arc['startPoint']['y'], arc['startPoint']['z'], units)
           end_point = Point.to_native(arc['endPoint']['x'], arc['endPoint']['y'], arc['endPoint']['z'], units)
-          normal = Vector.to_native(plane['normal']['x'], plane['normal']['y'], plane['normal']['z'], units)
-          x_axis = Vector.to_native(plane['xdir']['x'], plane['xdir']['y'], plane['xdir']['z'], units)
+          normal = Vector.to_native(plane['normal']['x'], plane['normal']['y'], plane['normal']['z'], units).normalize
+          x_axis = Vector.to_native(plane['xdir']['x'], plane['xdir']['y'], plane['xdir']['z'], units).normalize
           radius = Geometry.length_to_native(arc['radius'], units)
 
-          start_vector = Vector.to_native(start_point.x - origin.x, start_point.y - origin.y, start_point.z - origin.z, units)
-          end_vector = Vector.to_native(end_point.x - origin.x, end_point.y - origin.y, end_point.z - origin.z, units)
+          start_vector = (start_point - origin).normalize
+          end_vector = (end_point - origin).normalize
 
           start_angle = Math.atan2(start_vector.cross(normal).dot(x_axis), start_vector.dot(x_axis))
           end_angle = Math.atan2(end_vector.cross(normal).dot(x_axis), end_vector.dot(x_axis))
 
-          if end_angle < start_angle
-            end_angle += 2 * Math::PI
+          measure = arc['measure'] # this is in radians!
+          if measure # for backward compatibilty
+            end_angle = start_angle + measure
+          else
+            end_angle += 2 * Math::PI if end_angle < start_angle
           end
-
           edges = entities.add_arc(origin, x_axis, normal, radius, start_angle, end_angle)
           edges.each { |edge| edge.layer = layer }
           return state, edges
