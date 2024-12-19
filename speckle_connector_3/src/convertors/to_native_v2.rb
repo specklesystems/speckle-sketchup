@@ -504,7 +504,7 @@ module SpeckleConnector3
       def create_levels(state, speckle_object)
         level = speckle_object['level']
         return state if level.nil?
-        return state unless level['speckle_type'].include?('Objects.BuiltElements.Level')
+        # return state unless level['speckle_type'].include?('Objects.BuiltElements.Level')
 
         level_name = level['name'] || level['id']
         is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
