@@ -16,6 +16,7 @@ module SpeckleConnector3
           super('selection', 'Selection', nil, summary)
           @selected_object_ids = selected_object_ids
           self[:selectedObjectIds] = selected_object_ids
+          self[:isDefault] = true # hard coded default value, that's fair
         end
 
         def check_expiry(ids)
