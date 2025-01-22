@@ -80,6 +80,8 @@ export default {
     },
     allStreamsList() {
       if (this.$apollo.loading) return
+      console.log(this.streams);
+      
       return this.streams?.items.filter((stream) => !this.savedStreams?.includes(stream.id))
     }
   },
@@ -142,12 +144,14 @@ export default {
       debounce: 300,
       fetchPolicy: 'cache-and-network',
       query: gql`
-        query Streams($query: String, $limit: Int, $cursor: String) {
-          streams(query: $query, limit: $limit, cursor: $cursor) {
-            totalCount
-            cursor
-            items {
-              id
+        query Streams($limit: Int, $cursor: String) {
+          activeUser {
+            streams(limit: $limit, cursor: $cursor) {
+              totalCount
+              cursor
+              items {
+                id
+              }
             }
           }
         }
@@ -161,8 +165,10 @@ export default {
       },
       update(data) {
         bus.$emit('streams-loaded')
-        this.showMoreEnabled = data.streams?.items.length < data.streams.totalCount
-        return data.streams
+        console.log(data)
+        const streams = data.activeUser?.streams;
+        this.showMoreEnabled = streams?.items.length < streams?.totalCount;
+        return streams;
       }
     },
     $subscribe: {
@@ -200,16 +206,16 @@ export default {
         },
         // Transform the previous result with new data
         updateQuery: (previousResult, { fetchMoreResult }) => {
-          const newStreams = fetchMoreResult.streams?.items
-          if (!newStreams) return previousResult.streams
-          this.cursor = fetchMoreResult.streams.cursor
+          const newStreams = fetchMoreResult.activeUser.streams?.items
+          if (!newStreams) return previousResult.activeUser.streams
+          this.cursor = fetchMoreResult.activeUser.streams.cursor
           return {
             streams: {
-              __typename: previousResult.streams.__typename,
-              cursor: fetchMoreResult.streams.cursor,
-              totalCount: fetchMoreResult.streams.totalCount,
+              __typename: previousResult.activeUser.streams.__typename,
+              cursor: fetchMoreResult.activeUser.streams.cursor,
+              totalCount: fetchMoreResult.activeUser.streams.totalCount,
               // Merging the lists
-              items: [...previousResult.streams.items, ...newStreams]
+              items: [...previousResult.activeUser.streams.items, ...newStreams]
             }
           }
         }
