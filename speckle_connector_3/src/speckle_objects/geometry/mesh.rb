@@ -129,7 +129,10 @@ module SpeckleConnector3
             # Smooth edges if they already soft
             # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
             face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
-            unless mesh['sketchup_attributes'].nil?
+            if !mesh['properties'].nil?
+              SketchupModel::Dictionary::BaseDictionaryHandler
+                .attribute_dictionaries_to_native(face, mesh['properties']['dictionaries'])
+            elsif !mesh['sketchup_attributes'].nil? # backward compatibility
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
             end
@@ -278,7 +281,9 @@ module SpeckleConnector3
         # @param mesh [Object] speckle mesh object
         # @param entities [Sketchup::Entities] sketchup entities that mesh will be created in it as face.
         def self.get_soften_setting(mesh, entities)
-          unless mesh['sketchup_attributes'].nil?
+          if !mesh['properties'].nil?
+            return mesh['properties']['is_soften'].nil? ? true : mesh['properties']['is_soften']
+          elsif !mesh['sketchup_attributes'].nil? # backward compatibility
             return mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
 

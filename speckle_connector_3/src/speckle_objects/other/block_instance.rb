@@ -245,10 +245,15 @@ module SpeckleConnector3
           end
 
           instance.name = block['name'] unless block['name'].nil?
-          unless block['sketchup_attributes'].nil?
+
+          if !block['properties'].nil?
+            SketchupModel::Dictionary::BaseDictionaryHandler
+              .attribute_dictionaries_to_native(instance, block['properties']['dictionaries'])
+          elsif !block['sketchup_attributes'].nil? # backward compatibility
             SketchupModel::Dictionary::BaseDictionaryHandler
               .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
           end
+
           return state, [instance, definition]
         end
         # rubocop:enable Metrics/AbcSize

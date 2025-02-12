@@ -118,7 +118,7 @@ module SpeckleConnector3
           geometry = definition_obj['geometry'] || definition_obj['@geometry'] || definition_obj['displayValue']
 
           always_face_camera = definition_obj['always_face_camera'].nil? ? false : definition_obj['always_face_camera']
-          sketchup_attributes = definition_obj['sketchup_attributes']
+          properties = definition_obj['properties'] || definition_obj['sketchup_attributes']
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(definition_name)
 
@@ -143,9 +143,9 @@ module SpeckleConnector3
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
-          unless sketchup_attributes.nil?
+          unless properties.nil?
             SketchupModel::Dictionary::BaseDictionaryHandler
-              .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
+              .attribute_dictionaries_to_native(definition, properties['dictionaries'])
           end
           return state, [definition]
         end

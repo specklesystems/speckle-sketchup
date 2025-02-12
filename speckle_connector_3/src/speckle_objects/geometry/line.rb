@@ -141,7 +141,10 @@ module SpeckleConnector3
           edges.each do |edge|
             edge.layer = layer
             # edge.layer = line_layer.nil? ? layer : line_layer
-            unless line['sketchup_attributes'].nil?
+            if !line['properties'].nil?
+              SketchupModel::Dictionary::BaseDictionaryHandler
+                .attribute_dictionaries_to_native(edge, line['properties']['dictionaries'])
+            elsif !line['sketchup_attributes'].nil? # backward compatibility
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
             end
