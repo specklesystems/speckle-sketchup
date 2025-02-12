@@ -32,7 +32,7 @@ module SpeckleConnector3
           self[:units] = units
           self[:name] = name
           self[:always_face_camera] = always_face_camera
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
           self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
           # '@@' means that it is a detached property.
           self['@@geometry'] = geometry

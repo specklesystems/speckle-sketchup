@@ -36,7 +36,7 @@ module SpeckleConnector3
           self[:units] = units
           self[:layer] = layer unless layer.nil?
           self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 

@@ -49,7 +49,7 @@ module SpeckleConnector3
           # self[:renderMaterial] = render_material
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
           self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
         end
         # rubocop:enable Metrics/ParameterLists
