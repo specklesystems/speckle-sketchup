@@ -53,7 +53,7 @@ module SpeckleConnector3
                                                              group.persistent_id.to_s)
           speckle_state = new_speckle_state
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(group, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(group, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(group)
           block_instance = BlockInstance.new(
@@ -83,7 +83,7 @@ module SpeckleConnector3
           speckle_state = new_speckle_state
 
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(component_instance, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(component_instance, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)

@@ -154,7 +154,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/ParameterLists
         def self.from_face(speckle_state:, face:, units:, model_preferences:, global_transform: nil, parent_material: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(face, model_preferences)
+                         .attribute_dictionaries_to_speckle_by_settings(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }

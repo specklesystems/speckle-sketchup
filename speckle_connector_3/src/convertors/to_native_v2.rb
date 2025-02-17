@@ -153,6 +153,11 @@ module SpeckleConnector3
 
           definition_name = proxy['name']
           definition = state.sketchup_state.sketchup_model.definitions.add(definition_name)
+          properties = proxy['properties'] || proxy['sketchup_attributes']
+          unless properties.nil?
+            SketchupModel::Dictionary::BaseDictionaryHandler
+              .attribute_dictionaries_to_native(definition, properties['dictionaries'])
+          end
           definition.behavior.always_face_camera = proxy['alwaysFaceCamera'] if proxy['alwaysFaceCamera']
           @definition_proxies[proxy['applicationId']] = SpeckleObjects::InstanceDefinitionProxy.new(
             definition,

@@ -16,7 +16,20 @@ module SpeckleConnector3
         ].freeze
 
         # @param entity [Sketchup::Entity] entity to get attribute dictionaries
-        def self.attribute_dictionaries_to_speckle(entity, model_preferences)
+        def self.attribute_dictionaries_to_speckle(entity)
+          dictionaries = {}
+          return dictionaries if entity.attribute_dictionaries.nil?
+
+          entity.attribute_dictionaries.each do |att_dict|
+            dict_name = att_dict == '' ? 'empty_dictionary_name' : att_dict.name
+            dictionaries[dict_name] = att_dict.to_h unless IGNORED_DICTIONARY_NAMES.include?(att_dict.name)
+          end
+          dictionaries
+        end
+
+        # @param entity [Sketchup::Entity] entity to get attribute dictionaries
+        # @note v2 logic
+        def self.attribute_dictionaries_to_speckle_by_settings(entity, model_preferences)
           dictionaries = {}
           return dictionaries unless model_preferences[INCLUDE_ENTITY_ATTRIBUTES]
 

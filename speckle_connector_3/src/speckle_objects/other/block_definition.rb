@@ -47,7 +47,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/ParameterLists
         def self.from_definition(definition, units, preferences, speckle_state, parent, &convert)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(definition, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(definition, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(definition)

@@ -8,7 +8,7 @@ module SpeckleConnector3
   module SpeckleObjects
     class InstanceProxy < Base
       SPECKLE_TYPE = SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY
-      def initialize(definition_id, transform, max_depth, units, application_id: nil)
+      def initialize(definition_id, transform, max_depth, units, sketchup_attributes: {}, application_id: nil)
         super(
           speckle_type: SPECKLE_TYPE,
           application_id: application_id,
@@ -18,6 +18,7 @@ module SpeckleConnector3
         self[:definitionId] = definition_id
         self[:maxDepth] = max_depth
         self[:transform] = transform
+        self[:properties] = sketchup_attributes if sketchup_attributes.any?
       end
 
       def self.to_native(state, instance_proxy, layer, entities, definition_proxies, &_convert_to_native)
@@ -26,6 +27,13 @@ module SpeckleConnector3
         transform = Other::Transform.to_native(proxy_transform, instance_proxy['units'])
         definition = definition_proxies[definition_id].definition
         instance = entities.add_instance(definition, transform)
+
+        unless instance_proxy['properties'].nil?
+          SketchupModel::Dictionary::BaseDictionaryHandler
+            .attribute_dictionaries_to_native(instance, instance_proxy['properties']['dictionaries'])
+        end
+
+
         instance.layer = layer if layer # TODO: CONVERTER_V2 check
         # TODO: CONVERTER_V2 handle groups
         return state, [instance, definition]
