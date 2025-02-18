@@ -49,7 +49,7 @@ module SpeckleConnector3
           # self[:renderMaterial] = render_material
           self[:'@(31250)vertices'] = vertices
           self[:'@(62500)faces'] = faces
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
           self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
         end
         # rubocop:enable Metrics/ParameterLists
@@ -129,7 +129,10 @@ module SpeckleConnector3
             # Smooth edges if they already soft
             # FIXME: Below line should be reconsidered. It might be a good to know here mesh comes from NURBS or not.
             face.edges.each { |edge| edge.smooth = true if edge.soft? } if has_any_non_planar_quad_mesh
-            unless mesh['sketchup_attributes'].nil?
+            if !mesh['properties'].nil?
+              SketchupModel::Dictionary::BaseDictionaryHandler
+                .attribute_dictionaries_to_native(face, mesh['properties']['dictionaries'])
+            elsif !mesh['sketchup_attributes'].nil? # backward compatibility
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(face, mesh['sketchup_attributes']['dictionaries'])
             end
@@ -151,7 +154,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/ParameterLists
         def self.from_face(speckle_state:, face:, units:, model_preferences:, global_transform: nil, parent_material: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(face, model_preferences)
+                         .attribute_dictionaries_to_speckle_by_settings(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
           att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
                   : { is_soften: has_any_soften_edge }
@@ -278,7 +281,9 @@ module SpeckleConnector3
         # @param mesh [Object] speckle mesh object
         # @param entities [Sketchup::Entities] sketchup entities that mesh will be created in it as face.
         def self.get_soften_setting(mesh, entities)
-          unless mesh['sketchup_attributes'].nil?
+          if !mesh['properties'].nil?
+            return mesh['properties']['is_soften'].nil? ? true : mesh['properties']['is_soften']
+          elsif !mesh['sketchup_attributes'].nil? # backward compatibility
             return mesh['sketchup_attributes']['is_soften'].nil? ? true : mesh['sketchup_attributes']['is_soften']
           end
 

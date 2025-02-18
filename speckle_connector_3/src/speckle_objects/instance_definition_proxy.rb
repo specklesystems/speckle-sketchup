@@ -20,7 +20,7 @@ module SpeckleConnector3
       # @param object_ids [Array<String>]
       # @param max_depth [Integer]
       # @param application_id [String | NilClass]
-      def initialize(definition, object_ids, max_depth, application_id: nil)
+      def initialize(definition, object_ids, max_depth, sketchup_attributes: {}, application_id: nil)
         super(
           speckle_type: SPECKLE_TYPE,
           application_id: application_id,
@@ -31,6 +31,7 @@ module SpeckleConnector3
         self[:objects] = object_ids
         self[:maxDepth] = max_depth
         self[:alwaysFaceCamera] = definition.behavior.always_face_camera?
+        self[:properties] = sketchup_attributes if sketchup_attributes.any?
       end
 
       def add_object_id(object_id)

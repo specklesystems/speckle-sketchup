@@ -40,7 +40,7 @@ module SpeckleConnector3
           self[:is_sketchup_group] = is_sketchup_group
           # self[:renderMaterial] = render_material
           self[:transform] = transform
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
           self[:speckle_schema] = speckle_schema if speckle_schema.any?
           # FIXME: Since blockDefinition sends with @ as detached, block basePlane renders on viewer.
           self['@@definition'] = block_definition
@@ -53,7 +53,7 @@ module SpeckleConnector3
                                                              group.persistent_id.to_s)
           speckle_state = new_speckle_state
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(group, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(group, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(group)
           block_instance = BlockInstance.new(
@@ -83,7 +83,7 @@ module SpeckleConnector3
           speckle_state = new_speckle_state
 
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(component_instance, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(component_instance, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)
@@ -245,10 +245,15 @@ module SpeckleConnector3
           end
 
           instance.name = block['name'] unless block['name'].nil?
-          unless block['sketchup_attributes'].nil?
+
+          if !block['properties'].nil?
+            SketchupModel::Dictionary::BaseDictionaryHandler
+              .attribute_dictionaries_to_native(instance, block['properties']['dictionaries'])
+          elsif !block['sketchup_attributes'].nil? # backward compatibility
             SketchupModel::Dictionary::BaseDictionaryHandler
               .attribute_dictionaries_to_native(instance, block['sketchup_attributes']['dictionaries'])
           end
+
           return state, [instance, definition]
         end
         # rubocop:enable Metrics/AbcSize

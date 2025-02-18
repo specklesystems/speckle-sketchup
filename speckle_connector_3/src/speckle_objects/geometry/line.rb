@@ -36,7 +36,7 @@ module SpeckleConnector3
           self[:units] = units
           self[:layer] = layer unless layer.nil?
           self['@SpeckleSchema'] = speckle_schema if speckle_schema.any?
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
         end
         # rubocop:enable Metrics/ParameterLists
 
@@ -59,7 +59,7 @@ module SpeckleConnector3
         # @param edge [Sketchup::Edge] edge to convert line.
         def self.from_edge(speckle_state:, edge:, units:, model_preferences:, global_transformation: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(edge, model_preferences)
+                         .attribute_dictionaries_to_speckle_by_settings(edge, model_preferences)
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = Mapper.to_speckle(speckle_state, edge, units, global_transformation: global_transformation)
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
@@ -141,7 +141,10 @@ module SpeckleConnector3
           edges.each do |edge|
             edge.layer = layer
             # edge.layer = line_layer.nil? ? layer : line_layer
-            unless line['sketchup_attributes'].nil?
+            if !line['properties'].nil?
+              SketchupModel::Dictionary::BaseDictionaryHandler
+                .attribute_dictionaries_to_native(edge, line['properties']['dictionaries'])
+            elsif !line['sketchup_attributes'].nil? # backward compatibility
               SketchupModel::Dictionary::BaseDictionaryHandler
                 .attribute_dictionaries_to_native(edge, line['sketchup_attributes']['dictionaries'])
             end

@@ -46,11 +46,16 @@ module SpeckleConnector3
           instance_id = entity.persistent_id.to_s
           definition_id = entity.definition.persistent_id.to_s
 
+          instance_dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                           .attribute_dictionaries_to_speckle(entity)
+          instance_att = instance_dictionaries.any? ? { dictionaries: instance_dictionaries } : {}
+
           instance_proxies[instance_id] = SpeckleObjects::InstanceProxy.new(
             definition_id,
             SpeckleObjects::Other::Transform.from_transformation(entity.transformation, @units).value,
             depth,
             @units,
+            sketchup_attributes: instance_att,
             application_id: instance_id
           )
 
@@ -70,7 +75,17 @@ module SpeckleConnector3
             return
           end
 
-          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new(entity.definition, [], depth, application_id: definition_id)
+          definition_dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+                                    .attribute_dictionaries_to_speckle(entity.definition)
+          definition_att = definition_dictionaries.any? ? { dictionaries: definition_dictionaries } : {}
+
+          definition_proxy = SpeckleObjects::InstanceDefinitionProxy.new(
+            entity.definition,
+            [],
+            depth,
+            sketchup_attributes: definition_att,
+            application_id: definition_id
+          )
           definition_proxy[:name] = entity.definition.name
           definition_proxy[:description] = entity.definition.description
 

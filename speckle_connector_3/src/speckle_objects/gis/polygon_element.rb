@@ -57,7 +57,7 @@ module SpeckleConnector3
 
           geometries.each do |geo|
             if geo['speckle_type'] && geo['speckle_type'] == OBJECTS_GEOMETRY_MESH
-              geo['sketchup_attributes'] = { 'is_soften' => false }
+              geo['properties'] = { 'is_soften' => false }
             end
           end
 

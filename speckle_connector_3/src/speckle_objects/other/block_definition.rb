@@ -32,7 +32,7 @@ module SpeckleConnector3
           self[:units] = units
           self[:name] = name
           self[:always_face_camera] = always_face_camera
-          self[:sketchup_attributes] = sketchup_attributes if sketchup_attributes.any?
+          self[:properties] = sketchup_attributes if sketchup_attributes.any?
           self[:SpeckleSchema] = speckle_schema if speckle_schema.any?
           # '@@' means that it is a detached property.
           self['@@geometry'] = geometry
@@ -47,7 +47,7 @@ module SpeckleConnector3
         # rubocop:disable Metrics/ParameterLists
         def self.from_definition(definition, units, preferences, speckle_state, parent, &convert)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
-                         .attribute_dictionaries_to_speckle(definition, preferences[:model])
+                         .attribute_dictionaries_to_speckle_by_settings(definition, preferences[:model])
           att = dictionaries.any? ? { dictionaries: dictionaries } : {}
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(definition)
@@ -118,7 +118,7 @@ module SpeckleConnector3
           geometry = definition_obj['geometry'] || definition_obj['@geometry'] || definition_obj['displayValue']
 
           always_face_camera = definition_obj['always_face_camera'].nil? ? false : definition_obj['always_face_camera']
-          sketchup_attributes = definition_obj['sketchup_attributes']
+          properties = definition_obj['properties'] || definition_obj['sketchup_attributes']
           definition&.entities&.clear!
           definition ||= sketchup_model.definitions.add(definition_name)
 
@@ -143,9 +143,9 @@ module SpeckleConnector3
           # puts("definition finished: #{name} (#{application_id})")
           # puts("    entity count: #{definition.entities.count}")
           definition.behavior.always_face_camera = always_face_camera
-          unless sketchup_attributes.nil?
+          unless properties.nil?
             SketchupModel::Dictionary::BaseDictionaryHandler
-              .attribute_dictionaries_to_native(definition, sketchup_attributes['dictionaries'])
+              .attribute_dictionaries_to_native(definition, properties['dictionaries'])
           end
           return state, [definition]
         end

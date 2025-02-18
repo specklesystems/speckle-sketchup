@@ -32,7 +32,7 @@ module SpeckleConnector3
           self[:emissive] = emissive
           self[:metalness] = metalness
           self[:roughness] = roughness
-          self[:sketchup_attributes] = sketchup_attributes
+          self[:properties] = sketchup_attributes
         end
         # rubocop:enable Metrics/ParameterLists
 
