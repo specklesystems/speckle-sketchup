@@ -50,6 +50,8 @@ jobs:
         with:
           name: output-${{steps.gitversion.outputs.semVer}}
           path: sketchup.zip
+          retention-days: 1
+          if-no-files-found: error
           compression-level: 0 # no compression
       - id: set-version
         name: Set version to output
