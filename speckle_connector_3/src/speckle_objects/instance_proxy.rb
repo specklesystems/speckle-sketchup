@@ -14,7 +14,7 @@ module SpeckleConnector3
           application_id: application_id,
           id: nil
         )
-        self[:name] = name
+        self[:name] = name if name != ""
         self[:units] = units
         self[:definitionId] = definition_id
         self[:maxDepth] = max_depth
