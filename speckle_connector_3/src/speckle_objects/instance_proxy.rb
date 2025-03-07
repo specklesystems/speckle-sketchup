@@ -8,13 +8,15 @@ module SpeckleConnector3
   module SpeckleObjects
     class InstanceProxy < Base
       SPECKLE_TYPE = SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_PROXY
-      def initialize(definition_id, name, transform, max_depth, units, sketchup_attributes: {}, application_id: nil)
+      def initialize(definition_id, name, definitionName, layerName, transform, max_depth, units, sketchup_attributes: {}, application_id: nil)
         super(
           speckle_type: SPECKLE_TYPE,
           application_id: application_id,
           id: nil
         )
         self[:name] = name if name != ""
+        self[:definition] = definitionName if definitionName != ""
+        self[:layer] = layerName if layerName != ""
         self[:units] = units
         self[:definitionId] = definition_id
         self[:maxDepth] = max_depth
