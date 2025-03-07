@@ -17,6 +17,7 @@ module SpeckleConnector3
       # @return [States::State] the new updated state object
       def self.update_state(state, resolve_id, model_card_id)
         # Set active path always to model to be safe always. Later we can address it
+        start_time = Time.now.to_f
         state.sketchup_state.sketchup_model.active_path = nil
         units = Converters::SKETCHUP_UNITS[state.sketchup_state.length_units]
         model_card = state.speckle_state.send_cards[model_card_id]
@@ -53,10 +54,28 @@ module SpeckleConnector3
         base[:colorProxies] = unpacked_colors
         base[:units] = units
 
+        elapsed_time = (Time.now.to_f - start_time).round(3)
+        puts "==== Converting objects executed in #{elapsed_time} sec ===="
+
+        start_time = Time.now.to_f
+
+        sender_progress_args = {
+          modelCardId: model_card_id,
+          progress: {
+            progress: nil,
+            status: 'Serializing'
+          }
+        }
+        state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
+
         id, batches, refs = converter.serialize(base, state.user_state.preferences)
+        elapsed_time = (Time.now.to_f - start_time).round(3)
+        puts "==== Serializing objects executed in #{elapsed_time} sec ===="
         new_speckle_state = new_speckle_state.with_object_references(model_card.project_id, refs)
         new_speckle_state = new_speckle_state.with_empty_changed_entity_persistent_ids
         new_speckle_state = new_speckle_state.with_empty_changed_entity_ids
+
+        puts "Cached/Total object: #{converter.cached_object_count}/#{converter.object_count}"
 
         puts("converted #{base.count} objects for stream #{model_card.project_id}")
 

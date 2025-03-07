@@ -12,6 +12,23 @@ module SpeckleConnector3
     module Speckle
       module Core
         module Models
+          class Debouncer
+            def initialize(wait_time)
+              @wait_time = wait_time
+              @mutex = Mutex.new
+              @thread = nil
+            end
+
+            def call(&block)
+              @mutex.synchronize do
+                @thread&.kill # Cancel the previous execution
+                @thread = Thread.new do
+                  sleep @wait_time
+                  block.call
+                end
+              end
+            end
+          end
           # ModelCollection object that collect other speckle objects under it's elements.
           class ModelCollection < Collection
             DIRECT_SHAPE = SpeckleObjects::BuiltElements::Revit::DirectShape
@@ -61,6 +78,8 @@ module SpeckleConnector3
                 application_id: sketchup_model.guid
               )
 
+              last_sent_time = Time.now
+
               count = 0
               entities.each do |entity|
                 layer_collection = LayerCollection.get_or_create_layer_collection(entity.layer, model_collection)
@@ -83,13 +102,10 @@ module SpeckleConnector3
                     status: progress == 1 ? 'Completed' : 'Converting'
                   }
                 }
-
-                action = Proc.new do
+                if Time.now - last_sent_time >= 1
                   state.instant_message_sender.call("sendBinding.emit('setModelProgress', #{sender_progress_args.to_json})")
+                  last_sent_time = Time.now
                 end
-
-                state.worker.add_job(Job.new(entity.persistent_id.to_s, &action))
-                state.worker.do_work(Time.now.to_f, &action)
               end
 
               return speckle_state, model_collection

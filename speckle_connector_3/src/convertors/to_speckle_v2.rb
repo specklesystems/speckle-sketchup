@@ -37,12 +37,17 @@ module SpeckleConnector3
       # @return [SketchupModel::Definitions::UnpackResult]
       attr_reader :unpacked_entities
 
+      attr_reader :object_count
+      attr_reader :cached_object_count
+
       # @param model_card [Cards::SendCard] sender card
       def initialize(state, unpacked_entities, model_card)
         super(state, model_card)
         @send_filter = model_card.send_filter
         @conversion_results = []
         @unpacked_entities = unpacked_entities
+        @object_count = 0
+        @cached_object_count = 0
       end
 
       def convert_entities_to_base_blocks_poc
@@ -64,11 +69,9 @@ module SpeckleConnector3
       # @return [String, Integer, Array<Object>] base id of base and batches
       def serialize(base_and_entity, preferences)
         serializer = SpeckleConnector3::Converters::BaseObjectSerializer.new(preferences)
-        t = Time.now.to_f
         id = serializer.serialize(base_and_entity)
         batches = serializer.batch_json_objects
         write_to_speckle_folder(id, batches)
-        puts "Generating traversed object elapsed #{(Time.now.to_f - t).round(5)} s"
         return id, batches, serializer.object_references
       end
 
@@ -122,12 +125,15 @@ module SpeckleConnector3
       # @param speckle_state [States::SpeckleState]
       # rubocop:disable Metrics/MethodLength
       def from_native_to_speckle(entity, preferences, speckle_state, parent, ignore_cache, &convert)
+        @object_count += 1
+        persistent_id = entity.is_a?(SpeckleObjects::Geometry::GroupedMesh) ? entity.faces.first.persistent_id.to_s : entity.persistent_id.to_s
         # Where we do send caching!
         if !ignore_cache && !entity_has_changed?(entity) &&
-           speckle_state.object_references_by_project[model_card.project_id] &&
-           speckle_state.object_references_by_project[model_card.project_id].keys.include?(entity.persistent_id.to_s)
-          reference = speckle_state.object_references_by_project[model_card.project_id][entity.persistent_id.to_s]
+           speckle_state.object_references_by_project.keys.include?(model_card.project_id) &&
+           speckle_state.object_references_by_project[model_card.project_id].keys.include?(persistent_id)
+          reference = speckle_state.object_references_by_project[model_card.project_id][persistent_id]
           add_to_report(entity, reference)
+          @cached_object_count += 1
           return speckle_state, reference
         end
 
