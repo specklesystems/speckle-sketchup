@@ -53,6 +53,8 @@ module SpeckleConnector3
           instance_proxies[instance_id] = SpeckleObjects::InstanceProxy.new(
             definition_id,
             entity.name,
+            entity.definition.name,
+            entity.layer.display_name,
             SpeckleObjects::Other::Transform.from_transformation(entity.transformation, @units).value,
             depth,
             @units,
