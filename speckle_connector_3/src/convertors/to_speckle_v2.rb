@@ -140,14 +140,13 @@ module SpeckleConnector3
         if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
           mesh = SpeckleObjects::Geometry::Mesh.from_faces(speckle_state: speckle_state, faces: entity.faces,
                                                            units: @units, model_preferences: preferences[:model])
-          add_to_report(entity, mesh)
           return speckle_state, mesh
         end
 
         if entity.is_a?(Sketchup::Edge)
           line = SpeckleObjects::Geometry::Line.from_edge(speckle_state: speckle_state, edge: entity,
                                                           units: @units, model_preferences: preferences[:model]).to_h
-          add_to_report(entity, line)
+          add_to_report(entity, line) unless entity.parent.is_a?(Sketchup::ComponentDefinition)
           return speckle_state, line
         end
 
