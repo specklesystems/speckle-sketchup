@@ -34,6 +34,41 @@ module SpeckleConnector3
       )
     end
 
+    # this is needed to get last selected account
+    def self.get_user_selected_account_id
+      db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
+      row_data = db.exec("SELECT content FROM 'objects' WHERE hash = 'accounts'")
+      is_config_accounts_exist = !row_data.empty?
+      return nil unless is_config_accounts_exist
+
+      # Select data
+      row_data = db.exec("SELECT content FROM 'objects' WHERE hash = 'accounts'").first.first
+      # Parse string to hash
+      data_hash = JSON.parse(row_data).to_h
+      # Get current theme value
+      data_hash['userSelectedAccountId']
+    end
+
+    def self.format_user_selected_accounts_insert(account_id)
+      "('accounts', '{\"userSelectedAccountId\": \"#{account_id}\"}');"
+    end
+
+    def self.format_user_selected_accounts_update(account_id)
+      "{\"userSelectedAccountId\": \"#{account_id}\"}"
+    end
+
+    def self.set_user_selected_account_id(account_id)
+      db = Sqlite3::Database.new(SPECKLE_CONFIG_DB_PATH)
+      row_data = db.exec("SELECT content FROM 'objects' WHERE hash = 'accounts'")
+      is_config_accounts_exist = !row_data.empty?
+
+      if !is_config_accounts_exist
+        db.exec("INSERT INTO 'objects' VALUES #{format_user_selected_accounts_insert(account_id)}")
+      else
+        db.exec("UPDATE 'objects' SET content = '#{format_user_selected_accounts_update(account_id)}' WHERE hash = 'accounts'")
+      end
+    end
+
     # Creates the 'objects' table in the database if it doesn't already exist.
     # @param db [Sqlite3::Database] the SQLite3 database instance.
     def self.create_objects_table(db)
