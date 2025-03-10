@@ -12,10 +12,13 @@ module SpeckleConnector3
         def self.highlight_entities(sketchup_model, entity_ids)
           sketchup_model.selection.clear
 
+          # below code causing huge performance bottleneck since iterate nestedly, I was initially considering to cover all cases,
+          # but not worth to have highlighting sub elements since we already highlight the parent. This can be only an issue when user sends
+          # only the sub elements
           # Flat entities to select entities on card
-          flat_entities = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
+          # flat_entities = SketchupModel::Query::Entity.flat_entities(sketchup_model.entities)
 
-          flat_entities.each do |entity|
+          sketchup_model.entities.each do |entity|
             next unless entity_ids.include?(entity.persistent_id.to_s)
 
             sketchup_model.selection.add(entity.instances) if entity.is_a?(Sketchup::ComponentDefinition)
