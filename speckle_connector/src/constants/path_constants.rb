@@ -14,7 +14,9 @@ module SpeckleConnector
                            path = ENV.fetch('APPDATA')
                            Pathname.new(File.join(path, 'Speckle')).cleanpath.to_s
                          when OS_MAC
-                           File.join(Dir.home, '.config/Speckle')
+                           primary_path = File.join(Dir.home, '.config/Speckle')
+                           fallback_path = File.join(Dir.home, 'Library/Application Support/Speckle')
+                           Dir.exist?(primary_path) ? primary_path : fallback_path
                          else
                            raise 'Speckle could not determine your Appdata path'
                          end
