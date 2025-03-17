@@ -8,7 +8,7 @@ module SpeckleConnector
   module Commands
     # Command to remove stream.
     class RemoveStream < Command
-      def _run(data)
+      def _run(_resolve_id, data)
         stream_id = data['stream_id']
         action = Actions::RemoveStream.new(stream_id)
         app.update_state!(action)

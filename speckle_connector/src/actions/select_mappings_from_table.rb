@@ -10,11 +10,11 @@ module SpeckleConnector
     class SelectMappingsFromTable < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, data)
+      def self.update_state(state, _resolve_id, data)
         # Clear first selection
         state.sketchup_state.sketchup_model.selection.clear
 
-        # Flat entities to clear mappings
+        # Flat entities to select mapped elements
         flat_entities = SketchupModel::Query::Entity.flat_entities(state.sketchup_state.sketchup_model.entities)
 
         # Collect entity ids to clear mappings

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../actions/handle_error'
+
 module SpeckleConnector
   module Commands
     # Base command schema to wrap common operations for all commands.
@@ -7,19 +9,25 @@ module SpeckleConnector
       # @return [App::SpeckleConnectorApp] the main app object
       attr_reader :app
 
-      # @return [Ui::View] view object holds dialog and it's state
-      attr_reader :view
+      # @return [Ui::Binding] binding object holds dialog and it's state
+      attr_reader :binding
 
-      # @@param app [App::SpeckleConnectorApp] the main app object
-      def initialize(app)
+      # @param app [App::SpeckleConnectorApp] the main app object
+      # @param binding [Ui::Binding] binding object holds commands to call
+      def initialize(app, binding)
         @app = app
-        @view = app.ui_controller.user_interfaces[Ui::SPECKLE_UI_ID]
+        @binding = binding
       end
 
       def run(*parameters)
-        # Run here common operations that same for each command.
-        with_observers_disabled do
-          _run(*parameters)
+        begin
+          # Run here common operations that same for each command.
+          with_observers_disabled do
+            _run(*parameters)
+          end
+        rescue StandardError => e
+          action = Actions::HandleError.new(e, @binding.name, @action, parameters)
+          app.update_state!(action)
         end
       end
 

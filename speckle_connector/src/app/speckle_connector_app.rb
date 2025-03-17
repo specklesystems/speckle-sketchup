@@ -28,10 +28,6 @@ module SpeckleConnector
         state.speckle_state?
       end
 
-      def update_ui!
-        ui_controller.update_ui(state)
-      end
-
       # Attach observers to application when speckle initialized via menu commands.
       def add_observer_handler!(observer_handler)
         @observer_handler = observer_handler
@@ -40,8 +36,16 @@ module SpeckleConnector
       # Send messages to HtmlDialog if any.
       def send_messages!
         queue = @state.speckle_state.message_queue
-        queue.each_value { |value| ui_controller.user_interfaces[Ui::SPECKLE_UI_ID].dialog.execute_script(value) }
+        queue.each_value do |value|
+          instant_message_sender(value)
+        end
         update_state!(Actions::ClearQueue)
+      end
+
+      def instant_message_sender(message)
+        ui_controller.user_interfaces.each_value do |dialog|
+          dialog.execute_script(message)
+        end
       end
 
       # This is the only function application state will be switched by calling upcoming action with it's parameters
@@ -50,7 +54,6 @@ module SpeckleConnector
         old_state = @state
         @state = action.update_state(old_state, *parameters)
         send_messages! if @state.speckle_state.message_queue.any?
-        update_ui! unless @state.equal?(old_state)
       end
     end
   end

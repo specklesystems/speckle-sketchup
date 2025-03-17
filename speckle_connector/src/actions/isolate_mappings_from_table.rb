@@ -14,7 +14,7 @@ module SpeckleConnector
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/PerceivedComplexity
       # rubocop:disable Metrics/CyclomaticComplexity
-      def self.update_state(state, data)
+      def self.update_state(state, _resolve_id, data)
         sketchup_model = state.sketchup_state.sketchup_model
 
         # Hide all entities first

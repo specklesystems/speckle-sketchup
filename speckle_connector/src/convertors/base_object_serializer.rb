@@ -5,6 +5,8 @@ require 'securerandom'
 # rubocop:enable SketchupPerformance/OpenSSL
 require 'digest'
 require_relative 'converter'
+require_relative '../speckle_objects/base'
+require_relative '../speckle_objects/object_reference'
 require_relative '../speckle_entities/speckle_entity'
 require_relative '../relations/many_to_one_relation'
 
@@ -16,23 +18,17 @@ module SpeckleConnector
       # @return [Integer] default chunk size the determine splitting base prop into chucks
       attr_reader :default_chunk_size
 
-      # @return [String] stream id to send conversion
-      attr_reader :stream_id
+      attr_reader :object_references
 
-      attr_accessor :speckle_state
-
-      # @param stream_id [String] stream id to send conversion
-      def initialize(speckle_state, stream_id, preferences, default_chunk_size = 1000)
-        @speckle_state = speckle_state
-        @stream_id = stream_id
+      def initialize(preferences, default_chunk_size = 1000)
         @preferences = preferences
         @default_chunk_size = default_chunk_size
         @detach_lineage = []
         @lineage = []
         @family_tree = {}
-        @family_tree_relation = Relations::ManyToOneRelation.new
         @closure_table = {}
         @objects = {}
+        @object_references = {}
       end
 
       # @param base [Object] top base object to populate all children and their relationship
@@ -47,35 +43,14 @@ module SpeckleConnector
         @objects[id][:totalChildrenCount]
       end
 
-      # @param base_and_entities [Object] base object to populate all children and their relationship
+      # @param base [Object] base object to populate all children and their relationship
       # rubocop:disable Metrics/MethodLength
-      # rubocop:disable Metrics/PerceivedComplexity
-      # rubocop:disable Metrics/CyclomaticComplexity
-      # rubocop:disable Metrics/AbcSize
-      def traverse_base(base_and_entities)
-        base, entities = base_and_entities
-
+      def traverse_base(base)
         # 1. Create random string for lineage tracking.
         @lineage.append(SecureRandom.hex)
 
         # 2. Get last item from detach_lineage array
         is_detached = @detach_lineage.pop
-
-        # unless entities.nil?
-        #   is_sent_before = entities.all? do |entity|
-        #     check_base_available_on_state(entity, speckle_state)
-        #   end
-        #   if is_sent_before
-        #     speckle_entity = speckle_state.speckle_entities[entities.first.persistent_id]
-        #     ref_object = detach_helper(speckle_entity.id)
-        #     parent = @lineage[-1]
-        #     unless @family_tree[parent].nil?
-        #       @family_tree[parent] = @family_tree[parent].merge(speckle_entity.speckle_object[:__closure])
-        #     end
-        #     @objects[speckle_entity.id] = ref_object if is_detached
-        #     return speckle_entity.id, ref_object
-        #   end
-        # end
 
         # 3. Initialize traversed base object that will be filled with traversed values or
         # traversed base objects as props.
@@ -85,7 +60,6 @@ module SpeckleConnector
         traversed_base.delete(:applicationId)
 
         # 4. Iterate all entries (key, value) of the base {Base > Hash} object
-        # speckle_state = traverse_base_props(base, traversed_base)
         traverse_base_props(base, traversed_base)
         # this is where all props are done for current `traversed_base`
 
@@ -116,19 +90,15 @@ module SpeckleConnector
         # 10. Save object string if detached
         @objects[id] = traversed_base if is_detached
 
-        if @preferences[:user][:register_speckle_entity] && !entities.nil?
-          entities.uniq.each do |entity|
-            speckle_entity = create_or_update_speckle_entity(entity, id, traversed_base)
-            @speckle_state = speckle_state.with_speckle_entity(speckle_entity)
-          end
+        if traversed_base[:applicationId]
+          @object_references[traversed_base[:applicationId].to_s] = SpeckleObjects::ObjectReference.new(
+            id, traversed_base[:applicationId].to_s, traversed_base[:__closure]
+          )
         end
 
         return id, traversed_base
       end
       # rubocop:enable Metrics/MethodLength
-      # rubocop:enable Metrics/PerceivedComplexity
-      # rubocop:enable Metrics/CyclomaticComplexity
-      # rubocop:enable Metrics/AbcSize
 
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/AbcSize
@@ -155,7 +125,7 @@ module SpeckleConnector
           chunked_detach_match = prop.match(/^@\((\d*)\)/)
 
           # 3.5. If split chunk is needed and prop value is array, then run chunking process
-          if value.is_a?(Array) && !base_and_entities?(value) && chunked_detach_match
+          if value.is_a?(Array) && chunked_detach_match
             # 3.5.1. Determine chunk size, get it from prop if defined. ex: '@(31250)faces' -> 31250 = chunk size
             chunk_size = chunked_detach_match[1] == '' ? default_chunk_size : chunked_detach_match[1].to_i
 
@@ -204,12 +174,15 @@ module SpeckleConnector
 
           child = traverse_value(value, is_detach_prop)
 
-          is_base = (value.is_a?(Hash) && !value[:speckle_type].nil?) ||
-                    (base_and_entities?(value) && value[0].is_a?(Hash) && !value[0][:speckle_type].nil?)
+          is_base = value.is_a?(Hash) && !value[:speckle_type].nil?
 
           # 3.6. traverse value according to value is a speckle object or not
           traversed_base[prop] = if is_base
-                                   is_detach_prop ? detach_helper(child[:id]) : child
+                                   if child[:referencedId] && child[:speckle_type] == 'reference'
+                                     is_detach_prop ? detach_helper(child[:referencedId]) : child
+                                   else
+                                     is_detach_prop ? detach_helper(child[:id]) : child
+                                   end
                                  else
                                    child
                                  end
@@ -221,18 +194,6 @@ module SpeckleConnector
       # rubocop:enable Metrics/CyclomaticComplexity
       # rubocop:enable Metrics/PerceivedComplexity
 
-      # Whether value has a pattern [<converted>, [<entity>, <entity>, ... <entity>]] or not.
-      def base_and_entities?(value)
-        is_array = value.is_a?(Array)
-        return false unless is_array
-
-        return false unless is_array && value.length == 2
-
-        return false if value[1].nil?
-
-        value[1].all? { |v| v.is_a?(Sketchup::Entity) }
-      end
-
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Metrics/CyclomaticComplexity
       # rubocop:disable Metrics/PerceivedComplexity
@@ -242,8 +203,8 @@ module SpeckleConnector
         # 1. Return same value if value is primitive type (string, numeric, boolean)
         return value unless value.is_a?(Hash) || value.is_a?(Array)
 
-        # 2. For pure arrays (Without referencing any Sketchup Entity)
-        if value.is_a?(Array) && !base_and_entities?(value)
+        # 2. For pure arrays
+        if value.is_a?(Array)
 
           # 2.1. If it is not detached then iterate array by traversing with their value
           unless is_detach
@@ -257,7 +218,17 @@ module SpeckleConnector
           # 2.2. If it is detached than collect them into detached_list
           detached_list = []
           value.each do |el|
-            if (el.is_a?(Hash) && !el[:speckle_type].nil?) || base_and_entities?(el)
+            if el.is_a?(SpeckleObjects::ObjectReference)
+              if el.closure
+                el.closure.each_key do |k|
+                  detach_helper(k)
+                end
+              end
+              detached_list.append(detach_helper(el.referenced_id))
+              next
+            end
+
+            if el.is_a?(Hash) && !el[:speckle_type].nil?
               @detach_lineage.append(is_detach)
               id, _traversed_base = traverse_base(el)
               detached_list.append(detach_helper(id))
@@ -269,11 +240,21 @@ module SpeckleConnector
           return detached_list
         end
 
-        # 3. Hash
+        # 3. ObjectReference
+        if value.is_a?(SpeckleObjects::ObjectReference)
+          if value.closure
+            value.closure.each_key do |k|
+              detach_helper(k)
+            end
+          end
+          return detach_helper(value.referenced_id)
+        end
+
+        # 4. Hash
         return value if value.is_a?(Hash) && value[:speckle_type].nil?
 
-        # 4. Base objects
-        if (value.is_a?(Hash) && !value[:speckle_type].nil?) || base_and_entities?(value)
+        # 5. Base objects
+        if value.is_a?(Hash) && !value[:speckle_type].nil?
           @detach_lineage.append(is_detach)
           _id, traversed_base = traverse_base(value)
           return traversed_base
@@ -310,8 +291,12 @@ module SpeckleConnector
         Digest::MD5.hexdigest(traversed_base.to_json)
       end
 
+      def batch_objects
+        @objects
+      end
+
       # rubocop:disable Metrics/MethodLength
-      def batch_objects(max_batch_size_mb = 1)
+      def batch_json_objects(max_batch_size_mb = 1)
         max_size = 1000 * 1000 * max_batch_size_mb
         batches = []
         batch = '['
@@ -335,32 +320,6 @@ module SpeckleConnector
         batches
       end
       # rubocop:enable Metrics/MethodLength
-
-      # @param entity [Sketchup::Entity] source entity object
-      # @param speckle_state [States::SpeckleState] the current speckle state of the {States::State}
-      def check_base_available_on_state(entity, speckle_state)
-        is_exist = speckle_state.speckle_entities.keys.include?(entity.persistent_id)
-        return is_exist unless is_exist
-
-        speckle_state.speckle_entities[entity.persistent_id].valid_stream_ids.include?(stream_id)
-      end
-
-      # Creates or updates speckle entity.
-      # If speckle entity exist in state, creates new one by updating old one.
-      # Else creates new one
-      # @return [SpeckleEntity] speckle entity that collects both speckle and sketchup information.
-      def create_or_update_speckle_entity(entity, id, traversed_base)
-        if speckle_state.speckle_entities.keys.include?(entity.persistent_id)
-          speckle_state.speckle_entities[entity.persistent_id].with_valid_stream_id(stream_id)
-        else
-          children = traversed_base[:__closure].nil? ? {} : traversed_base[:__closure]
-          speckle_entity = SpeckleEntities::SpeckleEntity.new(entity, id, entity.persistent_id,
-                                                              traversed_base[:speckle_type],
-                                                              children.keys, [stream_id])
-          speckle_entity.write_initial_base_data
-          speckle_entity
-        end
-      end
     end
   end
 end

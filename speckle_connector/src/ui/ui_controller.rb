@@ -22,13 +22,6 @@ module SpeckleConnector
         # FIXME: Mutable alert!
         @user_interfaces[interface_id] = user_interface
       end
-
-      # Update user interfaces with new speckle states object
-      def update_ui(state)
-        user_interfaces.each_value do |ui|
-          ui.update_view(state)
-        end
-      end
     end
   end
 end

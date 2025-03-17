@@ -151,7 +151,7 @@ module SpeckleConnector
             end_pt: end_point,
             domain: domain,
             layer: 'test',
-            application_id: '',
+            application_id: 'test',
             units: units
           )
         end

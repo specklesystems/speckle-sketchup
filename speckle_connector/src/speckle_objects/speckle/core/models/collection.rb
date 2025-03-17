@@ -23,17 +23,17 @@ module SpeckleConnector
               )
               self[:name] = name
               self[:collectionType] = collection_type
-              self[:elements] = elements
+              self['@elements'] = elements
             end
 
             def self.to_native(state, collection, layer, entities, &convert_to_native)
               collection_type = collection['collectionType']
 
-              if collection_type.include?('model')
-                ModelCollection.to_native(state, collection, layer, entities, &convert_to_native)
-              else
-                LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
+              if collection_type && collection_type.include?('layer')
+                return LayerCollection.to_native(state, collection, layer, entities, &convert_to_native)
               end
+
+              ModelCollection.to_native(state, collection, layer, entities, &convert_to_native)
             end
           end
         end

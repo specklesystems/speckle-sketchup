@@ -79,7 +79,7 @@ module SpeckleConnector
             always_face_camera: definition.behavior.always_face_camera?,
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
-            application_id: definition.persistent_id.to_s
+            application_id: definition.persistent_id
           )
           return speckle_state, block_definition
         end
@@ -190,7 +190,7 @@ module SpeckleConnector
               speckle_state = new_speckle_state
             end
             # Update mesh overwrites points and polygons into base object.
-            mesh_groups.each { |_, mesh| mesh.first.update_mesh }
+            mesh_groups.each { |_, mesh| mesh.update_mesh unless mesh.is_a?(ObjectReference)}
 
             return speckle_state, lines + nested_blocks + nested_groups + mesh_groups.values
           else
@@ -213,11 +213,11 @@ module SpeckleConnector
         def self.group_meshes_by_material(face, mesh_groups, speckle_state, preferences, parent, &convert)
           # convert material
           mesh_group_id = Geometry::Mesh.get_mesh_group_id(face, preferences[:model])
-          new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent)
+          new_speckle_state, converted = convert.call(face, preferences, speckle_state, parent, true)
           mesh_groups[mesh_group_id] = converted unless mesh_groups.key?(mesh_group_id)
           mesh_group = mesh_groups[mesh_group_id]
-          mesh_group[0].face_to_mesh(face)
-          mesh_group[1].append(face)
+          mesh_group.face_to_mesh(face)
+          # mesh_group[1].append(face)
           new_speckle_state
         end
         # rubocop:enable Metrics/ParameterLists

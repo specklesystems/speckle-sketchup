@@ -29,6 +29,8 @@ module SpeckleConnector
         # Read speckle entities
         new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
         new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
+        # POC: Reconsider it when we will do caching between sessions!
+        new_speckle_state = new_speckle_state.with_empty_object_references
         # Read mapped entities
         new_mapped_entities = SketchupModel::Reader::MapperReader.read_mapped_entities(sketchup_model.entities)
         new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
@@ -51,6 +53,8 @@ module SpeckleConnector
         # layers = sketchup_model.layers
         # layers.add_observer(observers[LAYERS_OBSERVER_NAME])
         entities = sketchup_model.entities
+        edges = entities.grep(Sketchup::Edge)
+        edges.each { |edge| edge.add_observer(observers[ENTITY_OBSERVER]) }
         entities.add_observer(observers[ENTITIES_OBSERVER])
         sketchup_model.add_observer(observers[MODEL_OBSERVER])
         # materials = sketchup_model.materials

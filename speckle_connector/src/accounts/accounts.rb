@@ -7,6 +7,7 @@ require_relative '../constants/path_constants'
 module SpeckleConnector
   # Accounts to communicate with models on user's account.
   module Accounts
+    # Load accounts from user's app data.
     def self.load_accounts
       db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
@@ -23,9 +24,21 @@ module SpeckleConnector
       rows.map { |row| JSON.parse(row[1]) }
     end
 
+    def self.get_account_by_id(id)
+      accounts = load_accounts
+      accounts.select { |acc| acc['id'] == id }[0]
+    end
+
+    # Default account on the user computer.
     def self.default_account
       accounts = load_accounts
       accounts.select { |acc| acc['isDefault'] }[0] || accounts[0]
+    end
+
+    # Try to get local server account for debug/test purposes.
+    def self.try_get_local_server_account
+      accounts = load_accounts
+      accounts.select { |acc| acc['serverInfo']['url'].include?('localhost') }[0] || nil
     end
   end
 end

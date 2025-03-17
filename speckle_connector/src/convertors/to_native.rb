@@ -22,6 +22,7 @@ require_relative '../speckle_objects/built_elements/network'
 require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
+require_relative '../ui_data/report/conversion_result'
 
 module SpeckleConnector
   module Converters
@@ -36,12 +37,18 @@ module SpeckleConnector
 
       attr_reader :converted_faces
 
-      def initialize(state, stream_id, stream_name, branch_name, source_app)
-        super(state, stream_id)
+      attr_reader :converted_entities
+
+      attr_reader :conversion_results
+
+      def initialize(state, stream_id, stream_name, branch_name, source_app, model_card_id)
+        super(state, stream_id, model_card_id)
         @stream_name = stream_name
         @branch_name = branch_name
         @source_app = source_app.downcase
         @converted_faces = []
+        @converted_entities = []
+        @conversion_results = []
       end
 
       # Module aliases
@@ -146,6 +153,7 @@ module SpeckleConnector
       def try_create_instance
         if !from_sketchup && (!@is_update_commit || @branch_definition.instances.empty?)
           instance = sketchup_model.entities.add_instance(@branch_definition, Geom::Transformation.new)
+          @converted_entities.append(instance)
           BLOCK_INSTANCE.align_instance_axes(instance) if from_qgis
         end
       end
@@ -325,6 +333,7 @@ module SpeckleConnector
         # Call 'to_native' method by passing this method itself to handle nested 'to_native' conversions.
         # It returns updated state and converted entities.
         state, converted_entities = to_native_method.call(state, obj, layer, entities, &convert_to_native)
+        @converted_entities += converted_entities
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?
         if from_revit
@@ -334,10 +343,25 @@ module SpeckleConnector
           create_layers_from_categories(state, obj, converted_entities)
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
+
+        converted_entities.each do |converted|
+          @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
+                                                                        obj['id'],
+                                                                        obj['speckle_type'],
+                                                                        converted.persistent_id,
+                                                                        converted.class))
+
+        end
         SpeckleEntities::SpeckleEntity.from_speckle_object(state, obj, converted_entities, stream_id)
       rescue StandardError => e
         puts("Failed to convert #{obj['speckle_type']} (id: #{obj['id']})")
         puts(e)
+        @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::ERROR,
+                                                                      obj['id'],
+                                                                      obj['speckle_type'],
+                                                                      nil,
+                                                                      nil,
+                                                                      e))
         return state, []
       end
 

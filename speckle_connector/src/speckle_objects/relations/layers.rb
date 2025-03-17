@@ -33,7 +33,7 @@ module SpeckleConnector
         def self.extract_relations(commit_obj, source_app)
           return nil unless commit_obj['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION
 
-          elements = element_to_relation(commit_obj['elements'], source_app, [])
+          elements = element_to_relation(commit_obj['@elements'] || commit_obj['elements'], source_app, [])
 
           Layers.new(
             active: commit_obj['active_layer'],
@@ -53,12 +53,12 @@ module SpeckleConnector
             # Add this info to commit object to check later layer_collection conversion
             element['full_path'] = full_path if source_app.include?('rhino')
 
-            is_folder = element['elements'].any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
+            is_folder = (element['@elements'] || element['elements']).any? { |e| e['speckle_type'] == SPECKLE_CORE_MODELS_COLLECTION }
             color = element['color'] || element['displayStyle']['color'] unless element['displayStyle'].nil?
             Layer.new(
               name: element['name'], visible: element['visible'], is_folder: is_folder,
               color: color, full_path: full_path,
-              layers_and_folders: element_to_relation(element['elements'], source_app, layers_tree)
+              layers_and_folders: element_to_relation(element['@elements'] || element['elements'], source_app, layers_tree)
             )
           end.compact
         end

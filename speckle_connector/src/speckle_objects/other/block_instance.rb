@@ -112,7 +112,7 @@ module SpeckleConnector
             layer: SketchupModel::Query::Layer.entity_path(component_instance),
             sketchup_attributes: att,
             speckle_schema: speckle_schema,
-            application_id: component_instance.persistent_id.to_s
+            application_id: component_instance.persistent_id
           )
 
           if speckle_schema
@@ -124,7 +124,7 @@ module SpeckleConnector
                 category: speckle_schema['category'],
                 units: units,
                 instance: copy_block_instance,
-                application_id: component_instance.persistent_id.to_s
+                application_id: component_instance.persistent_id
               )
             when 'Family Instance'
               level = speckle_state.speckle_mapper_state.mapper_source
@@ -141,7 +141,7 @@ module SpeckleConnector
                   units
                 ),
                 rotation: calculate_rotation(transformation.to_a),
-                application_id: component_instance.persistent_id.to_s
+                application_id: component_instance.persistent_id
               )
             end
           end
