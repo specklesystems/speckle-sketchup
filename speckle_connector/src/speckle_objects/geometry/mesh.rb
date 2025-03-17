@@ -110,8 +110,7 @@ module SpeckleConnector
                                                               entities, &convert_to_native)
           # Find and assign material if exist
           unless mesh['renderMaterial'].nil?
-            material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id'] ||
-                            mesh['renderMaterial']['diffuse'].to_s
+            material_name = mesh['renderMaterial']['name'] || mesh['renderMaterial']['id']
             # Retrieve material from state
             material = state.sketchup_state.materials.by_id(material_name)
           end

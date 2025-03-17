@@ -11,12 +11,10 @@ module SpeckleConnector
         height: 400, width: 600, min_width: 250, min_height: 50
       }.freeze
 
-      # @return bindings [Hash{String=>Ui::Binding}] views that responsible to run upcoming commands
-      attr_reader :bindings
-
+      # @param commands [Hash{Symbol=>Object}] commands that are sent from the HTMLDialog
       # @param specs [Hash] the specifications that will be passed to {UI::HTMLDialog}
-      def initialize(dialog_id:, htm_file:, **specs)
-        @bindings = {}
+      def initialize(commands:, dialog_id:, htm_file:, **specs)
+        @commands = commands
         @id = dialog_id
         @htm_file = htm_file
         @dialog_specs = DEFAULT_SPECS.merge(
@@ -105,8 +103,7 @@ module SpeckleConnector
           puts '### COMMAND CALLED BY DIALOG ###'
           puts "name: #{cmd.name}"
           @ready = true if cmd.name == DIALOG_READY
-          # We have single view for legacy UI
-          @bindings[SPECKLE_LEGACY_BINDING_NAME].commands[cmd.name].run(cmd.resolve_id, cmd.data)
+          @commands[cmd.name].run(cmd.data)
         end
       end
     end

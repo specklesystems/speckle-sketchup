@@ -18,21 +18,12 @@ module SpeckleConnector
             sketchup_state = state.sketchup_state
             active_path = sketchup_state.sketchup_model.active_path
             observers = state.speckle_state.observers
-            update_entity_observers(active_path, observers)
+            update_object_observers(active_path, observers)
             return state
           end
 
-          def self.update_entity_observers(path, observers)
-            unless path.nil?
-              new_path_entities = path[-1].definition.entities
-              new_path_entities.add_observer(observers[ENTITIES_OBSERVER])
-              edges = new_path_entities.grep(Sketchup::Edge)
-              edges.each do |edge|
-                edge.add_observer(observers[ENTITY_OBSERVER])
-                edge.start.add_observer(observers[ENTITY_OBSERVER])
-                edge.end.add_observer(observers[ENTITY_OBSERVER])
-              end
-            end
+          def self.update_object_observers(path, observers)
+            path[-1].definition.entities.add_observer(observers[ENTITIES_OBSERVER]) unless path.nil?
           end
         end
 

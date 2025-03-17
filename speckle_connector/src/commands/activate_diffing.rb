@@ -7,7 +7,7 @@ module SpeckleConnector
   module Commands
     # Command to activate diffing for stream.
     class ActivateDiffing < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         stream_id = data['stream_id']
         action = Actions::ActivateDiffing.new(stream_id)
         app.update_state!(action)

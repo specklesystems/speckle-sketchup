@@ -5,7 +5,7 @@ require 'json'
 module SpeckleConnector
   module Ui
     # Command structure to handle it with dialog.exec_callback
-    CommandData = Struct.new(:name, :binding_name, :resolve_id, :data)
+    CommandData = Struct.new(:name, :data)
 
     # Parser class for commands that comes from dialog to ruby engine.
     class CommandParser
@@ -24,7 +24,7 @@ module SpeckleConnector
 
         return nil unless name.is_a?(String)
 
-        CommandData.new(name.to_sym, command['binding_name'], command['request_id'], command['data'])
+        CommandData.new(name.to_sym, command['data'])
       end
     end
   end

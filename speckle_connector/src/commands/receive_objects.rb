@@ -7,15 +7,14 @@ module SpeckleConnector
   module Commands
     # Command to receive objects from Speckle Server.
     class ReceiveObjects < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         stream_id = data['stream_id']
         base = data['base']
         branch_name = data['branch_name']
         branch_id = data['branch_id']
         stream_name = data['stream_name']
         source_app = data['source_app']
-        object_id = data['object_id']
-        action = Actions::ReceiveObjects.new(stream_id, base, stream_name, branch_name, branch_id, source_app, object_id)
+        action = Actions::ReceiveObjects.new(stream_id, base, stream_name, branch_name, branch_id, source_app)
         app.update_state!(action)
       end
     end

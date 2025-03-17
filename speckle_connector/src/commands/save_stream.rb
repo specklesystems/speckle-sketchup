@@ -9,7 +9,7 @@ module SpeckleConnector
   module Commands
     # Command to saved stream.
     class SaveStream < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         stream_id = data['stream_id']
         app.update_state!(Actions::SaveStream.new(stream_id))
       end

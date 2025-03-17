@@ -8,7 +8,7 @@ module SpeckleConnector
   module Commands
     # Command to notify connected.
     class NotifyConnected < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         stream_id = data['stream_id']
         app.update_state!(Actions::Connected)
         app.update_state!(Actions::SendFromQueue.new(stream_id))
