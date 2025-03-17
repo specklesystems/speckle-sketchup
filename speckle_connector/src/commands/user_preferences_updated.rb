@@ -8,7 +8,7 @@ module SpeckleConnector
   module Commands
     # Command to update preferences.
     class UserPreferencesUpdated < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         preference_hash = data['preference_hash']
         preference = data['preference']
         new_value = data['value']

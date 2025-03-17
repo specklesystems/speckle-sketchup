@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'event_action'
-require_relative 'on_document_changed'
 require_relative '../load_sketchup_model'
 require_relative '../collect_preferences'
 
@@ -26,8 +25,7 @@ module SpeckleConnector
             # Action to let UI to render itself with new preferences state
             # TODO: Later UI should be updated if any stream is invalid after
             #  we collected speckle_entities appropriately
-            new_state = CollectPreferences.update_state(new_state, nil, {})
-            OnDocumentChanged.update_state(new_state)
+            CollectPreferences.update_state(new_state, {})
           end
         end
 

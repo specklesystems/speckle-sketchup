@@ -10,7 +10,7 @@ module SpeckleConnector
     class CollectPreferences < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _resolve_id, _data)
+      def self.update_state(state, _data)
         state.with_add_queue('collectPreferences', state.user_state.preferences.to_json, [])
       end
     end

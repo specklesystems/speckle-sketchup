@@ -7,7 +7,7 @@ module SpeckleConnector
   module Commands
     # Command to update mapper source.
     class MapperSourceUpdated < Command
-      def _run(_resolve_id, data)
+      def _run(data)
         base = data['base']
         stream_id = data['stream_id']
         commit_id = data['commit_id']

@@ -72,8 +72,7 @@ module SpeckleConnector
               folder_path = SpeckleConnector::SketchupModel::Query::Layer.path(entity_layer)
               entity_layer_path = folder_path + [entity_layer]
               entity_layer_path.each do |folder|
-                coll = collection['@elements'] || collection['elements']
-                collection_candidate = coll.find do |el|
+                collection_candidate = collection[:elements].find do |el|
                   next if el.is_a?(Array)
 
                   el[:speckle_type] == SPECKLE_TYPE && el[:collectionType] == 'layer' &&
@@ -86,7 +85,7 @@ module SpeckleConnector
                     is_folder: folder.is_a?(Sketchup::LayerFolder), color: color
                   )
                   # Before switching collection with the new one, we should add it to current collection's elements
-                  coll.append(collection_candidate)
+                  collection[:elements].append(collection_candidate)
                 end
                 collection = collection_candidate
               end
@@ -98,7 +97,7 @@ module SpeckleConnector
             # @param state [States::State] state of the Speckle application.
             def self.to_native(state, layer_collection, layer_or_folder, entities, &convert_to_native)
               sketchup_model = state.sketchup_state.sketchup_model
-              elements = layer_collection['@elements'] || layer_collection['elements']
+              elements = layer_collection['elements']
               name = layer_collection['name']
               name = layer_collection['full_path'] if layer_collection['full_path']
 

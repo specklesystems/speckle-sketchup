@@ -4,7 +4,6 @@ require_relative 'menu_command_handler'
 require_relative 'action_command'
 require_relative 'initialize_speckle'
 require_relative 'reset_window_location'
-require_relative 'initialize_dui3_speckle'
 require_relative '../actions/one_click_send'
 
 module SpeckleConnector
@@ -13,7 +12,6 @@ module SpeckleConnector
     class SpeckleMenuCommands
       CMD_INITIALIZE_SPECKLE = :initialize_speckle
       CMD_RESET_WINDOW_LOCATION_SPECKLE = :reset_window_location_speckle
-      CMD_INITIALIZE_DUI3_SPECKLE = :initialize_dui3_speckle
       CMD_SEND_TO_SPECKLE = :send_to_speckle
       CMD_RECEIVE_FROM_SPECKLE = :receive_from_speckle
 
@@ -26,16 +24,12 @@ module SpeckleConnector
         speckle_menu = sketchup_ui.speckle_menu
         speckle_toolbar = sketchup_ui.speckle_toolbar
 
-        # commands[CMD_INITIALIZE_SPECKLE] = initialize_speckle_command(app)
-        # commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
-        # commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
+        commands[CMD_INITIALIZE_SPECKLE] = initialize_speckle_command(app)
+        commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
+        commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
 
         commands[CMD_RESET_WINDOW_LOCATION_SPECKLE] = reset_window_location_command(app)
         commands.add_to_menu!(CMD_RESET_WINDOW_LOCATION_SPECKLE, speckle_menu)
-
-        commands[CMD_INITIALIZE_DUI3_SPECKLE] = initialize_dui3_speckle_command(app)
-        commands.add_to_menu!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_menu)
-        commands.add_to_toolbar!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_toolbar)
 
         # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
         # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
@@ -44,7 +38,7 @@ module SpeckleConnector
 
       def self.initialize_speckle_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          InitializeSpeckle.new(app, nil), 'Initialize Speckle'
+          InitializeSpeckle.new(app), 'Initialize Speckle'
         )
         cmd.tooltip = 'Launch Connector'
         cmd.status_bar_text = 'Opens the Speckle Connector window'
@@ -55,7 +49,7 @@ module SpeckleConnector
 
       def self.reset_window_location_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          ResetWindowLocation.new(app, nil), 'Reset Window Location'
+          ResetWindowLocation.new(app), 'Reset Window Location'
         )
         cmd.tooltip = 'Bring Speckle window onto center of SketchUp window'
         cmd.status_bar_text = 'Bring Speckle window onto center of SketchUp window'
@@ -64,20 +58,9 @@ module SpeckleConnector
         cmd
       end
 
-      def self.initialize_dui3_speckle_command(app)
-        cmd = MenuCommandHandler.sketchup_command(
-          InitializeDUI3Speckle.new(app, nil), 'Initialize Speckle with New UI'
-        )
-        cmd.tooltip = 'Launch Connector with New UI'
-        cmd.status_bar_text = 'Opens the Speckle Connector with New UI'
-        cmd.small_icon  = '../../img/s2logo_dui3.png'
-        cmd.large_icon  = '../../img/s2logo_dui3.png'
-        cmd
-      end
-
       def self.send_command(app)
         cmd = MenuCommandHandler.sketchup_command(
-          ActionCommand.new(app, nil, Actions::OneClickSend), 'Send to Speckle'
+          ActionCommand.new(app, Actions::OneClickSend), 'Send to Speckle'
         )
         cmd.tooltip = 'Send to Speckle'
         cmd.status_bar_text = 'Send to Speckle'

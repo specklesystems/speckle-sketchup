@@ -17,18 +17,10 @@ module SpeckleConnector
       # @return [States::UserState] the user specific part of the states
       attr_reader :user_state
 
-      # @return [Sketchup::Worker] worker to run operations with UI.timer(0, false)
-      attr_reader :worker
-
-      # @return [Proc] call to send message immediately to ui.
-      attr_reader :instant_message_sender
-
-      def initialize(user_state, speckle_state, sketchup_state, is_connected, worker, &instant_message_sender)
+      def initialize(user_state, speckle_state, sketchup_state, is_connected)
         @speckle_state = speckle_state
         @is_connected = is_connected
         @sketchup_state = sketchup_state
-        @worker = worker
-        @instant_message_sender = instant_message_sender
         super(user_state)
       end
 
@@ -41,11 +33,6 @@ module SpeckleConnector
       # @param parameters [Array<String>] parameters of the callback method call
       def with_add_queue(callback_name, stream_id, parameters)
         new_speckle_state = speckle_state.with_add_queue(callback_name, stream_id, parameters)
-        with(:@speckle_state => new_speckle_state)
-      end
-
-      def with_add_queue_js_command(callback_name, js_command)
-        new_speckle_state = speckle_state.with_add_queue_js_command(callback_name, js_command)
         with(:@speckle_state => new_speckle_state)
       end
 

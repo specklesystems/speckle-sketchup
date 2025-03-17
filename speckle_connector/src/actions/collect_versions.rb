@@ -8,7 +8,7 @@ module SpeckleConnector
     class CollectVersions < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
-      def self.update_state(state, _resolve_id, _data)
+      def self.update_state(state, _data)
         versions = {
           sketchup: Sketchup.version.to_i,
           speckle: SpeckleConnector::CONNECTOR_VERSION

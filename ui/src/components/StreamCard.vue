@@ -54,7 +54,6 @@
         </div>
       </v-slide-x-transition>
     </v-toolbar>
-
     <v-card-text class="caption pt-1 text-truncate" style="white-space: nowrap">
       Updated
       <timeago class="mr-1" :datetime="stream.updatedAt" />
@@ -79,7 +78,6 @@
             {{ branchName }}
           </v-chip>
         </template>
-
         <!-- Branch list -->
         <v-list dense>
           <v-list-item
@@ -427,8 +425,7 @@ export default {
           stream_id: this.streamId,
           branch_name: this.selectedCommit.branchName,
           branch_id: this.selectedCommit.id,
-          source_app: this.selectedCommit.sourceApplication,
-          object_id: refId
+          source_app: this.selectedCommit.sourceApplication
       }})
 
       await this.$apollo.mutate({

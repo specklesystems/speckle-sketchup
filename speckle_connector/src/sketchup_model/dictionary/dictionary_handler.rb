@@ -59,19 +59,6 @@ module SpeckleConnector
           entity.attribute_dictionaries.delete(dictionary_name)
         end
 
-        # @param dict [Sketchup::AttributeDictionary] attribute dictionary to get complete hash.
-        def self.dict_to_h(dict)
-          hash = {}
-          hash.merge!(dict.to_h)
-          unless dict.attribute_dictionaries.nil?
-            dict.attribute_dictionaries.each do |sub_dict|
-              sub_hash = dict_to_h(sub_dict)
-              hash[sub_dict.name] = sub_hash
-            end
-          end
-          hash
-        end
-
         # @return [String] the name of the dictionary to read from
         def self.dictionary_name
           raise NotImplementedError 'Implement this in subclass'
