@@ -1,6 +1,6 @@
 require_paths:
 - "C:/Program Files/SketchUp/SketchUp 2021/Tools"
-- speckle_connector
+- speckle_connector_3
 
 require:
 - sketchup-api-stubs

@@ -32,12 +32,12 @@ end
 
 # Glob pattern to match source files. Defaults to FileList['.'].
 ruby_critic_paths = FileList[
-  'speckle_connector/**/*.rb',
-  'speckle_connector.rb',
+  'speckle_connector_3/**/*.rb',
+  'speckle_connector_3.rb',
   'tests/**/*.rb'] -
                     FileList[
                     '_tools/**/*.rb',
-                    'speckle_connector/src/ext/**/*.rb',
+                    'speckle_connector_3/src/ext/**/*.rb',
                     ]
 
 # for local

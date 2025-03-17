@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require_relative '../../test_helper'
-require_relative '../../../speckle_connector/src/speckle_objects/base'
+require_relative '../../../speckle_connector_3/src/speckle_objects/base'
 
-module SpeckleConnector
+module SpeckleConnector3
   module SpeckleObjects
     class BaseTest < Minitest::Test
       def setup
@@ -18,7 +18,7 @@ module SpeckleConnector
         base = Base.new
         json = base.to_json
 
-        base_obj = {"speckle_type":"Base","totalChildrenCount":0,"applicationId":nil,"id":nil}
+        base_obj = {"speckle_type":"Base","applicationId":nil,"id":nil}
         serialized = JSON.generate(base_obj)
 
         assert_equal(json, serialized)
@@ -29,7 +29,7 @@ module SpeckleConnector
         base[:sketchup_attributes] = {soften_edge: true}
         base[:id] = 'idididididid'
 
-        base_obj = {"speckle_type":"Base","totalChildrenCount":0,"applicationId":nil,"id":'idididididid', "sketchup_attributes": {"soften_edge": true }}
+        base_obj = {"speckle_type":"Base","applicationId":nil,"id":'idididididid', "sketchup_attributes": {"soften_edge": true }}
         serialized = JSON.generate(base_obj)
         hash = JSON.parse(serialized, { symbolize_names: true })
 

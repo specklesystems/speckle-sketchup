@@ -24,6 +24,8 @@ group :development do
   gem 'rubycritic', '~> 4.3', '>= 4.3.3', require: false
   # Auto completions for SketchUp API.
   gem 'sketchup-api-stubs'
+  # Runtime dependency of skippy for Ruby 3.2. Have it!
+  gem 'sorted_set', '~> 1.0'
   # Aid with common SketchUp extension tasks.
-  gem 'skippy', '~> 0.4.1.a'
+  gem 'skippy', '~> 0.5.2.a'
 end

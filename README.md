@@ -49,9 +49,9 @@ This repo is split into three parts:
 ### 1. **Speckle Connector extension** 
    
    Includes the `ruby` source files to run extension on SketchUp environment. SketchUp Extensions are composed of
-   a **.rb** file as entry and **folder** that .rb file refers to. In our case entry file is `speckle_connector.rb`
+   a **.rb** file as entry and **folder** that .rb file refers to. In our case entry file is `speckle_connector_3.rb`
    that responsible to register Speckle Connector extension to SketchUp and also it shows address to where extension
-   will start to read extension. Source folder is `speckle_connector`.
+   will start to read extension. Source folder is `speckle_connector_3`.
 
 ### 2. **User Interface**
 
@@ -64,7 +64,7 @@ This repo is split into three parts:
    we use extensions as native part of the source `ruby` code. 
 
    After building `sqlite3.sln` file, compiled `sqlite3.so` (for Windows) and `sqlite3.bundle` (for OSX) dynamic library files are created
-   by solution to place them into source code into `speckle_connector/src/ext`. Building this project should be only
+   by solution to place them into source code into `speckle_connector_3/src/ext`. Building this project should be only
    happen when SketchUp starts to support newer Ruby versions (currently it is `2.7`).
 
 ## Contribution Guide
@@ -115,9 +115,23 @@ You can now open up the repo in VS Code or you can use JetBrains' tools RubyMine
 
 If you will use VS Code, make sure you've installed the Ruby extension for VS Code.
 
+#### RubyMine
+
+To debug: 
+- Add configuration as **'Ruby remote debug'**
+  - Remote host: localhost
+  - Remote port: 7000
+  - Remote root folder: <repo_path>
+  - Local port: 26162
+  - Local root folder: <repo_path>
+- Run below script
+
+      bundle exec skippy sketchup:debug 2024
+- When sketchup opened, click Debug button on RubyMine
+
 ### Loading the Speckle Connector Plugin
 
-1. Find already prepared `speckle_connector_loader.rb` file on the `_tools`
+1. Find already prepared `speckle_connector_3_loader.rb` file on the `_tools`
 folder.
 2. Copy this Ruby file into your SketchUp Plugins directory. You will likely find this at:
     `C:\Users\{YOU}\AppData\Roaming\SketchUp\SketchUp 20XX\SketchUp\Plugins`
