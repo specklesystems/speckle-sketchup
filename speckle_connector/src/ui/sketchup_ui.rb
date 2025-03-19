@@ -5,7 +5,7 @@ module SpeckleConnector
     # An interface to Sketchup user interface. This object controls the menu `Extensions->Speckle` in Sketchup's menu,
     # the Speckle toolbar and sending message to the user via Sketchup.
     class SketchupUi
-      MENU_TITLE = 'Speckle'
+      MENU_TITLE = 'Speckle (Legacy)'
       BEFORE_NEVER_SHOWN = -1
 
       # @return [Sketchup::Menu] the menu of the Speckle
