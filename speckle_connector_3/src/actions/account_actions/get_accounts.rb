@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'action'
-require_relative '../accounts/accounts'
-require_relative 'load_saved_streams'
+require_relative '../action'
+require_relative '../../accounts/accounts'
+require_relative '../load_saved_streams'
 
 module SpeckleConnector3
   module Actions
