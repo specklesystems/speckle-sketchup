@@ -11,6 +11,7 @@ require_relative '../../actions/base_actions/add_model'
 require_relative '../../actions/base_actions/highlight_model'
 require_relative '../../actions/base_actions/highlight_objects'
 require_relative '../../actions/base_actions/remove_model'
+require_relative '../../actions/base_actions/remove_models'
 require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/update_send_filter'
 require_relative '../../actions/base_actions/get_document_state'
@@ -27,6 +28,7 @@ module SpeckleConnector3
           highlightModel: Commands::ActionCommand.new(@app, self, Actions::HighlightModel),
           highlightObjects: Commands::ActionCommand.new(@app, self, Actions::HighlightObjects),
           removeModel: Commands::ActionCommand.new(@app, self, Actions::RemoveModel),
+          removeModels: Commands::ActionCommand.new(@app, self, Actions::RemoveModels),
           # Since we send exact model card with updateModel, I can use directly AddModel action, it will replace
           updateModel: Commands::ActionCommand.new(@app, self, Actions::AddModel),
           getSourceApplicationName: Commands::ActionCommand.new(@app, self, Actions::GetSourceAppName),

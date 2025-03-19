@@ -24,6 +24,27 @@ module SpeckleConnector3
       rows.map { |row| JSON.parse(row[1]) }
     end
 
+    def self.remove_account(account_id)
+      db_path = SPECKLE_ACCOUNTS_DB_PATH
+      unless File.exist?(db_path)
+        raise(
+          IOError,
+          "No Accounts db found. Please read the guide for different options for adding your account:\n
+             https://speckle.guide/user/manager.html#adding-accounts"
+        )
+      end
+      db = Sqlite3::Database.new(db_path)
+
+      begin
+        db.exec("DELETE FROM objects WHERE hash = '#{account_id}'")
+        puts "Account with hash #{account_id} has been removed."
+      rescue StandardError => e
+        puts "An error occurred: #{e}"
+      ensure
+        db.close
+      end
+    end
+
     def self.get_account_by_id(id)
       accounts = load_accounts
       accounts.select { |acc| acc['id'] == id }[0]
