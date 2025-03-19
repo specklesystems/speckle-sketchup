@@ -22,7 +22,7 @@ module SpeckleConnector3
       SPECKLE_DUI3 = 'speckle_dui3'
 
       def dialog_title
-        "Speckle (Beta) for SketchUp"
+        "Speckle for SketchUp"
       end
 
       private
