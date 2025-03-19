@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-main>
+      <legacy-dialog/>
       <v-app-bar app flat height="50">
         <v-img
           class="mx-auto px-0"
@@ -135,6 +136,7 @@ import userQuery from './graphql/user.gql'
 import serverInfoQuery from './graphql/serverInfo.gql'
 import { onLogin } from './vue-apollo'
 import Login from "@/views/Login";
+import LegacyDialog from './components/dialogs/LegacyDialog.vue';
 
 global.collectPreferences = function (preferences) {
   bus.$emit('update-preferences', preferences)
@@ -178,7 +180,8 @@ export default {
     CreateStreamDialog: () => import('@/components/dialogs/CreateStreamDialog'),
     SettingsDialog: () => import('@/components/dialogs/SettingsDialog'),
     GlobalToast: () => import('@/components/GlobalToast'),
-    Mapper: () => import('@/components/Mapper')
+    Mapper: () => import('@/components/Mapper'),
+    LegacyDialog: () => import('@/components/dialogs/LegacyDialog')
   },
   props: {
     size: {
