@@ -12,7 +12,7 @@ module SpeckleConnector
     # This is the command where we show UI to user.
     class InitializeSpeckle < Command
       def dialog_title
-        "Speckle #{CONNECTOR_VERSION}"
+        "Speckle (Legacy) #{CONNECTOR_VERSION}"
       end
 
       private
