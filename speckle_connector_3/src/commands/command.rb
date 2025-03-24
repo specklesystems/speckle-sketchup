@@ -26,7 +26,7 @@ module SpeckleConnector3
             _run(*parameters)
           end
         rescue StandardError => e
-          action = Actions::HandleError.new(e, @binding.name, @action, parameters)
+          action = Actions::HandleError.new(e, @binding.nil? ? "unknown binding" : @binding.name, @action, parameters)
           app.update_state!(action)
         end
       end
