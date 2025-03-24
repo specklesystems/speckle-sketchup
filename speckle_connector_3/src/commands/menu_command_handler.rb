@@ -9,6 +9,8 @@ module SpeckleConnector3
       # @return [UI::Command] the command that can be added to Sketchup menu or toolbar
       def self.sketchup_command(command, menu_text)
         UI::Command.new(menu_text) do
+          puts '### COMMAND CALLED BY MENU ###'
+          puts "Name: #{menu_text}"
           command.run
         end
       end
