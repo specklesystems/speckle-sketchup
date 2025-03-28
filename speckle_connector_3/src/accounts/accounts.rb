@@ -3,6 +3,7 @@
 require 'JSON'
 require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
+require_relative '../preferences/preferences'
 
 module SpeckleConnector3
   # Accounts to communicate with models on user's account.
@@ -11,11 +12,11 @@ module SpeckleConnector3
     def self.load_accounts
       db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
-        raise(
-          IOError,
-          "No Accounts db found. Please read the guide for different options for adding your account:\n
-             https://speckle.guide/user/manager.html#adding-accounts"
-        )
+        File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
+        db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
+        Preferences.create_objects_table(db)
+        db.close
+        return []
       end
 
       db = Sqlite3::Database.new(db_path)
