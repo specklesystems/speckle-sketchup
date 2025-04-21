@@ -22,7 +22,9 @@ module SpeckleConnector3
         send_card = Cards::SendCard.new(
           data['modelCardId'],
           data['accountId'],
+          data['serverUrl'],
           data['workspaceId'],
+          data['workspaceSlug'],
           data['projectId'],
           data['projectName'],
           data['modelId'],

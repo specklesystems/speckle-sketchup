@@ -21,7 +21,9 @@ module SpeckleConnector3
           send_card = Cards::SendCard.new(
             id,
             card['account_id'],
+            card['server_url'],
             card['workspace_id'],
+            card['workspace_slug'],
             card['project_id'],
             card['project_name'],
             card['model_id'],
@@ -36,7 +38,9 @@ module SpeckleConnector3
           {
             modelCardId: send_card.model_card_id,
             accountId: send_card.account_id,
+            serverUrl: send_card.server_url,
             workspaceId: send_card.workspace_id,
+            workspaceSlug: send_card.workspace_slug,
             projectId: send_card.project_id,
             modelId: send_card.model_id,
             sendFilter: send_card.send_filter,
@@ -51,7 +55,7 @@ module SpeckleConnector3
 
         # TODO: CONVERTER_V2: Extract into new actions
         receive_cards = receive_cards_hash.collect do |id, card|
-          receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['workspace_id'], card['project_id'], card['model_id'],
+          receive_card = Cards::ReceiveCard.new(id, card['account_id'], card['server_url'], card['workspace_id'],  card['workspace_slug'], card['project_id'], card['model_id'],
                                                 card['project_name'], card['model_name'], card['selected_version_id'],
                                                 card['selected_version_source_app'], card['selected_version_user_id'],
                                                 card['latest_version_id'], card['latest_version_source_app'],
@@ -63,7 +67,9 @@ module SpeckleConnector3
           {
             modelCardId: receive_card.model_card_id,
             accountId: receive_card.account_id,
+            serverUrl: receive_card.server_url,
             workspaceId: receive_card.workspace_id,
+            workspaceSlug: receive_card.workspace_slug,
             projectId: receive_card.project_id,
             modelId: receive_card.model_id,
             projectName: receive_card.project_name,

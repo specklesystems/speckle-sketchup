@@ -48,7 +48,9 @@ module SpeckleConnector3
       def initialize(
         model_card_id,
         account_id,
+        server_url,
         workspace_id,
+        workspace_slug,
         project_id,
         model_id,
         project_name,
@@ -63,7 +65,7 @@ module SpeckleConnector3
         expired,
         baked_object_ids = nil
       )
-        super(model_card_id, account_id, workspace_id, project_id, project_name, model_id, model_name)
+        super(model_card_id, account_id, server_url, workspace_id, workspace_slug, project_id, project_name, model_id, model_name)
         @selected_version_id = selected_version_id
         @selected_version_source_app = selected_version_source_app
         @selected_version_user_id = selected_version_user_id
