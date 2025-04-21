@@ -22,6 +22,7 @@ require_relative '../speckle_objects/built_elements/network'
 require_relative '../speckle_objects/speckle/core/models/collection'
 require_relative '../speckle_objects/speckle/core/models/gis_layer_collection'
 require_relative '../speckle_objects/instance_definition_proxy'
+require_relative '../speckle_objects/data/revit_data_object'
 require_relative '../sketchup_model/dictionary/speckle_entity_dictionary_handler'
 require_relative '../ui_data/report/conversion_result'
 require_relative '../convertors/conversion_error'
@@ -94,6 +95,8 @@ module SpeckleConnector3
       LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::LayerCollection
       GIS_LAYER_COLLECTION = SpeckleObjects::Speckle::Core::Models::GisLayerCollection
 
+      REVIT_DATA_OBJECT = SpeckleObjects::RevitDataObject
+
       BASE_OBJECT_PROPS = %w[applicationId id speckle_type].freeze
       CONVERTABLE_SPECKLE_TYPES = %w[
         Objects.Geometry.Line
@@ -117,6 +120,7 @@ module SpeckleConnector3
         Speckle.Core.Models.Collections.Collection:Speckle.Core.Models.Collections.Layer
         Speckle.Core.Models.Collections.Collection:Objects.GIS.RasterLayer
         Speckle.Core.Models.Collections.Collection:Objects.GIS.VectorLayer
+        Objects.Data.DataObject:Objects.Data.RevitObject
       ].freeze
 
       def from_revit
@@ -377,6 +381,10 @@ module SpeckleConnector3
       # rubocop:enable Metrics/PerceivedComplexity
 
       def speckle_object_to_native(obj)
+        if SPECKLE_OBJECTS_WITH_NATIVE_CONVERSION[obj['speckle_type']]
+          return SPECKLE_OBJECTS_WITH_NATIVE_CONVERSION[obj['speckle_type']]
+        end
+
         return DISPLAY_VALUE.method(:to_native) unless obj['displayValue'].nil? && obj['@displayValue'].nil?
 
         SPECKLE_OBJECT_TO_NATIVE[obj['speckle_type']]
@@ -408,6 +416,10 @@ module SpeckleConnector3
         SPECKLE_CORE_MODELS_COLLECTION_RASTER_LAYER => GIS_LAYER_COLLECTION.method(:to_native),
         SPECKLE_CORE_MODELS_COLLECTION_VECTOR_LAYER => GIS_LAYER_COLLECTION.method(:to_native)
       }.freeze
+
+      SPECKLE_OBJECTS_WITH_NATIVE_CONVERSION = {
+        SPECKLE_OBJECT_DATA_OBJECT_REVIT => REVIT_DATA_OBJECT.method(:to_native)
+      }
 
       def entities_to_bake(obj, entities)
         entities_to_bake = entities
@@ -452,14 +464,25 @@ module SpeckleConnector3
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?
         if from_revit
-          # Create levels as section planes if they exists
-          create_levels(state, obj)
-          # Create layers from category of object and place object in it
-          # create_layers_from_categories(state, obj, converted_entities)
+          begin
+            # Create levels as section planes if they exists
+            create_levels(state, obj)
+            # Create layers from category of object and place object in it
+            # create_layers_from_categories(state, obj, converted_entities)
+          rescue StandardError => e
+            puts "Level could not be created: #{e.message}"
+          end
+
         end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
 
         converted_entities.each do |converted|
+          if converted.is_a?(Sketchup::ComponentDefinition)
+            next # no need to report definitions
+          end
+          if !from_sketchup && converted.is_a?(Sketchup::Face)
+            next # Otherwise we have many noise in report and causing delay post-receive
+          end
           @conversion_results.push(UiData::Report::ConversionResult.new(UiData::Report::ConversionStatus::SUCCESS,
                                                                         obj['id'],
                                                                         obj['speckle_type'],

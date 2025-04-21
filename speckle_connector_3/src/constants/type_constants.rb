@@ -54,4 +54,8 @@ module SpeckleConnector3
   SPECKLE_CORE_MODELS_INSTANCES_INSTANCE_DEFINITION_PROXY = 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'
   SPECKLE_CORE_OTHER_RENDER_MATERIAL_PROXY = 'Objects.Other.RenderMaterialProxy'
   SPECKLE_CORE_OTHER_COLOR_PROXY = 'Speckle.Core.Models.Proxies.ColorProxy'
+
+  # DATA OBJECTS
+  SPECKLE_OBJECT_DATA_OBJECT = 'Objects.Data.DataObject'
+  SPECKLE_OBJECT_DATA_OBJECT_REVIT = 'Objects.Data.DataObject:Objects.Data.RevitObject'
 end

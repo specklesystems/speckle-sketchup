@@ -72,6 +72,22 @@ module SpeckleConnector3
           hash
         end
 
+        # @param obj [Object] object to write
+        # @param dict [Sketchup::AttributeDictionary] attribute dictionary to write data.
+        def self.hash_to_dict(dict_name, obj, dict)
+          dict_to_write = dict.attribute_dictionary(dict_name, true)
+
+          obj.each do |key, value|
+            # value = obj.instance_variable_get(var)
+            # var_name = var.to_s[1..-1]
+            if value.is_a?(Hash) # FIXME or not, depends:-> This doesn't cover arrays that has objects in it.
+              hash_to_dict(key.to_s, value, dict_to_write)
+            else
+              dict_to_write[key] = value
+            end
+          end
+        end
+
         # @return [String] the name of the dictionary to read from
         def self.dictionary_name
           raise NotImplementedError 'Implement this in subclass'
