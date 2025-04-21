@@ -13,30 +13,14 @@ module SpeckleConnector3
         # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
         def self.save_send_card_to_model(send_card, sketchup_model)
           send_cards_dict = send_cards_dict(sketchup_model)
-          serialize_obj_to_dict(send_card.model_card_id, send_card, send_cards_dict)
+          hash_to_dict(send_card.model_card_id, send_card, send_cards_dict)
         end
 
         # @param receive_card [Cards::ReceiveCard] card to save model
         # @param sketchup_model [Sketchup::Model] sketchup model to save cards into it's attribute dictionary
         def self.save_receive_card_to_model(receive_card, sketchup_model)
           receive_cards_dict = receive_cards_dict(sketchup_model)
-          serialize_obj_to_dict(receive_card.model_card_id, receive_card, receive_cards_dict)
-        end
-
-        # @param obj [Object] object to write
-        # @param dict [Sketchup::AttributeDictionary] attribute dictionary to write data.
-        def self.serialize_obj_to_dict(dict_name, obj, dict)
-          dict_to_write = dict.attribute_dictionary(dict_name, true)
-
-          obj.each do |key, value|
-            # value = obj.instance_variable_get(var)
-            # var_name = var.to_s[1..-1]
-            if value.is_a?(Hash) # FIXME or not depends: This doesn't cover arrays that has objects in it.
-              serialize_obj_to_dict(key.to_s, value, dict_to_write)
-            else
-              dict_to_write[key] = value
-            end
-          end
+          hash_to_dict(receive_card.model_card_id, receive_card, receive_cards_dict)
         end
 
         def self.remove_card_dict(sketchup_model, data)
@@ -101,7 +85,7 @@ module SpeckleConnector3
               dict_to_write = dict_to_write.attribute_dictionary(dict_name, true)
               dict_to_write = dict_to_write.attribute_dictionary(var_name, true)
               value.each do |key, hash_value|
-                serialize_obj_to_dict(key.to_s, hash_value, dict_to_write)
+                hash_to_dict(key.to_s, hash_value, dict_to_write)
               end
             else
               dict_to_write.set_attribute(dict_name, var_name, value)
