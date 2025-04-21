@@ -18,8 +18,6 @@ module SpeckleConnector3
         attr = instance.attribute_dictionary('Speckle', true)
 
         SketchupModel::Dictionary::BaseDictionaryHandler.hash_to_dict('Revit Parameters', properties, attr) if properties
-
-        puts "Revit Data Object: #{revit_data_object['id']}"
         return new_state, instance_and_definition
       end
     end
