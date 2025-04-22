@@ -18,10 +18,10 @@ jobs:
     env:
       IS_TAG_BUILD: ${{ github.ref_type == 'tag' }}
     steps:
-      - name: 🔫 Trigger Build Installers
+      - name: 🔫 Trigger Build Installer(s)
         uses: the-actions-org/workflow-dispatch@v4.0.0
         with:
-          workflow: Build Sketchup
+          workflow: Build Installers
           repo: specklesystems/connector-installers
           token: ${{ secrets.CONNECTORS_GH_TOKEN }}
           inputs: '{
