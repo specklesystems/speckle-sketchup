@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     env:
-      IS_TAG_BUILD: ${{ github.ref_type == 'tag' }}
+      IS_PUBLIC_RELEASE: ${{ github.ref_type == 'tag' }}
     steps:
       - name: 🔫 Trigger Build Installer(s)
         uses: the-actions-org/workflow-dispatch@v4.0.0
@@ -29,9 +29,9 @@ jobs:
             "semver": "${{ needs.build.outputs.semver }}",
             "file_version": "${{ needs.build.outputs.file_version }}",
             "repo": "${{ github.repository }}",
-            "is_public_release": ${{ env.IS_TAG_BUILD }}
+            "is_public_release": ${{ env.IS_PUBLIC_RELEASE }}
             }'
-          ref: jrm/experiment-similar-ci
+          ref: main
           wait-for-completion: true
           wait-for-completion-interval: 10s
           wait-for-completion-timeout: 10m
