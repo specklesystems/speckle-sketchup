@@ -5,8 +5,8 @@ name: Build and deploy
 
 on:
   push:
-    branches: ["main"] # Continuous delivery on every long-lived branch
-    tags: ["v3.*"] # Manual delivery on every 3.x tag
+    branches: ["main", "installer-test/**"]
+    tags: ["v3.*.*"] # Manual delivery on every 3.x tag
 
 jobs:
   build:
@@ -16,15 +16,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     env:
-      IS_TAG_BUILD: ${{ github.ref_type == 'tag' }}
+      IS_PUBLIC_RELEASE: ${{ github.ref_type == 'tag' }}
     steps:
-      - name: 🔫 Trigger Build Installers
-        uses: ALEEF02/workflow-dispatch@v3.0.0
+      - name: 🔫 Trigger Build Installer(s)
+        uses: the-actions-org/workflow-dispatch@v4.0.0
         with:
-          workflow: Build Sketchup
+          workflow: Build Installers
           repo: specklesystems/connector-installers
           token: ${{ secrets.CONNECTORS_GH_TOKEN }}
-          inputs: '{ "run_id": "${{ github.run_id }}", "semver": "${{ needs.build.outputs.semver }}", "file_version": "${{ needs.build.outputs.file_version }}", "public_release": ${{ env.IS_TAG_BUILD }} }'
+          inputs: '{
+            "run_id": "${{ github.run_id }}",
+            "semver": "${{ needs.build.outputs.semver }}",
+            "file_version": "${{ needs.build.outputs.file_version }}",
+            "repo": "${{ github.repository }}",
+            "is_public_release": ${{ env.IS_PUBLIC_RELEASE }}
+            }'
           ref: main
           wait-for-completion: true
           wait-for-completion-interval: 10s
