@@ -3,14 +3,14 @@
     <v-card>
       <v-card-title class="headline">Legacy Version</v-card-title>
       <v-card-text>
-        You are using an legacy version of Speckle. A new version is available for download.
+        ⚠️Warning: This is a legacy connector.
         <br /><br />
         <a 
-          href="https://speckle.community/t/next-gen-connectors-supported-workflows-and-faq/16162" 
+          href="https://app.speckle.systems/connectors" 
           target="_blank" 
           style="color: #1976D2; text-decoration: none; font-weight: 500;"
         >
-          New connectors announcement
+          Download next-gen SketchUp connector
         </a>
       </v-card-text>
       <v-card-actions>
