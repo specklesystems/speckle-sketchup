@@ -114,7 +114,8 @@ module SpeckleConnector3
           speckle_folders = layers_relation[:elements].reject { |layer_or_fol| layer_or_fol[:elements].nil? }
 
           speckle_folders.each do |speckle_folder|
-            sub_folder = folder.add_folder(speckle_folder[:name])
+            folder_name = speckle_folder[:name] == '' ? 'Unnamed' : speckle_folder[:name]
+            sub_folder =  folder.add_folder(folder_name)
             sub_folder.visible = speckle_folder[:visible] unless speckle_folder[:visible].nil?
             to_native_layer_folder(speckle_folder, color_proxies, sub_folder, sketchup_model, project_id, model_id)
           end
