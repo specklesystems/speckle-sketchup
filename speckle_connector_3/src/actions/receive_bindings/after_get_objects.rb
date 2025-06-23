@@ -18,6 +18,7 @@ module SpeckleConnector3
         converter = Converters::ToNativeV2.new(state,
                                                root_obj['instanceDefinitionProxies'] || [],
                                                root_obj['renderMaterialProxies'] || [],
+                                               root_obj['levelProxies'] || [],
                                                source_application,
                                                model_card)
         start_time = Time.now.to_f
