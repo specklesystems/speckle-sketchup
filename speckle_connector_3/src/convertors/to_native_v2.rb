@@ -49,16 +49,19 @@ module SpeckleConnector3
       # @return [Array<SpeckleObjects::InstanceDefinitionProxy>]
       attr_reader :root_definition_proxies
 
+      attr_reader :level_proxies
+
       # @return [Array<SpeckleObjects::RenderMaterialProxy>]
       attr_accessor :root_render_material_proxies
 
       # @param definition_proxies [Array<SpeckleObjects::InstanceDefinitionProxy>]
       # @param render_material_proxies [Array<SpeckleObjects::RenderMaterialProxy>]
       # @param model_card [SpeckleConnector3::Cards::ReceiveCard]
-      def initialize(state, definition_proxies, render_material_proxies, source_app, model_card)
+      def initialize(state, definition_proxies, render_material_proxies, level_proxies, source_app, model_card)
         super(state, model_card)
         @root_definition_proxies = definition_proxies
         @root_render_material_proxies = render_material_proxies
+        @level_proxies = level_proxies
         @definition_proxies = {}
         @source_app = source_app.downcase
         @converted_faces = []
@@ -199,6 +202,7 @@ module SpeckleConnector3
         default_commit_layer = sketchup_model.layers.layers.find { |layer| layer.display_name == '@Untagged' }
 
         traverse_commit_object(obj, default_commit_layer, @entities_to_fill)
+        create_levels
         create_levels_from_section_planes
         check_hiding_layers_needed
         try_create_instance
@@ -463,17 +467,6 @@ module SpeckleConnector3
         end
         faces = converted_entities.select { |e| e.is_a?(Sketchup::Face) }
         @converted_faces += faces if faces.any?
-        if from_revit
-          begin
-            # Create levels as section planes if they exists
-            create_levels(state, obj)
-            # Create layers from category of object and place object in it
-            # create_layers_from_categories(state, obj, converted_entities)
-          rescue StandardError => e
-            puts "Level could not be created: #{e.message}"
-          end
-
-        end
         # Create speckle entities from sketchup entities to achieve continuous traversal.
 
         converted_entities.each do |converted|
@@ -528,25 +521,27 @@ module SpeckleConnector3
         nil
       end
 
-      # @param state [States::State] state of the speckle application
-      def create_levels(state, speckle_object)
-        level = speckle_object['level']
-        return state if level.nil?
-        # return state unless level['speckle_type'].include?('Objects.BuiltElements.Level')
+      def create_levels
+        return if level_proxies.empty?
 
-        level_name = level['name'] || level['id']
-        is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == level_name }
-        return state if is_exist
+        level_proxies.each do |level_proxy|
+          level_data_object = level_proxy['value']
+          name = level_data_object['name'] || level_data_object['id']
+          units = level_data_object['units']
+          elevation_raw = level_data_object['elevation']
 
-        elevation = SpeckleObjects::Geometry.length_to_native(level['elevation'], level['units'])
+          is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == name }
+          next if is_exist
 
-        section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
-        section_plane.name = level_name
-        section_plane.layer = levels_layer
-        SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
-          section_plane, level['applicationId'], level['id'], level['speckle_type'], [], model_card.project_id
-        )
-        state
+          elevation = SpeckleObjects::Geometry.length_to_native(elevation_raw, units)
+
+          section_plane = @entities_to_fill.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
+          section_plane.name = name
+          section_plane.layer = levels_layer
+          SketchupModel::Dictionary::SpeckleEntityDictionaryHandler.write_initial_base_data(
+            section_plane, level_data_object['applicationId'], level_data_object['id'], level_data_object['speckle_type'], [], model_card.project_id
+          )
+        end
       end
     end
     # rubocop:enable Metrics/ClassLength
