@@ -26,7 +26,8 @@ module SpeckleConnector3
             unless path.nil?
               new_path_entities = path[-1].definition.entities
               new_path_entities.add_observer(observers[ENTITIES_OBSERVER])
-              edges = new_path_entities.grep(Sketchup::Edge)
+              # attach observers to only orphan edges since face edges can be detected via face changes.
+              edges = new_path_entities.grep(Sketchup::Edge).filter { |edge| edge.faces.none? }
               edges.each do |edge|
                 edge.add_observer(observers[ENTITY_OBSERVER])
                 edge.start.add_observer(observers[ENTITY_OBSERVER])
