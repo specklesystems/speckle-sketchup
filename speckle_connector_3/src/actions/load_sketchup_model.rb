@@ -27,14 +27,14 @@ module SpeckleConnector3
         new_state = InitializeMaterials.update_state(new_state)
 
         # Read speckle entities
-        new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
-        new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
+        #new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
+        #new_speckle_state = new_state.speckle_state.with_speckle_entities(Immutable::Hash.new(new_speckle_entities))
         # POC: Reconsider it when we will do caching between sessions!
-        new_speckle_state = new_speckle_state.with_empty_object_references
+        # new_speckle_state = new_speckle_state.with_empty_object_references
         # Read mapped entities
-        new_mapped_entities = SketchupModel::Reader::MapperReader.read_mapped_entities(sketchup_model.entities)
-        new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
-        new_state = new_state.with_speckle_state(new_speckle_state)
+        # new_mapped_entities = SketchupModel::Reader::MapperReader.read_mapped_entities(sketchup_model.entities)
+        # new_speckle_state = new_speckle_state.with_mapped_entities(Immutable::Hash.new(new_mapped_entities))
+        # new_state = new_state.with_speckle_state(new_speckle_state)
 
         # Read preferences from database and model.
         preferences = Preferences.read_preferences(new_state.sketchup_state.sketchup_model)
