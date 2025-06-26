@@ -35,9 +35,11 @@ module SpeckleConnector3
       end
 
       # @param object_id [String] application id of the object to add into proxy list
-      def add_object_id(object_id)
-        object_ids.append(object_id)
-        self[:objects] = object_ids
+      def try_add_object_id(object_id)
+        unless object_ids.include?(object_id)
+          object_ids.append(object_id)
+          self[:objects] = object_ids
+        end
       end
     end
   end

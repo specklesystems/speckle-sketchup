@@ -34,7 +34,7 @@ module SpeckleConnector3
 
             unless material.nil?
               if render_material_proxies.has_key?(material.persistent_id.to_s)
-                render_material_proxies[material.persistent_id.to_s].add_object_id(entity.persistent_id.to_s)
+                render_material_proxies[material.persistent_id.to_s].try_add_object_id(entity.persistent_id.to_s)
               else
                 convert_material_and_add_to_proxies(material, entity)
               end
@@ -43,7 +43,7 @@ module SpeckleConnector3
             unless back_material.nil?
               if render_material_proxies.has_key?(back_material.persistent_id.to_s)
                 render_material_proxies[back_material.persistent_id.to_s]
-                  .add_object_id("#{entity.persistent_id.to_s}_back")
+                  .try_add_object_id("#{entity.persistent_id.to_s}_back")
               else
                 convert_material_and_add_to_proxies(back_material, entity, true)
               end
