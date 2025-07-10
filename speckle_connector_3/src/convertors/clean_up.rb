@@ -34,7 +34,17 @@ module SpeckleConnector3
         edges.each { |edge| remove_edge_have_coplanar_faces(edge) }
 
         # Remove remaining orphan edges
+        # the commented out code throws an exception over deleted elements
+        # even if they are rejected by deleted? flag
         # edges.reject(&:deleted?).select { |edge| edge.faces.empty? }.each(&:erase!)
+        edges.each do |edge|
+          next if edge.deleted?
+          begin
+            edge.erase! if edge.faces.empty?
+          rescue Sketchup::DeletedEntityError
+            # Ignore deleted edge
+          end
+        end
 
         merged_faces(faces)
       end

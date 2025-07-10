@@ -455,6 +455,12 @@ module SpeckleConnector3
         @converted_entities += converted_entities
         converted_entities.each do |e|
           material_to_assign = find_material_from_proxies(obj['applicationId'].to_s)
+
+          # If material_to_assign is nil, try to get from layer
+          if material_to_assign.nil?
+            material_to_assign = find_material_from_proxies(layer['applicationId'].to_s)
+          end
+
           e.material = material_to_assign if material_to_assign
           if e.is_a?(Sketchup::Face)
             if from_sketchup
