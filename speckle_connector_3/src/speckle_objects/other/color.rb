@@ -44,7 +44,7 @@ module SpeckleConnector3
         # @param argb [Numeric] int value of the corresponding color
         # @return [Sketchup::Color] sketchup color
         def self.from_int(argb)
-          Sketchup::Color.new((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >> 24) & 255)
+          Sketchup::Color.new((argb.to_i >> 16) & 255, (argb.to_i >> 8) & 255, argb.to_i & 255, (argb.to_i >> 24) & 255)
         end
       end
     end
