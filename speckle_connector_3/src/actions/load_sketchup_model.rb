@@ -23,8 +23,6 @@ module SpeckleConnector3
         new_sketchup_state = States::SketchupState.new(sketchup_model)
         sketchup_model.rendering_options['DisplaySectionPlanes'] = true
         new_state = state.with(:@sketchup_state => new_sketchup_state)
-        # Init materials again
-        new_state = InitializeMaterials.update_state(new_state)
 
         # Read speckle entities
         #new_speckle_entities = SketchupModel::Reader::SpeckleEntitiesReader.read(sketchup_model.entities)
