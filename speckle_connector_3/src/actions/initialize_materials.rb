@@ -6,7 +6,7 @@ require_relative '../constants/mat_constants'
 
 module SpeckleConnector3
   module Actions
-    # Action to initialize materials
+    # Action to initialize materials (legacy for diff colors)
     class InitializeMaterials < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
