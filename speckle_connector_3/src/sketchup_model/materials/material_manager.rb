@@ -28,6 +28,9 @@ module SpeckleConnector3
             back_material = nil
             if entity.is_a?(Sketchup::Face)
               back_material = entity.back_material
+              if material.nil? && entity.parent.is_a?(Sketchup::ComponentInstance)
+                material = SketchupModel::Query::Entity.parent_material(entity.parent.path)
+              end
             end
 
             next if material.nil? && back_material.nil?

@@ -25,6 +25,38 @@ module SpeckleConnector3
       rows.map { |row| JSON.parse(row[1]) }
     end
 
+    def self.add_account(account_id, account)
+      unless File.exist?(SPECKLE_ACCOUNTS_DB_PATH)
+        File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
+        db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
+        create_objects_table(db)
+        db.close
+      end
+      db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
+      account_json = JSON.generate(account)
+      sql_query = "INSERT OR REPLACE INTO objects (hash, content) VALUES ('#{account_id}', '#{account_json}')"
+
+      begin
+        db.exec(sql_query)
+        puts "Account with hash #{account_id} has been added/updated."
+      rescue StandardError => e
+        puts "An error occurred while adding the account: #{e}"
+      ensure
+        db.close
+      end
+    end
+
+    # Creates the 'objects' table in the database if it doesn't already exist.
+    # @param db [Sqlite3::Database] the SQLite3 database instance.
+    def self.create_objects_table(db)
+      db.exec <<-SQL
+    CREATE TABLE IF NOT EXISTS objects (
+      hash TEXT PRIMARY KEY,
+      content TEXT
+    );
+  SQL
+    end
+
     def self.remove_account(account_id)
       db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
