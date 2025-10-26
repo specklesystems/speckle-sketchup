@@ -6,7 +6,7 @@ require_relative '../load_saved_streams'
 
 module SpeckleConnector3
   module Actions
-    # Action to add account from database.
+    # Action to add account to local Account db.
     class AddAccount < Action
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @return [States::State] the new updated state object
