@@ -9,6 +9,8 @@ require_relative '../../convertors/conversion_error'
 require_relative '../../ui_data/report/conversion_result'
 require_relative '../../sketchup_model/dictionary/base_dictionary_handler'
 require_relative '../../sketchup_model/dictionary/speckle_schema_dictionary_handler'
+require_relative '../../sketchup_model/query/layer'
+require_relative '../../mapper/mapper'
 
 module SpeckleConnector3
   module SpeckleObjects
@@ -60,7 +62,8 @@ module SpeckleConnector3
         def self.from_edge(speckle_state:, edge:, units:, model_preferences:, global_transformation: nil)
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle_by_settings(edge, model_preferences)
-          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          layer_path = SketchupModel::Query::Layer.entity_path(edge)
+          att = dictionaries.any? ? { tag: layer_path, dictionaries: dictionaries } : { tag: layer_path }
           speckle_schema = Mapper.to_speckle(speckle_state, edge, units, global_transformation: global_transformation)
           start_pt = Geometry::Point.from_vertex(edge.start.position, units)
           end_pt = Geometry::Point.from_vertex(edge.end.position, units)

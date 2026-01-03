@@ -4,6 +4,8 @@ require_relative '../../speckle_objects/instance_proxy'
 require_relative '../../speckle_objects/instance_definition_proxy'
 require_relative '../../speckle_objects/other/transform'
 require_relative '../../speckle_objects/geometry/grouped_mesh'
+require_relative '../dictionary/base_dictionary_handler'
+require_relative '../query/layer'
 
 module SpeckleConnector3
   # Operations related to {SketchupModel}.
@@ -48,7 +50,8 @@ module SpeckleConnector3
 
           instance_dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                            .attribute_dictionaries_to_speckle(entity)
-          instance_att = instance_dictionaries.any? ? { dictionaries: instance_dictionaries } : {}
+          layer_path = SketchupModel::Query::Layer.entity_path(entity)
+          instance_att = instance_dictionaries.any? ? { tag: layer_path, dictionaries: instance_dictionaries } : { tag: layer_path }
 
           instance_proxies[instance_id] = SpeckleObjects::InstanceProxy.new(
             definition_id,

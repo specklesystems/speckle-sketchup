@@ -156,8 +156,9 @@ module SpeckleConnector3
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle_by_settings(face, model_preferences)
           has_any_soften_edge = face.edges.any?(&:soft?)
-          att = dictionaries.any? ? { is_soften: has_any_soften_edge, dictionaries: dictionaries }
-                  : { is_soften: has_any_soften_edge }
+          layer_path = SketchupModel::Query::Layer.entity_path(face)
+          att = dictionaries.any? ? { tag: layer_path, is_soften: has_any_soften_edge, dictionaries: dictionaries }
+                  : { tag: layer_path, is_soften: has_any_soften_edge }
           speckle_schema = Mapper.to_speckle(speckle_state, face, units, global_transformation: global_transform)
           material = face.material || face.back_material || parent_material
           speckle_mesh = Mesh.new(

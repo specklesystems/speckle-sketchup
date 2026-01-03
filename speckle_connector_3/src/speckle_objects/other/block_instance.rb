@@ -54,7 +54,8 @@ module SpeckleConnector3
           speckle_state = new_speckle_state
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle_by_settings(group, preferences[:model])
-          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          layer_path = SketchupModel::Query::Layer.entity_path(group)
+          att = dictionaries.any? ? { tag: layer_path, dictionaries: dictionaries } : { tag: layer_path }
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler.speckle_schema_to_speckle(group)
           block_instance = BlockInstance.new(
             units: units,
@@ -84,7 +85,8 @@ module SpeckleConnector3
 
           dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
                          .attribute_dictionaries_to_speckle_by_settings(component_instance, preferences[:model])
-          att = dictionaries.any? ? { dictionaries: dictionaries } : {}
+          layer_path = SketchupModel::Query::Layer.entity_path(component_instance)
+          att = dictionaries.any? ? { tag: layer_path, dictionaries: dictionaries } : { tag: layer_path }
           speckle_schema = SketchupModel::Dictionary::SpeckleSchemaDictionaryHandler
                            .speckle_schema_to_speckle(component_instance)
 
