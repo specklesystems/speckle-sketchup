@@ -25,7 +25,11 @@ module SpeckleConnector3
             sketchup_model.selection.add(entity)
           end
 
-          sketchup_model.active_view.zoom(sketchup_model.selection)
+          if sketchup_model.selection.empty?
+            puts 'No object is selected to highlight'
+          else
+            sketchup_model.active_view.zoom(sketchup_model.selection)
+          end
         end
       end
     end
