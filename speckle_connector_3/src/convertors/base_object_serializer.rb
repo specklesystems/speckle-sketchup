@@ -109,17 +109,12 @@ module SpeckleConnector3
             next
           end
 
+          # 3.4. Check prop needs to split into chunks
+          chunked_detach_match = prop.match(/^@\((\d*)\)/)
+
           # 3.3. Determine prop is dynamically detached or not
           is_detach_prop = prop[0] == '@'
           is_dynamically_detached = prop[0] == '@' && prop.length > 2 && prop[1] == '@'
-          if is_dynamically_detached
-            prop = prop[2..-1]
-          else
-            prop = prop[1..-1] if is_detach_prop
-          end
-
-          # 3.4. Check prop needs to split into chunks
-          chunked_detach_match = prop.match(/^@\((\d*)\)/)
 
           # 3.5. If split chunk is needed and prop value is array, then run chunking process
           if value.is_a?(Array) && chunked_detach_match
@@ -167,6 +162,12 @@ module SpeckleConnector3
 
             # 3.5.8. We are done chunking, good to go next property
             next
+          end
+
+          if is_dynamically_detached
+            prop = prop[2..-1]
+          else
+            prop = prop[1..-1] if is_detach_prop
           end
 
           child = traverse_value(value, is_detach_prop)
