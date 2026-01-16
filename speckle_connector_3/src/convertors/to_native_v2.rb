@@ -530,6 +530,8 @@ module SpeckleConnector3
           units = level_data_object['units']
           elevation_raw = level_data_object['elevation']
 
+          next if elevation_raw.nil? || units.nil?
+
           is_exist = @entities_to_fill.grep(Sketchup::SectionPlane).any? { |sp| sp.name == name }
           next if is_exist
 
