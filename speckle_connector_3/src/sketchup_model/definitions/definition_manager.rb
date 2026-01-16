@@ -50,6 +50,10 @@ module SpeckleConnector3
                            .attribute_dictionaries_to_speckle(entity)
           instance_att = instance_dictionaries.any? ? { dictionaries: instance_dictionaries } : {}
 
+          # definition_dictionaries = SketchupModel::Dictionary::BaseDictionaryHandler
+          #                             .attribute_dictionaries_to_speckle(entity.definition)
+          # instance_att = instance_dictionaries.any? ? { dictionaries: instance_dictionaries.merge(definition_dictionaries) } : {}
+
           instance_proxies[instance_id] = SpeckleObjects::InstanceProxy.new(
             definition_id,
             entity.name,
