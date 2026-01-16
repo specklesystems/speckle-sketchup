@@ -109,17 +109,12 @@ module SpeckleConnector3
             next
           end
 
-          # 3.3. Determine prop is dynamically detached or not
+          # 3.3. Check prop needs to split into chunks
+          chunked_detach_match = prop.match(/^@\((\d*)\)/)
+
+          # 3.4. Determine prop is dynamically detached or not
           is_detach_prop = prop[0] == '@'
           is_dynamically_detached = prop[0] == '@' && prop.length > 2 && prop[1] == '@'
-          if is_dynamically_detached
-            prop = prop[2..-1]
-          else
-            prop = prop[1..-1] if is_detach_prop
-          end
-
-          # 3.4. Check prop needs to split into chunks
-          chunked_detach_match = prop.match(/^@\((\d*)\)/)
 
           # 3.5. If split chunk is needed and prop value is array, then run chunking process
           if value.is_a?(Array) && chunked_detach_match
@@ -169,11 +164,18 @@ module SpeckleConnector3
             next
           end
 
+          # 3.6 we cleanup the semantic @ or @@ we used so far for detaching or chunking
+          if is_dynamically_detached
+            prop = prop[2..-1]
+          else
+            prop = prop[1..-1] if is_detach_prop
+          end
+
           child = traverse_value(value, is_detach_prop)
 
           is_base = value.is_a?(Hash) && !value[:speckle_type].nil?
 
-          # 3.6. traverse value according to value is a speckle object or not
+          # 3.7. traverse value according to value is a speckle object or not
           traversed_base[prop] = if is_base
                                    if child[:referencedId] && child[:speckle_type] == 'reference'
                                      is_detach_prop ? detach_helper(child[:referencedId]) : child
