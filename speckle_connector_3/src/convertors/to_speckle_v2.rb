@@ -105,9 +105,6 @@ module SpeckleConnector3
 
       # @param entity [Sketchup::Entity]
       def entity_has_changed?(entity)
-        # We do not necessarily consider grouped meshes for caching?
-        return false if entity.is_a?(SpeckleObjects::Geometry::GroupedMesh)
-
         speckle_state.changed_entity_persistent_ids.include?(entity.persistent_id.to_s) ||
           speckle_state.changed_entity_ids.include?(entity.entityID.to_s)
       end
