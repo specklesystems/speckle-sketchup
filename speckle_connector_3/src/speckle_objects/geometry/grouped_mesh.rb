@@ -28,15 +28,19 @@ module SpeckleConnector3
         # @return [Sketchup::Material] material that faces belong to
         attr_reader :material
 
-        # @return [String] structured id for grouped mesh
+        # @return [String] fake id for grouped mesh
         attr_reader :persistent_id
+
+        # @return [String] fake id for grouped mesh
+        attr_reader :entityID
 
         # @return Hash{String=>Sketchup::Face}
         attr_reader :mesh_groups
 
-        def initialize(faces, layer, material, persistent_id)
+        def initialize(faces, layer, material)
           @faces = faces
-          @persistent_id = persistent_id
+          @persistent_id = faces.first.persistent_id.to_s
+          @entityID = faces.first.persistent_id.to_s
           @layer = layer
           @material = material
           @mesh_groups = {}
