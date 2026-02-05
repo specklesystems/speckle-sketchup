@@ -30,17 +30,8 @@ module SpeckleConnector3
           stackTrace: error.backtrace
         }
         
-        # Check if state supports with_add_queue_js_command (State vs InitialState)
-        if state.respond_to?(:with_add_queue_js_command)
-          js_error_script = "#{@view_name}.receiveResponse('#{@args.first}', #{host_app_error.to_json})"
-          state.with_add_queue_js_command("error_#{@view_name}", js_error_script)
-        else
-          # State is InitialState and doesn't support JS commands
-          # Log the error and return the state unchanged
-          puts "Error during initialization: #{error.message}"
-          puts error.backtrace.join("\n")
-          state
-        end
+        js_error_script = "#{@view_name}.receiveResponse('#{@args.first}', #{host_app_error.to_json})"
+        state.with_add_queue_js_command("error_#{@view_name}", js_error_script)
       end
     end
   end
