@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'JSON'
+require 'fileutils'
 require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
 require_relative '../preferences/preferences'
@@ -12,6 +13,8 @@ module SpeckleConnector3
     def self.load_accounts
       db_path = SPECKLE_ACCOUNTS_DB_PATH
       unless File.exist?(db_path)
+        # Ensure parent directory exists before creating the database file
+        FileUtils.mkdir_p(File.dirname(db_path))
         File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
         db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
         Preferences.create_objects_table(db)
@@ -27,6 +30,8 @@ module SpeckleConnector3
 
     def self.add_account(account_id, account)
       unless File.exist?(SPECKLE_ACCOUNTS_DB_PATH)
+        # Ensure parent directory exists before creating the database file
+        FileUtils.mkdir_p(File.dirname(SPECKLE_ACCOUNTS_DB_PATH))
         File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
         db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
         create_objects_table(db)
