@@ -8,11 +8,15 @@ on:
   workflow_call:
     outputs:
       semver:
-        description: "The full SemVer 2.0 version of this build, e.g. '3.0.0-alpha.1234' (note: no 'v'-prefix)"
+        description: "The full SemVer 2.0 version of this build, e.g. '2026.6.0-alpha.1234' (note: no 'v'-prefix)"
         value: ${{ jobs.build.outputs.semver }}
       file_version:
-        description: "The file info version, e.g. '3.0.0.1234'"
+        description: "The file info version, e.g. '2026.6.0.1234'"
         value: ${{ jobs.build.outputs.file_version }}
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,12 +25,14 @@ jobs:
       file_version: ${{ steps.set-version.outputs.file-version }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v6
         with:
-          python-version: "3.10"
+          persist-credentials: false
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
 
       - id: set-version
         name: Set version to output
@@ -34,7 +40,7 @@ jobs:
         run: |
           TAG=${{ github.ref_name }}
           if [[ "${{ github.ref }}" != refs/tags/* ]]; then
-            TAG="v3.0.99.${{ github.run_number }}"
+            TAG="v0.0.99.${{ github.run_number }}"
           fi
           SEMVER="${TAG#v}"
           FILE_VERSION=$(echo "$TAG" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
@@ -50,12 +56,11 @@ jobs:
         run: |
           python patch_version.py ${{steps.set-version.outputs.semver}}
 
-      - uses: montudor/action-zip@v1
-        with:
-          args: zip -q -r sketchup.zip vendor speckle_connector_3/ speckle_connector_3.rb
-          
+      - name: Create SketchUp package
+        run: zip -q -r sketchup.zip vendor speckle_connector_3/ speckle_connector_3.rb
+
       - name: ⬆️ Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: output-${{steps.set-version.outputs.semver}}
           path: sketchup.zip

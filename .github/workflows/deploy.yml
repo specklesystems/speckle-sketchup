@@ -5,8 +5,11 @@ name: Build and deploy
 
 on:
   push:
-    branches: ["main", "installer-test/**"]
-    tags: ["v3.*.*"] # Manual delivery on every 3.x tag
+    branches: ["installer-test/**"]
+    tags: ["v202*.*.*"]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -19,7 +22,7 @@ jobs:
       IS_PUBLIC_RELEASE: ${{ github.ref_type == 'tag' }}
     steps:
       - name: 🔫 Trigger Build Installer(s)
-        uses: the-actions-org/workflow-dispatch@v4.0.0
+        uses: benc-uk/workflow-dispatch@31e2b3319479a63f0ab15bf800eff9e913504e26 # v1.3.2
         with:
           workflow: Build Installers
           repo: specklesystems/connector-installers
@@ -33,10 +36,8 @@ jobs:
             }'
           ref: main
           wait-for-completion: true
-          wait-for-completion-interval: 10s
-          wait-for-completion-timeout: 10m
-          display-workflow-run-url: true
-          display-workflow-run-url-interval: 10s
-      - uses: geekyeggo/delete-artifact@v5
+          sync-status: true
+        timeout-minutes: 15
+      - uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           name: output-*
