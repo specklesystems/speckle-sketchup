@@ -2,6 +2,7 @@
 
 require_relative 'binding'
 require_relative '../../actions/send_actions/send'
+require_relative '../../actions/send_actions/send_artifacts'
 require_relative '../../actions/send_actions/after_send_objects'
 require_relative '../../actions/base_actions/get_send_filters'
 require_relative '../../actions/base_actions/get_send_settings'
@@ -16,6 +17,7 @@ module SpeckleConnector3
       def commands
         @commands ||= {
           send: Commands::ActionCommand.new(@app, self, Actions::Send),
+          sendArtifacts: Commands::ActionCommand.new(@app, self, Actions::SendArtifacts),
           getSendFilters: Commands::ActionCommand.new(@app, self, Actions::GetSendFilters),
           getSendSettings: Commands::ActionCommand.new(@app, self, Actions::GetSendSettings),
           updateSendFilter: Commands::ActionCommand.new(@app, self, Actions::UpdateSendFilter),

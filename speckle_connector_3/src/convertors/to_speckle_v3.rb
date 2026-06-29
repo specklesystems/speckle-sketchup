@@ -1,0 +1,248 @@
+# frozen_string_literal: true
+
+require_relative '../artifacts/objects_artifact_pipeline'
+require_relative '../artifacts/sgeo_encoder'
+require_relative '../artifacts/vocab'
+require_relative '../speckle_objects/geometry/length'
+require_relative '../speckle_objects/other/transform'
+require_relative '../speckle_objects/other/render_material'
+require_relative '../speckle_objects/other/color'
+require_relative '../sketchup_model/definitions/definition_manager'
+require_relative '../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../sketchup_model/query/layer'
+
+module SpeckleConnector3
+  module Converters
+    # Speckle 4.0 single-pass extractor: produces the client-side artefact bundle
+    # (geometries.parquet + envelope.*.parquet + eav.*.parquet) DIRECTLY from
+    # SketchUp entities, modeled on speckle-oda's `RevitModelExtractor`. Geometry
+    # is extracted straight into SGEO and streamed to disk; topology edges are
+    # emitted inline; value-nodes (definitions / materials / colours / collections)
+    # are emitted post-loop. This is deliberately NOT a JSON serializer — it does
+    # not build a Base tree, chunk, hash, or batch.
+    #
+    # SketchUp's distinguishing axes vs. oda's single-container model: the tag
+    # (layer) folder tree -> nested COLLECTION nodes + IN_COLLECTION, layer colours
+    # -> COLOR nodes + HAS_COLOR, and component instancing -> DEFINITION/INSTANCE.
+    class ToSpeckleV3
+      ART = SpeckleConnector3::Artifacts
+      SOG = SpeckleConnector3::SpeckleObjects::Geometry
+      SOO = SpeckleConnector3::SpeckleObjects::Other
+      DICT = SpeckleConnector3::SketchupModel::Dictionary::BaseDictionaryHandler
+      LAYER = SpeckleConnector3::SketchupModel::Query::Layer
+
+      # @return [Integer] number of top-level objects emitted (totalChildrenCount)
+      attr_reader :object_count
+
+      # @param units [String] speckle model units (e.g. 'm', 'mm')
+      # @param output_dir [String] directory to write the parquet bundle into
+      # @param version_id [String] server pre-allocated version id (bundle base name)
+      def initialize(units, output_dir, version_id)
+        @units = units
+        @pipeline = ART::ObjectsArtifactPipeline.new(output_dir, version_id)
+        @object_count = 0
+        @collection_ks = {}
+      end
+
+      # Runs the single pass + post-loop emission and flushes the bundle to disk.
+      # @param entities [Array<Sketchup::Entity>] the selected top-level entities
+      # @return [Array<String>] the geometry shard paths written (for the upload bundle)
+      def extract(entities)
+        manager = SketchupModel::Definitions::DefinitionManager.new(@units)
+        unpacked = manager.unpack_entities(entities)
+        @flat = manager.flat_atomic_objects
+        @instance_proxies = unpacked.instance_proxies
+
+        # 1. Single pass over the selected top-level entities (emit + stream as we go).
+        entities.each { |entity| emit_top_level(entity) }
+
+        # 2. Post-loop: definitions (member geometry via DEFINES, nested instances via DEFINES_INSTANCE).
+        unpacked.instance_definition_proxies.each { |dp| emit_definition(dp) }
+
+        # 3. Default scene view: the tag/layer folder tree.
+        @pipeline.add_scene_view(
+          ART::SceneView.new(0, 'Default', true, [ART::SceneViewKey.rel(ART::RelKind::IN_COLLECTION)])
+        )
+
+        @pipeline.complete
+        @pipeline.geometry_paths
+      end
+
+      private
+
+      def emit_top_level(entity)
+        case entity
+        when Sketchup::ComponentInstance, Sketchup::Group
+          emit_instance_object(entity)
+        when Sketchup::Face
+          emit_face_object(entity)
+        when Sketchup::Edge
+          emit_edge_object(entity) unless entity.faces.any?
+        end
+      end
+
+      # A component/group placement -> object with a DISPLAY_INSTANCE edge to its INSTANCE node.
+      def emit_instance_object(entity)
+        app_id = entity.persistent_id.to_s
+        obj_k = @pipeline.intern_object(app_id)
+        in_collection(obj_k, entity)
+        add_properties(app_id, entity, 'Speckle.Core.Models.Instances.InstanceProxy', entity.name)
+
+        proxy = @instance_proxies[app_id]
+        def_k = @pipeline.add_definition(entity.definition.persistent_id.to_s, entity.definition.name)
+        inst_k = @pipeline.add_instance(app_id, def_k, proxy[:transform], proxy[:units])
+        @pipeline.display_instance(obj_k, inst_k, 0)
+        add_color(obj_k, entity)
+        @object_count += 1
+      end
+
+      # A top-level face -> object with a world-coordinate mesh (DISPLAY).
+      def emit_face_object(face)
+        app_id = face.persistent_id.to_s
+        obj_k = @pipeline.intern_object(app_id)
+        in_collection(obj_k, face)
+        add_properties(app_id, face, 'Objects.Geometry.Mesh', nil)
+
+        geom_k = emit_mesh(app_id, [face])
+        @pipeline.display(obj_k, geom_k, 0)
+        bind_material(geom_k, face.material || face.back_material)
+        add_color(obj_k, face)
+        @object_count += 1
+      end
+
+      # A free top-level edge (not bounding a face) -> object with a Line (DISPLAY).
+      def emit_edge_object(edge)
+        app_id = edge.persistent_id.to_s
+        obj_k = @pipeline.intern_object(app_id)
+        in_collection(obj_k, edge)
+        add_properties(app_id, edge, 'Objects.Geometry.Line', nil)
+
+        geom_k = @pipeline.add_geometry(app_id, edge_to_sgeo(edge))
+        @pipeline.display(obj_k, geom_k, 0)
+        add_color(obj_k, edge)
+        @object_count += 1
+      end
+
+      # Emits a definition node + its member geometry/instances.
+      def emit_definition(definition_proxy)
+        def_id = definition_proxy.definition.persistent_id.to_s
+        def_k = @pipeline.add_definition(def_id, definition_proxy[:name])
+        ord = 0
+        definition_proxy.object_ids.each do |member_id|
+          member = @flat[member_id]
+          next if member.nil?
+
+          case member
+          when SOG::GroupedMesh
+            geom_k = emit_mesh(member_id, member.faces)
+            @pipeline.defines(def_k, geom_k, ord)
+            bind_material(geom_k, member.material)
+            ord += 1
+          when Sketchup::ComponentInstance, Sketchup::Group
+            proxy = @instance_proxies[member_id]
+            next if proxy.nil?
+
+            nested_def_k = @pipeline.add_definition(member.definition.persistent_id.to_s, member.definition.name)
+            inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
+            @pipeline.defines_instance(def_k, inst_k, ord)
+            ord += 1
+          when Sketchup::Edge
+            geom_k = @pipeline.add_geometry(member_id, edge_to_sgeo(member))
+            @pipeline.defines(def_k, geom_k, ord)
+            ord += 1
+          end
+        end
+      end
+
+      # ── geometry ──────────────────────────────────────────────────────
+
+      # Triangulates the faces into flat vertices + a Speckle face stream (in the
+      # faces' own coordinate space — world for top-level, local for definition
+      # members), SGEO-encodes, and interns the blob. Returns the geometry K.
+      def emit_mesh(mesh_app_id, faces)
+        vertices, polygons = faces_to_mesh_arrays(faces)
+        @pipeline.add_geometry(mesh_app_id, ART::SgeoEncoder.encode_mesh(vertices, polygons, @units))
+      end
+
+      def faces_to_mesh_arrays(faces)
+        vertices = []
+        polygons = []
+        faces.each do |face|
+          mesh = face.mesh
+          base = vertices.length / 3
+          mesh.points.each do |pt|
+            vertices.push(
+              SOG.length_to_speckle(pt.x, @units),
+              SOG.length_to_speckle(pt.y, @units),
+              SOG.length_to_speckle(pt.z, @units)
+            )
+          end
+          mesh.polygons.each do |poly|
+            polygons.push(poly.length)
+            poly.each { |i| polygons.push(base + i.abs - 1) } # PolygonMesh indices are 1-based, signed
+          end
+        end
+        [vertices, polygons]
+      end
+
+      def edge_to_sgeo(edge)
+        a = edge.start.position
+        b = edge.end.position
+        ART::SgeoEncoder.encode_line(point_to_speckle(a), point_to_speckle(b), @units)
+      end
+
+      def point_to_speckle(point)
+        [
+          SOG.length_to_speckle(point.x, @units),
+          SOG.length_to_speckle(point.y, @units),
+          SOG.length_to_speckle(point.z, @units)
+        ]
+      end
+
+      # ── materials / colours / collections / properties ────────────────
+
+      def bind_material(geom_k, material)
+        return if material.nil?
+
+        rm = SOO::RenderMaterial.from_material(material)
+        mat_k = @pipeline.add_material(material.persistent_id.to_s, rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
+        @pipeline.has_material(geom_k, mat_k)
+      end
+
+      # Binds the object to its tag (layer) colour — SketchUp's "colour by tag".
+      def add_color(obj_k, entity)
+        layer = entity.layer
+        return if layer.nil?
+
+        @pipeline.has_color(obj_k, @pipeline.add_color(SOO::Color.to_int(layer.color)))
+      end
+
+      def in_collection(obj_k, entity)
+        layer_k = collection_k_for_layer(entity.layer)
+        @pipeline.in_collection(obj_k, layer_k, 0) if layer_k
+      end
+
+      # Resolves (building lazily) the COLLECTION node for an entity's tag, nesting
+      # it under its folder ancestry. Returns the leaf (tag) collection K.
+      def collection_k_for_layer(layer)
+        return nil if layer.nil?
+
+        parent_k = nil
+        LAYER.path(layer).each do |folder|
+          parent_k = ensure_collection(folder.persistent_id.to_s, folder.display_name, parent_k)
+        end
+        ensure_collection(layer.persistent_id.to_s, layer.display_name, parent_k)
+      end
+
+      def ensure_collection(key, name, parent_k)
+        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, 'Layer')
+      end
+
+      def add_properties(app_id, entity, speckle_type, name)
+        root = [['speckle_type', speckle_type], ['units', @units], ['layer', LAYER.entity_path(entity)]]
+        root << ['name', name] if name && name != ''
+        @pipeline.add_properties(app_id, DICT.attribute_dictionaries_to_speckle(entity), root)
+      end
+    end
+  end
+end
