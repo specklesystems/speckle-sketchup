@@ -101,7 +101,9 @@ module SpeckleConnector3
         app_id = face.persistent_id.to_s
         obj_k = @pipeline.intern_object(app_id)
         in_collection(obj_k, face)
-        add_properties(app_id, face, 'Objects.Geometry.Mesh', nil)
+        # Carry edge soft/smooth so receive can restore it (eav boolean; the geometry
+        # formats are cross-connector and have no place for host-specific flags).
+        add_properties(app_id, face, 'Objects.Geometry.Mesh', nil, [['@speckle.is_soften', soften?([face])]])
 
         geom_k = emit_mesh(app_id, [face])
         @pipeline.display(obj_k, geom_k, 0)
@@ -229,19 +231,27 @@ module SpeckleConnector3
 
         parent_k = nil
         LAYER.path(layer).each do |folder|
-          parent_k = ensure_collection(folder.persistent_id.to_s, folder.display_name, parent_k)
+          parent_k = ensure_collection(folder.persistent_id.to_s, folder.display_name, parent_k, 'Folder')
         end
-        ensure_collection(layer.persistent_id.to_s, layer.display_name, parent_k)
+        ensure_collection(layer.persistent_id.to_s, layer.display_name, parent_k, 'Layer')
       end
 
-      def ensure_collection(key, name, parent_k)
-        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, 'Layer')
+      # subtype 'Folder' for tag folders, 'Layer' for tags — so receive rebuilds each
+      # as the right SketchUp object (LayerFolder vs Layer).
+      def ensure_collection(key, name, parent_k, subtype)
+        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, subtype)
       end
 
-      def add_properties(app_id, entity, speckle_type, name)
+      def add_properties(app_id, entity, speckle_type, name, extra = [])
         root = [['speckle_type', speckle_type], ['units', @units], ['layer', LAYER.entity_path(entity)]]
         root << ['name', name] if name && name != ''
+        root.concat(extra)
         @pipeline.add_properties(app_id, DICT.attribute_dictionaries_to_speckle(entity), root)
+      end
+
+      # True if any of the faces has a soft edge (the existing Mesh.from_face rule).
+      def soften?(faces)
+        faces.any? { |face| face.edges.any?(&:soft?) }
       end
     end
   end
