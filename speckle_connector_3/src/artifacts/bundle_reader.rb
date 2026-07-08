@@ -6,22 +6,19 @@ require_relative 'vocab'
 
 module SpeckleConnector3
   module Artifacts
-    # Reads a 4.0 artefact bundle (our own UNCOMPRESSED parquet) back into a plain
-    # structured model — the inverse of the producer, with NO SketchUp dependency
-    # (so it is unit-testable headless). The native-entity creation consumes this.
+    # Reads a 4.0 artefact bundle back into a plain structured model — the inverse of
+    # the producer, with NO SketchUp dependency (unit-testable headless).
     #
-    # Returns a Hash:
-    #   {
-    #     collections: { node_k => { name:, parent_k:, subtype: } },   # tag/folder tree
-    #     materials:   { node_k => { argb:, opacity:, metalness:, roughness: } },
-    #     colors:      { node_k => argb },
-    #     definitions: { node_k => { name:, geometry_ks: [...], instance_ks: [...] } },
-    #     instances:   { node_k => { def_ref:, transform: [16 floats], units: } },
-    #     geometries:  { geom_k => <decoded SGEO hash> },
-    #     objects: [ { app_id:, collection_k:, color_argb:, is_soften:, properties: {path=>value},
-    #                  displays: [geom_k...], display_instances: [inst_node_k...] } ],
-    #     material_by_geom: { geom_k => material_node_k }
-    #   }
+    # Notably it resolves each object's **scene_path**: the ordered tag/folder labels
+    # the receive should organise it under, driven by the producer's DEFAULT
+    # `envelope.scene_views` projection. So a SketchUp bundle (IN_COLLECTION tier ->
+    # the tag-folder tree) and a Revit bundle (ON_LEVEL -> category -> family tiers)
+    # both come back organised, instead of dumping at the model root.
+    #
+    # Returns a Hash with: collections, materials, colors, definitions, instances,
+    # geometries, material_by_geom, default_scene_view, and objects (each with
+    # :app_id, :scene_path [String...], :color_argb, :is_soften, :properties,
+    # :displays [geom_k...], :display_instances [inst_node_k...]).
     module BundleReader
       module_function
 
@@ -35,13 +32,15 @@ module SpeckleConnector3
         paths = eav.call('paths').to_h { |r| [r['path_index'], r['path']] }
         props_by_obj = group_eav(eav.call('eav'), paths)
         geometries = read_geometries(dir, base)
+        default_view = read_default_scene_view(dir, base)
 
         model = {
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
-          geometries: geometries, objects: [], material_by_geom: {}
+          node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
+          default_scene_view: default_view
         }
         classify_nodes(nodes, model)
-        wire_relations(relations, model, object_app, props_by_obj)
+        wire_relations(relations, model, object_app, props_by_obj, default_view)
         model
       end
 
@@ -52,6 +51,11 @@ module SpeckleConnector3
           case n['kind']
           when NodeKind::COLLECTION
             model[:collections][id] = { name: n['name'], parent_k: n['def_ref'], subtype: n['units'] }
+            model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # tag/folder tier
+          when NodeKind::CONTAINER
+            model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # model/level/system tier
+          when NodeKind::LEVEL
+            model[:node_meta][id] = { name: n['name'], parent_k: nil }
           when NodeKind::MATERIAL
             model[:materials][id] = {
               argb: n['argb'], opacity: n['opacity'], metalness: n['metalness'], roughness: n['roughness']
@@ -70,15 +74,15 @@ module SpeckleConnector3
 
       # ── relations ─────────────────────────────────────────────────────
 
-      def wire_relations(relations, model, object_app, props_by_obj)
-        objects = {} # object_index => object hash (built lazily)
+      def wire_relations(relations, model, object_app, props_by_obj, default_view)
+        objects = {}
+        memberships = Hash.new { |h, k| h[k] = Hash.new { |hh, kk| hh[kk] = [] } } # oi -> rel -> [node]
         obj = lambda do |oi|
           objects[oi] ||= begin
             props = props_by_obj[oi] || {}
             {
-              app_id: object_app[oi], collection_k: nil, color_argb: nil,
-              is_soften: props['@speckle.is_soften'], properties: props,
-              displays: [], display_instances: []
+              app_id: object_app[oi], color_argb: nil, is_soften: props['@speckle.is_soften'],
+              properties: props, displays: [], display_instances: [], scene_path: []
             }
           end
         end
@@ -87,26 +91,86 @@ module SpeckleConnector3
           rel = r['rel']
           src = r['src']
           dst = r['dst']
+          memberships[src][rel] << dst
           case rel
           when RelKind::DISPLAY then obj.call(src)[:displays] << dst
           when RelKind::DISPLAY_INSTANCE then obj.call(src)[:display_instances] << dst
-          when RelKind::IN_COLLECTION then obj.call(src)[:collection_k] = dst
           when RelKind::HAS_COLOR then obj.call(src)[:color_argb] = model[:colors][dst]
           when RelKind::HAS_MATERIAL then model[:material_by_geom][src] = dst
           when RelKind::DEFINES then model[:definitions][src][:geometry_ks] << dst if model[:definitions][src]
           when RelKind::DEFINES_INSTANCE then model[:definitions][src][:instance_ks] << dst if model[:definitions][src]
+          else
+            obj.call(src) if (RelKind::ON_LEVEL..RelKind::XREF).cover?(rel) # ensure membership-only objects exist
           end
         end
 
+        objects.each do |oi, object|
+          object[:scene_path] = scene_path_for(oi, default_view, memberships, model[:node_meta], props_by_obj[oi] || {})
+        end
         model[:objects] = objects.values
+      end
+
+      # The ordered tag/folder labels for an object, from the default scene view.
+      def scene_path_for(object_index, default_view, memberships, node_meta, props)
+        segments = []
+        default_view.each do |key|
+          if key[:source] == 'rel'
+            rel = key[:ref].to_i
+            memberships[object_index][rel].each { |node_k| segments.concat(label_chain(node_k, node_meta)) }
+          else # eav group-by
+            value = props[key[:ref]]
+            segments << value.to_s unless value.nil? || value.to_s.empty?
+          end
+        end
+        segments
+      end
+
+      # Walks a node's parent chain (root-first) into its label segments.
+      def label_chain(node_k, node_meta)
+        chain = []
+        cur = node_k
+        guard = 0
+        while cur && (meta = node_meta[cur]) && guard < 64
+          chain.unshift(meta[:name]) unless meta[:name].nil? || meta[:name].empty?
+          cur = meta[:parent_k]
+          guard += 1
+        end
+        chain
       end
 
       # ── helpers ───────────────────────────────────────────────────────
 
+      def read_default_scene_view(dir, base)
+        path = File.join(dir, "#{base}.envelope.scene_views.parquet")
+        return [] unless File.exist?(path)
+
+        rows = ParquetSource.read_hashes(path)
+        by_view = rows.group_by { |r| r['view'] }
+        chosen = by_view.values.find { |vr| vr.any? { |r| r['is_default'] } } || by_view.values.first || []
+        chosen.sort_by { |r| r['ord'] }.map { |r| { source: r['source'], ref: r['ref'] } }
+      end
+
       def read_geometries(dir, base)
         geom = {}
+        skipped = Hash.new(0)
         Dir.glob(File.join(dir, "#{base}.geometries*.parquet")).each do |path|
-          ParquetSource.read_hashes(path).each { |row| geom[row['geometryIndex']] = SgeoDecoder.decode(row['content']) }
+          ParquetSource.read_hashes(path).each do |row|
+            content = row['content']
+            # The geometries file can carry non-SGEO blobs alongside SGEO — e.g. a Rhino
+            # bundle stores each solid's raw ".3dm" under the SOLID relation ("3D Geometry
+            # File Format…" magic). SketchUp consumes only the SGEO display geometry (those
+            # solids also emit SGEO display meshes), so skip anything without the SGEO magic
+            # instead of erroring on the first foreign blob.
+            if content.nil? || content.b.byteslice(0, 4) != SgeoEncoder::MAGIC
+              skipped[row['type']] += 1
+              next
+            end
+            geom[row['geometryIndex']] = SgeoDecoder.decode(content)
+          end
+        end
+        unless skipped.empty?
+          warn("Speckle: skipped #{skipped.values.sum} non-SGEO geometry blob(s) " \
+               "(#{skipped.map { |t, c| "#{t}:#{c}" }.join(', ')})")
         end
         geom
       end
@@ -114,13 +178,11 @@ module SpeckleConnector3
       def group_eav(rows, paths)
         by_obj = Hash.new { |h, k| h[k] = {} }
         rows.each do |row|
-          path = paths[row['path_index']]
-          by_obj[row['object_index']][path] = eav_value(row)
+          by_obj[row['object_index']][paths[row['path_index']]] = eav_value(row)
         end
         by_obj
       end
 
-      # Reconstructs the scalar value from the typed eav columns.
       def eav_value(row)
         return row['value_boolean'] unless row['value_boolean'].nil?
         return row['value_double'] unless row['value_double'].nil?

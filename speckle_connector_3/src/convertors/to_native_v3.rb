@@ -25,8 +25,10 @@ module SpeckleConnector3
       # @param sketchup_model [Sketchup::Model]
       def initialize(sketchup_model)
         @model = sketchup_model
-        @tag_by_k = {}
-        @folder_by_k = {}
+        @folder_by_path = {}
+        @tag_by_path = {}
+        @used_tag_names = {}
+        @uniq_counter = 0
         @material_by_k = {}
         @definition_by_k = {}
         @created_top_level = []
@@ -45,7 +47,6 @@ module SpeckleConnector3
 
       # @param model [Hash] the reconstructed model from {Artifacts::BundleReader}
       def build(model)
-        build_collections(model[:collections])
         build_materials(model[:materials])
         build_definitions(model)
         model[:objects].each { |obj| build_object(model, obj) }
@@ -54,23 +55,44 @@ module SpeckleConnector3
 
       private
 
-      # ── tags / folders ────────────────────────────────────────────────
+      # ── tags / folders (from the default scene-view path) ─────────────
 
-      def build_collections(collections)
-        collections.each do |k, info|
-          if info[:subtype] == 'Folder'
-            @folder_by_k[k] = @model.layers.add_folder(info[:name])
-          else
-            @tag_by_k[k] = @model.layers.add(info[:name])
-          end
-        end
-        collections.each do |k, info|
-          parent = info[:parent_k] && @folder_by_k[info[:parent_k]]
-          next unless parent
+      # Resolves (building lazily) the SketchUp tag for an object's scene_path
+      # [folder, …, tag]: the last segment is the tag, the rest are nested folders.
+      def ensure_tag_path(segments)
+        return nil if segments.nil? || segments.empty?
 
-          target = @folder_by_k[k] || @tag_by_k[k]
-          target.folder = parent if target.respond_to?(:folder=)
+        key = segments.join(" ")
+        return @tag_by_path[key] if @tag_by_path.key?(key)
+
+        parent_folder = ensure_folder_path(segments[0..-2])
+        tag = @model.layers.add(unique_tag_name(segments))
+        tag.folder = parent_folder if parent_folder && tag.respond_to?(:folder=)
+        @tag_by_path[key] = tag
+      end
+
+      def ensure_folder_path(segments)
+        parent = nil
+        path = []
+        segments.each do |name|
+          path << name
+          key = path.join(" ")
+          parent = (@folder_by_path[key] ||= begin
+            folder = @model.layers.add_folder(name)
+            folder.folder = parent if parent && folder.respond_to?(:folder=)
+            folder
+          end)
         end
+        parent
+      end
+
+      # SketchUp tag names are globally unique, so a bare leaf is used when free; on a
+      # collision (e.g. the same family name under different levels) the full path is.
+      def unique_tag_name(segments)
+        name = @used_tag_names.key?(segments.last) ? segments.join(' :: ') : segments.last
+        name = "#{segments.join(' :: ')} (#{@uniq_counter += 1})" while @used_tag_names.key?(name)
+        @used_tag_names[name] = true
+        name
       end
 
       # ── materials ─────────────────────────────────────────────────────
@@ -124,7 +146,7 @@ module SpeckleConnector3
             end
           end
 
-        tag = obj[:collection_k] && @tag_by_k[obj[:collection_k]]
+        tag = ensure_tag_path(obj[:scene_path])
         created.compact.each do |e|
           e.layer = tag if tag && e.respond_to?(:layer=)
           @created_top_level << e

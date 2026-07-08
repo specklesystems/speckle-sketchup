@@ -29,8 +29,10 @@ module SpeckleConnector3
         type = b.getbyte(5)
         flags = b.byteslice(6, 2).unpack1('v')
         units = CODE_UNITS[b.byteslice(8, 2).unpack1('v')] || 'none'
-        # Header CRC (0x0C) is a producer-specific hint — NOT verified (Revit fills it
-        # with a non-zlib value; magic + version above are the real guards).
+        # Header CRC (0x0C) is a canonical zlib/IEEE CRC-32 of the body across all
+        # producers (SDK/Revit/specklepy now match Zlib.crc32) — but we don't verify
+        # it: magic + version above are the guards, and skipping keeps us lenient to
+        # any stray blob written before the SDK's 0xEDB88820->0xEDB88320 CRC fix.
         body = b.byteslice(SgeoEncoder::HEADER_SIZE..) || ''.b
 
         decode_body(type, flags, units, body)
