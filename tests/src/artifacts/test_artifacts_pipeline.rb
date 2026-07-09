@@ -133,6 +133,22 @@ module SpeckleConnector3
         end
       end
 
+      # ENG-8841: a tag collection carries its colour on the container node's argb
+      # and it survives the produce->read round trip; folders stay colourless.
+      def test_tag_color_round_trips
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          folder = p.add_collection('folder-1', 'Site', nil, 'Folder')
+          p.add_collection('tag-1', 'Trees', folder, 'Layer', -65_536)
+          p.complete
+
+          colls = BundleReader.read(dir, base)[:collections].values
+          assert_equal(-65_536, colls.find { |c| c[:name] == 'Trees' }[:argb])
+          assert_nil(colls.find { |c| c[:name] == 'Site' }[:argb])
+        end
+      end
+
       # Pre-v5 bundles (COLLECTION kind 6, subtype overloaded into `units`) must
       # still classify, so old already-published models keep receiving.
       def test_bundle_reader_accepts_legacy_collection_rows

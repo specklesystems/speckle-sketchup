@@ -59,7 +59,9 @@ module SpeckleConnector3
           case n['kind']
           when NodeKind::CONTAINER, LEGACY_COLLECTION_KIND
             # v5 bundles carry the discriminator in `subtype`; pre-v5 overloaded `units`.
-            model[:collections][id] = { name: n['name'], parent_k: n['def_ref'], subtype: n['subtype'] || n['units'] }
+            model[:collections][id] = {
+              name: n['name'], parent_k: n['def_ref'], subtype: n['subtype'] || n['units'], argb: n['argb']
+            }
             model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # tag/folder/model tier
           when NodeKind::LEVEL
             model[:node_meta][id] = { name: n['name'], parent_k: nil }

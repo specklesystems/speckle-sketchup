@@ -233,13 +233,16 @@ module SpeckleConnector3
         LAYER.path(layer).each do |folder|
           parent_k = ensure_collection(folder.persistent_id.to_s, folder.display_name, parent_k, 'Folder')
         end
-        ensure_collection(layer.persistent_id.to_s, layer.display_name, parent_k, 'Layer')
+        ensure_collection(layer.persistent_id.to_s, layer.display_name, parent_k, 'Layer',
+                          SOO::Color.to_int(layer.color))
       end
 
       # subtype 'Folder' for tag folders, 'Layer' for tags — so receive rebuilds each
-      # as the right SketchUp object (LayerFolder vs Layer).
-      def ensure_collection(key, name, parent_k, subtype)
-        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, subtype)
+      # as the right SketchUp object (LayerFolder vs Layer). Tags carry their colour
+      # on the container node's argb (the cross-connector layer-colour pattern);
+      # folders have no colour in SketchUp.
+      def ensure_collection(key, name, parent_k, subtype, argb = nil)
+        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, subtype, argb)
       end
 
       def add_properties(app_id, entity, speckle_type, name, extra = [])

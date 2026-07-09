@@ -37,6 +37,7 @@ module SpeckleConnector3
         @definition_by_k = {}
         @created_top_level = []
         @converted_faces = []
+        @tag_color_by_path = {}
       end
 
       # Reads a bundle from `dir` (base name `base`) and builds it into the model.
@@ -52,6 +53,7 @@ module SpeckleConnector3
 
       # @param model [Hash] the reconstructed model from {Artifacts::BundleReader}
       def build(model)
+        @tag_color_by_path = tag_colors_by_path(model)
         build_materials(model[:materials])
         build_definitions(model)
         model[:objects].each { |obj| build_object(model, obj) }
@@ -73,6 +75,8 @@ module SpeckleConnector3
         parent_folder = ensure_folder_path(segments[0..-2])
         tag = @model.layers.add(unique_tag_name(segments))
         tag.folder = parent_folder if parent_folder && tag.respond_to?(:folder=)
+        argb = @tag_color_by_path[key]
+        tag.color = COLOR.from_int(argb) if argb && tag.respond_to?(:color=)
         @tag_by_path[key] = tag
       end
 
@@ -89,6 +93,22 @@ module SpeckleConnector3
           end)
         end
         parent
+      end
+
+      # Full scene-path key -> tag argb (ENG-8841). Tags are created from scene_path
+      # label strings, so colours are mapped by the same labels: each coloured
+      # collection's path is composed with the label_chain walk that produced the
+      # objects' scene_path, making the keys match by construction. Colourless
+      # collections (folders, pre-colour bundles) are simply absent.
+      def tag_colors_by_path(model)
+        colors = {}
+        model[:collections].each do |k, coll|
+          next if coll[:argb].nil?
+
+          segments = Artifacts::BundleReader.label_chain(k, model[:node_meta])
+          colors[segments.join(' ')] = coll[:argb] unless segments.empty?
+        end
+        colors
       end
 
       # SketchUp tag names are globally unique, so a bare leaf is used when free; on a

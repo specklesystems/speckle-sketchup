@@ -91,9 +91,10 @@ module SpeckleConnector3
       # Since bundle-spec v5 a collection IS a CONTAINER node — `subtype` (its own
       # column, e.g. 'Layer'/'Folder') is the only discriminator. Kept as a separate
       # method from {#add_container} for the 'coll:'-prefixed key namespace.
-      def add_collection(collection_key, name, parent_collection_k, subtype)
+      # `argb` is the collection's own colour (a tag's colour), nil when it has none.
+      def add_collection(collection_key, name, parent_collection_k, subtype, argb = nil)
         node('coll:' + collection_key) do |k|
-          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, argb, nil, nil, nil, nil)
         end
       end
 
