@@ -158,7 +158,7 @@ module SpeckleConnector3
 
       # ── geometry ──────────────────────────────────────────────────────
 
-      # Triangulates the faces into flat vertices + a Speckle face stream (in the
+      # Flattens the faces into flat vertices + a Speckle face stream (in the
       # faces' own coordinate space — world for top-level, local for definition
       # members), SGEO-encodes, and interns the blob. Returns the geometry K.
       def emit_mesh(mesh_app_id, faces)
@@ -166,25 +166,37 @@ module SpeckleConnector3
         @pipeline.add_geometry(mesh_app_id, ART::SgeoEncoder.encode_mesh(vertices, polygons, @units))
       end
 
+      # Single-loop faces emit one n-gon from their outer loop (v2 parity, ENG-8845 —
+      # no diagonal edges on receive, smaller payloads); only holed faces fall back
+      # to SketchUp's triangulation (`face.mesh`), which is what carries the holes.
       def faces_to_mesh_arrays(faces)
         vertices = []
         polygons = []
         faces.each do |face|
-          mesh = face.mesh
           base = vertices.length / 3
-          mesh.points.each do |pt|
-            vertices.push(
-              SOG.length_to_speckle(pt.x, @units),
-              SOG.length_to_speckle(pt.y, @units),
-              SOG.length_to_speckle(pt.z, @units)
-            )
-          end
-          mesh.polygons.each do |poly|
-            polygons.push(poly.length)
-            poly.each { |i| polygons.push(base + i.abs - 1) } # PolygonMesh indices are 1-based, signed
+          if face.loops.length > 1
+            mesh = face.mesh
+            mesh.points.each { |pt| push_point(vertices, pt) }
+            mesh.polygons.each do |poly|
+              polygons.push(poly.length)
+              poly.each { |i| polygons.push(base + i.abs - 1) } # PolygonMesh indices are 1-based, signed
+            end
+          else
+            loop_vertices = face.outer_loop.vertices
+            loop_vertices.each { |v| push_point(vertices, v.position) }
+            polygons.push(loop_vertices.length)
+            loop_vertices.each_index { |i| polygons.push(base + i) }
           end
         end
         [vertices, polygons]
+      end
+
+      def push_point(vertices, pt)
+        vertices.push(
+          SOG.length_to_speckle(pt.x, @units),
+          SOG.length_to_speckle(pt.y, @units),
+          SOG.length_to_speckle(pt.z, @units)
+        )
       end
 
       def edge_to_sgeo(edge)
