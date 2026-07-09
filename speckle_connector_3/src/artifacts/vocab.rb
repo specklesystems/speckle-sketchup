@@ -49,5 +49,19 @@ module SpeckleConnector3
 
     # A producer-authored scene-explorer projection. `keys` are outermost-first.
     SceneView = Struct.new(:view, :name, :is_default, :keys)
+
+    # One named camera viewpoint (a SketchUp scene/page camera) — a row of the
+    # optional `{base}.envelope.camera_views.parquet` artefact. `pos`/`target` are
+    # [x, y, z] triples in `units` (model units — same space as the geometry);
+    # `forward`/`up` are [x, y, z] NORMALIZED unit vectors (unitless). `fov` is the
+    # VERTICAL field of view in degrees and, like `lens_mm`, is perspective-only
+    # (nil for ortho); `ortho_height` is ortho-only (in `units`). `target`, `fov`,
+    # `lens_mm`, `ortho_height`, `aspect`, `near` and `far` may all be nil.
+    CameraView = Struct.new(
+      :view, :name, :is_default, :ord,
+      :pos, :forward, :up, :target, :units,
+      :is_ortho, :fov, :lens_mm, :ortho_height, :aspect, :near, :far,
+      keyword_init: true
+    )
   end
 end

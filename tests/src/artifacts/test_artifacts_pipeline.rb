@@ -72,13 +72,19 @@ module SpeckleConnector3
           mat = p.add_material('mat-red', 'Brick Red', -65_536, 1.0, 0.0, 1.0)
           p.has_material(g, mat)
           p.add_scene_view(SceneView.new(0, 'Default', true, [SceneViewKey.rel(RelKind::IN_COLLECTION)]))
+          p.add_camera_view(CameraView.new(
+                              view: 0, name: 'Scene 1', is_default: true, ord: 0,
+                              pos: [1.0, 2.0, 3.0], forward: [0.0, 1.0, 0.0], up: [0.0, 0.0, 1.0],
+                              target: [1.0, 12.0, 3.0], units: 'm', is_ortho: false,
+                              fov: 35.0, lens_mm: 57.0, ortho_height: nil, aspect: nil, near: nil, far: nil
+                            ))
           p.complete
 
           expected = %w[
             geometries
             eav.objects eav.paths eav.eav eav.types eav.type_eav eav.object_type
             envelope.relations envelope.nodes envelope.meta envelope.rel_types envelope.node_kinds
-            envelope.scene_views
+            envelope.scene_views envelope.camera_views
           ]
           expected.each do |suffix|
             path = File.join(dir, "#{base}.#{suffix}.parquet")
@@ -165,6 +171,75 @@ module SpeckleConnector3
           assert_equal(['Teddy'], meta.keys)
           assert_equal('A soft bear', meta['Teddy'][:description])
           assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta['Teddy'][:dictionaries])
+        end
+      end
+
+      # Camera viewpoints round-trip through the frozen bundle-spec `camera_views`
+      # schema: one row per view, positions in model units, forward/up unit vectors,
+      # perspective/ortho projection scalars mutually exclusive, near/far null.
+      def test_camera_views_round_trip
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_camera_view(CameraView.new(
+                              view: 0, name: 'Persp', is_default: true, ord: 0,
+                              pos: [1.5, -2.0, 3.25], forward: [0.0, 1.0, 0.0], up: [0.0, 0.0, 1.0],
+                              target: [1.5, 8.0, 3.25], units: 'm', is_ortho: false,
+                              fov: 35.0, lens_mm: 57.0, ortho_height: nil, aspect: 1.5, near: nil, far: nil
+                            ))
+          p.add_camera_view(CameraView.new(
+                              view: 1, name: 'Top', is_default: false, ord: 3,
+                              pos: [0.0, 0.0, 10.0], forward: [0.0, 0.0, -1.0], up: [0.0, 1.0, 0.0],
+                              target: nil, units: 'm', is_ortho: true,
+                              fov: nil, lens_mm: nil, ortho_height: 12.5, aspect: nil, near: nil, far: nil
+                            ))
+          p.complete
+
+          rows = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.camera_views.parquet"))
+          assert_equal(2, rows.length)
+
+          persp = rows[0]
+          assert_equal(0, persp['view'])
+          assert_equal('Persp', persp['name'])
+          assert_equal(true, persp['is_default'])
+          assert_equal(0, persp['ord'])
+          assert_in_delta(1.5, persp['pos_x'])
+          assert_in_delta(-2.0, persp['pos_y'])
+          assert_in_delta(3.25, persp['pos_z'])
+          assert_in_delta(1.0, persp['forward_y'])
+          assert_in_delta(1.0, persp['up_z'])
+          assert_in_delta(8.0, persp['target_y'])
+          assert_equal('m', persp['units'])
+          assert_equal(false, persp['is_ortho'])
+          assert_in_delta(35.0, persp['fov'])
+          assert_in_delta(57.0, persp['lens_mm'])
+          assert_nil(persp['ortho_height'])
+          assert_in_delta(1.5, persp['aspect'])
+          assert_nil(persp['near'])
+          assert_nil(persp['far'])
+
+          ortho = rows[1]
+          assert_equal(1, ortho['view'])
+          assert_equal(3, ortho['ord'])
+          assert_equal(true, ortho['is_ortho'])
+          assert_nil(ortho['target_x'])
+          assert_nil(ortho['fov'])
+          assert_nil(ortho['lens_mm'])
+          assert_in_delta(12.5, ortho['ortho_height'])
+          assert_nil(ortho['aspect'])
+        end
+      end
+
+      # camera_views is an OPTIONAL artefact: a bundle with no viewpoints must not
+      # ship the file at all (absent means "the model ships no viewpoints").
+      def test_camera_views_file_absent_when_no_views_added
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_collection('tag-1', 'Trees', nil, 'Layer')
+          p.complete
+
+          refute(File.exist?(File.join(dir, "#{base}.envelope.camera_views.parquet")))
         end
       end
 

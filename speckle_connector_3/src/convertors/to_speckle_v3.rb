@@ -3,6 +3,7 @@
 require_relative '../artifacts/objects_artifact_pipeline'
 require_relative '../artifacts/sgeo_encoder'
 require_relative '../artifacts/vocab'
+require_relative 'camera_views'
 require_relative '../speckle_objects/geometry/length'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/render_material'
@@ -66,6 +67,9 @@ module SpeckleConnector3
         @pipeline.add_scene_view(
           ART::SceneView.new(0, 'Default', true, [ART::SceneViewKey.rel(ART::RelKind::IN_COLLECTION)])
         )
+
+        # 4. Named camera viewpoints: the model's scenes (pages).
+        emit_camera_views(entities.first&.model)
 
         @pipeline.complete
         @pipeline.geometry_paths
@@ -215,6 +219,16 @@ module SpeckleConnector3
           SOG.length_to_speckle(point.y, @units),
           SOG.length_to_speckle(point.z, @units)
         ]
+      end
+
+      # ── camera views ──────────────────────────────────────────────────
+
+      # Emits one {Artifacts::CameraView} per scene (page) that saves camera state
+      # -> the optional `{base}.envelope.camera_views.parquet` artefact (no file
+      # when the model has no scenes). Extraction (inch->model-unit conversion,
+      # vertical fov, projection scalars) lives in {Converters::CameraViews}.
+      def emit_camera_views(model)
+        CameraViews.from_model(model, @units).each { |view| @pipeline.add_camera_view(view) }
       end
 
       # ── materials / colours / collections / properties ────────────────

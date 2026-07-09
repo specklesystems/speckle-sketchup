@@ -8,7 +8,8 @@ module SpeckleConnector3
     # Writes the envelope topology artefact: `{base}.envelope.relations.parquet`
     # (typed edges) + `.nodes.parquet` (value-entities) + the self-describing
     # `.meta`/`.rel_types`/`.node_kinds` catalog (written once) + optional
-    # `.scene_views.parquet` (producer-authored projections). Mirrors the
+    # `.scene_views.parquet` (producer-authored projections) + optional
+    # `.camera_views.parquet` (named camera viewpoints). Mirrors the
     # `speckle-bundle-spec` generated schemas (and the SDK `EnvelopeWriter`);
     # SCHEMA_VERSION must stay in lockstep with `BundleSpec.SchemaVersion`.
     class EnvelopeWriter
@@ -60,6 +61,7 @@ module SpeckleConnector3
         @relations = Parquet::ParquetTableWriter.new(path('relations.parquet'), RELATIONS_SCHEMA)
         @nodes = Parquet::ParquetTableWriter.new(path('nodes.parquet'), NODES_SCHEMA)
         @scene_views = []
+        @camera_views = []
         @completed = false
         write_catalog
       end
@@ -78,6 +80,10 @@ module SpeckleConnector3
         @scene_views << view
       end
 
+      def add_camera_view(view)
+        @camera_views << view
+      end
+
       def complete
         return if @completed
 
@@ -85,6 +91,7 @@ module SpeckleConnector3
         @relations.complete
         @nodes.complete
         write_scene_views
+        write_camera_views
       end
 
       private
@@ -136,6 +143,56 @@ module SpeckleConnector3
         end
         sv.complete
       end
+
+      # Optional artefact: written only when at least one camera view was added —
+      # an absent file means "the model ships no viewpoints" (bundle-spec table 14).
+      # One row per view; column order/nullability is the frozen `camera_views`
+      # schema from `speckle-bundle-spec`.
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def write_camera_views
+        return if @camera_views.empty?
+
+        cv = Parquet::ParquetTableWriter.new(
+          path('camera_views.parquet'),
+          [{ name: 'view', type: :int32, optional: false },
+           { name: 'name', type: :string, optional: true },
+           { name: 'is_default', type: :boolean, optional: true },
+           { name: 'ord', type: :int32, optional: true },
+           { name: 'pos_x', type: :double, optional: false },
+           { name: 'pos_y', type: :double, optional: false },
+           { name: 'pos_z', type: :double, optional: false },
+           { name: 'forward_x', type: :double, optional: false },
+           { name: 'forward_y', type: :double, optional: false },
+           { name: 'forward_z', type: :double, optional: false },
+           { name: 'up_x', type: :double, optional: false },
+           { name: 'up_y', type: :double, optional: false },
+           { name: 'up_z', type: :double, optional: false },
+           { name: 'target_x', type: :double, optional: true },
+           { name: 'target_y', type: :double, optional: true },
+           { name: 'target_z', type: :double, optional: true },
+           { name: 'units', type: :string, optional: true },
+           { name: 'is_ortho', type: :boolean, optional: true },
+           { name: 'fov', type: :double, optional: true },
+           { name: 'lens_mm', type: :double, optional: true },
+           { name: 'ortho_height', type: :double, optional: true },
+           { name: 'aspect', type: :double, optional: true },
+           { name: 'near', type: :double, optional: true },
+           { name: 'far', type: :double, optional: true }]
+        )
+        @camera_views.each do |v|
+          target = v.target || [nil, nil, nil]
+          cv.add_row(
+            v.view, v.name, v.is_default, v.ord,
+            v.pos[0], v.pos[1], v.pos[2],
+            v.forward[0], v.forward[1], v.forward[2],
+            v.up[0], v.up[1], v.up[2],
+            target[0], target[1], target[2],
+            v.units, v.is_ortho, v.fov, v.lens_mm, v.ortho_height, v.aspect, v.near, v.far
+          )
+        end
+        cv.complete
+      end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       def path(suffix)
         File.join(@dir, "#{@base}.envelope.#{suffix}")

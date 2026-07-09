@@ -150,10 +150,16 @@ module SpeckleConnector3
         @envelope.add_relation(RelKind::IN_MODEL, object_k, model_k, ord)
       end
 
-      # ── scene views / lifecycle ───────────────────────────────────────
+      # ── scene views / camera views / lifecycle ────────────────────────
 
       def add_scene_view(view)
         @envelope.add_scene_view(view)
+      end
+
+      # Buffers a named camera viewpoint ({CameraView}) for the optional
+      # `{base}.envelope.camera_views.parquet` artefact (no file when none added).
+      def add_camera_view(view)
+        @envelope.add_camera_view(view)
       end
 
       # Flushes all three artefacts to disk.
