@@ -65,38 +65,41 @@ module SpeckleConnector3
       # ── node namespace (value-entities) ───────────────────────────────
 
       def add_definition(definition_key, name)
-        node('def:' + definition_key) { |k| @envelope.add_node(k, NodeKind::DEFINITION, name, nil, nil, nil, nil, nil, nil, nil, nil) }
+        node('def:' + definition_key) { |k| @envelope.add_node(k, NodeKind::DEFINITION, name, nil, nil, nil, nil, nil, nil, nil, nil, nil) }
       end
 
       def add_instance(placement_key, def_ref, transform, units)
         node('inst:' + placement_key) do |k|
-          @envelope.add_node(k, NodeKind::INSTANCE, nil, def_ref, format_transform(transform), units, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::INSTANCE, nil, def_ref, format_transform(transform), units, nil, nil, nil, nil, nil, nil)
         end
       end
 
       def add_material(material_key, argb, opacity, metalness, roughness)
         node('mat:' + material_key) do |k|
-          @envelope.add_node(k, NodeKind::MATERIAL, nil, nil, nil, nil, argb, opacity, metalness, roughness, nil)
+          @envelope.add_node(k, NodeKind::MATERIAL, nil, nil, nil, nil, nil, argb, opacity, metalness, roughness, nil)
         end
       end
 
       def add_color(argb)
-        node('col:' + argb.to_s) { |k| @envelope.add_node(k, NodeKind::COLOR, nil, nil, nil, nil, argb, nil, nil, nil, nil) }
+        node('col:' + argb.to_s) { |k| @envelope.add_node(k, NodeKind::COLOR, nil, nil, nil, nil, nil, argb, nil, nil, nil, nil) }
       end
 
       def add_level(level_key, name, elevation)
-        node('lvl:' + level_key) { |k| @envelope.add_node(k, NodeKind::LEVEL, name, nil, nil, nil, nil, nil, nil, nil, elevation) }
+        node('lvl:' + level_key) { |k| @envelope.add_node(k, NodeKind::LEVEL, name, nil, nil, nil, nil, nil, nil, nil, nil, elevation) }
       end
 
+      # Since bundle-spec v5 a collection IS a CONTAINER node — `subtype` (its own
+      # column, e.g. 'Layer'/'Folder') is the only discriminator. Kept as a separate
+      # method from {#add_container} for the 'coll:'-prefixed key namespace.
       def add_collection(collection_key, name, parent_collection_k, subtype)
         node('coll:' + collection_key) do |k|
-          @envelope.add_node(k, NodeKind::COLLECTION, name, parent_collection_k, nil, subtype, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, nil, nil, nil, nil, nil)
         end
       end
 
       def add_container(container_key, name, parent_container_k, subtype)
         node('cont:' + container_key) do |k|
-          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_container_k, nil, subtype, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_container_k, nil, nil, subtype, nil, nil, nil, nil, nil)
         end
       end
 

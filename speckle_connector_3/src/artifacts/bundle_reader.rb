@@ -20,6 +20,14 @@ module SpeckleConnector3
     # :app_id, :scene_path [String...], :color_argb, :is_soften, :properties,
     # :displays [geom_k...], :display_instances [inst_node_k...]).
     module BundleReader
+      # Pre-v5 vocabulary, accepted on read only: kind 6 COLLECTION (folded into
+      # CONTAINER + `subtype` in v5) and the retired membership rels 13, 15-20, 22.
+      LEGACY_COLLECTION_KIND = 6
+      MEMBERSHIP_RELS = [
+        RelKind::ON_LEVEL, RelKind::IN_COLLECTION, RelKind::IN_MODEL, RelKind::IN_ROOM,
+        RelKind::IN_SYSTEM, 13, 15, 16, 17, 18, 19, 20, 22
+      ].freeze
+
       module_function
 
       def read(dir, base)
@@ -49,11 +57,10 @@ module SpeckleConnector3
       def classify_nodes(nodes, model)
         nodes.each do |id, n|
           case n['kind']
-          when NodeKind::COLLECTION
-            model[:collections][id] = { name: n['name'], parent_k: n['def_ref'], subtype: n['units'] }
-            model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # tag/folder tier
-          when NodeKind::CONTAINER
-            model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # model/level/system tier
+          when NodeKind::CONTAINER, LEGACY_COLLECTION_KIND
+            # v5 bundles carry the discriminator in `subtype`; pre-v5 overloaded `units`.
+            model[:collections][id] = { name: n['name'], parent_k: n['def_ref'], subtype: n['subtype'] || n['units'] }
+            model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # tag/folder/model tier
           when NodeKind::LEVEL
             model[:node_meta][id] = { name: n['name'], parent_k: nil }
           when NodeKind::MATERIAL
@@ -100,7 +107,7 @@ module SpeckleConnector3
           when RelKind::DEFINES then model[:definitions][src][:geometry_ks] << dst if model[:definitions][src]
           when RelKind::DEFINES_INSTANCE then model[:definitions][src][:instance_ks] << dst if model[:definitions][src]
           else
-            obj.call(src) if (RelKind::ON_LEVEL..RelKind::XREF).cover?(rel) # ensure membership-only objects exist
+            obj.call(src) if MEMBERSHIP_RELS.include?(rel) # ensure membership-only objects exist
           end
         end
 

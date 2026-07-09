@@ -8,16 +8,17 @@ module SpeckleConnector3
     # Writes the envelope topology artefact: `{base}.envelope.relations.parquet`
     # (typed edges) + `.nodes.parquet` (value-entities) + the self-describing
     # `.meta`/`.rel_types`/`.node_kinds` catalog (written once) + optional
-    # `.scene_views.parquet` (producer-authored projections). Mirrors the SDK
-    # `EnvelopeWriter`; SCHEMA_VERSION must stay in lockstep with it.
+    # `.scene_views.parquet` (producer-authored projections). Mirrors the
+    # `speckle-bundle-spec` generated schemas (and the SDK `EnvelopeWriter`);
+    # SCHEMA_VERSION must stay in lockstep with `BundleSpec.SchemaVersion`.
     class EnvelopeWriter
-      SCHEMA_VERSION = 3
+      SCHEMA_VERSION = 5
 
       RELATIONS_SCHEMA = [
         { name: 'rel', type: :int32, optional: false },
         { name: 'src', type: :int32, optional: false },
         { name: 'dst', type: :int32, optional: false },
-        { name: 'ord', type: :int32, optional: false }
+        { name: 'ord', type: :int32, optional: true }
       ].freeze
 
       NODES_SCHEMA = [
@@ -27,6 +28,7 @@ module SpeckleConnector3
         { name: 'def_ref', type: :int32, optional: true },
         { name: 'transform', type: :string, optional: true },
         { name: 'units', type: :string, optional: true },
+        { name: 'subtype', type: :string, optional: true },
         { name: 'argb', type: :int32, optional: true },
         { name: 'opacity', type: :double, optional: true },
         { name: 'metalness', type: :double, optional: true },
@@ -34,24 +36,22 @@ module SpeckleConnector3
         { name: 'elevation', type: :double, optional: true }
       ].freeze
 
-      # rel code -> [name, src_ns, dst_ns] — the cross-connector vocabulary catalog.
+      # rel code -> [name, src_ns, dst_ns] — the cross-connector vocabulary catalog
+      # (live + reserved rows only; retired ids stay vacant).
       REL_TYPES = [
         [1, 'DISPLAY', 'object', 'geometry'], [2, 'SOLID', 'object', 'geometry'],
         [3, 'SUBELEMENT', 'object', 'object'], [4, 'DEFINES', 'node', 'geometry'],
         [5, 'HAS_MATERIAL', 'geometry', 'node'], [6, 'HAS_COLOR', 'geometry|object', 'node'],
         [7, 'ON_LEVEL', 'object', 'node'], [8, 'DISPLAY_INSTANCE', 'object', 'node'],
         [9, 'DEFINES_INSTANCE', 'node', 'node'], [10, 'IN_COLLECTION', 'object', 'node'],
-        [11, 'IN_MODEL', 'object', 'node'], [12, 'IN_ROOM', 'object', 'node'],
-        [13, 'IN_SPACE', 'object', 'node'], [14, 'IN_SYSTEM', 'object', 'node'],
-        [15, 'IN_NETWORK', 'object', 'node'], [16, 'IN_LINE', 'object', 'node'],
-        [17, 'IN_GROUP', 'object', 'node'], [18, 'IN_ASSEMBLY', 'object', 'node'],
-        [19, 'IN_SUBASSEMBLY', 'object', 'node'], [20, 'XREF', 'object', 'node'],
-        [21, 'CONNECTS_TO', 'object', 'object'], [22, 'HOSTED_ON', 'object', 'object']
+        [11, 'IN_MODEL', 'object', 'node'], [12, 'IN_ROOM', 'object', 'object'],
+        [14, 'IN_SYSTEM', 'object', 'node'], [21, 'CONNECTS_TO', 'object', 'object'],
+        [23, 'BOUNDS', 'object', 'object']
       ].freeze
 
       NODE_KINDS = [
         [1, 'DEFINITION'], [2, 'INSTANCE'], [3, 'MATERIAL'], [4, 'COLOR'],
-        [5, 'LEVEL'], [6, 'COLLECTION'], [7, 'CONTAINER']
+        [5, 'LEVEL'], [7, 'CONTAINER']
       ].freeze
 
       def initialize(output_dir, base_name)
@@ -69,8 +69,8 @@ module SpeckleConnector3
       end
 
       # rubocop:disable Metrics/ParameterLists
-      def add_node(id, kind, name, def_ref, transform, units, argb, opacity, metalness, roughness, elevation)
-        @nodes.add_row(id, kind, name, def_ref, transform, units, argb, opacity, metalness, roughness, elevation)
+      def add_node(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
+        @nodes.add_row(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
       end
       # rubocop:enable Metrics/ParameterLists
 

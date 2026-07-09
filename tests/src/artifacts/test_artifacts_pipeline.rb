@@ -4,6 +4,7 @@ require_relative '../../test_helper'
 require 'tmpdir'
 require_relative '../../../speckle_connector_3/src/artifacts/objects_artifact_pipeline'
 require_relative '../../../speckle_connector_3/src/artifacts/sgeo_encoder'
+require_relative '../../../speckle_connector_3/src/artifacts/bundle_reader'
 
 module SpeckleConnector3
   module Artifacts
@@ -87,6 +88,43 @@ module SpeckleConnector3
             assert_equal('PAR1', bytes[-4, 4], "#{suffix}: bad footer magic")
           end
         end
+      end
+
+      # ENG-8847: the viewer resolves the scene tree via
+      # `SELECT id, name, def_ref, subtype FROM nodes WHERE kind = 7` — collections
+      # must be CONTAINER (7) rows carrying their discriminator in a real `subtype`
+      # column (bundle-spec v5), not COLLECTION (6) rows overloading `units`.
+      def test_collections_are_v5_containers_with_subtype_column
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          folder = p.add_collection('folder-1', 'Site', nil, 'Folder')
+          p.add_collection('tag-1', 'Trees', folder, 'Layer')
+          p.complete
+
+          meta = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.meta.parquet"))
+          assert_equal(EnvelopeWriter::SCHEMA_VERSION, meta.first['schema_version'])
+
+          nodes = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.nodes.parquet"))
+          containers = nodes.select { |n| n['kind'] == NodeKind::CONTAINER }
+          assert_equal(2, containers.length)
+          assert_equal(%w[Folder Layer], containers.map { |n| n['subtype'] }.sort)
+          assert(containers.all? { |n| n['units'].nil? }, 'subtype must not ride in units')
+          assert_empty(nodes.select { |n| n['kind'] == BundleReader::LEGACY_COLLECTION_KIND })
+        end
+      end
+
+      # Pre-v5 bundles (COLLECTION kind 6, subtype overloaded into `units`) must
+      # still classify, so old already-published models keep receiving.
+      def test_bundle_reader_accepts_legacy_collection_rows
+        legacy = { 10 => { 'kind' => 6, 'name' => 'Trees', 'def_ref' => nil, 'units' => 'Layer' } }
+        current = { 11 => { 'kind' => 7, 'name' => 'Site', 'def_ref' => nil, 'subtype' => 'Folder' } }
+        model = { collections: {}, materials: {}, colors: {}, definitions: {}, instances: {}, node_meta: {} }
+        BundleReader.classify_nodes(legacy.merge(current), model)
+
+        assert_equal('Layer', model[:collections][10][:subtype])
+        assert_equal('Folder', model[:collections][11][:subtype])
+        assert_equal(%w[Site Trees], model[:node_meta].values.map { |m| m[:name] }.sort)
       end
     end
   end

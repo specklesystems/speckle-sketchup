@@ -3,12 +3,14 @@
 module SpeckleConnector3
   module Artifacts
     # The fixed envelope relation/node vocabulary + scene-view projection types,
-    # mirroring the SDK's `EnvelopeWriter.RelKind` / `NodeKind` / `SceneView`.
-    # These integer codes are a cross-connector contract — never invent new ones
-    # here without the matching SDK change + a schema_version bump.
+    # mirroring the `speckle-bundle-spec` catalog (schema_version 5). These integer
+    # codes are a cross-connector contract — never invent new ones here without the
+    # matching spec change + a schema_version bump. Retired ids (rels 13, 15-20, 22;
+    # node kind 6 COLLECTION, folded into CONTAINER + `subtype`) are kept vacant and
+    # never reused; {BundleReader} still accepts them when reading pre-v5 bundles.
     module RelKind
       DISPLAY = 1
-      SOLID = 2
+      SOLID = 2 # reserved
       SUBELEMENT = 3
       DEFINES = 4
       HAS_MATERIAL = 5
@@ -19,16 +21,9 @@ module SpeckleConnector3
       IN_COLLECTION = 10
       IN_MODEL = 11
       IN_ROOM = 12
-      IN_SPACE = 13
       IN_SYSTEM = 14
-      IN_NETWORK = 15
-      IN_LINE = 16
-      IN_GROUP = 17
-      IN_ASSEMBLY = 18
-      IN_SUBASSEMBLY = 19
-      XREF = 20
       CONNECTS_TO = 21
-      HOSTED_ON = 22
+      BOUNDS = 23
     end
 
     module NodeKind
@@ -37,7 +32,6 @@ module SpeckleConnector3
       MATERIAL = 3
       COLOR = 4
       LEVEL = 5
-      COLLECTION = 6
       CONTAINER = 7
     end
 
