@@ -156,21 +156,44 @@ module SpeckleConnector3
       end
 
       # ENG-8842: definition description + dictionaries ride the eav table keyed by
-      # the definition id and come back as definition_meta (joined by name).
+      # the definition id and come back as definition_meta — joined by the stamped
+      # definition node k, with the name join kept for pre-stamp bundles.
       def test_definition_metadata_round_trips
         Dir.mktmpdir('speckle-artifacts') do |dir|
           base = 'ver1'
           p = ObjectsArtifactPipeline.new(dir, base)
           p.add_properties(
             'def-42', { 'Classifier' => { 'code' => 'XX-1' } },
-            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Teddy'], ['description', 'A soft bear']]
+            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Teddy'],
+             ['description', 'A soft bear'], ['@speckle.definition_k', 3]]
           )
           p.complete
 
           meta = BundleReader.read(dir, base)[:definition_meta]
-          assert_equal(['Teddy'], meta.keys)
-          assert_equal('A soft bear', meta['Teddy'][:description])
-          assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta['Teddy'][:dictionaries])
+          assert_equal([3, 'Teddy'], meta.keys.sort_by(&:to_s))
+          assert_same(meta['Teddy'], meta[3]) # one entry, both join keys
+          assert_equal('A soft bear', meta[3][:description])
+          assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta[3][:dictionaries])
+        end
+      end
+
+      # Nested-instance metadata round-trips via the `@speckle.instance_k` stamp:
+      # the eav row-set is keyed by the member's own persistent id and joined back
+      # to the INSTANCE node by its dense id.
+      def test_instance_metadata_round_trips
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_properties(
+            'inst-9', { 'MyDict' => { 'serial' => 'A-77' } },
+            [['speckle_type', BundleReader::INSTANCE_PROXY_TYPE], ['name', 'Chair A'], ['@speckle.instance_k', 7]]
+          )
+          p.complete
+
+          meta = BundleReader.read(dir, base)[:instance_meta]
+          assert_equal([7], meta.keys)
+          assert_equal('Chair A', meta[7][:name])
+          assert_equal({ 'MyDict' => { 'serial' => 'A-77' } }, meta[7][:dictionaries])
         end
       end
 

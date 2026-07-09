@@ -24,6 +24,7 @@ module SpeckleConnector3
       # CONTAINER + `subtype` in v5) and the retired membership rels 13, 15-20, 22.
       LEGACY_COLLECTION_KIND = 6
       DEFINITION_PROXY_TYPE = 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'
+      INSTANCE_PROXY_TYPE = 'Speckle.Core.Models.Instances.InstanceProxy'
       MEMBERSHIP_RELS = [
         RelKind::ON_LEVEL, RelKind::IN_COLLECTION, RelKind::IN_MODEL, RelKind::IN_ROOM,
         RelKind::IN_SYSTEM, 13, 15, 16, 17, 18, 19, 20, 22
@@ -46,26 +47,44 @@ module SpeckleConnector3
         model = {
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
-          default_scene_view: default_view, definition_meta: definition_meta(props_by_obj)
+          default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
+          instance_meta: instance_meta(props_by_obj)
         }
         classify_nodes(nodes, model)
         wire_relations(relations, model, object_app, props_by_obj, default_view)
         model
       end
 
-      # Definition-level metadata (ENG-8842): the producer emits it as an eav
-      # row-set keyed by the definition's source persistent id, but DEFINITION
-      # envelope nodes carry only a name — so the join back is by name (unique in
-      # SketchUp's definition list). Returns name -> {description, dictionaries}.
+      # Definition-level metadata (ENG-8842): an eav row-set keyed by the
+      # definition's source persistent id. Joined back by the DEFINITION node's
+      # dense id (the producer stamps it as `@speckle.definition_k`); bundles from
+      # before that stamp fall back to the name join (unique in SketchUp).
+      # Returns {node_k | name -> {description, dictionaries}}.
       def definition_meta(props_by_obj)
         meta = {}
         props_by_obj.each_value do |props|
           next unless props['speckle_type'] == DEFINITION_PROXY_TYPE
 
+          entry = { description: props['description'], dictionaries: unflatten_dictionaries(props) }
+          def_k = props['@speckle.definition_k']
           name = props['name']
-          next if name.nil? || name.to_s.empty?
+          meta[def_k.to_i] = entry unless def_k.nil?
+          meta[name] = entry unless name.nil? || name.to_s.empty?
+        end
+        meta
+      end
 
-          meta[name] = { description: props['description'], dictionaries: unflatten_dictionaries(props) }
+      # Nested-instance metadata: eav row-sets stamped with `@speckle.instance_k`
+      # (the INSTANCE node's dense id). Top-level instances carry their properties
+      # on the scene object itself and are not stamped, so they don't appear here.
+      # Returns instance node k -> {name, dictionaries}.
+      def instance_meta(props_by_obj)
+        meta = {}
+        props_by_obj.each_value do |props|
+          inst_k = props['@speckle.instance_k']
+          next if inst_k.nil? || props['speckle_type'] != INSTANCE_PROXY_TYPE
+
+          meta[inst_k.to_i] = { name: props['name'], dictionaries: unflatten_dictionaries(props) }
         end
         meta
       end

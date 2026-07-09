@@ -150,7 +150,7 @@ module SpeckleConnector3
       def build_definitions(model)
         model[:definitions].each do |k, info|
           definition = @model.definitions.add(info[:name] || "speckle_def_#{k}")
-          apply_definition_meta(definition, model[:definition_meta][info[:name]])
+          apply_definition_meta(definition, model[:definition_meta][k] || model[:definition_meta][info[:name]])
           info[:geometry_ks].each do |geom_k|
             geometry = model[:geometries][geom_k]
             next if geometry.nil?
@@ -163,14 +163,16 @@ module SpeckleConnector3
         # nested instances (DEFINES_INSTANCE) — definitions exist now, so wire placements
         model[:definitions].each do |k, info|
           info[:instance_ks].each do |inst_k|
-            place_instance(@definition_by_k[k].entities, model[:instances][inst_k])
+            instance = place_instance(@definition_by_k[k].entities, model[:instances][inst_k])
+            apply_instance_meta(instance, model[:instance_meta][inst_k])
           end
         end
       end
 
       # Restores definition-level metadata (ENG-8842): description + attribute
-      # dictionaries, joined by definition name. Pre-fix bundles have no
-      # definition-proxy eav rows, so meta is nil and nothing is applied.
+      # dictionaries, joined by the definition node id (name fallback for older
+      # bundles). Pre-fix bundles have no definition-proxy eav rows, so meta is
+      # nil and nothing is applied.
       def apply_definition_meta(definition, meta)
         return if meta.nil?
 
@@ -180,12 +182,36 @@ module SpeckleConnector3
         DICT.attribute_dictionaries_to_native(definition, meta[:dictionaries]) if meta[:dictionaries]&.any?
       end
 
+      # Restores a nested instance's name + attribute dictionaries from its
+      # `@speckle.instance_k`-stamped eav row-set.
+      def apply_instance_meta(instance, meta)
+        return if instance.nil? || meta.nil?
+
+        instance.name = meta[:name] if meta[:name] && !meta[:name].to_s.empty? && instance.respond_to?(:name=)
+        DICT.attribute_dictionaries_to_native(instance, meta[:dictionaries]) if meta[:dictionaries]&.any?
+      end
+
+      # Restores a top-level instance's name + attribute dictionaries from the
+      # scene object's own eav properties (dictionaries live under 'properties.*').
+      def apply_object_properties(instance, props)
+        return if instance.nil? || props.nil? || props.empty?
+
+        name = props['name']
+        instance.name = name if name && !name.to_s.empty? && instance.respond_to?(:name=)
+        dicts = Artifacts::BundleReader.unflatten_dictionaries(props)
+        DICT.attribute_dictionaries_to_native(instance, dicts) if dicts.any?
+      end
+
       # ── objects ───────────────────────────────────────────────────────
 
       def build_object(model, obj)
         created =
           if obj[:display_instances].any?
-            obj[:display_instances].map { |ik| place_instance(@model.entities, model[:instances][ik]) }
+            obj[:display_instances].map do |ik|
+              instance = place_instance(@model.entities, model[:instances][ik])
+              apply_object_properties(instance, obj[:properties])
+              instance
+            end
           else
             obj[:displays].flat_map do |geom_k|
               geometry = model[:geometries][geom_k]

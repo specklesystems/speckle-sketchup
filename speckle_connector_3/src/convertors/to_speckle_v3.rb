@@ -136,7 +136,7 @@ module SpeckleConnector3
       def emit_definition(definition_proxy)
         def_id = definition_proxy.definition.persistent_id.to_s
         def_k = @pipeline.add_definition(def_id, definition_proxy[:name])
-        add_definition_properties(def_id, definition_proxy.definition)
+        add_definition_properties(def_id, def_k, definition_proxy.definition)
         ord = 0
         definition_proxy.object_ids.each do |member_id|
           member = @flat[member_id]
@@ -155,6 +155,7 @@ module SpeckleConnector3
             nested_def_k = @pipeline.add_definition(member.definition.persistent_id.to_s, member.definition.name)
             inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
             @pipeline.defines_instance(def_k, inst_k, ord)
+            add_instance_properties(member_id, inst_k, member)
             ord += 1
           when Sketchup::Edge
             geom_k = @pipeline.add_geometry(member_id, edge_to_sgeo(member))
@@ -286,11 +287,28 @@ module SpeckleConnector3
       # dictionaries ride the eav table keyed by the definition's persistent id.
       # Dictionaries are re-extracted through the send settings here — NOT taken from
       # the proxy's copy, which DefinitionManager extracts unfiltered (ENG-8843).
-      def add_definition_properties(def_id, definition)
-        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name]]
+      # `@speckle.definition_k` carries the DEFINITION node's dense id so receive
+      # joins back exactly (envelope nodes carry no application id).
+      def add_definition_properties(def_id, def_k, definition)
+        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name],
+                ['@speckle.definition_k', def_k]]
         description = definition.description
         root << ['description', description] if description && description != ''
         @pipeline.add_properties(def_id, entity_dictionaries(definition), root)
+      end
+
+      # Nested-instance metadata: attribute dictionaries + name, keyed by the
+      # member's own persistent id, with the INSTANCE node's dense id as the join
+      # key for receive. Emitted only when there is something to carry, so plain
+      # unnamed placements add no eav rows.
+      def add_instance_properties(app_id, inst_k, entity)
+        dicts = entity_dictionaries(entity)
+        name = entity.name.to_s
+        return if dicts.empty? && name.empty?
+
+        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceProxy'], ['@speckle.instance_k', inst_k]]
+        root << ['name', name] unless name.empty?
+        @pipeline.add_properties(app_id, dicts, root)
       end
 
       # Honours the "Include entity attributes" send settings (ENG-8843) with v2's
