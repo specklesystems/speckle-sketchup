@@ -69,7 +69,7 @@ module SpeckleConnector3
           blob = SgeoEncoder.encode_mesh([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0], [4, 0, 1, 2, 3], 'm')
           g = p.add_geometry('mesh-1', blob)
           p.display(obj, g, 0)
-          mat = p.add_material('mat-red', -65_536, 1.0, 0.0, 1.0)
+          mat = p.add_material('mat-red', 'Brick Red', -65_536, 1.0, 0.0, 1.0)
           p.has_material(g, mat)
           p.add_scene_view(SceneView.new(0, 'Default', true, [SceneViewKey.rel(RelKind::IN_COLLECTION)]))
           p.complete
@@ -111,6 +111,25 @@ module SpeckleConnector3
           assert_equal(%w[Folder Layer], containers.map { |n| n['subtype'] }.sort)
           assert(containers.all? { |n| n['units'].nil? }, 'subtype must not ride in units')
           assert_empty(nodes.select { |n| n['kind'] == BundleReader::LEGACY_COLLECTION_KIND })
+        end
+      end
+
+      # ENG-8840: MATERIAL nodes must carry the SketchUp material name in the
+      # envelope `name` column and it must survive the produce->read round trip
+      # (receive falls back to `speckle_<k>` only when the name is absent).
+      def test_material_name_round_trips
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_material('mat-red', 'Brick Red', -65_536, 0.5, 0.0, 1.0)
+          p.complete
+
+          materials = BundleReader.read(dir, base)[:materials]
+          assert_equal(1, materials.length)
+          mat = materials.values.first
+          assert_equal('Brick Red', mat[:name])
+          assert_equal(-65_536, mat[:argb])
+          assert_in_delta(0.5, mat[:opacity])
         end
       end
 

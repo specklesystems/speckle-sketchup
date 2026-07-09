@@ -74,9 +74,9 @@ module SpeckleConnector3
         end
       end
 
-      def add_material(material_key, argb, opacity, metalness, roughness)
+      def add_material(material_key, name, argb, opacity, metalness, roughness)
         node('mat:' + material_key) do |k|
-          @envelope.add_node(k, NodeKind::MATERIAL, nil, nil, nil, nil, nil, argb, opacity, metalness, roughness, nil)
+          @envelope.add_node(k, NodeKind::MATERIAL, name, nil, nil, nil, nil, argb, opacity, metalness, roughness, nil)
         end
       end
 

@@ -207,7 +207,7 @@ module SpeckleConnector3
         return if material.nil?
 
         rm = SOO::RenderMaterial.from_material(material)
-        mat_k = @pipeline.add_material(material.persistent_id.to_s, rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
+        mat_k = @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
         @pipeline.has_material(geom_k, mat_k)
       end
 

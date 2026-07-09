@@ -65,6 +65,7 @@ module SpeckleConnector3
             model[:node_meta][id] = { name: n['name'], parent_k: nil }
           when NodeKind::MATERIAL
             model[:materials][id] = {
+              name: n['name'],
               argb: n['argb'], opacity: n['opacity'], metalness: n['metalness'], roughness: n['roughness']
             }
           when NodeKind::COLOR

@@ -97,11 +97,21 @@ module SpeckleConnector3
 
       # ── materials ─────────────────────────────────────────────────────
 
+      # Bakes each MATERIAL node under its authored name (pre-name bundles fall back
+      # to the synthetic `speckle_<k>`), reusing an existing same-named material so
+      # repeated receives don't multiply uniquified copies (`Brick Red1`, `Brick Red2`, …).
       def build_materials(materials)
         materials.each do |k, m|
           next if m[:argb].nil?
 
-          mat = @model.materials.add("speckle_#{k}")
+          name = m[:name].nil? || m[:name].empty? ? "speckle_#{k}" : m[:name]
+          existing = @model.materials[name]
+          if existing
+            @material_by_k[k] = existing
+            next
+          end
+
+          mat = @model.materials.add(name)
           mat.color = COLOR.from_int(m[:argb])
           mat.alpha = m[:opacity] unless m[:opacity].nil?
           @material_by_k[k] = mat
