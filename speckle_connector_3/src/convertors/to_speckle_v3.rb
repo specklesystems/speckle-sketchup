@@ -128,10 +128,11 @@ module SpeckleConnector3
         @object_count += 1
       end
 
-      # Emits a definition node + its member geometry/instances.
+      # Emits a definition node + its metadata + member geometry/instances.
       def emit_definition(definition_proxy)
         def_id = definition_proxy.definition.persistent_id.to_s
         def_k = @pipeline.add_definition(def_id, definition_proxy[:name])
+        add_definition_properties(def_id, definition_proxy.definition)
         ord = 0
         definition_proxy.object_ids.each do |member_id|
           member = @flat[member_id]
@@ -265,6 +266,17 @@ module SpeckleConnector3
         root << ['name', name] if name && name != ''
         root.concat(extra)
         @pipeline.add_properties(app_id, entity_dictionaries(entity), root)
+      end
+
+      # Definition-level metadata (ENG-8842): description + definition attribute
+      # dictionaries ride the eav table keyed by the definition's persistent id.
+      # Dictionaries are re-extracted through the send settings here — NOT taken from
+      # the proxy's copy, which DefinitionManager extracts unfiltered (ENG-8843).
+      def add_definition_properties(def_id, definition)
+        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name]]
+        description = definition.description
+        root << ['description', description] if description && description != ''
+        @pipeline.add_properties(def_id, entity_dictionaries(definition), root)
       end
 
       # Honours the "Include entity attributes" send settings (ENG-8843) with v2's
