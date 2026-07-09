@@ -4,6 +4,7 @@ require 'tmpdir'
 require_relative '../action'
 require_relative '../../accounts/accounts'
 require_relative '../../convertors/to_native_v3'
+require_relative '../../convertors/clean_up'
 require_relative '../../artifacts/artifact_downloader'
 
 module SpeckleConnector3
@@ -29,6 +30,7 @@ module SpeckleConnector3
         t_start = Time.now.to_f
         begin
           count = LOCAL_ROUND_TRIP ? converter.receive(local_dir, LOCAL_BASE) : download_and_build(state, model_card_id, converter)
+          merge_coplanar(state, converter)
         rescue StandardError => e
           model.commit_operation
           puts "Speckle 4.0 receive FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
@@ -46,6 +48,18 @@ module SpeckleConnector3
           'setModelReceiveResult', "receiveBinding.emit('setModelReceiveResult', #{args.to_json})"
         )
         state.with_add_queue_js_command('receive', "receiveBinding.receiveResponse('#{resolve_id}')")
+      end
+
+      # Post-receive coplanar merge (v2 parity: {Actions::ReceiveObjects}) — undoes the
+      # SGEO triangulation by removing edges between coplanar same-material faces.
+      # Gated on the same model preference as v2; runs inside the receive operation.
+      def self.merge_coplanar(state, converter)
+        return unless state.user_state.model_preferences[:merge_coplanar_faces]
+
+        t_merge = Time.now.to_f
+        Converters::CleanUp.merge_coplanar_faces(converter.converted_faces)
+        puts "  [timing] merged coplanar faces (#{converter.converted_faces.length} baked) " \
+             "in #{(Time.now.to_f - t_merge).round(2)}s"
       end
 
       # Downloads the selected version's bundle and builds it. @return [Integer] object count

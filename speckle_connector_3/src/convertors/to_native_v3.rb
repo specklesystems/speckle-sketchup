@@ -22,6 +22,10 @@ module SpeckleConnector3
       # @return [Array<Sketchup::Entity>] top-level entities created this receive
       attr_reader :created_top_level
 
+      # @return [Array<Sketchup::Face>] every face baked this receive (top-level and
+      # inside definitions) — the input for the post-receive coplanar merge (v2 parity)
+      attr_reader :converted_faces
+
       # @param sketchup_model [Sketchup::Model]
       def initialize(sketchup_model)
         @model = sketchup_model
@@ -32,6 +36,7 @@ module SpeckleConnector3
         @material_by_k = {}
         @definition_by_k = {}
         @created_top_level = []
+        @converted_faces = []
       end
 
       # Reads a bundle from `dir` (base name `base`) and builds it into the model.
@@ -207,7 +212,9 @@ module SpeckleConnector3
         end
         smooth_flags = is_soften ? 4 : 1
         entities.add_faces_from_mesh(polygon_mesh, smooth_flags, material, material)
-        entities.grep(Sketchup::Face).last(polygon_mesh.polygons.length)
+        created = entities.grep(Sketchup::Face).last(polygon_mesh.polygons.length)
+        @converted_faces.concat(created)
+        created
       end
 
       def add_line(entities, geometry)
