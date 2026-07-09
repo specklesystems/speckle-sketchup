@@ -42,7 +42,8 @@ module SpeckleConnector3
         if EXTRACT_ONLY
           progress(state, model_card_id, 'Extracting artefacts (local, no upload)')
           begin
-            result = Operations::SendArtifacts.extract_only(entities, units, 'skp-send')
+            result = Operations::SendArtifacts.extract_only(entities, units, 'skp-send',
+                                                            state.user_state.model_preferences)
           rescue StandardError => e
             puts "Speckle 4.0 EXTRACT-ONLY FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
             return send_error(state, resolve_id, model_card_id, e.message)
@@ -65,7 +66,8 @@ module SpeckleConnector3
 
         progress(state, model_card_id, 'Extracting + uploading artefacts')
         begin
-          version_id = Operations::SendArtifacts.send_bundle(entities, units, params)
+          version_id = Operations::SendArtifacts.send_bundle(entities, units, params,
+                                                             state.user_state.model_preferences)
         rescue StandardError => e
           puts "Speckle 4.0 artefact send FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
           return send_error(state, resolve_id, model_card_id, e.message)

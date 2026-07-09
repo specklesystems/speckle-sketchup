@@ -37,11 +37,14 @@ module SpeckleConnector3
       # @param units [String] speckle model units (e.g. 'm', 'mm')
       # @param output_dir [String] directory to write the parquet bundle into
       # @param version_id [String] server pre-allocated version id (bundle base name)
-      def initialize(units, output_dir, version_id)
+      # @param model_preferences [Hash, nil] the card's send settings ("Include entity
+      #   attributes" + per-entity-type toggles); nil includes everything (dev harness)
+      def initialize(units, output_dir, version_id, model_preferences = nil)
         @units = units
         @pipeline = ART::ObjectsArtifactPipeline.new(output_dir, version_id)
         @object_count = 0
         @collection_ks = {}
+        @model_preferences = model_preferences
       end
 
       # Runs the single pass + post-loop emission and flushes the bundle to disk.
@@ -261,7 +264,15 @@ module SpeckleConnector3
         root = [['speckle_type', speckle_type], ['units', @units], ['layer', LAYER.entity_path(entity)]]
         root << ['name', name] if name && name != ''
         root.concat(extra)
-        @pipeline.add_properties(app_id, DICT.attribute_dictionaries_to_speckle(entity), root)
+        @pipeline.add_properties(app_id, entity_dictionaries(entity), root)
+      end
+
+      # Honours the "Include entity attributes" send settings (ENG-8843) with v2's
+      # exact filtering; without preferences (dev harness) everything is included.
+      def entity_dictionaries(entity)
+        return DICT.attribute_dictionaries_to_speckle(entity) if @model_preferences.nil?
+
+        DICT.attribute_dictionaries_to_speckle_by_settings(entity, @model_preferences)
       end
 
       # True if any of the faces has a soft edge (the existing Mesh.from_face rule).

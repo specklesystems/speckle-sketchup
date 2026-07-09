@@ -20,8 +20,9 @@ module SpeckleConnector3
       # @param units [String] speckle model units
       # @param params [Hash] { server_url:, project_id:, model_id:, token:,
       #   source_app_slug:, source_app_version: }
+      # @param preferences [Hash, nil] model preferences (attribute-send settings)
       # @return [String] the committed version id
-      def send_bundle(entities, units, params)
+      def send_bundle(entities, units, params, preferences = nil)
         t0 = Time.now.to_f
         client = Artifacts::ModelIngestionClient.new(params.fetch(:server_url), params.fetch(:token))
         ingestion = client.create(
@@ -39,7 +40,7 @@ module SpeckleConnector3
         output_dir = File.join(Dir.tmpdir, 'speckle', 'artifacts', version_id)
         FileUtils.mkdir_p(output_dir)
 
-        extractor = Converters::ToSpeckleV3.new(units, output_dir, version_id)
+        extractor = Converters::ToSpeckleV3.new(units, output_dir, version_id, preferences)
         extractor.extract(entities)
         t2 = Time.now.to_f
         puts "  [timing] extract: #{(t2 - t1).round(2)}s (#{extractor.object_count} objects)"
@@ -58,13 +59,13 @@ module SpeckleConnector3
       # parquet bundle to a stable local folder for inspection. Used to validate a
       # real .skp through ToSpeckleV3 without needing the v2 data endpoints.
       # @return [Hash] { dir:, base:, count: }
-      def extract_only(entities, units, base_name)
+      def extract_only(entities, units, base_name, preferences = nil)
         output_dir = File.join(Dir.home, 'Documents', 'speckle-skp-test')
         FileUtils.mkdir_p(output_dir)
         Dir.glob(File.join(output_dir, "#{base_name}.*.parquet")).each { |f| File.delete(f) }
 
         t0 = Time.now.to_f
-        extractor = Converters::ToSpeckleV3.new(units, output_dir, base_name)
+        extractor = Converters::ToSpeckleV3.new(units, output_dir, base_name, preferences)
         extractor.extract(entities)
         puts "  [timing] extract: #{(Time.now.to_f - t0).round(2)}s (#{extractor.object_count} objects)"
         { dir: output_dir, base: base_name, count: extractor.object_count }
