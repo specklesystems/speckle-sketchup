@@ -149,6 +149,25 @@ module SpeckleConnector3
         end
       end
 
+      # ENG-8842: definition description + dictionaries ride the eav table keyed by
+      # the definition id and come back as definition_meta (joined by name).
+      def test_definition_metadata_round_trips
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_properties(
+            'def-42', { 'Classifier' => { 'code' => 'XX-1' } },
+            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Teddy'], ['description', 'A soft bear']]
+          )
+          p.complete
+
+          meta = BundleReader.read(dir, base)[:definition_meta]
+          assert_equal(['Teddy'], meta.keys)
+          assert_equal('A soft bear', meta['Teddy'][:description])
+          assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta['Teddy'][:dictionaries])
+        end
+      end
+
       # Pre-v5 bundles (COLLECTION kind 6, subtype overloaded into `units`) must
       # still classify, so old already-published models keep receiving.
       def test_bundle_reader_accepts_legacy_collection_rows

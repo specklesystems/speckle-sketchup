@@ -4,6 +4,7 @@ require_relative '../artifacts/bundle_reader'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/color'
+require_relative '../sketchup_model/dictionary/base_dictionary_handler'
 
 module SpeckleConnector3
   module Converters
@@ -18,6 +19,7 @@ module SpeckleConnector3
       POINT = SpeckleConnector3::SpeckleObjects::Geometry::Point
       TRANSFORM = SpeckleConnector3::SpeckleObjects::Other::Transform
       COLOR = SpeckleConnector3::SpeckleObjects::Other::Color
+      DICT = SpeckleConnector3::SketchupModel::Dictionary::BaseDictionaryHandler
 
       # @return [Array<Sketchup::Entity>] top-level entities created this receive
       attr_reader :created_top_level
@@ -148,6 +150,7 @@ module SpeckleConnector3
       def build_definitions(model)
         model[:definitions].each do |k, info|
           definition = @model.definitions.add(info[:name] || "speckle_def_#{k}")
+          apply_definition_meta(definition, model[:definition_meta][info[:name]])
           info[:geometry_ks].each do |geom_k|
             geometry = model[:geometries][geom_k]
             next if geometry.nil?
@@ -163,6 +166,18 @@ module SpeckleConnector3
             place_instance(@definition_by_k[k].entities, model[:instances][inst_k])
           end
         end
+      end
+
+      # Restores definition-level metadata (ENG-8842): description + attribute
+      # dictionaries, joined by definition name. Pre-fix bundles have no
+      # definition-proxy eav rows, so meta is nil and nothing is applied.
+      def apply_definition_meta(definition, meta)
+        return if meta.nil?
+
+        if meta[:description] && !meta[:description].to_s.empty? && definition.respond_to?(:description=)
+          definition.description = meta[:description]
+        end
+        DICT.attribute_dictionaries_to_native(definition, meta[:dictionaries]) if meta[:dictionaries]&.any?
       end
 
       # ── objects ───────────────────────────────────────────────────────

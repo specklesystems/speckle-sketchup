@@ -23,6 +23,7 @@ module SpeckleConnector3
       # Pre-v5 vocabulary, accepted on read only: kind 6 COLLECTION (folded into
       # CONTAINER + `subtype` in v5) and the retired membership rels 13, 15-20, 22.
       LEGACY_COLLECTION_KIND = 6
+      DEFINITION_PROXY_TYPE = 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'
       MEMBERSHIP_RELS = [
         RelKind::ON_LEVEL, RelKind::IN_COLLECTION, RelKind::IN_MODEL, RelKind::IN_ROOM,
         RelKind::IN_SYSTEM, 13, 15, 16, 17, 18, 19, 20, 22
@@ -45,11 +46,45 @@ module SpeckleConnector3
         model = {
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
-          default_scene_view: default_view
+          default_scene_view: default_view, definition_meta: definition_meta(props_by_obj)
         }
         classify_nodes(nodes, model)
         wire_relations(relations, model, object_app, props_by_obj, default_view)
         model
+      end
+
+      # Definition-level metadata (ENG-8842): the producer emits it as an eav
+      # row-set keyed by the definition's source persistent id, but DEFINITION
+      # envelope nodes carry only a name — so the join back is by name (unique in
+      # SketchUp's definition list). Returns name -> {description, dictionaries}.
+      def definition_meta(props_by_obj)
+        meta = {}
+        props_by_obj.each_value do |props|
+          next unless props['speckle_type'] == DEFINITION_PROXY_TYPE
+
+          name = props['name']
+          next if name.nil? || name.to_s.empty?
+
+          meta[name] = { description: props['description'], dictionaries: unflatten_dictionaries(props) }
+        end
+        meta
+      end
+
+      # Rebuilds nested attribute dictionaries from the flattened dotted eav paths
+      # ('properties.Dict.key' -> {'Dict' => {'key' => value}}).
+      def unflatten_dictionaries(props)
+        dicts = {}
+        props.each do |path, value|
+          next unless path.start_with?('properties.')
+
+          segments = path.split('.')[1..]
+          next if segments.empty?
+
+          cursor = dicts
+          segments[0..-2].each { |seg| cursor = (cursor[seg] = cursor[seg].is_a?(Hash) ? cursor[seg] : {}) }
+          cursor[segments.last] = value
+        end
+        dicts
       end
 
       # ── nodes ─────────────────────────────────────────────────────────
