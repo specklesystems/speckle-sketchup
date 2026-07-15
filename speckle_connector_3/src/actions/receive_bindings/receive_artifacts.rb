@@ -30,6 +30,7 @@ module SpeckleConnector3
         model.start_operation('Receive Speckle 4.0 Artefacts', true)
         t_start = Time.now.to_f
         begin
+          converter.wrap_name = LOCAL_BASE if LOCAL_ROUND_TRIP
           count = LOCAL_ROUND_TRIP ? converter.receive(local_dir, LOCAL_BASE) : download_and_build(state, model_card_id, converter)
           merge_coplanar(state, converter)
         rescue StandardError => e
@@ -80,6 +81,8 @@ module SpeckleConnector3
         end
 
         dir = File.join(Dir.tmpdir, 'speckle', 'receive', version_id)
+        converter.wrap_name = [model_card.project_name, model_card.model_name]
+                              .reject { |n| n.to_s.empty? }.join(' - ')
         converter.stats.version_id = version_id
         converter.stats.time(:download) { downloader.download(files, dir) }
         converter.stats.set(:bundle_files, files.length)

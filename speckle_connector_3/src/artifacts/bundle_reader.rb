@@ -48,7 +48,8 @@ module SpeckleConnector3
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
-          instance_meta: instance_meta(props_by_obj)
+          instance_meta: instance_meta(props_by_obj),
+          levels: {}, units: producer_units(props_by_obj)
         }
         classify_nodes(nodes, model)
         wire_relations(relations, model, object_app, props_by_obj, default_view)
@@ -89,6 +90,16 @@ module SpeckleConnector3
         meta
       end
 
+      # The producer's model units, read off any object's `units` root scalar
+      # (every object carries one). LEVEL node elevations are in these units.
+      def producer_units(props_by_obj)
+        props_by_obj.each_value do |props|
+          units = props['units']
+          return units unless units.nil? || units.to_s.empty?
+        end
+        nil
+      end
+
       # Rebuilds nested attribute dictionaries from the flattened dotted eav paths
       # ('properties.Dict.key' -> {'Dict' => {'key' => value}}).
       def unflatten_dictionaries(props)
@@ -119,6 +130,7 @@ module SpeckleConnector3
             model[:node_meta][id] = { name: n['name'], parent_k: n['def_ref'] } # tag/folder/model tier
           when NodeKind::LEVEL
             model[:node_meta][id] = { name: n['name'], parent_k: nil }
+            model[:levels][id] = { name: n['name'], elevation: n['elevation'] }
           when NodeKind::MATERIAL
             model[:materials][id] = {
               name: n['name'],

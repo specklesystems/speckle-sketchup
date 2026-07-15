@@ -3,6 +3,8 @@
 require_relative '../artifacts/bundle_reader'
 require_relative '../artifacts/receive_stats'
 require_relative '../speckle_objects/geometry/point'
+require_relative '../speckle_objects/geometry/length'
+require_relative '../constants/pref_constants'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/color'
 require_relative '../sketchup_model/dictionary/base_dictionary_handler'
@@ -32,6 +34,11 @@ module SpeckleConnector3
       # @return [Artifacts::ReceiveStats] per-phase timings/counters for this receive
       attr_reader :stats
 
+      # Display name for the wrapping group (set from the receive card's
+      # project/model names); receives are grouped so multiple received models
+      # stay distinguishable in the same SketchUp file.
+      attr_accessor :wrap_name
+
       # @param sketchup_model [Sketchup::Model]
       # @param stats [Artifacts::ReceiveStats, nil] shared stats collector (one is
       #   created when not provided, so headless/test callers stay unchanged)
@@ -56,17 +63,25 @@ module SpeckleConnector3
         build(model)
       end
 
-      # @return [Array<String>] persistent ids of the created top-level entities
+      # @return [Array<String>] persistent ids for highlight — the wrapping group
+      # when present (selecting it selects the whole received model), else the
+      # created top-level entities.
       def created_top_level_ids
+        return [@wrap_group.persistent_id.to_s] if @wrap_group && !@wrap_group.deleted?
+
         @created_top_level.reject(&:deleted?).map { |e| e.persistent_id.to_s }
       end
 
       # @param model [Hash] the reconstructed model from {Artifacts::BundleReader}
       def build(model)
         @tag_color_by_path = tag_colors_by_path(model)
+        @wrap_group = @model.entities.add_group
+        @wrap_group.name = wrap_name.to_s.empty? ? 'Speckle Model' : wrap_name
+        @target = @wrap_group.entities
         @stats.time(:materials) { build_materials(model[:materials]) }
         @stats.time(:definitions) { build_definitions(model) }
         @stats.time(:objects) { model[:objects].each { |obj| build_object(model, obj) } }
+        @stats.time(:levels) { build_levels(model) }
         @stats.add(:objects, model[:objects].length)
         model[:objects].length
       end
@@ -217,7 +232,7 @@ module SpeckleConnector3
         created =
           if obj[:display_instances].any?
             obj[:display_instances].map do |ik|
-              instance = place_instance(@model.entities, model[:instances][ik])
+              instance = place_instance(@target, model[:instances][ik])
               apply_object_properties(instance, obj[:properties])
               instance
             end
@@ -227,7 +242,7 @@ module SpeckleConnector3
               next [] if geometry.nil?
 
               material = @material_by_k[model[:material_by_geom][geom_k]]
-              add_geometry(@model.entities, geometry, material, obj[:is_soften] != false)
+              add_geometry(@target, geometry, material, obj[:is_soften] != false)
             end
           end
 
@@ -246,6 +261,57 @@ module SpeckleConnector3
 
         @stats.add(:instances)
         entities.add_instance(definition, TRANSFORM.to_native(instance[:transform], instance[:units]))
+      end
+
+      # ── levels ────────────────────────────────────────────────────────
+
+      # Rebuilds the producer's LEVEL nodes (Revit storeys) the way v2 did
+      # ({Converters::ToNative} create_levels + create_levels_from_section_planes):
+      # per level a named SectionPlane LEVEL_SHIFT_VALUE above the storey (so the
+      # cut shows it) and a group with a construction-line rectangle around the
+      # model footprint + a text label at the true elevation, all on a
+      # '<model>-Levels' tag so they hide together.
+      def build_levels(model)
+        levels = model[:levels]
+        return if levels.nil? || levels.empty?
+
+        units = model[:units] || 'm'
+        layer = @model.layers.add("#{@wrap_group.name}-Levels")
+        corners = footprint_corners
+        levels.each_value do |level|
+          next if level[:elevation].nil?
+
+          elevation = SpeckleObjects::Geometry.length_to_native(level[:elevation], units)
+          name = level[:name].to_s
+          section_plane = @target.add_section_plane([0, 0, elevation + LEVEL_SHIFT_VALUE], [0, 0, -1])
+          section_plane.name = name
+          section_plane.layer = layer
+          add_level_graphics(name, elevation, corners, layer)
+          @stats.add(:levels)
+        end
+      end
+
+      def add_level_graphics(name, elevation, corners, layer)
+        group = @target.add_group
+        group.name = name
+        points = corners.map { |x, y| Geom::Point3d.new(x, y, elevation) }
+        clines = points.each_index.map { |i| group.entities.add_cline(points[i], points[(i + 1) % 4]) }
+        text = group.entities.add_text(" #{name}", points[0])
+        (clines + [text, group]).each { |o| o.layer = layer }
+      end
+
+      # The received model's XY footprint (from the wrap group's bounds, which
+      # contain all baked geometry by the time levels are built); a 10m square at
+      # the origin when there is nothing to measure, matching the v2 fallback.
+      def footprint_corners
+        bounds = @wrap_group.bounds
+        if bounds.empty? || bounds.diagonal.zero?
+          side = SpeckleObjects::Geometry.length_to_native(10, 'm')
+          return [[0, 0], [side, 0], [side, side], [0, side]]
+        end
+
+        [[bounds.min.x, bounds.min.y], [bounds.max.x, bounds.min.y],
+         [bounds.max.x, bounds.max.y], [bounds.min.x, bounds.max.y]]
       end
 
       # ── geometry ──────────────────────────────────────────────────────
