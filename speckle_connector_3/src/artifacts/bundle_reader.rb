@@ -49,7 +49,8 @@ module SpeckleConnector3
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
           instance_meta: instance_meta(props_by_obj),
-          levels: {}, units: producer_units(props_by_obj)
+          levels: {}, units: producer_units(props_by_obj),
+          produced_by: read_produced_by(env)
         }
         classify_nodes(nodes, model)
         wire_relations(relations, model, object_app, props_by_obj, default_view)
@@ -88,6 +89,14 @@ module SpeckleConnector3
           meta[inst_k.to_i] = { name: props['name'], dictionaries: unflatten_dictionaries(props) }
         end
         meta
+      end
+
+      # The envelope meta's producer stamp (e.g. 'speckle-sketchup EnvelopeWriter',
+      # 'Speckle.Sdk EnvelopeWriter') — lets receive vary host behaviour by source.
+      def read_produced_by(env)
+        (env.call('meta').first || {})['produced_by']
+      rescue StandardError
+        nil
       end
 
       # The producer's model units, read off any object's `units` root scalar

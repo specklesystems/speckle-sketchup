@@ -54,6 +54,7 @@ module SpeckleConnector3
         @created_top_level = []
         @converted_faces = []
         @tag_color_by_path = {}
+        @wrap_group = nil
       end
 
       # Reads a bundle from `dir` (base name `base`) and builds it into the model.
@@ -75,9 +76,16 @@ module SpeckleConnector3
       # @param model [Hash] the reconstructed model from {Artifacts::BundleReader}
       def build(model)
         @tag_color_by_path = tag_colors_by_path(model)
-        @wrap_group = @model.entities.add_group
-        @wrap_group.name = wrap_name.to_s.empty? ? 'Speckle Model' : wrap_name
-        @target = @wrap_group.entities
+        # v2 parity: SketchUp-sourced models bake directly into the model (their
+        # own grouping/tags already structure them); only foreign models get the
+        # wrapper group. The bundle's meta stamp identifies the producer.
+        if model[:produced_by].to_s.match?(/sketchup/i)
+          @target = @model.entities
+        else
+          @wrap_group = @model.entities.add_group
+          @wrap_group.name = wrap_name.to_s.empty? ? 'Speckle Model' : wrap_name
+          @target = @wrap_group.entities
+        end
         @stats.time(:materials) { build_materials(model[:materials]) }
         @stats.time(:definitions) { build_definitions(model) }
         @stats.time(:objects) { model[:objects].each { |obj| build_object(model, obj) } }
@@ -276,7 +284,7 @@ module SpeckleConnector3
         return if levels.nil? || levels.empty?
 
         units = model[:units] || 'm'
-        layer = @model.layers.add("#{@wrap_group.name}-Levels")
+        layer = @model.layers.add("#{@wrap_group&.name || wrap_name || 'Speckle'}-Levels")
         corners = footprint_corners
         levels.each_value do |level|
           next if level[:elevation].nil?
@@ -304,7 +312,7 @@ module SpeckleConnector3
       # contain all baked geometry by the time levels are built); a 10m square at
       # the origin when there is nothing to measure, matching the v2 fallback.
       def footprint_corners
-        bounds = @wrap_group.bounds
+        bounds = @wrap_group ? @wrap_group.bounds : @model.bounds
         if bounds.empty? || bounds.diagonal.zero?
           side = SpeckleObjects::Geometry.length_to_native(10, 'm')
           return [[0, 0], [side, 0], [side, side], [0, side]]
