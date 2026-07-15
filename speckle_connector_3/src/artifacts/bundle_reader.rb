@@ -260,10 +260,17 @@ module SpeckleConnector3
         geom
       end
 
+      # Metadata scalars that must round-trip as authored strings: the producer's
+      # type inference stores numeric-looking strings ("1000") typed for querying
+      # (value_double), but the native side needs the string form back — a Float
+      # description/name crashes the SketchUp setters.
+      STRING_PATHS = %w[name description speckle_type units layer].freeze
+
       def group_eav(rows, paths)
         by_obj = Hash.new { |h, k| h[k] = {} }
         rows.each do |row|
-          by_obj[row['object_index']][paths[row['path_index']]] = eav_value(row)
+          path = paths[row['path_index']]
+          by_obj[row['object_index']][path] = STRING_PATHS.include?(path) ? string_value(row) : eav_value(row)
         end
         by_obj
       end
@@ -273,6 +280,10 @@ module SpeckleConnector3
         return row['value_double'] unless row['value_double'].nil?
 
         row['value_string']
+      end
+
+      def string_value(row)
+        row['value_string'] || eav_value(row)&.to_s
       end
 
       def parse_transform(str)

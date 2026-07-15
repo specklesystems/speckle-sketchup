@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../artifacts/objects_artifact_pipeline'
+require_relative '../artifacts/op_stats'
 require_relative '../artifacts/sgeo_encoder'
 require_relative '../artifacts/vocab'
 require_relative 'camera_views'
@@ -35,33 +36,48 @@ module SpeckleConnector3
       # @return [Integer] number of top-level objects emitted (totalChildrenCount)
       attr_reader :object_count
 
+      # @return [Artifacts::OpStats] per-phase timings/counters for this send
+      attr_reader :stats
+
       # @param units [String] speckle model units (e.g. 'm', 'mm')
       # @param output_dir [String] directory to write the parquet bundle into
       # @param version_id [String] server pre-allocated version id (bundle base name)
       # @param model_preferences [Hash, nil] the card's send settings ("Include entity
       #   attributes" + per-entity-type toggles); nil includes everything (dev harness)
-      def initialize(units, output_dir, version_id, model_preferences = nil)
+      # @param stats [Artifacts::OpStats, nil] shared stats collector (one is
+      #   created when not provided, so headless/test callers stay unchanged)
+      def initialize(units, output_dir, version_id, model_preferences = nil, stats = nil)
         @units = units
         @pipeline = ART::ObjectsArtifactPipeline.new(output_dir, version_id)
         @object_count = 0
         @collection_ks = {}
         @model_preferences = model_preferences
+        @stats = stats || Artifacts::OpStats.new('send')
+        # Per-extract memoizations: layers/materials don't change mid-extract, so
+        # the folder-path walk, colour conversion, and render-material conversion
+        # run once per layer/material instead of once per entity.
+        @collection_k_by_layer = {}
+        @color_int_by_layer = {}
+        @material_k_by_material = {}
       end
 
       # Runs the single pass + post-loop emission and flushes the bundle to disk.
       # @param entities [Array<Sketchup::Entity>] the selected top-level entities
       # @return [Array<String>] the geometry shard paths written (for the upload bundle)
       def extract(entities)
-        manager = SketchupModel::Definitions::DefinitionManager.new(@units)
-        unpacked = manager.unpack_entities(entities)
-        @flat = manager.flat_atomic_objects
+        unpacked = @stats.time(:unpack) do
+          manager = SketchupModel::Definitions::DefinitionManager.new(@units)
+          result = manager.unpack_entities(entities)
+          @flat = manager.flat_atomic_objects
+          result
+        end
         @instance_proxies = unpacked.instance_proxies
 
         # 1. Single pass over the selected top-level entities (emit + stream as we go).
-        entities.each { |entity| emit_top_level(entity) }
+        @stats.time(:emit_objects) { entities.each { |entity| emit_top_level(entity) } }
 
         # 2. Post-loop: definitions (member geometry via DEFINES, nested instances via DEFINES_INSTANCE).
-        unpacked.instance_definition_proxies.each { |dp| emit_definition(dp) }
+        @stats.time(:emit_definitions) { unpacked.instance_definition_proxies.each { |dp| emit_definition(dp) } }
 
         # 3. Default scene view: the tag/layer folder tree.
         @pipeline.add_scene_view(
@@ -71,7 +87,9 @@ module SpeckleConnector3
         # 4. Named camera viewpoints: the model's scenes (pages).
         emit_camera_views(entities.first&.model)
 
-        @pipeline.complete
+        # 5. Flush the bundle to disk (parquet writes happen here).
+        @stats.time(:flush) { @pipeline.complete }
+        @stats.add(:objects, @object_count)
         @pipeline.geometry_paths
       end
 
@@ -237,8 +255,10 @@ module SpeckleConnector3
       def bind_material(geom_k, material)
         return if material.nil?
 
-        rm = SOO::RenderMaterial.from_material(material)
-        mat_k = @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
+        mat_k = @material_k_by_material[material.persistent_id] ||= begin
+          rm = SOO::RenderMaterial.from_material(material)
+          @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
+        end
         @pipeline.has_material(geom_k, mat_k)
       end
 
@@ -247,11 +267,15 @@ module SpeckleConnector3
         layer = entity.layer
         return if layer.nil?
 
-        @pipeline.has_color(obj_k, @pipeline.add_color(SOO::Color.to_int(layer.color)))
+        argb = @color_int_by_layer[layer.persistent_id] ||= SOO::Color.to_int(layer.color)
+        @pipeline.has_color(obj_k, @pipeline.add_color(argb))
       end
 
       def in_collection(obj_k, entity)
-        layer_k = collection_k_for_layer(entity.layer)
+        layer = entity.layer
+        return if layer.nil?
+
+        layer_k = @collection_k_by_layer[layer.persistent_id] ||= collection_k_for_layer(layer)
         @pipeline.in_collection(obj_k, layer_k, 0) if layer_k
       end
 

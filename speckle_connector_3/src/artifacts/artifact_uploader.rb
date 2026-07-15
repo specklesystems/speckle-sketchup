@@ -15,6 +15,13 @@ module SpeckleConnector3
     # the pre-allocated versionId. The ingestion + versionId are created upstream
     # (the JS DUI3 frontend) and passed in here.
     class ArtifactUploader
+      # Concurrent PUTs per file (IO-bound; presigned URLs are independent, so
+      # ordering doesn't matter — mirrors ArtifactDownloader's queue).
+      MAX_PARALLEL = 6
+
+      # @return [Artifacts::OpStats, nil] optional send-stats collector
+      attr_accessor :stats
+
       # @param server_url [String] e.g. https://app.speckle.systems
       # @param project_id [String]
       # @param ingestion_id [String] server-minted model-ingestion id
@@ -32,19 +39,51 @@ module SpeckleConnector3
       # @return [String, nil] the version id echoed by complete (may be nil; the
       #   caller already holds the pre-allocated id)
       def upload(files, root_id, total_children_count)
-        signed = sign(files.keys)
+        signed = timed(:sign) { sign(files.keys) }
         uploads = signed['uploads'] || {}
-        etags = {}
-        files.each do |name, path|
-          presigned = uploads[name]
-          raise "Server did not sign an upload for file '#{name}'" if presigned.nil?
-
-          etags[name] = put_file(path, presigned)
+        files.each_key do |name|
+          raise "Server did not sign an upload for file '#{name}'" if uploads[name].nil?
         end
-        complete(etags, root_id, total_children_count)
+        etags = timed(:upload) { put_files(files, uploads) }
+        timed(:complete) { complete(etags, root_id, total_children_count) }
       end
 
       private
+
+      # PUTs the files concurrently; returns {name => etag}. A worker error is
+      # re-raised after all threads finish.
+      def put_files(files, uploads)
+        queue = Queue.new
+        files.each { |name, path| queue << [name, path] }
+        etags = {}
+        mutex = Mutex.new
+        errors = Queue.new
+        threads = Array.new([MAX_PARALLEL, files.length].min) do
+          Thread.new do
+            loop do
+              name, path = begin
+                queue.pop(true)
+              rescue ThreadError
+                break
+              end
+              begin
+                etag = put_file(path, uploads[name])
+                mutex.synchronize { etags[name] = etag }
+              rescue StandardError => e
+                errors << e
+              end
+            end
+          end
+        end
+        threads.each(&:join)
+        raise errors.pop unless errors.empty?
+
+        etags
+      end
+
+      def timed(key, &block)
+        @stats ? @stats.time(key, &block) : block.call
+      end
 
       def endpoint(suffix)
         URI("#{@server_url}/api/v2/projects/#{@project_id}/modelingestion/#{@ingestion_id}/uploads/#{suffix}")

@@ -177,6 +177,31 @@ module SpeckleConnector3
         end
       end
 
+      # Numeric-looking metadata strings ("1000") are stored typed by the eav
+      # inference (value_double) but must come back as Strings — a Float
+      # description/name crashes the SketchUp setters on receive.
+      def test_numeric_looking_metadata_round_trips_as_string
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_properties(
+            'def-1', {},
+            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', '101'],
+             ['description', '1000'], ['@speckle.definition_k', 3]]
+          )
+          p.add_properties(
+            'inst-1', {},
+            [['speckle_type', BundleReader::INSTANCE_PROXY_TYPE], ['name', '2.5'], ['@speckle.instance_k', 7]]
+          )
+          p.complete
+
+          model = BundleReader.read(dir, base)
+          assert_equal('1000', model[:definition_meta][3][:description])
+          assert(model[:definition_meta].key?('101'), 'name join key must be the authored string')
+          assert_equal('2.5', model[:instance_meta][7][:name])
+        end
+      end
+
       # Nested-instance metadata round-trips via the `@speckle.instance_k` stamp:
       # the eav row-set is keyed by the member's own persistent id and joined back
       # to the INSTANCE node by its dense id.

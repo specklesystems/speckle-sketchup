@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../artifacts/bundle_reader'
-require_relative '../artifacts/receive_stats'
+require_relative '../artifacts/op_stats'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/geometry/length'
 require_relative '../constants/pref_constants'
@@ -31,7 +31,7 @@ module SpeckleConnector3
       # inside definitions) — the input for the post-receive coplanar merge (v2 parity)
       attr_reader :converted_faces
 
-      # @return [Artifacts::ReceiveStats] per-phase timings/counters for this receive
+      # @return [Artifacts::OpStats] per-phase timings/counters for this receive
       attr_reader :stats
 
       # Display name for the wrapping component (set from the receive card's
@@ -40,11 +40,11 @@ module SpeckleConnector3
       attr_accessor :wrap_name
 
       # @param sketchup_model [Sketchup::Model]
-      # @param stats [Artifacts::ReceiveStats, nil] shared stats collector (one is
+      # @param stats [Artifacts::OpStats, nil] shared stats collector (one is
       #   created when not provided, so headless/test callers stay unchanged)
       def initialize(sketchup_model, stats = nil)
         @model = sketchup_model
-        @stats = stats || Artifacts::ReceiveStats.new
+        @stats = stats || Artifacts::OpStats.new('receive')
         @folder_by_path = {}
         @tag_by_path = {}
         @used_tag_names = {}
@@ -212,9 +212,9 @@ module SpeckleConnector3
         return if meta.nil?
 
         if meta[:description] && !meta[:description].to_s.empty? && definition.respond_to?(:description=)
-          definition.description = meta[:description]
+          definition.description = meta[:description].to_s
         end
-        DICT.attribute_dictionaries_to_native(definition, meta[:dictionaries]) if meta[:dictionaries]&.any?
+        apply_dictionaries(definition, meta[:dictionaries])
       end
 
       # Restores a nested instance's name + attribute dictionaries from its
@@ -222,8 +222,8 @@ module SpeckleConnector3
       def apply_instance_meta(instance, meta)
         return if instance.nil? || meta.nil?
 
-        instance.name = meta[:name] if meta[:name] && !meta[:name].to_s.empty? && instance.respond_to?(:name=)
-        DICT.attribute_dictionaries_to_native(instance, meta[:dictionaries]) if meta[:dictionaries]&.any?
+        instance.name = meta[:name].to_s if meta[:name] && !meta[:name].to_s.empty? && instance.respond_to?(:name=)
+        apply_dictionaries(instance, meta[:dictionaries])
       end
 
       # Restores a top-level instance's name + attribute dictionaries from the
@@ -232,9 +232,18 @@ module SpeckleConnector3
         return if instance.nil? || props.nil? || props.empty?
 
         name = props['name']
-        instance.name = name if name && !name.to_s.empty? && instance.respond_to?(:name=)
-        dicts = Artifacts::BundleReader.unflatten_dictionaries(props)
-        DICT.attribute_dictionaries_to_native(instance, dicts) if dicts.any?
+        instance.name = name.to_s if name && !name.to_s.empty? && instance.respond_to?(:name=)
+        apply_dictionaries(instance, Artifacts::BundleReader.unflatten_dictionaries(props))
+      end
+
+      # SketchUp refuses writes to its internal dictionaries ("Cannot modify
+      # internal attribute dictionaries"), so GSU_-prefixed ones are skipped on
+      # restore — they describe the source .skp, not user data.
+      def apply_dictionaries(entity, dicts)
+        return if dicts.nil?
+
+        writable = dicts.reject { |name, _| name.to_s.start_with?('GSU_') }
+        DICT.attribute_dictionaries_to_native(entity, writable) if writable.any?
       end
 
       # ── objects ───────────────────────────────────────────────────────
