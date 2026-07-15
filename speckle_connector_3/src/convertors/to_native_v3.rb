@@ -90,6 +90,7 @@ module SpeckleConnector3
         @stats.time(:definitions) { build_definitions(model) }
         @stats.time(:objects) { model[:objects].each { |obj| build_object(model, obj) } }
         @stats.time(:levels) { build_levels(model) }
+        @stats.time(:camera_views) { build_camera_views(model) }
         # The wrapper is filled first, then placed once at the origin (v2's
         # project-model-definition pattern).
         @wrap_instance = @model.entities.add_instance(@wrap_definition, Geom::Transformation.new) if @wrap_definition
@@ -226,24 +227,67 @@ module SpeckleConnector3
         apply_dictionaries(instance, meta[:dictionaries])
       end
 
-      # Restores a top-level instance's name + attribute dictionaries from the
-      # scene object's own eav properties (dictionaries live under 'properties.*').
-      def apply_object_properties(instance, props)
-        return if instance.nil? || props.nil? || props.empty?
+      # Restores a scene object's name + attributes from its eav properties.
+      # Foreign models (wrapped) additionally get the root scalars (speckle_type,
+      # category, family, type, application id) in a 'Speckle' base dictionary;
+      # SketchUp round-trips restore only what was authored.
+      def apply_object_properties(entity, obj)
+        props = obj[:properties]
+        return if entity.nil? || props.nil? || props.empty?
 
         name = props['name']
-        instance.name = name.to_s if name && !name.to_s.empty? && instance.respond_to?(:name=)
-        apply_dictionaries(instance, Artifacts::BundleReader.unflatten_dictionaries(props))
+        entity.name = name.to_s if name && !name.to_s.empty? && entity.respond_to?(:name=)
+        apply_dictionaries(entity, object_dictionaries(props, obj[:app_id], include_base: !@wrap_definition.nil?))
+      end
+
+      # Splits eav paths into attribute dictionaries: 'properties.Dict.key…' keeps
+      # its top-level segment as the dictionary name with the remaining path as a
+      # dotted key; single-segment 'properties.x' and (when include_base) root
+      # scalars land in the 'Speckle' dictionary.
+      def object_dictionaries(props, app_id, include_base:)
+        dicts = Hash.new { |h, k| h[k] = {} }
+        props.each do |path, value|
+          next if value.nil?
+
+          if path.start_with?('properties.')
+            segments = path.split('.')[1..]
+            next if segments.empty?
+
+            if segments.length == 1
+              dicts['Speckle'][segments.first] = value if include_base
+            else
+              dicts[segments.first][segments[1..].join('.')] = value
+            end
+          elsif include_base && !%w[name units layer].include?(path) && !path.start_with?('@speckle.')
+            dicts['Speckle'][path] = value
+          end
+        end
+        dicts['Speckle']['application_id'] = app_id if include_base && app_id
+        dicts
       end
 
       # SketchUp refuses writes to its internal dictionaries ("Cannot modify
       # internal attribute dictionaries"), so GSU_-prefixed ones are skipped on
-      # restore — they describe the source .skp, not user data.
+      # restore — they describe the source .skp, not user data. Nested hashes
+      # (from unflattened meta) are flattened to dotted keys: set_attribute can
+      # only store scalars/arrays.
       def apply_dictionaries(entity, dicts)
         return if dicts.nil?
 
-        writable = dicts.reject { |name, _| name.to_s.start_with?('GSU_') }
+        writable = {}
+        dicts.each do |name, entries|
+          next if name.to_s.start_with?('GSU_') || !entries.is_a?(Hash) || entries.empty?
+
+          writable[name] = flatten_entries(entries)
+        end
         DICT.attribute_dictionaries_to_native(entity, writable) if writable.any?
+      end
+
+      def flatten_entries(hash, prefix = nil)
+        hash.each_with_object({}) do |(key, value), acc|
+          full_key = prefix ? "#{prefix}.#{key}" : key.to_s
+          value.is_a?(Hash) ? acc.merge!(flatten_entries(value, full_key)) : acc[full_key] = value
+        end
       end
 
       # ── objects ───────────────────────────────────────────────────────
@@ -253,23 +297,47 @@ module SpeckleConnector3
           if obj[:display_instances].any?
             obj[:display_instances].map do |ik|
               instance = place_instance(@target, model[:instances][ik])
-              apply_object_properties(instance, obj[:properties])
+              apply_object_properties(instance, obj)
               instance
             end
+          elsif @wrap_definition
+            build_object_group(model, obj)
           else
-            obj[:displays].flat_map do |geom_k|
-              geometry = model[:geometries][geom_k]
-              next [] if geometry.nil?
-
-              material = @material_by_k[model[:material_by_geom][geom_k]]
-              add_geometry(@target, geometry, material, obj[:is_soften] != false)
-            end
+            # SketchUp-sourced: loose faces/edges, exactly as authored.
+            bake_displays(@target, model, obj)
           end
 
         tag = ensure_tag_path(obj[:scene_path])
         created.compact.each do |e|
           e.layer = tag if tag && e.respond_to?(:layer=)
           @created_top_level << e
+        end
+      end
+
+      # A foreign (e.g. Revit) scene object with direct display geometry becomes
+      # its OWN group, named after the object, with its eav baked as attribute
+      # dictionaries — so selecting a wall selects the wall and Entity Info /
+      # attribute inspectors show its data (v2 parity).
+      def build_object_group(model, obj)
+        group = @target.add_group
+        baked = bake_displays(group.entities, model, obj)
+        if baked.empty?
+          group.erase! unless group.deleted?
+          return []
+        end
+
+        apply_object_properties(group, obj)
+        @stats.add(:object_groups)
+        [group]
+      end
+
+      def bake_displays(entities, model, obj)
+        obj[:displays].flat_map do |geom_k|
+          geometry = model[:geometries][geom_k]
+          next [] if geometry.nil?
+
+          material = @material_by_k[model[:material_by_geom][geom_k]]
+          add_geometry(entities, geometry, material, obj[:is_soften] != false)
         end
       end
 
@@ -332,6 +400,67 @@ module SpeckleConnector3
 
         [[bounds.min.x, bounds.min.y], [bounds.max.x, bounds.min.y],
          [bounds.max.x, bounds.max.y], [bounds.min.x, bounds.max.y]]
+      end
+
+      # ── camera views ──────────────────────────────────────────────────
+
+      # Rebuilds the bundle's named viewpoints as SketchUp scenes (pages), the v2
+      # View3d way: set the camera on the active view, then `pages.add` captures
+      # it. Existing same-named pages are kept (no stomping on user scenes); the
+      # bundle's default view ends up selected.
+      def build_camera_views(model)
+        views = model[:camera_views]
+        return if views.nil? || views.empty?
+
+        default_page = nil
+        views.each do |v|
+          name = v['name'].to_s.empty? ? "Scene #{v['view']}" : v['name'].to_s
+          next if @model.pages.any? { |page| page.name == name }
+
+          camera = camera_from_view(v)
+          next if camera.nil?
+
+          @model.active_view.camera = camera
+          page = @model.pages.add(name)
+          default_page = page if v['is_default']
+          @stats.add(:camera_views)
+        end
+        @model.pages.selected_page = default_page if default_page
+      end
+
+      def camera_from_view(v)
+        units = v['units'] || 'm'
+        eye = POINT.to_native(v['pos_x'], v['pos_y'], v['pos_z'], units)
+        target = v['target_x'] ? POINT.to_native(v['target_x'], v['target_y'], v['target_z'], units) : eye.offset(Geom::Vector3d.new(v['forward_x'], v['forward_y'], v['forward_z']))
+        up = Geom::Vector3d.new(v['up_x'].to_f, v['up_y'].to_f, v['up_z'].to_f)
+        up = Geom::Vector3d.new(0, 0, 1) unless up.valid?
+        perspective = v['is_ortho'] ? false : true
+        camera = Sketchup::Camera.new(eye, target, up, perspective)
+        camera.aspect_ratio = v['aspect'] if v['aspect'] && v['aspect'] > 0
+        if perspective
+          apply_camera_fov(camera, v)
+        elsif v['ortho_height']
+          camera.height = SpeckleObjects::Geometry.length_to_native(v['ortho_height'], units)
+        end
+        camera
+      rescue StandardError => e
+        puts "Speckle: skipping camera view '#{v['name']}' (#{e.message})"
+        nil
+      end
+
+      # The bundle's fov is VERTICAL degrees; SketchUp's Camera#fov measures
+      # height or width per fov_is_height?. Height-measuring cameras take it
+      # directly; width-measuring ones convert through the aspect, else fall back
+      # to the (width-based) focal length.
+      def apply_camera_fov(camera, v)
+        fov = v['fov']
+        width_fov = camera.respond_to?(:fov_is_height?) && !camera.fov_is_height?
+        if fov && (!width_fov || v['aspect'])
+          fov = Math.atan(Math.tan(fov * Math::PI / 360.0) * v['aspect']) * 360.0 / Math::PI if width_fov
+          camera.fov = fov
+        elsif v['lens_mm']
+          camera.focal_length = v['lens_mm']
+        end
       end
 
       # ── geometry ──────────────────────────────────────────────────────

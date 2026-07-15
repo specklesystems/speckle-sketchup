@@ -275,6 +275,10 @@ module SpeckleConnector3
           assert_nil(ortho['lens_mm'])
           assert_in_delta(12.5, ortho['ortho_height'])
           assert_nil(ortho['aspect'])
+
+          # BundleReader exposes the same rows (scene-tab order) for receive.
+          reader_views = BundleReader.read(dir, base)[:camera_views]
+          assert_equal(%w[Persp Top], reader_views.map { |r| r['name'] })
         end
       end
 
@@ -288,6 +292,7 @@ module SpeckleConnector3
           p.complete
 
           refute(File.exist?(File.join(dir, "#{base}.envelope.camera_views.parquet")))
+          assert_equal([], BundleReader.read(dir, base)[:camera_views])
         end
       end
 

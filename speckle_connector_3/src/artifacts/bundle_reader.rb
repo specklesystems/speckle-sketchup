@@ -50,7 +50,8 @@ module SpeckleConnector3
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
           instance_meta: instance_meta(props_by_obj),
           levels: {}, units: producer_units(props_by_obj),
-          produced_by: read_produced_by(env)
+          produced_by: read_produced_by(env),
+          camera_views: read_camera_views(dir, base)
         }
         classify_nodes(nodes, model)
         wire_relations(relations, model, object_app, props_by_obj, default_view)
@@ -233,6 +234,18 @@ module SpeckleConnector3
         by_view = rows.group_by { |r| r['view'] }
         chosen = by_view.values.find { |vr| vr.any? { |r| r['is_default'] } } || by_view.values.first || []
         chosen.sort_by { |r| r['ord'] }.map { |r| { source: r['source'], ref: r['ref'] } }
+      end
+
+      # Optional `{base}.envelope.camera_views.parquet` (named viewpoints) — an
+      # absent file means the producer shipped none. Rows in scene-tab order.
+      def read_camera_views(dir, base)
+        path = File.join(dir, "#{base}.envelope.camera_views.parquet")
+        return [] unless File.exist?(path)
+
+        ParquetSource.read_hashes(path).sort_by { |r| [r['ord'] || 0, r['view'] || 0] }
+      rescue StandardError => e
+        puts "Speckle: could not read camera_views (#{e.message})"
+        []
       end
 
       def read_geometries(dir, base)
