@@ -22,7 +22,8 @@ module SpeckleConnector3
       # @param params [Hash] { server_url:, project_id:, model_id:, token:,
       #   source_app_slug:, source_app_version: }
       # @param preferences [Hash, nil] model preferences (attribute-send settings)
-      # @return [String] the committed version id
+      # @return [Hash] { version_id:, conversion_results: } — the committed version
+      #   id + one DUI report row per top-level object
       def send_bundle(entities, units, params, preferences = nil)
         stats = Artifacts::OpStats.new('send')
         t0 = Time.now.to_f
@@ -61,7 +62,7 @@ module SpeckleConnector3
         t3 = Time.now.to_f
         puts "  [timing] upload + finalize: #{(t3 - t2).round(2)}s (#{bundle.size} files)"
         stats.report
-        version_id
+        { version_id: version_id, conversion_results: extractor.conversion_results }
       end
 
       # Extract-only (no server): runs the single-pass extractor and writes the
@@ -79,7 +80,8 @@ module SpeckleConnector3
         extractor.extract(entities)
         puts "  [timing] extract: #{(Time.now.to_f - t0).round(2)}s (#{extractor.object_count} objects)"
         stats.report
-        { dir: output_dir, base: base_name, count: extractor.object_count }
+        { dir: output_dir, base: base_name, count: extractor.object_count,
+          conversion_results: extractor.conversion_results }
       end
 
       # Collects every parquet file in the bundle, keyed by basename (the server

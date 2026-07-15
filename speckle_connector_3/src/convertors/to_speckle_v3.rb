@@ -2,6 +2,7 @@
 
 require_relative '../artifacts/objects_artifact_pipeline'
 require_relative '../artifacts/op_stats'
+require_relative '../ui_data/report/conversion_result'
 require_relative '../artifacts/sgeo_encoder'
 require_relative '../artifacts/vocab'
 require_relative 'camera_views'
@@ -39,6 +40,10 @@ module SpeckleConnector3
       # @return [Artifacts::OpStats] per-phase timings/counters for this send
       attr_reader :stats
 
+      # @return [Array<UiData::Report::ConversionResult>] one entry per top-level
+      # object, for the DUI send report
+      attr_reader :conversion_results
+
       # @param units [String] speckle model units (e.g. 'm', 'mm')
       # @param output_dir [String] directory to write the parquet bundle into
       # @param version_id [String] server pre-allocated version id (bundle base name)
@@ -53,6 +58,7 @@ module SpeckleConnector3
         @collection_ks = {}
         @model_preferences = model_preferences
         @stats = stats || Artifacts::OpStats.new('send')
+        @conversion_results = []
         # Per-extract memoizations: layers/materials don't change mid-extract, so
         # the folder-path walk, colour conversion, and render-material conversion
         # run once per layer/material instead of once per entity.
@@ -98,12 +104,30 @@ module SpeckleConnector3
       def emit_top_level(entity)
         case entity
         when Sketchup::ComponentInstance, Sketchup::Group
-          emit_instance_object(entity)
+          report(entity, 'Speckle.Core.Models.Instances.InstanceProxy') { emit_instance_object(entity) }
         when Sketchup::Face
-          emit_face_object(entity)
+          report(entity, 'Objects.Geometry.Mesh') { emit_face_object(entity) }
         when Sketchup::Edge
-          emit_edge_object(entity) unless entity.faces.any?
+          report(entity, 'Objects.Geometry.Line') { emit_edge_object(entity) } unless entity.faces.any?
         end
+      end
+
+      # Records one DUI report row per top-level object. A failing entity is
+      # reported as ERROR (with the exception) and the send continues — one bad
+      # entity shouldn't sink the whole version.
+      def report(entity, speckle_type)
+        yield
+        @conversion_results << UiData::Report::ConversionResult.new(
+          UiData::Report::ConversionStatus::SUCCESS,
+          entity.persistent_id.to_s, entity.class.to_s.split('::').last,
+          entity.persistent_id.to_s, speckle_type, ''
+        )
+      rescue StandardError => e
+        @conversion_results << UiData::Report::ConversionResult.new(
+          UiData::Report::ConversionStatus::ERROR,
+          entity.persistent_id.to_s, entity.class.to_s.split('::').last,
+          nil, nil, '', e
+        )
       end
 
       # A component/group placement -> object with a DISPLAY_INSTANCE edge to its INSTANCE node.

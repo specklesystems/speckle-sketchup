@@ -50,7 +50,7 @@ module SpeckleConnector3
           end
           puts "Speckle 4.0 EXTRACT-ONLY: #{result[:count]} objects -> #{result[:dir]} (base '#{result[:base]}')"
           puts "Speckle 4.0 TOTAL time: #{(Time.now.to_f - t_start).round(2)}s"
-          state = send_result(state, model_card_id, result[:base])
+          state = send_result(state, model_card_id, result[:base], result[:conversion_results])
           return state.with_add_queue_js_command('sendArtifacts', "sendBinding.receiveResponse('#{resolve_id}')")
         end
 
@@ -66,16 +66,17 @@ module SpeckleConnector3
 
         progress(state, model_card_id, 'Extracting + uploading artefacts')
         begin
-          version_id = Operations::SendArtifacts.send_bundle(entities, units, params,
-                                                             state.user_state.model_preferences)
+          result = Operations::SendArtifacts.send_bundle(entities, units, params,
+                                                         state.user_state.model_preferences)
         rescue StandardError => e
           puts "Speckle 4.0 artefact send FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
           return send_error(state, resolve_id, model_card_id, e.message)
         end
+        version_id = result[:version_id]
         puts "Speckle 4.0 artefact send complete — version #{version_id} (project #{model_card.project_id})"
         puts "Speckle 4.0 TOTAL time: #{(Time.now.to_f - t_start).round(2)}s"
 
-        state = send_result(state, model_card_id, version_id)
+        state = send_result(state, model_card_id, version_id, result[:conversion_results])
         resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('sendArtifacts', resolve_js_script)
       end
@@ -83,8 +84,8 @@ module SpeckleConnector3
       # Emits the DUI send-complete event that clears the card progress and shows the
       # created version (no ingestionId -> the legacy/direct path: sets
       # latestCreatedVersionId + clears progress, no ingestion-status subscription).
-      def self.send_result(state, model_card_id, version_id)
-        args = { modelCardId: model_card_id, versionId: version_id, sendConversionResults: [] }
+      def self.send_result(state, model_card_id, version_id, conversion_results = [])
+        args = { modelCardId: model_card_id, versionId: version_id, sendConversionResults: conversion_results || [] }
         state.with_add_queue_js_command('setModelSendResult', "sendBinding.emit('setModelSendResult', #{args.to_json})")
       end
 
