@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../artifacts/bundle_reader'
+require_relative '../artifacts/receive_stats'
 require_relative '../speckle_objects/geometry/point'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/color'
@@ -28,9 +29,15 @@ module SpeckleConnector3
       # inside definitions) — the input for the post-receive coplanar merge (v2 parity)
       attr_reader :converted_faces
 
+      # @return [Artifacts::ReceiveStats] per-phase timings/counters for this receive
+      attr_reader :stats
+
       # @param sketchup_model [Sketchup::Model]
-      def initialize(sketchup_model)
+      # @param stats [Artifacts::ReceiveStats, nil] shared stats collector (one is
+      #   created when not provided, so headless/test callers stay unchanged)
+      def initialize(sketchup_model, stats = nil)
         @model = sketchup_model
+        @stats = stats || Artifacts::ReceiveStats.new
         @folder_by_path = {}
         @tag_by_path = {}
         @used_tag_names = {}
@@ -45,7 +52,8 @@ module SpeckleConnector3
       # Reads a bundle from `dir` (base name `base`) and builds it into the model.
       # @return [Integer] number of top-level objects created
       def receive(dir, base)
-        build(Artifacts::BundleReader.read(dir, base))
+        model = @stats.time(:bundle_read) { Artifacts::BundleReader.read(dir, base) }
+        build(model)
       end
 
       # @return [Array<String>] persistent ids of the created top-level entities
@@ -56,9 +64,10 @@ module SpeckleConnector3
       # @param model [Hash] the reconstructed model from {Artifacts::BundleReader}
       def build(model)
         @tag_color_by_path = tag_colors_by_path(model)
-        build_materials(model[:materials])
-        build_definitions(model)
-        model[:objects].each { |obj| build_object(model, obj) }
+        @stats.time(:materials) { build_materials(model[:materials]) }
+        @stats.time(:definitions) { build_definitions(model) }
+        @stats.time(:objects) { model[:objects].each { |obj| build_object(model, obj) } }
+        @stats.add(:objects, model[:objects].length)
         model[:objects].length
       end
 
@@ -235,6 +244,7 @@ module SpeckleConnector3
         definition = @definition_by_k[instance[:def_ref]]
         return nil if definition.nil?
 
+        @stats.add(:instances)
         entities.add_instance(definition, TRANSFORM.to_native(instance[:transform], instance[:units]))
       end
 
@@ -263,17 +273,41 @@ module SpeckleConnector3
       end
 
       def add_mesh(entities, geometry, material, is_soften)
-        units = geometry[:units]
-        points = geometry[:vertices].each_slice(3).map { |x, y, z| POINT.to_native(x, y, z, units) }
-        polygon_mesh = Geom::PolygonMesh.new(points.length)
-        faces = geometry[:faces].dup
-        until faces.empty?
-          count = faces.shift
-          polygon_mesh.add_polygon(faces.shift(count).map { |i| points[i] })
+        polygon_mesh = @stats.time(:mesh_prep) do
+          units = geometry[:units]
+          points = geometry[:vertices].each_slice(3).map { |x, y, z| POINT.to_native(x, y, z, units) }
+          mesh = Geom::PolygonMesh.new(points.length)
+          faces = geometry[:faces].dup
+          until faces.empty?
+            count = faces.shift
+            mesh.add_polygon(faces.shift(count).map { |i| points[i] })
+          end
+          @stats.add(:mesh_points, points.length)
+          mesh
         end
         smooth_flags = is_soften ? 4 : 1
-        entities.add_faces_from_mesh(polygon_mesh, smooth_flags, material, material)
-        created = entities.grep(Sketchup::Face).last(polygon_mesh.polygons.length)
+        before = entities.size
+        # fill_from_mesh skips add_faces_from_mesh's merge-with-existing checks, which
+        # is only sound when there is nothing to merge with — i.e. a fresh collection
+        # (each definition's first geometry, the dominant receive path).
+        @stats.time(:mesh_bake) do
+          if before.zero?
+            entities.fill_from_mesh(polygon_mesh, true, smooth_flags, material, material)
+          else
+            entities.add_faces_from_mesh(polygon_mesh, smooth_flags, material, material)
+          end
+        end
+        # Collect only the appended slice (entities appends on add) instead of
+        # grepping the whole collection — the grep was O(model) per mesh, quadratic
+        # over a receive that bakes thousands of top-level meshes.
+        created = @stats.time(:face_collect) do
+          (before...entities.size).filter_map do |i|
+            entity = entities.at(i)
+            entity if entity.is_a?(Sketchup::Face)
+          end
+        end
+        @stats.add(:meshes)
+        @stats.add(:faces_created, created.length)
         @converted_faces.concat(created)
         created
       end

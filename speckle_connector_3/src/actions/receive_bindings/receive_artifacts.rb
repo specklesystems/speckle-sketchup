@@ -6,6 +6,7 @@ require_relative '../../accounts/accounts'
 require_relative '../../convertors/to_native_v3'
 require_relative '../../convertors/clean_up'
 require_relative '../../artifacts/artifact_downloader'
+require_relative '../../artifacts/parquet_source'
 
 module SpeckleConnector3
   module Actions
@@ -34,10 +35,14 @@ module SpeckleConnector3
         rescue StandardError => e
           model.commit_operation
           puts "Speckle 4.0 receive FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
+          converter.stats.report # partial phases still tell us where it died
           return receive_error(state, resolve_id, model_card_id, e.message)
         end
         model.commit_operation
         puts "Speckle 4.0 receive complete: #{count} objects in #{(Time.now.to_f - t_start).round(2)}s"
+        converter.stats.set(:backend, Artifacts::ParquetSource.backend.is_a?(Module) ? 'pure-ruby' : 'duckdb')
+        converter.stats.set(:merge_pref, state.user_state.model_preferences[:merge_coplanar_faces] ? true : false)
+        converter.stats.report
 
         args = {
           modelCardId: model_card_id,
@@ -57,7 +62,7 @@ module SpeckleConnector3
         return unless state.user_state.model_preferences[:merge_coplanar_faces]
 
         t_merge = Time.now.to_f
-        Converters::CleanUp.merge_coplanar_faces(converter.converted_faces)
+        converter.stats.time(:merge_coplanar) { Converters::CleanUp.merge_coplanar_faces(converter.converted_faces) }
         puts "  [timing] merged coplanar faces (#{converter.converted_faces.length} baked) " \
              "in #{(Time.now.to_f - t_merge).round(2)}s"
       end
@@ -75,7 +80,10 @@ module SpeckleConnector3
         end
 
         dir = File.join(Dir.tmpdir, 'speckle', 'receive', version_id)
-        downloader.download(files, dir)
+        converter.stats.version_id = version_id
+        converter.stats.time(:download) { downloader.download(files, dir) }
+        converter.stats.set(:bundle_files, files.length)
+        converter.stats.set(:bundle_bytes, Dir.glob(File.join(dir, "#{version_id}.*")).sum { |f| File.size(f) })
         puts "  [timing] downloaded #{files.length} artefact files -> #{dir}"
         converter.receive(dir, version_id)
       end

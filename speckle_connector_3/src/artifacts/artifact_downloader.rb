@@ -28,14 +28,37 @@ module SpeckleConnector3
         (JSON.parse(resp.body.to_s)['files'] || []).map { |f| { name: f['name'], url: f['url'] } }
       end
 
+      # Concurrent GETs per file (IO-bound, so plain threads overlap the per-file
+      # round-trip latency; sequentially the bundle's ~16 small files cost a full
+      # RTT each). Presigned URLs are independent, so ordering doesn't matter.
+      MAX_PARALLEL = 6
+
       # Downloads each listed file into `dest_dir`. @return [Array<String>] local paths
       def download(files, dest_dir)
         FileUtils.mkdir_p(dest_dir)
-        files.map do |f|
-          path = File.join(dest_dir, f[:name])
-          download_to(f[:url], path)
-          path
+        queue = Queue.new
+        files.each { |f| queue << f }
+        errors = Queue.new
+        threads = Array.new([MAX_PARALLEL, files.length].min) do
+          Thread.new do
+            loop do
+              f = begin
+                queue.pop(true)
+              rescue ThreadError
+                break
+              end
+              begin
+                download_to(f[:url], File.join(dest_dir, f[:name]))
+              rescue StandardError => e
+                errors << e
+              end
+            end
+          end
         end
+        threads.each(&:join)
+        raise errors.pop unless errors.empty?
+
+        files.map { |f| File.join(dest_dir, f[:name]) }
       end
 
       private
