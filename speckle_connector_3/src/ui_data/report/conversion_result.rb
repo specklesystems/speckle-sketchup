@@ -60,7 +60,9 @@ module SpeckleConnector3
           @source_type = source_type
           @result_id = result_id
           @result_type = result_type
-          @error = ConversionException.new(message, exception) if exception
+          # A message-only entry (e.g. an unsupported-type warning) still needs to
+          # reach the UI; v2 callers pass "" so their behaviour is unchanged.
+          @error = ConversionException.new(message, exception) if exception || !message.to_s.empty?
           self[:status] = @status
           self[:sourceId] = @source_id
           self[:sourceType] = @source_type

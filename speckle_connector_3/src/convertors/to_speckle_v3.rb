@@ -104,29 +104,44 @@ module SpeckleConnector3
       def emit_top_level(entity)
         case entity
         when Sketchup::ComponentInstance, Sketchup::Group
-          report(entity, 'Speckle.Core.Models.Instances.InstanceProxy') { emit_instance_object(entity) }
+          report(entity, 'Instance') { emit_instance_object(entity) }
         when Sketchup::Face
-          report(entity, 'Objects.Geometry.Mesh') { emit_face_object(entity) }
+          report(entity, 'Mesh') { emit_face_object(entity) }
         when Sketchup::Edge
-          report(entity, 'Objects.Geometry.Line') { emit_edge_object(entity) } unless entity.faces.any?
+          report(entity, 'Line') { emit_edge_object(entity) } unless entity.faces.any?
+        else
+          report_unsupported(entity)
         end
       end
 
       # Records one DUI report row per top-level object. A failing entity is
       # reported as ERROR (with the exception) and the send continues — one bad
-      # entity shouldn't sink the whole version.
-      def report(entity, speckle_type)
+      # entity shouldn't sink the whole version. `result_label` is the report's
+      # display vocabulary (Instance/Mesh/Line), not the eav speckle_type string
+      # (which keeps its v2-compatible value as a receive join key).
+      def report(entity, result_label)
         yield
         @conversion_results << UiData::Report::ConversionResult.new(
           UiData::Report::ConversionStatus::SUCCESS,
           entity.persistent_id.to_s, entity.class.to_s.split('::').last,
-          entity.persistent_id.to_s, speckle_type, ''
+          entity.persistent_id.to_s, result_label, ''
         )
       rescue StandardError => e
         @conversion_results << UiData::Report::ConversionResult.new(
           UiData::Report::ConversionStatus::ERROR,
           entity.persistent_id.to_s, entity.class.to_s.split('::').last,
           nil, nil, '', e
+        )
+      end
+
+      # An entity type the 4.0 send path doesn't convert (Text, Dimension,
+      # construction geometry, …) -> a WARNING row so nothing drops silently.
+      def report_unsupported(entity)
+        kind = entity.class.to_s.split('::').last
+        @conversion_results << UiData::Report::ConversionResult.new(
+          UiData::Report::ConversionStatus::WARNING,
+          (entity.persistent_id.to_s if entity.respond_to?(:persistent_id)),
+          kind, nil, nil, "#{kind} is not supported yet — skipped"
         )
       end
 
@@ -214,6 +229,8 @@ module SpeckleConnector3
             @pipeline.defines(def_k, geom_k, ord)
             member_tag(member_id, member.layer, geom_k: geom_k)
             ord += 1
+          else
+            report_unsupported(member)
           end
         end
       end
