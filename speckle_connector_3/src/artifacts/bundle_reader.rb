@@ -47,6 +47,7 @@ module SpeckleConnector3
         model = {
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
+          member_tag_paths: {},
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
           instance_meta: instance_meta(props_by_obj),
           levels: {}, units: producer_units(props_by_obj),
@@ -192,6 +193,26 @@ module SpeckleConnector3
 
         objects.each do |oi, object|
           object[:scene_path] = scene_path_for(oi, default_view, memberships, model[:node_meta], props_by_obj[oi] || {})
+        end
+        # Definition-member carrier objects are template metadata, not scene
+        # objects (ENG-8851): a `@speckle.instance_k` stamp hands the tag path to
+        # instance_meta (nested instances), a `@speckle.geometry_k` stamp to
+        # member_tag_paths (member meshes/edges) — and both stay out of
+        # model[:objects].
+        objects.reject! do |oi, object|
+          props = props_by_obj[oi] || {}
+          inst_k = props['@speckle.instance_k']
+          geom_k = props['@speckle.geometry_k']
+          if !inst_k.nil?
+            meta = (model[:instance_meta][inst_k.to_i] ||= {})
+            meta[:scene_path] = object[:scene_path] unless object[:scene_path].empty?
+            true
+          elsif !geom_k.nil?
+            model[:member_tag_paths][geom_k.to_i] = object[:scene_path] unless object[:scene_path].empty?
+            true
+          else
+            false
+          end
         end
         model[:objects] = objects.values
       end

@@ -275,7 +275,11 @@ module SpeckleConnector3
             next if geometry.nil?
 
             material = @material_by_k[model[:material_by_geom][geom_k]]
-            add_geometry(definition.entities, geometry, material, true)
+            created = add_geometry(definition.entities, geometry, material, true)
+            # Member meshes/edges carry their tag as a geometry-K IN_COLLECTION
+            # edge (ENG-8851); restore it so visibility toggles reach nested geometry.
+            tag = member_tag_for(model, geom_k)
+            created.each { |e| e.layer = tag if e.respond_to?(:layer=) } if tag
           end
           @definition_by_k[k] = definition
         end
@@ -308,6 +312,21 @@ module SpeckleConnector3
 
         instance.name = meta[:name].to_s if meta[:name] && !meta[:name].to_s.empty? && instance.respond_to?(:name=)
         apply_dictionaries(instance, meta[:dictionaries])
+        path = meta[:scene_path]
+        return unless path && !path.empty? && instance.respond_to?(:layer=)
+
+        tag = ensure_tag_path(path)
+        instance.layer = tag if tag
+      end
+
+      # Resolves a definition member's tag (ENG-8851): the member's carrier
+      # object joins to its geometry via the `@speckle.geometry_k` stamp, and the
+      # reader hands its resolved scene path over in member_tag_paths.
+      def member_tag_for(model, geom_k)
+        path = model[:member_tag_paths][geom_k]
+        return nil if path.nil? || path.empty?
+
+        ensure_tag_path(path)
       end
 
       # Restores a scene object's name + attributes from its eav properties.

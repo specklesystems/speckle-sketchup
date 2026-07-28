@@ -193,6 +193,7 @@ module SpeckleConnector3
             geom_k = emit_mesh(member_id, member.faces)
             @pipeline.defines(def_k, geom_k, ord)
             bind_material(geom_k, member.material)
+            member_tag(member_id, member.layer, geom_k: geom_k)
             ord += 1
           when Sketchup::ComponentInstance, Sketchup::Group
             proxy = @instance_proxies[member_id]
@@ -202,11 +203,16 @@ module SpeckleConnector3
             inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
             @pipeline.defines_instance(def_k, inst_k, ord)
             bind_material(inst_k, member.material)
-            add_instance_properties(member_id, inst_k, member)
+            # A tagged nested instance gets an object row + IN_COLLECTION, exactly
+            # like a top-level instance (ENG-8851); `force` guarantees the
+            # `@speckle.instance_k` eav stamp receive joins the tag back through.
+            tagged = member_tag(member_id, member.layer)
+            add_instance_properties(member_id, inst_k, member, force: tagged)
             ord += 1
           when Sketchup::Edge
             geom_k = @pipeline.add_geometry(member_id, edge_to_sgeo(member))
             @pipeline.defines(def_k, geom_k, ord)
+            member_tag(member_id, member.layer, geom_k: geom_k)
             ord += 1
           end
         end
@@ -301,11 +307,37 @@ module SpeckleConnector3
       end
 
       def in_collection(obj_k, entity)
-        layer = entity.layer
-        return if layer.nil?
-
-        layer_k = @collection_k_by_layer[layer.persistent_id] ||= collection_k_for_layer(layer)
+        layer_k = layer_collection_k(entity.layer)
         @pipeline.in_collection(obj_k, layer_k, 0) if layer_k
+      end
+
+      def layer_collection_k(layer)
+        return nil if layer.nil?
+
+        @collection_k_by_layer[layer.persistent_id] ||= collection_k_for_layer(layer)
+      end
+
+      # Tag membership for definition content (ENG-8851): a tagged member gets an
+      # object row under its own app id and the standard
+      # IN_COLLECTION(object -> collection) edge, exactly like a top-level
+      # object. For meshes/edges the object joins back to its geometry via an
+      # `@speckle.geometry_k` eav stamp (the `@speckle.instance_k` pattern —
+      # object and geometry indexes are separate id spaces). Default-tag members
+      # emit nothing: receive's default is already Untagged. Returns whether the
+      # member was tagged.
+      def member_tag(app_id, layer, geom_k: nil)
+        return false unless member_tagged?(layer)
+
+        layer_k = layer_collection_k(layer)
+        return false if layer_k.nil?
+
+        @pipeline.in_collection(@pipeline.intern_object(app_id), layer_k, 0)
+        @pipeline.add_properties(app_id, {}, [['@speckle.geometry_k', geom_k]]) unless geom_k.nil?
+        true
+      end
+
+      def member_tagged?(layer)
+        !layer.nil? && !%w[Layer0 Untagged].include?(layer.display_name)
       end
 
       # Resolves (building lazily) the COLLECTION node for an entity's tag, nesting
@@ -354,10 +386,10 @@ module SpeckleConnector3
       # member's own persistent id, with the INSTANCE node's dense id as the join
       # key for receive. Emitted only when there is something to carry, so plain
       # unnamed placements add no eav rows.
-      def add_instance_properties(app_id, inst_k, entity)
+      def add_instance_properties(app_id, inst_k, entity, force: false)
         dicts = entity_dictionaries(entity)
         name = entity.name.to_s
-        return if dicts.empty? && name.empty?
+        return if dicts.empty? && name.empty? && !force
 
         root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceProxy'], ['@speckle.instance_k', inst_k]]
         root << ['name', name] unless name.empty?
