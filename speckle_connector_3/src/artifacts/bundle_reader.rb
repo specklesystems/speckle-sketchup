@@ -251,7 +251,12 @@ module SpeckleConnector3
       def read_geometries(dir, base)
         geom = {}
         skipped = Hash.new(0)
-        Dir.glob(File.join(dir, "#{base}.geometries*.parquet")).each do |path|
+        # No Dir.glob here: `base` is producer-chosen (a file importer uses the source
+        # file's stem — see ENG-8945) and may contain glob metacharacters like `[`.
+        shards = Dir.children(dir)
+                    .select { |n| n.start_with?("#{base}.geometries") && n.end_with?('.parquet') }
+                    .sort.map { |n| File.join(dir, n) }
+        shards.each do |path|
           ParquetSource.read_hashes(path).each do |row|
             content = row['content']
             # The geometries file can carry non-SGEO blobs alongside SGEO — e.g. a Rhino

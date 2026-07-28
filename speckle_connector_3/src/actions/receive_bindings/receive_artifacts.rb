@@ -80,15 +80,26 @@ module SpeckleConnector3
           raise "No artefact files for version #{version_id} (is it a 4.0 / schemaVersion 3 version?)"
         end
 
+        # The bundle's file prefix ("base") is producer-chosen — the connector uses the
+        # pre-allocated versionId, file importers use the source file's stem — so derive
+        # it from the listing instead of assuming versionId (ENG-8945). Only the
+        # `.parquet` tables are the bundle; sidecars like `<versionId>.viewer.dat` are
+        # viewer-only and skipped.
+        files = files.select { |f| f[:name].end_with?('.parquet') }
+        nodes = files.find { |f| f[:name].end_with?('.envelope.nodes.parquet') }
+        raise "No envelope.nodes table in artefact bundle for version #{version_id}" unless nodes
+
+        base = nodes[:name].delete_suffix('.envelope.nodes.parquet')
+
         dir = File.join(Dir.tmpdir, 'speckle', 'receive', version_id)
         converter.wrap_name = [model_card.project_name, model_card.model_name]
                               .reject { |n| n.to_s.empty? }.join(' - ')
         converter.stats.version_id = version_id
-        converter.stats.time(:download) { downloader.download(files, dir) }
+        local_paths = converter.stats.time(:download) { downloader.download(files, dir) }
         converter.stats.set(:bundle_files, files.length)
-        converter.stats.set(:bundle_bytes, Dir.glob(File.join(dir, "#{version_id}.*")).sum { |f| File.size(f) })
+        converter.stats.set(:bundle_bytes, local_paths.sum { |f| File.size(f) })
         puts "  [timing] downloaded #{files.length} artefact files -> #{dir}"
-        converter.receive(dir, version_id)
+        converter.receive(dir, base)
       end
 
       def self.local_dir
