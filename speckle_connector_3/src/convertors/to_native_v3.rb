@@ -39,6 +39,14 @@ module SpeckleConnector3
       # stay distinguishable in the same SketchUp file.
       attr_accessor :wrap_name
 
+      # Stable identity of the receive card ("<projectId>/<modelId>"). Baked
+      # top-level entities are stamped with it so the card's next receive can
+      # erase its previous bake (ENG-8850); nil/empty skips both stamp and erase.
+      attr_accessor :receive_key
+
+      # Attribute dictionary carrying the receive stamp.
+      STAMP_DICT = 'Speckle_Receive'
+
       # @param sketchup_model [Sketchup::Model]
       # @param stats [Artifacts::OpStats, nil] shared stats collector (one is
       #   created when not provided, so headless/test callers stay unchanged)
@@ -56,6 +64,7 @@ module SpeckleConnector3
         @tag_color_by_path = {}
         @wrap_definition = nil
         @wrap_instance = nil
+        @claimed_definition_ids = {}
       end
 
       # Reads a bundle from `dir` (base name `base`) and builds it into the model.
@@ -81,9 +90,17 @@ module SpeckleConnector3
         # own grouping/tags already structure them); only foreign models get the
         # wrapper component. The bundle's meta stamp identifies the producer.
         if model[:produced_by].to_s.match?(/sketchup/i)
+          # Loose bakes are stamped per receive card; erase the card's previous
+          # bake before rebuilding (ENG-8850).
+          @stats.time(:erase_previous) { erase_previous_bake }
           @target = @model.entities
         else
-          @wrap_definition = @model.definitions.add(wrap_name.to_s.empty? ? 'Speckle Model' : wrap_name)
+          # Reuse-and-clear the same-named wrap definition (v2's
+          # project-model-definition pattern), keeping its placed instance so a
+          # user-moved received model stays where they put it.
+          @wrap_definition = claim_definition(wrap_name.to_s.empty? ? 'Speckle Model' : wrap_name)
+          @wrap_instance = @wrap_definition.instances.find { |i| !i.deleted? }
+          @stats.time(:erase_previous) { erase_previous_bake(keep: @wrap_instance) }
           @target = @wrap_definition.entities
         end
         @stats.time(:materials) { build_materials(model[:materials]) }
@@ -93,12 +110,75 @@ module SpeckleConnector3
         @stats.time(:camera_views) { build_camera_views(model) }
         # The wrapper is filled first, then placed once at the origin (v2's
         # project-model-definition pattern).
-        @wrap_instance = @model.entities.add_instance(@wrap_definition, Geom::Transformation.new) if @wrap_definition
+        if @wrap_definition
+          @wrap_instance ||= @model.entities.add_instance(@wrap_definition, Geom::Transformation.new)
+          stamp(@wrap_instance, 'wrap')
+        else
+          @created_top_level.each { |e| stamp(e, 'loose') }
+        end
         @stats.add(:objects, model[:objects].length)
         model[:objects].length
       end
 
       private
+
+      # ── re-receive: erase previous bake (ENG-8850) ────────────────────
+
+      def stamp(entity, kind)
+        return if receive_key.to_s.empty? || entity.nil? || entity.deleted?
+
+        entity.set_attribute(STAMP_DICT, 'receive_key', receive_key)
+        entity.set_attribute(STAMP_DICT, 'kind', kind)
+      end
+
+      # Erases every top-level entity this receive card baked previously (its
+      # stamp matches `receive_key`), except `keep` (the reused wrap instance).
+      # Stamped faces pull their boundary edges along when no surviving face
+      # still uses them (loose meshes only track faces; edges are implicit).
+      # A stale wrap instance under a different definition (project/model was
+      # renamed) also drops its now-orphaned definition.
+      def erase_previous_bake(keep: nil)
+        return if receive_key.to_s.empty?
+
+        stale = @model.entities.select do |e|
+          !e.deleted? && !e.equal?(keep) && e.get_attribute(STAMP_DICT, 'receive_key') == receive_key
+        end
+        return if stale.empty?
+
+        faces = stale.grep(Sketchup::Face)
+        stale_face_ids = {}
+        faces.each { |f| stale_face_ids[f.entityID] = true }
+        orphan_edges = faces.flat_map(&:edges).uniq.select do |edge|
+          edge.faces.all? { |f| stale_face_ids.key?(f.entityID) }
+        end
+        orphan_definitions = stale
+                             .select { |e| e.is_a?(Sketchup::ComponentInstance) && e.get_attribute(STAMP_DICT, 'kind') == 'wrap' }
+                             .map(&:definition).uniq - [@wrap_definition]
+
+        @model.entities.erase_entities((stale + orphan_edges).uniq)
+        if @model.definitions.respond_to?(:remove)
+          orphan_definitions.each { |d| @model.definitions.remove(d) if d.valid? && d.instances.empty? }
+        end
+        @stats.add(:erased_previous, stale.length)
+      end
+
+      # Reuses an existing same-named definition by clearing and refilling it
+      # (v2 parity — {SpeckleObjects::Other::BlockDefinition.to_native}), so
+      # re-receives don't multiply uniquified copies (`Chair#1`, `Chair#2`, …).
+      # Each definition is claimed at most once per receive; a same-named second
+      # claim falls through to `definitions.add`, which uniquifies.
+      def claim_definition(name)
+        existing = @model.definitions[name]
+        if existing && !existing.group? && !existing.image? && !@claimed_definition_ids.key?(existing.entityID)
+          existing.entities.clear!
+          @claimed_definition_ids[existing.entityID] = true
+          return existing
+        end
+
+        definition = @model.definitions.add(name)
+        @claimed_definition_ids[definition.entityID] = true
+        definition
+      end
 
       # ── tags / folders (from the default scene-view path) ─────────────
 
@@ -125,8 +205,11 @@ module SpeckleConnector3
           path << name
           key = path.join(" ")
           parent = (@folder_by_path[key] ||= begin
-            folder = @model.layers.add_folder(name)
-            folder.folder = parent if parent && folder.respond_to?(:folder=)
+            # Reuse the same-named folder at this nesting level so re-receives
+            # don't duplicate the folder tree (ENG-8850).
+            siblings = parent.respond_to?(:folders) ? parent.folders : @model.layers.folders
+            folder = siblings.find { |f| f.display_name == name } || @model.layers.add_folder(name)
+            folder.folder = parent if parent && folder.respond_to?(:folder=) && folder.folder != parent
             folder
           end)
         end
@@ -185,7 +268,7 @@ module SpeckleConnector3
 
       def build_definitions(model)
         model[:definitions].each do |k, info|
-          definition = @model.definitions.add(info[:name] || "speckle_def_#{k}")
+          definition = claim_definition(info[:name] || "speckle_def_#{k}")
           apply_definition_meta(definition, model[:definition_meta][k] || model[:definition_meta][info[:name]])
           info[:geometry_ks].each do |geom_k|
             geometry = model[:geometries][geom_k]

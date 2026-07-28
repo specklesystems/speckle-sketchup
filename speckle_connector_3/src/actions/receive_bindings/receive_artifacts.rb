@@ -94,6 +94,7 @@ module SpeckleConnector3
         dir = File.join(Dir.tmpdir, 'speckle', 'receive', version_id)
         converter.wrap_name = [model_card.project_name, model_card.model_name]
                               .reject { |n| n.to_s.empty? }.join(' - ')
+        converter.receive_key = "#{model_card.project_id}/#{model_card.model_id}"
         converter.stats.version_id = version_id
         local_paths = converter.stats.time(:download) { downloader.download(files, dir) }
         converter.stats.set(:bundle_files, files.length)
