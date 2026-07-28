@@ -141,6 +141,10 @@ module SpeckleConnector3
         def_k = @pipeline.add_definition(entity.definition.persistent_id.to_s, entity.definition.name)
         inst_k = @pipeline.add_instance(app_id, def_k, proxy[:transform], proxy[:units])
         @pipeline.display_instance(obj_k, inst_k, 0)
+        # Instance-painted material (ENG-8849): default-material faces inside the
+        # definition inherit it, so it must ride on the INSTANCE node, not the
+        # shared geometry (same definition can be painted red and blue per placement).
+        bind_material(inst_k, entity.material)
         add_color(obj_k, entity)
         @object_count += 1
       end
@@ -197,6 +201,7 @@ module SpeckleConnector3
             nested_def_k = @pipeline.add_definition(member.definition.persistent_id.to_s, member.definition.name)
             inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
             @pipeline.defines_instance(def_k, inst_k, ord)
+            bind_material(inst_k, member.material)
             add_instance_properties(member_id, inst_k, member)
             ord += 1
           when Sketchup::Edge

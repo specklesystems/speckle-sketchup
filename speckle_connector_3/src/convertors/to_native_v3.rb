@@ -282,7 +282,7 @@ module SpeckleConnector3
         # nested instances (DEFINES_INSTANCE) — definitions exist now, so wire placements
         model[:definitions].each do |k, info|
           info[:instance_ks].each do |inst_k|
-            instance = place_instance(@definition_by_k[k].entities, model[:instances][inst_k])
+            instance = place_instance(@definition_by_k[k].entities, model, inst_k)
             apply_instance_meta(instance, model[:instance_meta][inst_k])
           end
         end
@@ -379,7 +379,7 @@ module SpeckleConnector3
         created =
           if obj[:display_instances].any?
             obj[:display_instances].map do |ik|
-              instance = place_instance(@target, model[:instances][ik])
+              instance = place_instance(@target, model, ik)
               apply_object_properties(instance, obj)
               instance
             end
@@ -424,14 +424,21 @@ module SpeckleConnector3
         end
       end
 
-      def place_instance(entities, instance)
+      def place_instance(entities, model, inst_k)
+        instance = model[:instances][inst_k]
         return nil if instance.nil?
 
         definition = @definition_by_k[instance[:def_ref]]
         return nil if definition.nil?
 
         @stats.add(:instances)
-        entities.add_instance(definition, TRANSFORM.to_native(instance[:transform], instance[:units]))
+        placed = entities.add_instance(definition, TRANSFORM.to_native(instance[:transform], instance[:units]))
+        # Instance-painted material (ENG-8849): HAS_MATERIAL edges sourced from the
+        # INSTANCE node land in material_by_geom keyed by inst_k; default-material
+        # faces inside the definition then inherit it natively.
+        material = @material_by_k[model[:material_by_geom][inst_k]]
+        placed.material = material if material
+        placed
       end
 
       # ── levels ────────────────────────────────────────────────────────
