@@ -2,6 +2,7 @@
 
 require_relative 'parquet/parquet_table_writer'
 require_relative 'vocab'
+require_relative '../constants/app_constants'
 
 module SpeckleConnector3
   module Artifacts
@@ -102,7 +103,9 @@ module SpeckleConnector3
           [{ name: 'schema_version', type: :int32, optional: false },
            { name: 'produced_by', type: :string, optional: true }]
         )
-        meta.add_row(SCHEMA_VERSION, 'speckle-sketchup EnvelopeWriter')
+        # meta.produced_by carries the host-app slug (not a writer class name) — consumers
+        # (e.g. `to_native_v3`) branch on it to detect same-app round-trips.
+        meta.add_row(SCHEMA_VERSION, HOST_APP_SLUG)
         meta.complete
 
         rt = Parquet::ParquetTableWriter.new(

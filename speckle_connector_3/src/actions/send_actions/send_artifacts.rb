@@ -17,8 +17,6 @@ module SpeckleConnector3
     # shows 'version created' + the View CTA only when the server reports success.
     # The alternative to {Actions::Send} (JSON serialize + sendBatchViaBrowser).
     class SendArtifacts < Action
-      SOURCE_APP_SLUG = 'sketchup'
-
       # When true, Send only EXTRACTS the parquet bundle to a local folder
       # (~/Documents/speckle-skp-test) and skips the upload — so a real .skp can
       # be validated through ToSpeckleV3 without a v2 server. Set true to debug
