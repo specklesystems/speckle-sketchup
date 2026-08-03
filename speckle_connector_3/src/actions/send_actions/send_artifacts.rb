@@ -7,25 +7,31 @@ require_relative '../../operations/send_artifacts'
 
 module SpeckleConnector3
   module Actions
-    # Speckle 4.0 send: create a client-side model ingestion, extract the parquet
-    # artefact bundle from the selected entities (ToSpeckleV3, single pass), and
-    # upload it via the v2 data endpoints — all Ruby-side, no JS round-trip. The
-    # alternative to {Actions::Send} (the JSON serialize + sendBatchViaBrowser path).
+    # Speckle 4.0 send: extract the parquet artefact bundle from the selected
+    # entities (ToSpeckleV3, single pass) and upload it via the v2 data endpoints.
+    # The ingestion is created by the DUI before the send reaches Ruby (its id +
+    # pre-allocated versionId arrive as arguments) — one ingestion per publish,
+    # owned by the DUI. After the upload the SERVER creates the version (for
+    # .dat-less bundles only once its datgen job built the viewer .dat); the DUI
+    # subscribes to the ingestion (via the ingestionId in setModelSendResult) and
+    # shows 'version created' + the View CTA only when the server reports success.
+    # The alternative to {Actions::Send} (JSON serialize + sendBatchViaBrowser).
     class SendArtifacts < Action
       SOURCE_APP_SLUG = 'sketchup'
 
       # When true, Send only EXTRACTS the parquet bundle to a local folder
-      # (~/Documents/speckle-skp-test) and skips ingestion-create + upload — so a
-      # real .skp can be validated through ToSpeckleV3 without a v2 server. Set
-      # true to debug extraction locally; false does the full create -> extract ->
-      # upload -> finalize (the version is created by the v2 /uploads/complete call).
+      # (~/Documents/speckle-skp-test) and skips the upload — so a real .skp can
+      # be validated through ToSpeckleV3 without a v2 server. Set true to debug
+      # extraction locally; false does the full extract -> upload flow.
       EXTRACT_ONLY = false
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
       # @param resolve_id [String] the JS promise id to resolve
       # @param model_card_id [String] the model card being sent
+      # @param ingestion_id [String, nil] the DUI-created ingestion for this publish
+      # @param version_id [String, nil] the pre-allocated version id of that ingestion
       # @return [States::State] the new updated state object
-      def self.update_state(state, resolve_id, model_card_id)
+      def self.update_state(state, resolve_id, model_card_id, ingestion_id = nil, version_id = nil)
         t_start = Time.now.to_f
         state.sketchup_state.sketchup_model.active_path = nil
         units = Converters::SKETCHUP_UNITS[state.sketchup_state.length_units]
@@ -54,38 +60,46 @@ module SpeckleConnector3
           return state.with_add_queue_js_command('sendArtifacts', "sendBinding.receiveResponse('#{resolve_id}')")
         end
 
+        if ingestion_id.to_s.empty? || version_id.to_s.empty?
+          return send_error(state, resolve_id, model_card_id,
+                            'No ingestion received from the DUI — the 4.0 artefact send requires a DUI/server with ingestion pre-allocation support.')
+        end
+
         account = Accounts.get_account_by_id(model_card.account_id)
         params = {
           server_url: account['serverInfo']['url'],
           project_id: model_card.project_id,
           model_id: model_card.model_id,
           token: account['token'],
-          source_app_slug: SOURCE_APP_SLUG,
-          source_app_version: SpeckleConnector3::CONNECTOR_VERSION
+          ingestion_id: ingestion_id,
+          version_id: version_id
         }
 
         progress(state, model_card_id, 'Extracting + uploading artefacts')
         begin
-          result = Operations::SendArtifacts.send_bundle(entities, units, params,
-                                                         state.user_state.model_preferences)
+          result = Operations::SendArtifacts.upload_bundle(entities, units, params,
+                                                           state.user_state.model_preferences)
         rescue StandardError => e
           puts "Speckle 4.0 artefact send FAILED: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}"
           return send_error(state, resolve_id, model_card_id, e.message)
         end
-        version_id = result[:version_id]
-        puts "Speckle 4.0 artefact send complete — version #{version_id} (project #{model_card.project_id})"
+        puts "Speckle 4.0 artefact upload done — version #{version_id} (project #{model_card.project_id})"
         puts "Speckle 4.0 TOTAL time: #{(Time.now.to_f - t_start).round(2)}s"
 
-        state = send_result(state, model_card_id, version_id, result[:conversion_results])
+        state = send_result(state, model_card_id, version_id, result[:conversion_results],
+                            result[:ingestion_id])
         resolve_js_script = "sendBinding.receiveResponse('#{resolve_id}')"
         state.with_add_queue_js_command('sendArtifacts', resolve_js_script)
       end
 
-      # Emits the DUI send-complete event that clears the card progress and shows the
-      # created version (no ingestionId -> the legacy/direct path: sets
-      # latestCreatedVersionId + clears progress, no ingestion-status subscription).
-      def self.send_result(state, model_card_id, version_id, conversion_results = [])
+      # Emits the DUI send-complete event. With an ingestionId the DUI subscribes
+      # to the ingestion and shows 'version created' + the View CTA only once the
+      # server reports success (the version does not exist until then — the server
+      # creates it, possibly after its datgen job). Without one (EXTRACT_ONLY
+      # debug path) the DUI shows the result immediately.
+      def self.send_result(state, model_card_id, version_id, conversion_results = [], ingestion_id = nil)
         args = { modelCardId: model_card_id, versionId: version_id, sendConversionResults: conversion_results || [] }
+        args[:ingestionId] = ingestion_id unless ingestion_id.to_s.empty?
         state.with_add_queue_js_command('setModelSendResult', "sendBinding.emit('setModelSendResult', #{args.to_json})")
       end
 
