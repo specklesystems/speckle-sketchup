@@ -8,12 +8,15 @@ module SpeckleConnector3
   module Artifacts
     # Uploads an already-built artefact bundle via the Speckle v2 data endpoints —
     # a pure-Ruby mirror of the SDK `ArtifactPipeline.UploadFilesAsync`:
-    # sign -> presigned PUT per file -> complete (which creates the version).
+    # sign -> presigned PUT per file -> complete. The `complete` call is an
+    # upload-finalization signal, NOT version creation: the server creates the
+    # version itself once the artefact set is viewer-consumable (for bundles
+    # without a viewer .dat that happens later, after the server-side datgen job).
+    # Clients learn the version exists via the ingestion status subscription.
     #
     # The bundle is filename-keyed and count-agnostic: the server signs one PUT per
-    # basename under versions/{versionId}/{basename}, and `complete` commits with
-    # the pre-allocated versionId. The ingestion + versionId are created upstream
-    # (the JS DUI3 frontend) and passed in here.
+    # basename under versions/{versionId}/{basename}. The ingestion + versionId are
+    # created upstream (the JS DUI3 frontend) and passed in here.
     class ArtifactUploader
       # Concurrent PUTs per file (IO-bound; presigned URLs are independent, so
       # ordering doesn't matter — mirrors ArtifactDownloader's queue).
@@ -93,6 +96,8 @@ module SpeckleConnector3
         post_json(endpoint('sign'), { files: file_names })
       end
 
+      # Signals "all files uploaded" with the etags for integrity verification.
+      # The server takes it from here (creates the version now, or after datgen).
       def complete(etags, root_id, total_children_count)
         resp = post_json(endpoint('complete'), { etags: etags, rootId: root_id, totalChildrenCount: total_children_count })
         resp.is_a?(Hash) ? resp['versionId'] : nil

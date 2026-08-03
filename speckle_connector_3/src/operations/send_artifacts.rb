@@ -4,44 +4,37 @@ require 'tmpdir'
 require 'fileutils'
 require_relative '../convertors/to_speckle_v3'
 require_relative '../artifacts/artifact_uploader'
-require_relative '../artifacts/model_ingestion_client'
 require_relative '../artifacts/op_stats'
 
 module SpeckleConnector3
   module Operations
-    # Orchestrates a Speckle 4.0 artefact send end-to-end (Ruby-side, no JS):
-    # create a client-side model ingestion (pre-allocates the versionId) -> extract
-    # the parquet bundle from the selected entities (ToSpeckleV3, single pass to disk)
-    # -> upload it via the v2 data endpoints. Mirrors speckle-oda's RevitModelExtractor
-    # finalize tail (Complete -> glob {versionId}.*.parquet -> UploadFilesAsync).
+    # Speckle 4.0 artefact send, Ruby-side half: extract the parquet bundle from
+    # the selected entities (ToSpeckleV3, single pass to disk) and upload it via
+    # the v2 data endpoints (sign -> PUT -> complete). The ingestion is created by
+    # the DUI (which also holds the pre-allocated versionId) BEFORE the send
+    # reaches Ruby — one ingestion per publish, owned by the DUI. Ruby never talks
+    # to the ingestion GraphQL API; `complete` here only signals "upload done" —
+    # the SERVER creates the version (after its datgen job for .dat-less bundles),
+    # and the DUI detects that via the ingestion status subscription.
     module SendArtifacts
       module_function
 
       # @param entities [Array<Sketchup::Entity>] the selected top-level entities
       # @param units [String] speckle model units
       # @param params [Hash] { server_url:, project_id:, model_id:, token:,
-      #   source_app_slug:, source_app_version: }
+      #   ingestion_id:, version_id: } — ingestion_id/version_id come from the
+      #   DUI-created ingestion
       # @param preferences [Hash, nil] model preferences (attribute-send settings)
-      # @return [Hash] { version_id:, conversion_results: } — the committed version
-      #   id + one DUI report row per top-level object
-      def send_bundle(entities, units, params, preferences = nil)
+      # @return [Hash] { version_id:, ingestion_id:, conversion_results: } — the
+      #   pre-allocated version id (the version itself may not exist yet; the DUI
+      #   tracks the ingestion until the server creates it), the ingestion id, and
+      #   one DUI report row per top-level object
+      def upload_bundle(entities, units, params, preferences = nil)
         stats = Artifacts::OpStats.new('send')
-        t0 = Time.now.to_f
-        client = Artifacts::ModelIngestionClient.new(params.fetch(:server_url), params.fetch(:token))
-        ingestion = stats.time(:ingestion_create) do
-          client.create(
-            params.fetch(:project_id), params.fetch(:model_id),
-            params.fetch(:source_app_slug), params.fetch(:source_app_version)
-          )
-        end
-        ingestion_id = ingestion[:id]
-        version_id = ingestion[:version_id]
-        if version_id.nil? || version_id.to_s.empty?
-          raise 'Server did not pre-allocate a versionId on ingestion create (needs the v2 data endpoints).'
-        end
+        ingestion_id = params.fetch(:ingestion_id)
+        version_id = params.fetch(:version_id)
         stats.version_id = version_id
         t1 = Time.now.to_f
-        puts "  [timing] ingestion create: #{(t1 - t0).round(2)}s (ingestion #{ingestion_id}, version #{version_id})"
 
         output_dir = File.join(Dir.tmpdir, 'speckle', 'artifacts', version_id)
         FileUtils.mkdir_p(output_dir)
@@ -62,7 +55,11 @@ module SpeckleConnector3
         t3 = Time.now.to_f
         puts "  [timing] upload + finalize: #{(t3 - t2).round(2)}s (#{bundle.size} files)"
         stats.report
-        { version_id: version_id, conversion_results: extractor.conversion_results }
+        {
+          version_id: version_id,
+          ingestion_id: ingestion_id,
+          conversion_results: extractor.conversion_results
+        }
       end
 
       # Extract-only (no server): runs the single-pass extractor and writes the

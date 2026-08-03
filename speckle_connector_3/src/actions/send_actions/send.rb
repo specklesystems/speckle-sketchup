@@ -21,9 +21,13 @@ module SpeckleConnector3
       USE_ARTIFACT_PIPELINE = true
 
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
+      # @param ingestion_id [String, nil] the DUI-created ingestion (4.0 artifact path)
+      # @param version_id [String, nil] the pre-allocated version id of that ingestion
       # @return [States::State] the new updated state object
-      def self.update_state(state, resolve_id, model_card_id)
-        return SendArtifacts.update_state(state, resolve_id, model_card_id) if USE_ARTIFACT_PIPELINE
+      def self.update_state(state, resolve_id, model_card_id, ingestion_id = nil, version_id = nil)
+        if USE_ARTIFACT_PIPELINE
+          return SendArtifacts.update_state(state, resolve_id, model_card_id, ingestion_id, version_id)
+        end
 
         # Set active path always to model to be safe always. Later we can address it
         start_time = Time.now.to_f
