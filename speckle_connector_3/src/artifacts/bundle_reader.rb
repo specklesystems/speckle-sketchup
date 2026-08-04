@@ -41,6 +41,7 @@ module SpeckleConnector3
         object_app = eav.call('objects').to_h { |r| [r['object_index'], r['application_id']] }
         paths = eav.call('paths').to_h { |r| [r['path_index'], r['path']] }
         props_by_obj = group_eav(eav.call('eav'), paths)
+        props_by_type = group_eav(read_optional(dir, "#{base}.eav.type_eav.parquet"), paths, key: 'type_index')
         geometries = read_geometries(dir, base)
         default_view = read_default_scene_view(dir, base)
 
@@ -48,7 +49,7 @@ module SpeckleConnector3
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
           member_tag_paths: {},
-          default_scene_view: default_view, definition_meta: definition_meta(props_by_obj),
+          default_scene_view: default_view, definition_meta: definition_meta(props_by_obj, props_by_type),
           instance_meta: instance_meta(props_by_obj),
           levels: {}, units: producer_units(props_by_obj),
           produced_by: read_produced_by(env),
@@ -59,21 +60,28 @@ module SpeckleConnector3
         model
       end
 
-      # Definition-level metadata (ENG-8842): an eav row-set keyed by the
-      # definition's source persistent id. Joined back by the DEFINITION node's
-      # dense id (the producer stamps it as `@speckle.definition_k`); bundles from
-      # before that stamp fall back to the name join (unique in SketchUp).
+      # Definition-level metadata (ENG-8842): a type_eav row-set keyed by the
+      # definition's persistent id (its type_key) — a definition is a TYPE, not
+      # an interactable scene object, so it never appears in the objects table.
+      # Bundles from before the type split carried the same row-set in eav as a
+      # pseudo-object; both sources are scanned (legacy first, so type rows win)
+      # and old already-published models keep receiving. Joined back by the
+      # DEFINITION node's dense id (the producer stamps it as
+      # `@speckle.definition_k`); bundles from before that stamp fall back to
+      # the name join (unique in SketchUp).
       # Returns {node_k | name -> {description, dictionaries}}.
-      def definition_meta(props_by_obj)
+      def definition_meta(props_by_obj, props_by_type = {})
         meta = {}
-        props_by_obj.each_value do |props|
-          next unless props['speckle_type'] == DEFINITION_PROXY_TYPE
+        [props_by_obj, props_by_type].each do |source|
+          source.each_value do |props|
+            next unless props['speckle_type'] == DEFINITION_PROXY_TYPE
 
-          entry = { description: props['description'], dictionaries: unflatten_dictionaries(props) }
-          def_k = props['@speckle.definition_k']
-          name = props['name']
-          meta[def_k.to_i] = entry unless def_k.nil?
-          meta[name] = entry unless name.nil? || name.to_s.empty?
+            entry = { description: props['description'], dictionaries: unflatten_dictionaries(props) }
+            def_k = props['@speckle.definition_k']
+            name = props['name']
+            meta[def_k.to_i] = entry unless def_k.nil?
+            meta[name] = entry unless name.nil? || name.to_s.empty?
+          end
         end
         meta
       end
@@ -305,13 +313,20 @@ module SpeckleConnector3
       # description/name crashes the SketchUp setters.
       STRING_PATHS = %w[name description speckle_type units layer].freeze
 
-      def group_eav(rows, paths)
-        by_obj = Hash.new { |h, k| h[k] = {} }
+      def group_eav(rows, paths, key: 'object_index')
+        by_key = Hash.new { |h, k| h[k] = {} }
         rows.each do |row|
           path = paths[row['path_index']]
-          by_obj[row['object_index']][path] = STRING_PATHS.include?(path) ? string_value(row) : eav_value(row)
+          by_key[row[key]][path] = STRING_PATHS.include?(path) ? string_value(row) : eav_value(row)
         end
-        by_obj
+        by_key
+      end
+
+      # Reads an eav table a foreign producer may not ship (e.g. type_eav) —
+      # an absent file is an empty table, not an error.
+      def read_optional(dir, filename)
+        path = File.join(dir, filename)
+        File.exist?(path) ? ParquetSource.read_hashes(path) : []
       end
 
       def eav_value(row)

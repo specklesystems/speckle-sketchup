@@ -155,14 +155,16 @@ module SpeckleConnector3
         end
       end
 
-      # ENG-8842: definition description + dictionaries ride the eav table keyed by
-      # the definition id and come back as definition_meta — joined by the stamped
-      # definition node k, with the name join kept for pre-stamp bundles.
+      # ENG-8842: definition description + dictionaries ride the TYPE tables keyed
+      # by the definition id (its type_key) and come back as definition_meta —
+      # joined by the stamped definition node k, with the name join kept for
+      # pre-stamp bundles. Definitions are types, not scene objects: the objects
+      # table stays empty.
       def test_definition_metadata_round_trips
         Dir.mktmpdir('speckle-artifacts') do |dir|
           base = 'ver1'
           p = ObjectsArtifactPipeline.new(dir, base)
-          p.add_properties(
+          p.add_type_properties(
             'def-42', { 'Classifier' => { 'code' => 'XX-1' } },
             [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Teddy'],
              ['description', 'A soft bear'], ['@speckle.definition_k', 3]]
@@ -174,6 +176,65 @@ module SpeckleConnector3
           assert_same(meta['Teddy'], meta[3]) # one entry, both join keys
           assert_equal('A soft bear', meta[3][:description])
           assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta[3][:dictionaries])
+          assert_empty(ParquetSource.read_hashes(File.join(dir, "#{base}.eav.objects.parquet")))
+        end
+      end
+
+      # Pre-type-split bundles carried definition metadata as an eav pseudo-object
+      # row-set — those already-published models must keep resolving.
+      def test_legacy_eav_keyed_definition_metadata_still_resolves
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_properties(
+            'def-42', { 'Classifier' => { 'code' => 'XX-1' } },
+            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Teddy'],
+             ['description', 'A soft bear'], ['@speckle.definition_k', 3]]
+          )
+          p.complete
+
+          meta = BundleReader.read(dir, base)[:definition_meta]
+          assert_equal('A soft bear', meta[3][:description])
+          assert_equal({ 'Classifier' => { 'code' => 'XX-1' } }, meta[3][:dictionaries])
+        end
+      end
+
+      # The full star schema: placements link through object_type to the shared
+      # type_eav row-set, written exactly once however many placements (and
+      # add_type_properties calls) there are — and the link order is free: objects
+      # may link before the type's rows land (entity pass vs post-loop).
+      def test_definition_attributes_ride_type_tables
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          root = [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Door-A'],
+                  ['@speckle.definition_k', 5]]
+          p.intern_object('inst-201')
+          p.add_object_type('inst-201', 'def-100') # link BEFORE rows exist
+          p.intern_object('inst-202')
+          p.add_object_type('inst-202', 'def-100')
+          p.add_type_properties('def-100', { 'props' => { 'height' => 2100 } }, root)
+          p.add_type_properties('def-100', { 'props' => { 'height' => 2100 } }, root) # no-op
+          p.complete
+
+          read = ->(t) { ParquetSource.read_hashes(File.join(dir, "#{base}.eav.#{t}.parquet")) }
+          assert_equal(%w[inst-201 inst-202], read.call('objects').map { |r| r['application_id'] }.sort)
+
+          types = read.call('types')
+          assert_equal(['def-100'], types.map { |r| r['type_key'] })
+          type_index = types.first['type_index']
+
+          links = read.call('object_type')
+          assert_equal([type_index] * 2, links.map { |r| r['type_index'] })
+          assert_equal(read.call('objects').map { |r| r['object_index'] }.sort,
+                       links.map { |r| r['object_index'] }.sort)
+
+          type_rows = read.call('type_eav')
+          assert_equal(4, type_rows.length, 'type rows must be written exactly once')
+          assert(type_rows.all? { |r| r['type_index'] == type_index })
+
+          meta = BundleReader.read(dir, base)[:definition_meta]
+          assert_equal({ 'props' => { 'height' => 2100.0 } }, meta[5][:dictionaries])
         end
       end
 
@@ -184,7 +245,7 @@ module SpeckleConnector3
         Dir.mktmpdir('speckle-artifacts') do |dir|
           base = 'ver1'
           p = ObjectsArtifactPipeline.new(dir, base)
-          p.add_properties(
+          p.add_type_properties(
             'def-1', {},
             [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', '101'],
              ['description', '1000'], ['@speckle.definition_k', 3]]

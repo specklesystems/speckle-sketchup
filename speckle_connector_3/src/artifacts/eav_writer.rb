@@ -54,6 +54,7 @@ module SpeckleConnector3
         @object_index = IdInterner.new
         @path_index = IdInterner.new
         @type_index = IdInterner.new
+        @type_rows_written = {}
         @completed = false
       end
 
@@ -76,20 +77,36 @@ module SpeckleConnector3
         end
       end
 
-      # Links an object to its type and writes that type's params ONCE (deduped).
-      # `type_rows` is yielded only on the type's first sight.
-      def add_type(application_id, type_key)
-        is_new, type_index = @type_index.get_or_add(type_key)
-        if is_new
-          @types.add_row(type_index, type_key)
-          yield.each do |row|
-            @type_eav.add_row(
-              type_index, get_or_add_path(row.path),
-              row.value_text, row.value_num, boolean_value(row), row.unit, row.internal_definition_name
-            )
-          end
+      # Interns a type_key to its dense type_index (writes the dictionary row on
+      # first sight). Types are NOT objects: they never touch the objects table.
+      def get_or_add_type(type_key)
+        is_new, idx = @type_index.get_or_add(type_key)
+        @types.add_row(idx, type_key) if is_new
+        idx
+      end
+
+      # Writes a type's property rows ONCE per type_key, independent of interning
+      # order — an `add_object_type` link may have interned the type long before
+      # its rows arrive (objects stream during the entity pass, type properties
+      # post-loop). Later calls for the same type_key are no-ops.
+      def add_type_rows(type_key, rows)
+        type_index = get_or_add_type(type_key)
+        return type_index if @type_rows_written.key?(type_index)
+
+        @type_rows_written[type_index] = true
+        rows.each do |row|
+          @type_eav.add_row(
+            type_index, get_or_add_path(row.path),
+            row.value_text, row.value_num, boolean_value(row), row.unit, row.internal_definition_name
+          )
         end
-        @object_type.add_row(get_or_add_object(application_id), type_index)
+        type_index
+      end
+
+      # Links an object to its type (interning both sides) — the star-schema join
+      # edge consumers walk as objects -> object_type -> type_eav.
+      def add_object_type(application_id, type_key)
+        @object_type.add_row(get_or_add_object(application_id), get_or_add_type(type_key))
       end
 
       def complete

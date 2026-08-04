@@ -40,10 +40,25 @@ module SpeckleConnector3
       # Flattens an object's property tree into eav, keyed by applicationId.
       # @param properties [Hash] nested property dictionary (geometry excluded)
       # @param root_scalars [Array<Array(String,Object)>] bare top-level labels
-      # @param type_key [String, nil] reserved (SketchUp has no type-parameter split)
-      def add_properties(application_id, properties, root_scalars = [], _type_key = nil)
+      def add_properties(application_id, properties, root_scalars = [])
         rows = EavExtraction.flatten_properties(properties, root_scalars, excluded: @excluded)
         @eav.add_rows(application_id, rows)
+      end
+
+      # Flattens a TYPE's property tree into type_eav, keyed by type_key.
+      # SketchUp's "type" is the component definition: attributes shared by every
+      # placement live here (written once per type_key, later calls no-op), and
+      # the definition never enters the objects table — it is not an interactable
+      # scene object. Returns the dense type_index.
+      def add_type_properties(type_key, properties, root_scalars = [])
+        rows = EavExtraction.flatten_properties(properties, root_scalars, excluded: @excluded)
+        @eav.add_type_rows(type_key, rows)
+      end
+
+      # Links an object to its type in object_type (objects -> object_type ->
+      # type_eav, the standard star-schema join).
+      def add_object_type(application_id, type_key)
+        @eav.add_object_type(application_id, type_key)
       end
 
       # ── geometry namespace ────────────────────────────────────────────
