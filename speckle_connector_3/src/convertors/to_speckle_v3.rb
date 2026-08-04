@@ -25,8 +25,10 @@ module SpeckleConnector3
     # not build a Base tree, chunk, hash, or batch.
     #
     # SketchUp's distinguishing axes vs. oda's single-container model: the tag
-    # (layer) folder tree -> nested COLLECTION nodes + IN_COLLECTION, layer colours
-    # -> COLOR nodes + HAS_COLOR, and component instancing -> DEFINITION/INSTANCE.
+    # (layer) folder tree -> nested COLLECTION nodes + IN_COLLECTION (each tag
+    # carries its colour on the CONTAINER node's argb — SketchUp has no object- or
+    # instance-level colour, so no HAS_COLOR edges are emitted), and component
+    # instancing -> DEFINITION/INSTANCE.
     class ToSpeckleV3
       ART = SpeckleConnector3::Artifacts
       SOG = SpeckleConnector3::SpeckleObjects::Geometry
@@ -63,7 +65,6 @@ module SpeckleConnector3
         # the folder-path walk, colour conversion, and render-material conversion
         # run once per layer/material instead of once per entity.
         @collection_k_by_layer = {}
-        @color_int_by_layer = {}
         @material_k_by_material = {}
       end
 
@@ -164,8 +165,7 @@ module SpeckleConnector3
         # Instance-painted material (ENG-8849): default-material faces inside the
         # definition inherit it, so it must ride on the INSTANCE node, not the
         # shared geometry (same definition can be painted red and blue per placement).
-        bind_material(inst_k, entity.material)
-        add_color(obj_k, entity)
+        bind_material(inst_k, entity.material, instance: true)
         @object_count += 1
       end
 
@@ -181,7 +181,6 @@ module SpeckleConnector3
         geom_k = emit_mesh(app_id, [face])
         @pipeline.display(obj_k, geom_k, 0)
         bind_material(geom_k, face.material || face.back_material)
-        add_color(obj_k, face)
         @object_count += 1
       end
 
@@ -194,7 +193,6 @@ module SpeckleConnector3
 
         geom_k = @pipeline.add_geometry(app_id, edge_to_sgeo(edge))
         @pipeline.display(obj_k, geom_k, 0)
-        add_color(obj_k, edge)
         @object_count += 1
       end
 
@@ -222,7 +220,7 @@ module SpeckleConnector3
             nested_def_k = @pipeline.add_definition(member.definition.persistent_id.to_s, member.definition.name)
             inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
             @pipeline.defines_instance(def_k, inst_k, ord)
-            bind_material(inst_k, member.material)
+            bind_material(inst_k, member.material, instance: true)
             # A tagged nested instance gets an object row + IN_COLLECTION, exactly
             # like a top-level instance (ENG-8851); `force` guarantees the
             # `@speckle.instance_k` eav stamp receive joins the tag back through.
@@ -309,23 +307,16 @@ module SpeckleConnector3
 
       # ── materials / colours / collections / properties ────────────────
 
-      def bind_material(geom_k, material)
+      # `instance: true` marks placement painting (src is an INSTANCE node K, not
+      # a geometry K) — rides the rel's ord as the namespace discriminator.
+      def bind_material(src_k, material, instance: false)
         return if material.nil?
 
         mat_k = @material_k_by_material[material.persistent_id] ||= begin
           rm = SOO::RenderMaterial.from_material(material)
           @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
         end
-        @pipeline.has_material(geom_k, mat_k)
-      end
-
-      # Binds the object to its tag (layer) colour — SketchUp's "colour by tag".
-      def add_color(obj_k, entity)
-        layer = entity.layer
-        return if layer.nil?
-
-        argb = @color_int_by_layer[layer.persistent_id] ||= SOO::Color.to_int(layer.color)
-        @pipeline.has_color(obj_k, @pipeline.add_color(argb))
+        @pipeline.has_material(src_k, mat_k, instance: instance)
       end
 
       def in_collection(obj_k, entity)
