@@ -313,13 +313,23 @@ module SpeckleConnector3
       # description/name crashes the SketchUp setters.
       STRING_PATHS = %w[name description speckle_type units layer].freeze
 
+      # SketchUp's advanced-attribute dictionaries (Price/Size/Url on the
+      # definition, Owner/Status on the instance) are string-typed: the panel
+      # silently ignores non-String values, so a Price authored as "1" must come
+      # back as the authored "1", not the query-typed 1.0.
+      STRING_DICT_PREFIXES = %w[properties.SU_DefinitionSet. properties.SU_InstanceSet.].freeze
+
       def group_eav(rows, paths, key: 'object_index')
         by_key = Hash.new { |h, k| h[k] = {} }
         rows.each do |row|
           path = paths[row['path_index']]
-          by_key[row[key]][path] = STRING_PATHS.include?(path) ? string_value(row) : eav_value(row)
+          by_key[row[key]][path] = string_typed?(path) ? string_value(row) : eav_value(row)
         end
         by_key
+      end
+
+      def string_typed?(path)
+        STRING_PATHS.include?(path) || STRING_DICT_PREFIXES.any? { |prefix| path.to_s.start_with?(prefix) }
       end
 
       # Reads an eav table a foreign producer may not ship (e.g. type_eav) —
