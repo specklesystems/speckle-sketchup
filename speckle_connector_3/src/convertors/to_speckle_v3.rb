@@ -153,9 +153,14 @@ module SpeckleConnector3
         add_properties(app_id, entity, 'Speckle.Core.Models.Instances.InstanceProxy', entity.name)
 
         proxy = @instance_proxies[app_id]
-        def_k = @pipeline.add_definition(entity.definition.persistent_id.to_s, entity.definition.name)
+        def_id = entity.definition.persistent_id.to_s
+        def_k = @pipeline.add_definition(def_id, entity.definition.name)
         inst_k = @pipeline.add_instance(app_id, def_k, proxy[:transform], proxy[:units])
         @pipeline.display_instance(obj_k, inst_k, 0)
+        # The definition is this object's TYPE: the object_type link lets consumers
+        # reach the definition's attributes (written post-loop in emit_definition)
+        # through the standard star-schema join.
+        @pipeline.add_object_type(app_id, def_id)
         # Instance-painted material (ENG-8849): default-material faces inside the
         # definition inherit it, so it must ride on the INSTANCE node, not the
         # shared geometry (same definition can be painted red and blue per placement).
@@ -197,7 +202,7 @@ module SpeckleConnector3
       def emit_definition(definition_proxy)
         def_id = definition_proxy.definition.persistent_id.to_s
         def_k = @pipeline.add_definition(def_id, definition_proxy[:name])
-        add_definition_properties(def_id, def_k, definition_proxy.definition)
+        add_definition_type(def_id, def_k, definition_proxy.definition)
         ord = 0
         definition_proxy.object_ids.each do |member_id|
           member = @flat[member_id]
@@ -386,17 +391,21 @@ module SpeckleConnector3
       end
 
       # Definition-level metadata (ENG-8842): description + definition attribute
-      # dictionaries ride the eav table keyed by the definition's persistent id.
-      # Dictionaries are re-extracted through the send settings here — NOT taken from
-      # the proxy's copy, which DefinitionManager extracts unfiltered (ENG-8843).
+      # dictionaries ride the TYPE tables (types/type_eav), keyed by the
+      # definition's persistent id as the type_key. Definitions are not
+      # interactable scene objects, so they never enter the objects table —
+      # placements reach these rows through their object_type link. Written once
+      # per definition regardless of placement count. Dictionaries are
+      # re-extracted through the send settings here — NOT taken from the proxy's
+      # copy, which DefinitionManager extracts unfiltered (ENG-8843).
       # `@speckle.definition_k` carries the DEFINITION node's dense id so receive
       # joins back exactly (envelope nodes carry no application id).
-      def add_definition_properties(def_id, def_k, definition)
+      def add_definition_type(def_id, def_k, definition)
         root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name],
                 ['@speckle.definition_k', def_k]]
         description = definition.description
         root << ['description', description] if description && description != ''
-        @pipeline.add_properties(def_id, entity_dictionaries(definition), root)
+        @pipeline.add_type_properties(def_id, entity_dictionaries(definition), root)
       end
 
       # Nested-instance metadata: attribute dictionaries + name, keyed by the
@@ -411,6 +420,11 @@ module SpeckleConnector3
         root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceProxy'], ['@speckle.instance_k', inst_k]]
         root << ['name', name] unless name.empty?
         @pipeline.add_properties(app_id, dicts, root)
+        # A nested placement that carries an eav row-set links to its definition
+        # type like a top-level object does; plain placements emit no object row,
+        # so they get no link either (object_type never outgrows objects — their
+        # definition membership is already in the envelope via DEFINES_INSTANCE).
+        @pipeline.add_object_type(app_id, entity.definition.persistent_id.to_s)
       end
 
       # Honours the "Include entity attributes" send settings (ENG-8843) with v2's
