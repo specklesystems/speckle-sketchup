@@ -263,6 +263,33 @@ module SpeckleConnector3
         end
       end
 
+      # SketchUp's advanced-attribute dictionaries are string-typed — the panel
+      # ignores non-String values. A Price authored as "1" gets query-typed to
+      # value_double 1.0 by the eav inference and must come back as the authored
+      # string "1" (definition set via type_eav, instance set via eav).
+      def test_advanced_attribute_values_round_trip_as_strings
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          p.add_type_properties(
+            'def-1', { 'SU_DefinitionSet' => { 'Price' => '1', 'Size' => 'a' } },
+            [['speckle_type', BundleReader::DEFINITION_PROXY_TYPE], ['name', 'Box'], ['@speckle.definition_k', 3]]
+          )
+          p.add_properties(
+            'inst-1', { 'SU_InstanceSet' => { 'Owner' => '42' }, 'MyDict' => { 'count' => '42' } },
+            [['speckle_type', BundleReader::INSTANCE_PROXY_TYPE], ['@speckle.instance_k', 7]]
+          )
+          p.complete
+
+          model = BundleReader.read(dir, base)
+          assert_equal({ 'Price' => '1', 'Size' => 'a' },
+                       model[:definition_meta][3][:dictionaries]['SU_DefinitionSet'])
+          assert_equal({ 'Owner' => '42' }, model[:instance_meta][7][:dictionaries]['SU_InstanceSet'])
+          # non-SU dictionaries keep the query-typed value
+          assert_equal(42.0, model[:instance_meta][7][:dictionaries]['MyDict']['count'])
+        end
+      end
+
       # Nested-instance metadata round-trips via the `@speckle.instance_k` stamp:
       # the eav row-set is keyed by the member's own persistent id and joined back
       # to the INSTANCE node by its dense id.
