@@ -48,7 +48,7 @@ module SpeckleConnector3
         args = {
           modelCardId: model_card_id,
           bakedObjectIds: converter.created_top_level_ids,
-          conversionResults: []
+          conversionResults: converter.conversion_results
         }
         state = state.with_add_queue_js_command(
           'setModelReceiveResult', "receiveBinding.emit('setModelReceiveResult', #{args.to_json})"

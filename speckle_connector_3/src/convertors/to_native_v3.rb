@@ -8,6 +8,7 @@ require_relative '../constants/pref_constants'
 require_relative '../speckle_objects/other/transform'
 require_relative '../speckle_objects/other/color'
 require_relative '../sketchup_model/dictionary/base_dictionary_handler'
+require_relative '../ui_data/report/receive_report'
 
 module SpeckleConnector3
   module Converters
@@ -33,6 +34,10 @@ module SpeckleConnector3
 
       # @return [Artifacts::OpStats] per-phase timings/counters for this receive
       attr_reader :stats
+
+      # @return [Array<UiData::Report::ConversionResult>] one DUI report row per
+      # source object plus definition-member loss warnings (ENG-9122)
+      attr_reader :conversion_results
 
       # Display name for the wrapping component (set from the receive card's
       # project/model names); receives are wrapped so multiple received models
@@ -61,6 +66,7 @@ module SpeckleConnector3
         @definition_by_k = {}
         @created_top_level = []
         @converted_faces = []
+        @conversion_results = []
         @tag_color_by_path = {}
         @wrap_definition = nil
         @wrap_instance = nil
@@ -105,6 +111,7 @@ module SpeckleConnector3
         end
         @stats.time(:materials) { build_materials(model[:materials]) }
         @stats.time(:definitions) { build_definitions(model) }
+        @conversion_results.concat(UiData::Report::ReceiveReport.definition_rows(model))
         @stats.time(:objects) { model[:objects].each { |obj| build_object(model, obj) } }
         @stats.time(:levels) { build_levels(model) }
         @stats.time(:camera_views) { build_camera_views(model) }
@@ -410,9 +417,24 @@ module SpeckleConnector3
           end
 
         tag = ensure_tag_path(obj[:scene_path])
-        created.compact.each do |e|
+        created = created.compact
+        created.each do |e|
           e.layer = tag if tag && e.respond_to?(:layer=)
           @created_top_level << e
+        end
+        @conversion_results << UiData::Report::ReceiveReport.object_row(model, obj, entity_summaries(created))
+      rescue StandardError => e
+        # One bad object gets its ERROR row and the receive moves on — only the
+        # action-level rescue (a fatal operation error) aborts the whole receive.
+        @conversion_results << UiData::Report::ReceiveReport.object_error_row(obj, e)
+      end
+
+      # Plain {id:, type:} summaries of baked entities — the host-independent
+      # shape {UiData::Report::ReceiveReport} builds report rows from.
+      def entity_summaries(entities)
+        entities.map do |e|
+          { id: (e.persistent_id.to_s if e.respond_to?(:persistent_id)),
+            type: e.class.to_s.split('::').last }
         end
       end
 
