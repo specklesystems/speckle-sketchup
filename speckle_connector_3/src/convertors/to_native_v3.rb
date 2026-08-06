@@ -474,10 +474,11 @@ module SpeckleConnector3
 
         @stats.add(:instances)
         placed = entities.add_instance(definition, TRANSFORM.to_native(instance[:transform], instance[:units]))
-        # Instance-painted material (ENG-8849): HAS_MATERIAL edges sourced from the
-        # INSTANCE node land in material_by_geom keyed by inst_k; default-material
+        # Instance-painted material (ENG-8849): INSTANCE-sourced HAS_MATERIAL edges
+        # live in their own map — inst_k must never be looked up among geometry Ks
+        # (separate id namespaces that overlap numerically); default-material
         # faces inside the definition then inherit it natively.
-        material = @material_by_k[model[:material_by_geom][inst_k]]
+        material = @material_by_k[model[:material_by_inst][inst_k]]
         placed.material = material if material
         placed
       end

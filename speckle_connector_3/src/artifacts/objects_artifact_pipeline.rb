@@ -145,8 +145,13 @@ module SpeckleConnector3
         @envelope.add_relation(RelKind::DEFINES_INSTANCE, definition_k, instance_k, ord)
       end
 
-      def has_material(geometry_k, material_k)
-        @envelope.add_relation(RelKind::HAS_MATERIAL, geometry_k, material_k, 0)
+      # `src_k` is a geometry K, or an INSTANCE node K for placement painting
+      # (ENG-8849). The two K-spaces overlap numerically and rel 5's src namespace
+      # is their union — undecidable for a reader on collision — so `ord` (unused
+      # by the spec for this rel) carries the producer's discriminator: 1 =
+      # INSTANCE-sourced, 0 = geometry-sourced.
+      def has_material(src_k, material_k, instance: false)
+        @envelope.add_relation(RelKind::HAS_MATERIAL, src_k, material_k, instance ? 1 : 0)
       end
 
       def has_color(src_k, color_k)

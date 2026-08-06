@@ -49,7 +49,7 @@ module SpeckleConnector3
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
           node_meta: {}, geometries: geometries, skipped_geometry: skipped_geometry,
           objects: [], material_by_geom: {},
-          member_tag_paths: {},
+          material_by_inst: {}, member_tag_paths: {},
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj, props_by_type),
           instance_meta: instance_meta(props_by_obj),
           levels: {}, units: producer_units(props_by_obj),
@@ -192,7 +192,17 @@ module SpeckleConnector3
           when RelKind::DISPLAY then obj.call(src)[:displays] << dst
           when RelKind::DISPLAY_INSTANCE then obj.call(src)[:display_instances] << dst
           when RelKind::HAS_COLOR then obj.call(src)[:color_argb] = model[:colors][dst]
-          when RelKind::HAS_MATERIAL then model[:material_by_geom][src] = dst
+          when RelKind::HAS_MATERIAL
+            # src spans TWO id namespaces (spec rel 5: geometry|instance, ENG-8849)
+            # and geometry Ks overlap node Ks numerically — folding both into one
+            # map painted objects with unrelated materials on collision. The
+            # producer stamps `ord` 1 on INSTANCE-sourced edges (placement
+            # painting); pre-stamp bundles fall back to "instance only when the id
+            # can't be a geometry", defaulting ambiguous ids to geometry (a lost
+            # placement paint beats a wrong material appearing).
+            instance_src = r['ord'] == 1 ||
+                           (model[:instances].key?(src) && !model[:geometries].key?(src))
+            (instance_src ? model[:material_by_inst] : model[:material_by_geom])[src] = dst
           when RelKind::DEFINES then model[:definitions][src][:geometry_ks] << dst if model[:definitions][src]
           when RelKind::DEFINES_INSTANCE then model[:definitions][src][:instance_ks] << dst if model[:definitions][src]
           else

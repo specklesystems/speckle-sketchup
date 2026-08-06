@@ -310,6 +310,59 @@ module SpeckleConnector3
         end
       end
 
+      # HAS_MATERIAL src spans two id namespaces (spec rel 5: geometry|instance,
+      # ENG-8849) that overlap numerically — the reader must route INSTANCE-sourced
+      # edges (placement painting) and geometry-sourced edges into separate maps,
+      # or colliding ids paint objects with unrelated materials.
+      def test_instance_and_geometry_materials_route_to_separate_maps
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          def_k = p.add_definition('def-1', 'Box')                     # node 0
+          inst_k = p.add_instance('inst-1', def_k, [1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0], 'm')
+          mat_geo = p.add_material('mat-geo', 'Skin', -2_000_000, 1.0, 0.0, 1.0)
+          mat_inst = p.add_material('mat-inst', 'Paint', -65_536, 1.0, 0.0, 1.0)
+          blob = SgeoEncoder.encode_mesh([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], [3, 0, 1, 2], 'm')
+          p.add_geometry('mesh-0', blob)
+          geom = p.add_geometry('mesh-1', blob + 'x')                  # geometry 1 == inst_k numerically
+          assert_equal(inst_k, geom, 'test setup: ids must collide')
+          p.has_material(geom, mat_geo)
+          p.has_material(inst_k, mat_inst, instance: true)
+          p.complete
+
+          model = BundleReader.read(dir, base)
+          assert_equal({ geom => mat_geo }, model[:material_by_geom])
+          assert_equal({ inst_k => mat_inst }, model[:material_by_inst])
+        end
+      end
+
+      # Pre-stamp bundles (no ord discriminator): an UNPAINTED instance whose node
+      # id collides with a painted geometry must not steal that material — the
+      # ambiguous id defaults to geometry. An instance-sourced edge whose id
+      # cannot be a geometry is still recovered as placement paint.
+      def test_legacy_material_edges_default_ambiguous_ids_to_geometry
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          def_k = p.add_definition('def-1', 'Box')                     # node 0
+          inst_a = p.add_instance('inst-a', def_k, [1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0], 'm') # node 1
+          inst_b = p.add_instance('inst-b', def_k, [1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0], 'm') # node 2
+          mat = p.add_material('mat-skin', 'Skin', -2_000_000, 1.0, 0.0, 1.0)
+          mat_paint = p.add_material('mat-paint', 'Paint', -65_536, 1.0, 0.0, 1.0)
+          blob = SgeoEncoder.encode_mesh([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], [3, 0, 1, 2], 'm')
+          p.add_geometry('mesh-0', blob)
+          geom = p.add_geometry('mesh-1', blob + 'x')                  # geometry 1 == inst_a
+          p.has_material(geom, mat)                                    # legacy: no stamp
+          p.has_material(inst_b, mat_paint)                            # legacy instance edge, id not a geometry
+          p.complete
+
+          model = BundleReader.read(dir, base)
+          assert_equal({ geom => mat }, model[:material_by_geom], 'ambiguous id stays geometry-scoped')
+          assert_equal({ inst_b => mat_paint }, model[:material_by_inst], 'unambiguous instance edge recovered')
+          refute(model[:material_by_inst].key?(inst_a), 'colliding unpainted instance must not steal the material')
+        end
+      end
+
       # Camera viewpoints round-trip through the frozen bundle-spec `camera_views`
       # schema: one row per view, positions in model units, forward/up unit vectors,
       # perspective/ortho projection scalars mutually exclusive, near/far null.
