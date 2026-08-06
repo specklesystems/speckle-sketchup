@@ -314,7 +314,10 @@ module SpeckleConnector3
 
         mat_k = @material_k_by_material[material.persistent_id] ||= begin
           rm = SOO::RenderMaterial.from_material(material)
-          @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], rm[:metalness], rm[:roughness])
+          # Authored PBR values, nil when disabled/unsupported (ENG-9121) — not
+          # v2's fixed metalness 0 / roughness 1.
+          metalness, roughness = SOO::RenderMaterial.pbr_channels(material)
+          @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], metalness, roughness)
         end
         @pipeline.has_material(geom_k, mat_k)
       end

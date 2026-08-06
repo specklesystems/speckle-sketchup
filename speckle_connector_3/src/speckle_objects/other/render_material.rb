@@ -48,6 +48,20 @@ module SpeckleConnector3
           )
         end
 
+        # Authored PBR channels for the artifact path (ENG-9121): [metalness,
+        # roughness] factors as authored, nil for a disabled channel or a host
+        # without the PBR Material API (SketchUp 2025.0+) — never fabricated
+        # defaults; the bundle MATERIAL columns are nullable. The v2
+        # from_material contract above is unchanged.
+        def self.pbr_channels(material)
+          return [nil, nil] unless material.respond_to?(:metalness_enabled?)
+
+          [
+            material.metalness_enabled? ? material.metallic_factor : nil,
+            material.roughness_enabled? ? material.roughness_factor : nil
+          ]
+        end
+
         # @param state [States::State] state of the application.
         def self.to_native(state, render_material, _layer, _entities, &_convert_to_native)
           return state, [] if render_material.nil?
