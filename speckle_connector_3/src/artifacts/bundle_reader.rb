@@ -42,12 +42,13 @@ module SpeckleConnector3
         paths = eav.call('paths').to_h { |r| [r['path_index'], r['path']] }
         props_by_obj = group_eav(eav.call('eav'), paths)
         props_by_type = group_eav(read_optional(dir, "#{base}.eav.type_eav.parquet"), paths, key: 'type_index')
-        geometries = read_geometries(dir, base)
+        geometries, skipped_geometry = read_geometries(dir, base)
         default_view = read_default_scene_view(dir, base)
 
         model = {
           collections: {}, materials: {}, colors: {}, definitions: {}, instances: {},
-          node_meta: {}, geometries: geometries, objects: [], material_by_geom: {},
+          node_meta: {}, geometries: geometries, skipped_geometry: skipped_geometry,
+          objects: [], material_by_geom: {},
           material_by_inst: {}, member_tag_paths: {},
           default_scene_view: default_view, definition_meta: definition_meta(props_by_obj, props_by_type),
           instance_meta: instance_meta(props_by_obj),
@@ -287,9 +288,12 @@ module SpeckleConnector3
         []
       end
 
+      # @return [Array(Hash, Hash)] decoded geometries by K, and skip reasons by K
+      #   (non-SGEO blob or a decode failure) so receive can report the loss per
+      #   object instead of only counting it (ENG-9122).
       def read_geometries(dir, base)
         geom = {}
-        skipped = Hash.new(0)
+        skipped = {}
         # No Dir.glob here: `base` is producer-chosen (a file importer uses the source
         # file's stem — see ENG-8945) and may contain glob metacharacters like `[`.
         shards = Dir.children(dir)
@@ -304,17 +308,21 @@ module SpeckleConnector3
             # solids also emit SGEO display meshes), so skip anything without the SGEO magic
             # instead of erroring on the first foreign blob.
             if content.nil? || content.b.byteslice(0, 4) != SgeoEncoder::MAGIC
-              skipped[row['type']] += 1
+              skipped[row['geometryIndex']] = "non-SGEO geometry blob (#{row['type'] || 'unknown type'})"
               next
             end
-            geom[row['geometryIndex']] = SgeoDecoder.decode(content)
+            begin
+              geom[row['geometryIndex']] = SgeoDecoder.decode(content)
+            rescue StandardError => e
+              skipped[row['geometryIndex']] = "undecodable SGEO blob (#{e.message})"
+            end
           end
         end
         unless skipped.empty?
-          warn("Speckle: skipped #{skipped.values.sum} non-SGEO geometry blob(s) " \
-               "(#{skipped.map { |t, c| "#{t}:#{c}" }.join(', ')})")
+          warn("Speckle: skipped #{skipped.length} geometry blob(s) " \
+               "(#{skipped.values.tally.map { |reason, c| "#{reason} x#{c}" }.join(', ')})")
         end
-        geom
+        [geom, skipped]
       end
 
       # Metadata scalars that must round-trip as authored strings: the producer's
