@@ -12,6 +12,8 @@ module SpeckleConnector3
       DISPLAY = 1
       SOLID = 2 # reserved
       SUBELEMENT = 3
+      # `ord` is the MEMBER ordinal: DEFINES rows sharing (definition, ord) are one
+      # member's geometries and join to DEFINES_MEMBER on the same key.
       DEFINES = 4
       HAS_MATERIAL = 5
       HAS_COLOR = 6
@@ -24,6 +26,13 @@ module SpeckleConnector3
       IN_SYSTEM = 14
       CONNECTS_TO = 21
       BOUNDS = 23
+      # Member/painting vocabulary (post-v5 additive; replaces the `@speckle.*`
+      # member eav stamps and the ord=1 HAS_MATERIAL namespace stamp — both still
+      # emitted this release for old consumers).
+      PLACES = 24              # member object -> its INSTANCE node (association only, never a render root)
+      DEFINES_MEMBER = 25      # DEFINITION -> member object; ord = member ordinal (joins DEFINES on (definition, ord))
+      OBJECT_HAS_MATERIAL = 26 # painted object -> MATERIAL node; FILL semantics (geometry-level HAS_MATERIAL wins)
+      OBJECT_HAS_COLOR = 27    # object -> COLOR node; FILL semantics (geometry-level HAS_COLOR wins); not emitted by SketchUp
     end
 
     module NodeKind

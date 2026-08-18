@@ -449,6 +449,88 @@ module SpeckleConnector3
         assert_equal('Folder', model[:collections][11][:subtype])
         assert_equal(%w[Site Trees], model[:node_meta].values.map { |m| m[:name] }.sort)
       end
+
+      # Post-v5 member vocabulary (rels 24/25/26): member carrier objects join back
+      # to their definition content through DEFINES_MEMBER's (definition, ord) key
+      # and PLACES — no `@speckle.*` stamps — and placement paint rides
+      # OBJECT_HAS_MATERIAL resolved to the placement. This is the stamp-less
+      # future-bundle shape; the fallback test below covers the stamped past.
+      def test_member_rels_round_trip_without_stamps
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          trees = p.add_collection('tag-trees', 'Trees', nil, 'Layer')
+          p.add_scene_view(SceneView.new(0, 'Default', true, [SceneViewKey.rel(RelKind::IN_COLLECTION)]))
+
+          def_k = p.add_definition('def-1', 'Planter')
+          blob = SgeoEncoder.encode_mesh([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], [3, 0, 1, 2], 'm')
+          geom_k = p.add_geometry('member-mesh', blob)
+          p.defines(def_k, geom_k, 0)
+          mesh_member_k = p.intern_object('member-mesh-obj')
+          p.in_collection(mesh_member_k, trees, 0)
+          p.defines_member(def_k, mesh_member_k, 0)
+
+          nested_def_k = p.add_definition('def-2', 'Shrub')
+          inst_k = p.add_instance('member-inst', nested_def_k, [1.0] + [0.0] * 4 + [1.0] + [0.0] * 4 + [1.0] + [0.0] * 4 + [1.0], 'm')
+          p.defines_instance(def_k, inst_k, 1)
+          inst_member_k = p.intern_object('member-inst-obj')
+          p.in_collection(inst_member_k, trees, 0)
+          p.places(inst_member_k, inst_k)
+          p.defines_member(def_k, inst_member_k, 1)
+          mat_k = p.add_material('mat-green', 'Leaf', -16_711_936, 1.0, nil, nil)
+          p.object_has_material(inst_member_k, mat_k)
+
+          top_obj_k = p.intern_object('planter-1')
+          top_inst_k = p.add_instance('planter-1', def_k, [1.0] + [0.0] * 4 + [1.0] + [0.0] * 4 + [1.0] + [0.0] * 4 + [1.0], 'm')
+          p.display_instance(top_obj_k, top_inst_k, 0)
+          p.object_has_material(top_obj_k, mat_k)
+          p.complete
+
+          rels = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.relations.parquet"))
+          dm = rels.select { |r| r['rel'] == RelKind::DEFINES_MEMBER }
+          assert_equal([[def_k, mesh_member_k, 0], [def_k, inst_member_k, 1]],
+                       dm.map { |r| [r['src'], r['dst'], r['ord']] }.sort)
+          defines_ords = rels.select { |r| r['rel'] == RelKind::DEFINES }.to_h { |r| [r['ord'], r['dst']] }
+          assert_equal(geom_k, defines_ords[0]) # DEFINES ord aligns with DEFINES_MEMBER ord
+          assert_equal([[inst_member_k, inst_k]],
+                       rels.select { |r| r['rel'] == RelKind::PLACES }.map { |r| [r['src'], r['dst']] })
+
+          model = BundleReader.read(dir, base)
+          app_ids = model[:objects].map { |o| o[:app_id] }
+          assert_includes(app_ids, 'planter-1')
+          refute_includes(app_ids, 'member-mesh-obj', 'member carriers must not become scene objects')
+          refute_includes(app_ids, 'member-inst-obj')
+          assert_equal(['Trees'], model[:member_tag_paths][geom_k], 'tag path joined via (definition, ord), no stamp')
+          assert_equal(mat_k, model[:material_by_inst][inst_k], 'rel-26 paint resolved via PLACES')
+          assert_equal(mat_k, model[:material_by_inst][top_inst_k], 'rel-26 paint resolved via DISPLAY_INSTANCE')
+          assert_equal(['Trees'], model[:instance_meta][inst_k][:scene_path])
+        end
+      end
+
+      # Pre-rel-24/25 bundles carry only the `@speckle.geometry_k` /
+      # `@speckle.instance_k` eav stamps — the fallback path must behave exactly
+      # as before the vocabulary landed.
+      def test_member_stamp_fallback_still_works
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          trees = p.add_collection('tag-trees', 'Trees', nil, 'Layer')
+          p.add_scene_view(SceneView.new(0, 'Default', true, [SceneViewKey.rel(RelKind::IN_COLLECTION)]))
+
+          def_k = p.add_definition('def-1', 'Planter')
+          blob = SgeoEncoder.encode_mesh([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], [3, 0, 1, 2], 'm')
+          geom_k = p.add_geometry('member-mesh', blob)
+          p.defines(def_k, geom_k, 0)
+          mesh_member_k = p.intern_object('member-mesh-obj')
+          p.in_collection(mesh_member_k, trees, 0)
+          p.add_properties('member-mesh-obj', {}, [['@speckle.geometry_k', geom_k]])
+          p.complete
+
+          model = BundleReader.read(dir, base)
+          refute_includes(model[:objects].map { |o| o[:app_id] }, 'member-mesh-obj')
+          assert_equal(['Trees'], model[:member_tag_paths][geom_k])
+        end
+      end
     end
   end
 end

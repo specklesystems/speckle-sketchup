@@ -42,12 +42,14 @@ module SpeckleConnector3
       REL_TYPES = [
         [1, 'DISPLAY', 'object', 'geometry'], [2, 'SOLID', 'object', 'geometry'],
         [3, 'SUBELEMENT', 'object', 'object'], [4, 'DEFINES', 'node', 'geometry'],
-        [5, 'HAS_MATERIAL', 'geometry', 'node'], [6, 'HAS_COLOR', 'geometry|object', 'node'],
+        [5, 'HAS_MATERIAL', 'geometry', 'node'], [6, 'HAS_COLOR', 'geometry', 'node'],
         [7, 'ON_LEVEL', 'object', 'node'], [8, 'DISPLAY_INSTANCE', 'object', 'node'],
         [9, 'DEFINES_INSTANCE', 'node', 'node'], [10, 'IN_COLLECTION', 'object', 'node'],
         [11, 'IN_MODEL', 'object', 'node'], [12, 'IN_ROOM', 'object', 'object'],
         [14, 'IN_SYSTEM', 'object', 'node'], [21, 'CONNECTS_TO', 'object', 'object'],
-        [23, 'BOUNDS', 'object', 'object']
+        [23, 'BOUNDS', 'object', 'object'], [24, 'PLACES', 'object', 'node'],
+        [25, 'DEFINES_MEMBER', 'node', 'object'], [26, 'OBJECT_HAS_MATERIAL', 'object', 'node'],
+        [27, 'OBJECT_HAS_COLOR', 'object', 'node']
       ].freeze
 
       NODE_KINDS = [

@@ -147,11 +147,36 @@ module SpeckleConnector3
 
       # `src_k` is a geometry K, or an INSTANCE node K for placement painting
       # (ENG-8849). The two K-spaces overlap numerically and rel 5's src namespace
-      # is their union — undecidable for a reader on collision — so `ord` (unused
-      # by the spec for this rel) carries the producer's discriminator: 1 =
-      # INSTANCE-sourced, 0 = geometry-sourced.
+      # was their union — undecidable for a reader on collision — so `ord` carries
+      # the producer's discriminator: 1 = INSTANCE-sourced, 0 = geometry-sourced.
+      # The INSTANCE-sourced form is superseded by {#object_has_material} (rel 26);
+      # it is still emitted this release for pre-rel-26 consumers (viewer/datgen).
       def has_material(src_k, material_k, instance: false)
         @envelope.add_relation(RelKind::HAS_MATERIAL, src_k, material_k, instance ? 1 : 0)
+      end
+
+      # Association only, NEVER a render root (that is DISPLAY_INSTANCE): ties a
+      # render-edge-less definition-member object to its nested INSTANCE node so
+      # its properties and IN_COLLECTION stay reachable. Successor of the
+      # `@speckle.instance_k` eav stamp (ENG-8851/ENG-9110 lineage).
+      def places(member_object_k, instance_k)
+        @envelope.add_relation(RelKind::PLACES, member_object_k, instance_k, 0)
+      end
+
+      # Definition membership on the object plane, where nothing is deduped.
+      # `ord` is the member ordinal — the same value the member's DEFINES rows
+      # carry — so (definition, ord) joins a member object to its geometry even
+      # when content-hash dedup shares one geometry K across definitions.
+      # Successor of the `@speckle.geometry_k` eav stamp.
+      def defines_member(definition_k, member_object_k, ord)
+        @envelope.add_relation(RelKind::DEFINES_MEMBER, definition_k, member_object_k, ord)
+      end
+
+      # Placement painting on the object plane (rel 26): the painted object is a
+      # top-level instance object or a definition-member object (reached from its
+      # placement via PLACES). FILL semantics — geometry-level HAS_MATERIAL wins.
+      def object_has_material(object_k, material_k)
+        @envelope.add_relation(RelKind::OBJECT_HAS_MATERIAL, object_k, material_k, 0)
       end
 
       def has_color(src_k, color_k)
