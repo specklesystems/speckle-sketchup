@@ -106,10 +106,11 @@ module SpeckleConnector3
       # Since bundle-spec v5 a collection IS a CONTAINER node — `subtype` (its own
       # column, e.g. 'Layer'/'Folder') is the only discriminator. Kept as a separate
       # method from {#add_container} for the 'coll:'-prefixed key namespace.
-      # `argb` is the collection's own colour (a tag's colour), nil when it has none.
-      def add_collection(collection_key, name, parent_collection_k, subtype, argb = nil)
+      # A collection's colour rides {#node_has_color} (rel 29), never the row's argb
+      # (the pre-rel-29 carrier, now read-side fallback only).
+      def add_collection(collection_key, name, parent_collection_k, subtype)
         node('coll:' + collection_key) do |k|
-          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, argb, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, nil, nil, nil, nil, nil)
         end
       end
 
@@ -177,6 +178,14 @@ module SpeckleConnector3
       # placement via PLACES). FILL semantics — geometry-level HAS_MATERIAL wins.
       def object_has_material(object_k, material_k)
         @envelope.add_relation(RelKind::OBJECT_HAS_MATERIAL, object_k, material_k, 0)
+      end
+
+      # Container display colour (rel 29): a tag/layer CONTAINER -> its COLOR node.
+      # The weakest colour tier (object > geometry > container); supersedes the
+      # argb formerly stamped on the CONTAINER row (readers keep that as the
+      # old-bundle fallback; producers no longer write it).
+      def node_has_color(node_k, color_k)
+        @envelope.add_relation(RelKind::NODE_HAS_COLOR, node_k, color_k, 0)
       end
 
       def has_color(src_k, color_k)
