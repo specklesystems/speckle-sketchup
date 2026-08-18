@@ -165,7 +165,7 @@ module SpeckleConnector3
         # Instance-painted material (ENG-8849): default-material faces inside the
         # definition inherit it, so it must ride on the INSTANCE node, not the
         # shared geometry (same definition can be painted red and blue per placement).
-        bind_material(inst_k, entity.material, instance: true)
+        bind_material(inst_k, entity.material, instance: true, painted_object_k: obj_k)
         @object_count += 1
       end
 
@@ -211,7 +211,8 @@ module SpeckleConnector3
             geom_k = emit_mesh(member_id, member.faces)
             @pipeline.defines(def_k, geom_k, ord)
             bind_material(geom_k, member.material)
-            member_tag(member_id, member.layer, geom_k: geom_k)
+            member_obj_k = member_tag(member_id, member.layer, geom_k: geom_k)
+            @pipeline.defines_member(def_k, member_obj_k, ord) if member_obj_k
             ord += 1
           when Sketchup::ComponentInstance, Sketchup::Group
             proxy = @instance_proxies[member_id]
@@ -220,17 +221,27 @@ module SpeckleConnector3
             nested_def_k = @pipeline.add_definition(member.definition.persistent_id.to_s, member.definition.name)
             inst_k = @pipeline.add_instance(member_id, nested_def_k, proxy[:transform], proxy[:units])
             @pipeline.defines_instance(def_k, inst_k, ord)
-            bind_material(inst_k, member.material, instance: true)
-            # A tagged nested instance gets an object row + IN_COLLECTION, exactly
-            # like a top-level instance (ENG-8851); `force` guarantees the
+            # A tagged OR painted nested instance gets an object row + IN_COLLECTION,
+            # exactly like a top-level instance (ENG-8851); `force` guarantees the
             # `@speckle.instance_k` eav stamp receive joins the tag back through.
+            # The object row also anchors the new-vocabulary edges: PLACES (24,
+            # association to the placement) + DEFINES_MEMBER (25, ord = the member
+            # ordinal shared with this member's DEFINES_INSTANCE row) + the rel-26
+            # paint (fill semantics; geometry-level HAS_MATERIAL wins).
             tagged = member_tag(member_id, member.layer)
-            add_instance_properties(member_id, inst_k, member, force: tagged)
+            painted = !member.material.nil?
+            member_obj_k = add_instance_properties(member_id, inst_k, member, force: !tagged.nil? || painted)
+            if member_obj_k
+              @pipeline.places(member_obj_k, inst_k)
+              @pipeline.defines_member(def_k, member_obj_k, ord)
+            end
+            bind_material(inst_k, member.material, instance: true, painted_object_k: member_obj_k)
             ord += 1
           when Sketchup::Edge
             geom_k = @pipeline.add_geometry(member_id, edge_to_sgeo(member))
             @pipeline.defines(def_k, geom_k, ord)
-            member_tag(member_id, member.layer, geom_k: geom_k)
+            member_obj_k = member_tag(member_id, member.layer, geom_k: geom_k)
+            @pipeline.defines_member(def_k, member_obj_k, ord) if member_obj_k
             ord += 1
           else
             report_unsupported(member)
@@ -309,7 +320,11 @@ module SpeckleConnector3
 
       # `instance: true` marks placement painting (src is an INSTANCE node K, not
       # a geometry K) — rides the rel's ord as the namespace discriminator.
-      def bind_material(src_k, material, instance: false)
+      # `painted_object_k` is the painted placement's OBJECT row (top-level
+      # instance object, or forced member object): when given, the paint is also
+      # emitted as OBJECT_HAS_MATERIAL (rel 26), the successor vocabulary — the
+      # ord=1-stamped rel-5 edge stays for pre-rel-26 consumers.
+      def bind_material(src_k, material, instance: false, painted_object_k: nil)
         return if material.nil?
 
         mat_k = @material_k_by_material[material.persistent_id] ||= begin
@@ -320,6 +335,7 @@ module SpeckleConnector3
           @pipeline.add_material(material.persistent_id.to_s, rm[:name], rm[:diffuse], rm[:opacity], metalness, roughness)
         end
         @pipeline.has_material(src_k, mat_k, instance: instance)
+        @pipeline.object_has_material(painted_object_k, mat_k) if instance && painted_object_k
       end
 
       def in_collection(obj_k, entity)
@@ -338,18 +354,21 @@ module SpeckleConnector3
       # IN_COLLECTION(object -> collection) edge, exactly like a top-level
       # object. For meshes/edges the object joins back to its geometry via an
       # `@speckle.geometry_k` eav stamp (the `@speckle.instance_k` pattern —
-      # object and geometry indexes are separate id spaces). Default-tag members
-      # emit nothing: receive's default is already Untagged. Returns whether the
-      # member was tagged.
+      # object and geometry indexes are separate id spaces; kept this release for
+      # old consumers) and, in the successor vocabulary, via DEFINES_MEMBER's
+      # (definition, ord) join emitted by the caller. Default-tag members emit
+      # nothing: receive's default is already Untagged. Returns the member's
+      # object K when tagged, nil otherwise.
       def member_tag(app_id, layer, geom_k: nil)
-        return false unless member_tagged?(layer)
+        return nil unless member_tagged?(layer)
 
         layer_k = layer_collection_k(layer)
-        return false if layer_k.nil?
+        return nil if layer_k.nil?
 
-        @pipeline.in_collection(@pipeline.intern_object(app_id), layer_k, 0)
+        obj_k = @pipeline.intern_object(app_id)
+        @pipeline.in_collection(obj_k, layer_k, 0)
         @pipeline.add_properties(app_id, {}, [['@speckle.geometry_k', geom_k]]) unless geom_k.nil?
-        true
+        obj_k
       end
 
       def member_tagged?(layer)
@@ -406,10 +425,11 @@ module SpeckleConnector3
       # member's own persistent id, with the INSTANCE node's dense id as the join
       # key for receive. Emitted only when there is something to carry, so plain
       # unnamed placements add no eav rows.
+      # Returns the member's object K when a row-set was written, nil otherwise.
       def add_instance_properties(app_id, inst_k, entity, force: false)
         dicts = entity_dictionaries(entity)
         name = entity.name.to_s
-        return if dicts.empty? && name.empty? && !force
+        return nil if dicts.empty? && name.empty? && !force
 
         root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceProxy'], ['@speckle.instance_k', inst_k]]
         root << ['name', name] unless name.empty?
@@ -419,6 +439,7 @@ module SpeckleConnector3
         # so they get no link either (object_type never outgrows objects — their
         # definition membership is already in the envelope via DEFINES_INSTANCE).
         @pipeline.add_object_type(app_id, entity.definition.persistent_id.to_s)
+        @pipeline.intern_object(app_id)
       end
 
       # Honours the "Include entity attributes" send settings (ENG-8843) with v2's

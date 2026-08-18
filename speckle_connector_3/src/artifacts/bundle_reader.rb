@@ -159,7 +159,7 @@ module SpeckleConnector3
           when NodeKind::COLOR
             model[:colors][id] = n['argb']
           when NodeKind::DEFINITION
-            model[:definitions][id] = { name: n['name'], geometry_ks: [], instance_ks: [] }
+            model[:definitions][id] = { name: n['name'], geometry_ks: [], instance_ks: [], geometry_ks_by_ord: {} }
           when NodeKind::INSTANCE
             model[:instances][id] = {
               def_ref: n['def_ref'], transform: parse_transform(n['transform']), units: n['units']
@@ -183,6 +183,9 @@ module SpeckleConnector3
           end
         end
 
+        places = {}        # member object oi -> INSTANCE node K   (rel 24)
+        member_ords = {}   # member object oi -> [definition K, member ordinal] (rel 25)
+        object_material = {} # painted object oi -> MATERIAL node K (rel 26)
         relations.each do |r|
           rel = r['rel']
           src = r['src']
@@ -203,34 +206,58 @@ module SpeckleConnector3
             instance_src = r['ord'] == 1 ||
                            (model[:instances].key?(src) && !model[:geometries].key?(src))
             (instance_src ? model[:material_by_inst] : model[:material_by_geom])[src] = dst
-          when RelKind::DEFINES then model[:definitions][src][:geometry_ks] << dst if model[:definitions][src]
+          when RelKind::DEFINES
+            if (defn = model[:definitions][src])
+              defn[:geometry_ks] << dst
+              (defn[:geometry_ks_by_ord][r['ord']] ||= []) << dst # member-ordinal join key (rel 25)
+            end
           when RelKind::DEFINES_INSTANCE then model[:definitions][src][:instance_ks] << dst if model[:definitions][src]
+          when RelKind::PLACES then places[src] = dst
+          when RelKind::DEFINES_MEMBER then member_ords[dst] = [src, r['ord']]
+          when RelKind::OBJECT_HAS_MATERIAL then object_material[src] = dst
           else
             obj.call(src) if MEMBERSHIP_RELS.include?(rel) # ensure membership-only objects exist
           end
+        end
+
+        # Rel-26 paint resolves to the painted object's placement: a member object
+        # via PLACES, a top-level instance object via its DISPLAY_INSTANCE edges.
+        # `||=` keeps the ord=1-stamped rel-5 value when a transitional bundle
+        # carries both (they are the same material).
+        object_material.each do |oi, mat_k|
+          inst_ks = places.key?(oi) ? [places[oi]] : (objects[oi] ? objects[oi][:display_instances] : [])
+          inst_ks.each { |ik| model[:material_by_inst][ik] ||= mat_k }
         end
 
         objects.each do |oi, object|
           object[:scene_path] = scene_path_for(oi, default_view, memberships, model[:node_meta], props_by_obj[oi] || {})
         end
         # Definition-member carrier objects are template metadata, not scene
-        # objects (ENG-8851): a `@speckle.instance_k` stamp hands the tag path to
-        # instance_meta (nested instances), a `@speckle.geometry_k` stamp to
-        # member_tag_paths (member meshes/edges) — and both stay out of
-        # model[:objects].
+        # objects (ENG-8851): their tag path is handed to instance_meta (nested
+        # instances) or member_tag_paths (member meshes/edges) and they stay out
+        # of model[:objects]. New-vocabulary bundles are joined through the rels —
+        # PLACES (24) for the placement, DEFINES_MEMBER (25) + the definition's
+        # DEFINES (definition, ord) groups for member geometry; pre-rel bundles
+        # fall back to the `@speckle.instance_k` / `@speckle.geometry_k` stamps.
         objects.reject! do |oi, object|
           props = props_by_obj[oi] || {}
-          inst_k = props['@speckle.instance_k']
-          geom_k = props['@speckle.geometry_k']
+          inst_k = places[oi] || props['@speckle.instance_k']
+          geom_ks = []
+          if (dm = member_ords[oi]) && (defn = model[:definitions][dm[0]])
+            geom_ks = defn[:geometry_ks_by_ord][dm[1]] || []
+          end
+          geom_ks = [props['@speckle.geometry_k']].compact if geom_ks.empty?
           if !inst_k.nil?
             meta = (model[:instance_meta][inst_k.to_i] ||= {})
             meta[:scene_path] = object[:scene_path] unless object[:scene_path].empty?
             true
-          elsif !geom_k.nil?
-            model[:member_tag_paths][geom_k.to_i] = object[:scene_path] unless object[:scene_path].empty?
+          elsif !geom_ks.empty?
+            unless object[:scene_path].empty?
+              geom_ks.each { |gk| model[:member_tag_paths][gk.to_i] = object[:scene_path] }
+            end
             true
           else
-            false
+            member_ords.key?(oi) # a member carrier with no joinable geometry is still not a scene object
           end
         end
         model[:objects] = objects.values
