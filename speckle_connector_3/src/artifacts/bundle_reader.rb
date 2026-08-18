@@ -215,6 +215,12 @@ module SpeckleConnector3
           when RelKind::PLACES then places[src] = dst
           when RelKind::DEFINES_MEMBER then member_ords[dst] = [src, r['ord']]
           when RelKind::OBJECT_HAS_MATERIAL then object_material[src] = dst
+          when RelKind::NODE_HAS_COLOR
+            # Rel 29 wins over the argb overloaded onto the CONTAINER row; the row
+            # argb stays untouched as the fallback for pre-rel-29 bundles.
+            if model[:collections][src] && model[:colors].key?(dst)
+              model[:collections][src][:argb] = model[:colors][dst]
+            end
           else
             obj.call(src) if MEMBERSHIP_RELS.include?(rel) # ensure membership-only objects exist
           end

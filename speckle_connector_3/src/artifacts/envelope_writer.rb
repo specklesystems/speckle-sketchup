@@ -49,7 +49,8 @@ module SpeckleConnector3
         [14, 'IN_SYSTEM', 'object', 'node'], [21, 'CONNECTS_TO', 'object', 'object'],
         [23, 'BOUNDS', 'object', 'object'], [24, 'PLACES', 'object', 'node'],
         [25, 'DEFINES_MEMBER', 'node', 'object'], [26, 'OBJECT_HAS_MATERIAL', 'object', 'node'],
-        [27, 'OBJECT_HAS_COLOR', 'object', 'node']
+        [27, 'OBJECT_HAS_COLOR', 'object', 'node'], [28, 'NODE_HAS_MATERIAL', 'node', 'node'],
+        [29, 'NODE_HAS_COLOR', 'node', 'node']
       ].freeze
 
       NODE_KINDS = [

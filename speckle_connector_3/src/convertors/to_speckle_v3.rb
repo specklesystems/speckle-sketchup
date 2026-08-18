@@ -25,10 +25,10 @@ module SpeckleConnector3
     # not build a Base tree, chunk, hash, or batch.
     #
     # SketchUp's distinguishing axes vs. oda's single-container model: the tag
-    # (layer) folder tree -> nested COLLECTION nodes + IN_COLLECTION (each tag
-    # carries its colour on the CONTAINER node's argb — SketchUp has no object- or
-    # instance-level colour, so no HAS_COLOR edges are emitted), and component
-    # instancing -> DEFINITION/INSTANCE.
+    # (layer) folder tree -> nested COLLECTION nodes + IN_COLLECTION (each tag's
+    # colour rides a NODE_HAS_COLOR edge to a COLOR node — SketchUp has no
+    # object- or instance-level colour, so no other colour edges are emitted),
+    # and component instancing -> DEFINITION/INSTANCE.
     class ToSpeckleV3
       ART = SpeckleConnector3::Artifacts
       SOG = SpeckleConnector3::SpeckleObjects::Geometry
@@ -394,11 +394,15 @@ module SpeckleConnector3
       end
 
       # subtype 'Folder' for tag folders, 'Layer' for tags — so receive rebuilds each
-      # as the right SketchUp object (LayerFolder vs Layer). Tags carry their colour
-      # on the container node's argb (the cross-connector layer-colour pattern);
-      # folders have no colour in SketchUp.
+      # as the right SketchUp object (LayerFolder vs Layer). A tag's colour rides a
+      # NODE_HAS_COLOR edge (rel 29) to an interned COLOR node; folders have no
+      # colour in SketchUp.
       def ensure_collection(key, name, parent_k, subtype, argb = nil)
-        @collection_ks[key] ||= @pipeline.add_collection(key, name, parent_k, subtype, argb)
+        @collection_ks[key] ||= begin
+          k = @pipeline.add_collection(key, name, parent_k, subtype)
+          @pipeline.node_has_color(k, @pipeline.add_color(argb)) unless argb.nil?
+          k
+        end
       end
 
       def add_properties(app_id, entity, speckle_type, name, extra = [])

@@ -169,20 +169,70 @@ module SpeckleConnector3
         end
       end
 
-      # ENG-8841: a tag collection carries its colour on the container node's argb
-      # and it survives the produce->read round trip; folders stay colourless.
-      def test_tag_color_round_trips
+      # ENG-8841 -> rel 29: a tag's colour rides a NODE_HAS_COLOR edge to a COLOR
+      # node and survives the produce->read round trip; folders stay colourless.
+      def test_tag_color_round_trips_via_rel29
         Dir.mktmpdir('speckle-artifacts') do |dir|
           base = 'ver1'
           p = ObjectsArtifactPipeline.new(dir, base)
           folder = p.add_collection('folder-1', 'Site', nil, 'Folder')
-          p.add_collection('tag-1', 'Trees', folder, 'Layer', -65_536)
+          trees = p.add_collection('tag-1', 'Trees', folder, 'Layer')
+          p.node_has_color(trees, p.add_color(-65_536))
           p.complete
 
           colls = BundleReader.read(dir, base)[:collections].values
           assert_equal(-65_536, colls.find { |c| c[:name] == 'Trees' }[:argb])
           assert_nil(colls.find { |c| c[:name] == 'Site' }[:argb])
         end
+      end
+
+      # Rel 29 (NODE_HAS_COLOR) is the SOLE carrier: the CONTAINER row's argb (the
+      # pre-rel-29 overload) is no longer written, and same-coloured tags intern
+      # to one COLOR node.
+      def test_tag_color_rel29_edge_replaces_container_argb
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          base = 'ver1'
+          p = ObjectsArtifactPipeline.new(dir, base)
+          trees = p.add_collection('tag-1', 'Trees', nil, 'Layer')
+          p.node_has_color(trees, p.add_color(-65_536))
+          shrubs = p.add_collection('tag-2', 'Shrubs', nil, 'Layer')
+          p.node_has_color(shrubs, p.add_color(-65_536))
+          p.complete
+
+          nodes = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.nodes.parquet"))
+          container = nodes.find { |n| n['kind'] == NodeKind::CONTAINER && n['name'] == 'Trees' }
+          assert_nil(container['argb']) # the argb overload is dead on send
+
+          color_nodes = nodes.select { |n| n['kind'] == NodeKind::COLOR }
+          assert_equal(1, color_nodes.length) # interned: one COLOR node per distinct argb
+          assert_equal(-65_536, color_nodes.first['argb'])
+
+          rels = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.relations.parquet"))
+          edges = rels.select { |r| r['rel'] == RelKind::NODE_HAS_COLOR }
+          assert_equal(2, edges.length)
+          edge = edges.find { |r| r['src'] == container['id'] }
+          refute_nil(edge)
+          assert_equal(color_nodes.first['id'], edge['dst'])
+        end
+      end
+
+      # Old bundles carried the tag colour as an argb on the CONTAINER row (no rel
+      # 29): the reader still resolves it, and when a bundle carries both (other
+      # producers' transitional output) the rel-29 edge wins over a stale argb.
+      def test_tag_color_container_argb_fallback_and_rel29_precedence
+        nodes = {
+          10 => { 'kind' => NodeKind::CONTAINER, 'name' => 'Trees', 'subtype' => 'Layer', 'argb' => -1 },
+          11 => { 'kind' => NodeKind::CONTAINER, 'name' => 'Shrubs', 'subtype' => 'Layer', 'argb' => -16_711_936 },
+          20 => { 'kind' => NodeKind::COLOR, 'argb' => -65_536 }
+        }
+        model = { collections: {}, materials: {}, colors: {}, definitions: {}, instances: {}, node_meta: {},
+                  geometries: {}, material_by_geom: {}, material_by_inst: {}, member_tag_paths: {},
+                  instance_meta: {} }
+        BundleReader.classify_nodes(nodes, model)
+        BundleReader.wire_relations([{ 'rel' => RelKind::NODE_HAS_COLOR, 'src' => 10, 'dst' => 20 }], model, {}, {}, [])
+
+        assert_equal(-65_536, model[:collections][10][:argb])      # edge wins over the stale argb
+        assert_equal(-16_711_936, model[:collections][11][:argb])  # argb-only (old bundle) unchanged
       end
 
       # ENG-8842: definition description + dictionaries ride the TYPE tables keyed

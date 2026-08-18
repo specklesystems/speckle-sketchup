@@ -33,6 +33,9 @@ module SpeckleConnector3
       DEFINES_MEMBER = 25      # DEFINITION -> member object; ord = member ordinal (joins DEFINES on (definition, ord))
       OBJECT_HAS_MATERIAL = 26 # painted object -> MATERIAL node; FILL semantics (geometry-level HAS_MATERIAL wins)
       OBJECT_HAS_COLOR = 27    # object -> COLOR node; FILL semantics (geometry-level HAS_COLOR wins); not emitted by SketchUp
+      # Container appearance (weakest tier of both ladders: object > geometry > container).
+      NODE_HAS_MATERIAL = 28   # CONTAINER -> MATERIAL node (authored layer material); not emitted by SketchUp
+      NODE_HAS_COLOR = 29      # CONTAINER -> COLOR node (tag display colour); supersedes the CONTAINER argb overload
     end
 
     module NodeKind
