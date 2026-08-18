@@ -411,11 +411,11 @@ module SpeckleConnector3
       # per definition regardless of placement count. Dictionaries are
       # re-extracted through the send settings here — NOT taken from the proxy's
       # copy, which DefinitionManager extracts unfiltered (ENG-8843).
-      # `@speckle.definition_k` carries the DEFINITION node's dense id so receive
-      # joins back exactly (envelope nodes carry no application id).
+      # No @speckle.definition_k stamp (removed with the vocab rels): receive
+      # joins definition meta by NAME, unique in SketchUp — the reader keeps the
+      # stamp fallback for old bundles.
       def add_definition_type(def_id, def_k, definition)
-        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name],
-                ['@speckle.definition_k', def_k]]
+        root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name]]
         description = definition.description
         root << ['description', description] if description && description != ''
         @pipeline.add_type_properties(def_id, entity_dictionaries(definition), root)
