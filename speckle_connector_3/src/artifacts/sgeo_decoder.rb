@@ -79,7 +79,8 @@ module SpeckleConnector3
         end
         colors = body.byteslice(pos, vcount * 4).unpack('l<*') if (flags & SgeoEncoder::FLAG_HAS_COLORS) != 0
 
-        { type: :mesh, vertices: vertices, faces: faces, units: units, normals: normals, uvs: uvs, colors: colors }
+        { type: :mesh, vertices: vertices, faces: faces, units: units, normals: normals, uvs: uvs, colors: colors,
+          hard_edges: (flags & SgeoEncoder::FLAG_HARD_EDGES) != 0 }
       end
 
       def decode_line(body, units)

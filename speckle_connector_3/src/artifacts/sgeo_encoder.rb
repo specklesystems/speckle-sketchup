@@ -33,6 +33,10 @@ module SpeckleConnector3
       FLAG_HAS_NORMALS = 1 << 4
       FLAG_HAS_UVS = 1 << 5
       FLAG_HAS_COLORS = 1 << 6
+      # Set = rebuild with HARD edges; unset = the legacy soften-on-receive default.
+      # Inverted on purpose (spec/sgeo-spec.sql bit 11): every pre-flag bundle has
+      # the bit unset and keeps its current meaning with no version bump.
+      FLAG_HARD_EDGES = 1 << 11
 
       # Units string -> uint16 code (mirrors Units.GetEncodingFromUnit; unknown -> 0).
       UNIT_CODES = {
@@ -54,10 +58,11 @@ module SpeckleConnector3
       # @param uvs [Array<Float>] optional flat uv pairs
       # @param colors [Array<Integer>] optional per-vertex ARGB ints
       # @return [String] the SGEO blob (binary String)
-      def encode_mesh(vertices, faces, units, normals: [], uvs: [], colors: [])
+      def encode_mesh(vertices, faces, units, normals: [], uvs: [], colors: [], hard_edges: false)
         raise ArgumentError, 'Mesh.vertices length must be a multiple of 3.' unless (vertices.length % 3).zero?
 
         flags = 0
+        flags |= FLAG_HARD_EDGES if hard_edges
         flags |= FLAG_HAS_NORMALS unless normals.empty?
         flags |= FLAG_HAS_UVS unless uvs.empty?
         flags |= FLAG_HAS_COLORS unless colors.empty?

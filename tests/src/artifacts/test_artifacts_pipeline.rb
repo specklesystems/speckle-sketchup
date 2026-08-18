@@ -4,6 +4,7 @@ require_relative '../../test_helper'
 require 'tmpdir'
 require_relative '../../../speckle_connector_3/src/artifacts/objects_artifact_pipeline'
 require_relative '../../../speckle_connector_3/src/artifacts/sgeo_encoder'
+require_relative '../../../speckle_connector_3/src/artifacts/sgeo_decoder'
 require_relative '../../../speckle_connector_3/src/artifacts/bundle_reader'
 
 module SpeckleConnector3
@@ -26,6 +27,35 @@ module SpeckleConnector3
         assert_equal(3, body[0, 4].unpack1('V'))  # vertex count
         assert_equal(4, body[4, 4].unpack1('V'))  # face stream length
         assert_equal(verts, body[8, 9 * 8].unpack('E*'))
+      end
+
+      def test_sgeo_mesh_hard_edges_flag
+        verts = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        faces = [3, 0, 1, 2]
+
+        soft = SgeoEncoder.encode_mesh(verts, faces, 'm')
+        hard = SgeoEncoder.encode_mesh(verts, faces, 'm', hard_edges: true)
+
+        # Inverted polarity: default/unset = legacy soften; bit 11 set = hard.
+        assert_equal(0, soft[6, 2].unpack1('v') & SgeoEncoder::FLAG_HARD_EDGES)
+        refute_equal(0, hard[6, 2].unpack1('v') & SgeoEncoder::FLAG_HARD_EDGES)
+
+        decoded_soft = SgeoDecoder.decode(soft)
+        decoded_hard = SgeoDecoder.decode(hard)
+        refute(decoded_soft[:hard_edges])
+        assert(decoded_hard[:hard_edges])
+        # The flag is header-only: bodies stay identical.
+        assert_equal(decoded_soft[:vertices], decoded_hard[:vertices])
+        assert_equal(decoded_soft[:faces], decoded_hard[:faces])
+      end
+
+      def test_sgeo_hard_edges_distinct_blobs_for_identity
+        verts = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        faces = [3, 0, 1, 2]
+        # Softness lives in the hashed bytes: hard/soft variants of the same mesh
+        # must never collapse to one blob (content-hash identity, ENG-9124 principle).
+        refute_equal(SgeoEncoder.encode_mesh(verts, faces, 'm'),
+                     SgeoEncoder.encode_mesh(verts, faces, 'm', hard_edges: true))
       end
 
       def test_sgeo_line_units

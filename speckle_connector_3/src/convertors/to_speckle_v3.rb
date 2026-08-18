@@ -174,8 +174,9 @@ module SpeckleConnector3
         app_id = face.persistent_id.to_s
         obj_k = @pipeline.intern_object(app_id)
         in_collection(obj_k, face)
-        # Carry edge soft/smooth so receive can restore it (eav boolean; the geometry
-        # formats are cross-connector and have no place for host-specific flags).
+        # Edge soft/smooth: the authoritative signal is SGEO HardEdges (bit 11) on
+        # the blob (emit_mesh). This eav row is TRANSITIONAL — old receives read
+        # only @speckle.is_soften; it dies at the stamp cut-over.
         add_properties(app_id, face, 'Objects.Geometry.Mesh', nil, [['@speckle.is_soften', soften?([face])]])
 
         geom_k = emit_mesh(app_id, [face])
@@ -256,7 +257,11 @@ module SpeckleConnector3
       # members), SGEO-encodes, and interns the blob. Returns the geometry K.
       def emit_mesh(mesh_app_id, faces)
         vertices, polygons = faces_to_mesh_arrays(faces)
-        @pipeline.add_geometry(mesh_app_id, ART::SgeoEncoder.encode_mesh(vertices, polygons, @units))
+        # HardEdges (SGEO bit 11) rides the blob — per-geometry and authoritative.
+        # Definition members gain soft/hard fidelity through it too: they never
+        # carried the object-plane @speckle.is_soften eav.
+        blob = ART::SgeoEncoder.encode_mesh(vertices, polygons, @units, hard_edges: !soften?(faces))
+        @pipeline.add_geometry(mesh_app_id, blob)
       end
 
       # Single-loop faces emit one n-gon from their outer loop (v2 parity, ENG-8845 —

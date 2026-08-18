@@ -600,6 +600,10 @@ module SpeckleConnector3
       # Adds a decoded SGEO geometry (mesh or line) to `entities`. Returns the created
       # entities (faces / edge) so the caller can tag them.
       def add_geometry(entities, geometry, material, is_soften)
+        # SGEO HardEdges (bit 11) is per-geometry and authoritative; the caller's
+        # is_soften (the object-plane @speckle.is_soften eav on transitional
+        # bundles, or the legacy soften default) is the fallback when unset.
+        is_soften = false if geometry[:hard_edges]
         case geometry[:type]
         when :mesh then add_mesh(entities, geometry, material, is_soften)
         when :line then [add_line(entities, geometry)]
