@@ -200,7 +200,7 @@ module SpeckleConnector3
       def emit_definition(definition_proxy)
         def_id = definition_proxy.definition.persistent_id.to_s
         def_k = @pipeline.add_definition(def_id, definition_proxy[:name])
-        add_definition_type(def_id, def_k, definition_proxy.definition)
+        add_definition_type(def_id, definition_proxy.definition)
         ord = 0
         definition_proxy.object_ids.each do |member_id|
           member = @flat[member_id]
@@ -414,7 +414,7 @@ module SpeckleConnector3
       # No @speckle.definition_k stamp (removed with the vocab rels): receive
       # joins definition meta by NAME, unique in SketchUp — the reader keeps the
       # stamp fallback for old bundles.
-      def add_definition_type(def_id, def_k, definition)
+      def add_definition_type(def_id, definition)
         root = [['speckle_type', 'Speckle.Core.Models.Instances.InstanceDefinitionProxy'], ['name', definition.name]]
         description = definition.description
         root << ['description', description] if description && description != ''
