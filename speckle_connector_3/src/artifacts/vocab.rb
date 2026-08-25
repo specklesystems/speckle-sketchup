@@ -3,11 +3,12 @@
 module SpeckleConnector3
   module Artifacts
     # The fixed envelope relation/node vocabulary + scene-view projection types,
-    # mirroring the `speckle-bundle-spec` catalog (schema_version 5). These integer
-    # codes are a cross-connector contract — never invent new ones here without the
-    # matching spec change + a schema_version bump. Retired ids (rels 13, 15-20, 22;
-    # node kind 6 COLLECTION, folded into CONTAINER + `subtype`) are kept vacant and
-    # never reused; {BundleReader} still accepts them when reading pre-v5 bundles.
+    # mirroring the `speckle-bundle-spec` catalog (schema_version 1, the renumbered
+    # successor of v5). These integer codes are a cross-connector contract — never
+    # invent new ones here without the matching spec change + a schema_version bump.
+    # Retired ids (rels 13, 15, 16, 19, 20; node kind 6 COLLECTION, folded into
+    # CONTAINER + `subtype`) are kept vacant and never reused; {BundleReader} still
+    # accepts them when reading older bundles.
     module RelKind
       DISPLAY = 1
       SOLID = 2 # reserved

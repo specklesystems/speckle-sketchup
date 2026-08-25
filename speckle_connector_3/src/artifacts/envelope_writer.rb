@@ -13,7 +13,7 @@ module SpeckleConnector3
     # `speckle-bundle-spec` generated schemas (and the SDK `EnvelopeWriter`);
     # SCHEMA_VERSION must stay in lockstep with `BundleSpec.SchemaVersion`.
     class EnvelopeWriter
-      SCHEMA_VERSION = 5
+      SCHEMA_VERSION = 1
 
       RELATIONS_SCHEMA = [
         { name: 'rel', type: :int32, optional: false },
@@ -46,8 +46,10 @@ module SpeckleConnector3
         [7, 'ON_LEVEL', 'object', 'node'], [8, 'DISPLAY_INSTANCE', 'object', 'node'],
         [9, 'DEFINES_INSTANCE', 'node', 'node'], [10, 'IN_COLLECTION', 'object', 'node'],
         [11, 'IN_MODEL', 'object', 'node'], [12, 'IN_ROOM', 'object', 'object'],
-        [14, 'IN_SYSTEM', 'object', 'node'], [21, 'CONNECTS_TO', 'object', 'object'],
-        [23, 'BOUNDS', 'object', 'object'], [24, 'PLACES', 'object', 'node'],
+        [14, 'IN_SYSTEM', 'object', 'node'], [17, 'IN_GROUP', 'object', 'node'],
+        [18, 'IN_ASSEMBLY', 'object', 'object'], [21, 'CONNECTS_TO', 'object', 'object'],
+        [22, 'HOSTED_ON', 'object', 'object'], [23, 'BOUNDS', 'object', 'object'],
+        [24, 'PLACES', 'object', 'node'],
         [25, 'DEFINES_MEMBER', 'node', 'object'], [26, 'OBJECT_HAS_MATERIAL', 'object', 'node'],
         [27, 'OBJECT_HAS_COLOR', 'object', 'node'], [28, 'NODE_HAS_MATERIAL', 'node', 'node'],
         [29, 'NODE_HAS_COLOR', 'node', 'node']
