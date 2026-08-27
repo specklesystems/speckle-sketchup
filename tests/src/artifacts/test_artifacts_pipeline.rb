@@ -139,7 +139,8 @@ module SpeckleConnector3
           p.complete
 
           meta = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.meta.parquet"))
-          assert_equal(EnvelopeWriter::SCHEMA_VERSION, meta.first['schema_version'])
+          assert_equal('1.0.0', EnvelopeWriter::SCHEMA_VERSION)
+          assert_equal('1.0.0', meta.first['schema_version'])
 
           nodes = ParquetSource.read_hashes(File.join(dir, "#{base}.envelope.nodes.parquet"))
           containers = nodes.select { |n| n['kind'] == NodeKind::CONTAINER }
