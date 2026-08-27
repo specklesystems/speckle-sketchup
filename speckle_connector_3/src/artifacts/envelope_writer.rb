@@ -11,9 +11,10 @@ module SpeckleConnector3
     # `.scene_views.parquet` (producer-authored projections) + optional
     # `.camera_views.parquet` (named camera viewpoints). Mirrors the
     # `speckle-bundle-spec` generated schemas (and the SDK `EnvelopeWriter`);
-    # SCHEMA_VERSION must stay in lockstep with `BundleSpec.SchemaVersion`.
+    # SCHEMA_VERSION is a semver string (VARCHAR in `meta.parquet`, initial
+    # release "1.0.0") and must stay in lockstep with `BundleSpec.SchemaVersion`.
     class EnvelopeWriter
-      SCHEMA_VERSION = 1
+      SCHEMA_VERSION = '1.0.0'
 
       RELATIONS_SCHEMA = [
         { name: 'rel', type: :int32, optional: false },
@@ -104,7 +105,7 @@ module SpeckleConnector3
       def write_catalog
         meta = Parquet::ParquetTableWriter.new(
           path('meta.parquet'),
-          [{ name: 'schema_version', type: :int32, optional: false },
+          [{ name: 'schema_version', type: :string, optional: false },
            { name: 'produced_by', type: :string, optional: true }]
         )
         meta.add_row(SCHEMA_VERSION, 'speckle-sketchup EnvelopeWriter')
