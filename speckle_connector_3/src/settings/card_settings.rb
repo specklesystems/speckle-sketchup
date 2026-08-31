@@ -42,8 +42,12 @@ module SpeckleConnector3
       end
 
       def self.get_filter_from_document(data)
-        return nil if data.nil?
-        data.values.collect do |d|
+        return nil if data.nil? || data.empty?
+
+        # Saved docs may hold settings as an Array (cards saved with no settings
+        # round-trip as []) or as an index-keyed Hash ("UI give array as object").
+        items = data.is_a?(Hash) ? data.values : data
+        items.collect do |d|
           CardSetting.new(id: d['id'], title: d['title'], type: d['type'],
                           value: d['value'], enum: d['enum'] ? d['enum'].values : nil) # UI give array as object damn!
         end

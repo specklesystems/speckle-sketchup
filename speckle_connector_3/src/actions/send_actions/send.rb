@@ -8,14 +8,27 @@ require_relative '../../operations/send'
 require_relative '../../sketchup_model/definitions/definition_manager'
 require_relative '../../sketchup_model/materials/material_manager'
 require_relative '../../sketchup_model/colors/color_manager'
+require_relative 'send_artifacts'
 
 module SpeckleConnector3
   module Actions
     # Send to server.
     class Send < Action
+      # Feature switch: when true, the Send button drives the Speckle 4.0 client-side
+      # artefact pipeline (ToSpeckleV3 -> parquet bundle -> v2 data endpoints) instead
+      # of the legacy JSON serialize + sendBatchViaBrowser path. Set false to restore
+      # the legacy path. (Requires a server with the v2 data endpoints.)
+      USE_ARTIFACT_PIPELINE = true
+
       # @param state [States::State] the current state of the {App::SpeckleConnectorApp}
+      # @param ingestion_id [String, nil] the DUI-created ingestion (4.0 artifact path)
+      # @param version_id [String, nil] the pre-allocated version id of that ingestion
       # @return [States::State] the new updated state object
-      def self.update_state(state, resolve_id, model_card_id)
+      def self.update_state(state, resolve_id, model_card_id, ingestion_id = nil, version_id = nil)
+        if USE_ARTIFACT_PIPELINE
+          return SendArtifacts.update_state(state, resolve_id, model_card_id, ingestion_id, version_id)
+        end
+
         # Set active path always to model to be safe always. Later we can address it
         start_time = Time.now.to_f
         state.sketchup_state.sketchup_model.active_path = nil
