@@ -202,6 +202,15 @@ module SpeckleConnector3
         end
       end
 
+      def test_add_node_rejects_columns_outside_the_node_schema
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          envelope = EnvelopeWriter.new(dir, 'ver1')
+          error = assert_raises(ArgumentError) { envelope.add_node(1, NodeKind::COLOR, colour: -65_536) }
+          assert_match(/colour/, error.message)
+          envelope.complete
+        end
+      end
+
       # ENG-8841 -> rel 29: a tag's colour rides a NODE_HAS_COLOR edge to a COLOR
       # node and survives the produce->read round trip; folders stay colourless.
       def test_tag_color_round_trips_via_rel29
