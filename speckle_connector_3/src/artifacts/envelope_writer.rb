@@ -35,7 +35,10 @@ module SpeckleConnector3
         { name: 'opacity', type: :double, optional: true },
         { name: 'metalness', type: :double, optional: true },
         { name: 'roughness', type: :double, optional: true },
-        { name: 'elevation', type: :double, optional: true }
+        { name: 'emissive', type: :int32, optional: true },
+        { name: 'ior', type: :double, optional: true },
+        { name: 'elevation', type: :double, optional: true },
+        { name: 'gh_topology', type: :string, optional: true }
       ].freeze
 
       # rel code -> [name, src_ns, dst_ns] — the cross-connector vocabulary catalog
@@ -78,7 +81,8 @@ module SpeckleConnector3
 
       # rubocop:disable Metrics/ParameterLists
       def add_node(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
-        @nodes.add_row(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
+        @nodes.add_row(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness,
+                       nil, nil, elevation, nil)
       end
       # rubocop:enable Metrics/ParameterLists
 

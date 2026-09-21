@@ -1,0 +1,24 @@
+name: Artifact tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install test dependencies
+        run: gem install minitest:5.20.0 simplecov:0.22.0 --no-document
+      - name: Test artifact serialization
+        run: ruby tests/src/artifacts/test_artifacts_pipeline.rb
