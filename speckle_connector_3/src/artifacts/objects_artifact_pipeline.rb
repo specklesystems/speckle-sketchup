@@ -80,27 +80,29 @@ module SpeckleConnector3
       # ── node namespace (value-entities) ───────────────────────────────
 
       def add_definition(definition_key, name)
-        node('def:' + definition_key) { |k| @envelope.add_node(k, NodeKind::DEFINITION, name, nil, nil, nil, nil, nil, nil, nil, nil, nil) }
+        node('def:' + definition_key) { |k| @envelope.add_node(k, NodeKind::DEFINITION, name: name) }
       end
 
       def add_instance(placement_key, def_ref, transform, units)
         node('inst:' + placement_key) do |k|
-          @envelope.add_node(k, NodeKind::INSTANCE, nil, def_ref, format_transform(transform), units, nil, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::INSTANCE, def_ref: def_ref, transform: format_transform(transform),
+                                                    units: units)
         end
       end
 
       def add_material(material_key, name, argb, opacity, metalness, roughness)
         node('mat:' + material_key) do |k|
-          @envelope.add_node(k, NodeKind::MATERIAL, name, nil, nil, nil, nil, argb, opacity, metalness, roughness, nil)
+          @envelope.add_node(k, NodeKind::MATERIAL, name: name, argb: argb, opacity: opacity, metalness: metalness,
+                                                    roughness: roughness)
         end
       end
 
       def add_color(argb)
-        node('col:' + argb.to_s) { |k| @envelope.add_node(k, NodeKind::COLOR, nil, nil, nil, nil, nil, argb, nil, nil, nil, nil) }
+        node('col:' + argb.to_s) { |k| @envelope.add_node(k, NodeKind::COLOR, argb: argb) }
       end
 
       def add_level(level_key, name, elevation)
-        node('lvl:' + level_key) { |k| @envelope.add_node(k, NodeKind::LEVEL, name, nil, nil, nil, nil, nil, nil, nil, nil, elevation) }
+        node('lvl:' + level_key) { |k| @envelope.add_node(k, NodeKind::LEVEL, name: name, elevation: elevation) }
       end
 
       # Since bundle-spec v5 a collection IS a CONTAINER node — `subtype` (its own
@@ -110,13 +112,13 @@ module SpeckleConnector3
       # (the pre-rel-29 carrier, now read-side fallback only).
       def add_collection(collection_key, name, parent_collection_k, subtype)
         node('coll:' + collection_key) do |k|
-          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_collection_k, nil, nil, subtype, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name: name, def_ref: parent_collection_k, subtype: subtype)
         end
       end
 
       def add_container(container_key, name, parent_container_k, subtype)
         node('cont:' + container_key) do |k|
-          @envelope.add_node(k, NodeKind::CONTAINER, name, parent_container_k, nil, nil, subtype, nil, nil, nil, nil, nil)
+          @envelope.add_node(k, NodeKind::CONTAINER, name: name, def_ref: parent_container_k, subtype: subtype)
         end
       end
 

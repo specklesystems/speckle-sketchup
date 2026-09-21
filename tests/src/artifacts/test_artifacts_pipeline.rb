@@ -170,6 +170,47 @@ module SpeckleConnector3
         end
       end
 
+      def test_node_schema_includes_unset_columns_required_by_other_connectors
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          p = ObjectsArtifactPipeline.new(dir, 'ver1')
+          p.add_material('mat-red', 'Brick Red', -65_536, 0.5, 0.25, 0.75)
+          p.add_level('level-1', 'First floor', 3.5)
+          p.add_collection('tag-1', 'Walls', nil, 'Layer')
+          p.complete
+
+          nodes = Parquet::ParquetTableReader.read_hashes(File.join(dir, 'ver1.envelope.nodes.parquet'))
+          assert_equal(3, nodes.length)
+          nodes.each do |node|
+            %w[emissive ior gh_topology].each { |column| assert_nil(node.fetch(column)) }
+          end
+          material, level, collection = nodes
+          assert_equal([-65_536, 0.5, 0.25, 0.75], material.values_at('argb', 'opacity', 'metalness', 'roughness'))
+          assert_equal(3.5, level.fetch('elevation'))
+          assert_equal('Layer', collection.fetch('subtype'))
+        end
+      end
+
+      def test_empty_node_table_still_has_the_complete_bundle_schema
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          p = ObjectsArtifactPipeline.new(dir, 'ver1')
+          p.complete
+
+          table = Parquet::ParquetTableReader.read(File.join(dir, 'ver1.envelope.nodes.parquet'))
+          assert_equal(%w[id kind name def_ref transform units subtype argb opacity metalness roughness
+                          emissive ior elevation gh_topology], table[:columns])
+          assert_empty(table[:rows])
+        end
+      end
+
+      def test_add_node_rejects_columns_outside_the_node_schema
+        Dir.mktmpdir('speckle-artifacts') do |dir|
+          envelope = EnvelopeWriter.new(dir, 'ver1')
+          error = assert_raises(ArgumentError) { envelope.add_node(1, NodeKind::COLOR, colour: -65_536) }
+          assert_match(/colour/, error.message)
+          envelope.complete
+        end
+      end
+
       # ENG-8841 -> rel 29: a tag's colour rides a NODE_HAS_COLOR edge to a COLOR
       # node and survives the produce->read round trip; folders stay colourless.
       def test_tag_color_round_trips_via_rel29

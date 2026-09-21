@@ -35,8 +35,13 @@ module SpeckleConnector3
         { name: 'opacity', type: :double, optional: true },
         { name: 'metalness', type: :double, optional: true },
         { name: 'roughness', type: :double, optional: true },
-        { name: 'elevation', type: :double, optional: true }
+        { name: 'emissive', type: :int32, optional: true },
+        { name: 'ior', type: :double, optional: true },
+        { name: 'elevation', type: :double, optional: true },
+        { name: 'gh_topology', type: :string, optional: true }
       ].freeze
+
+      NODE_VALUE_COLUMNS = NODES_SCHEMA.drop(2).map { |column| column[:name].to_sym }.freeze
 
       # rel code -> [name, src_ns, dst_ns] — the cross-connector vocabulary catalog
       # (live + reserved rows only; retired ids stay vacant).
@@ -76,11 +81,15 @@ module SpeckleConnector3
         @relations.add_row(rel, src, dst, ord)
       end
 
-      # rubocop:disable Metrics/ParameterLists
-      def add_node(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
-        @nodes.add_row(id, kind, name, def_ref, transform, units, subtype, argb, opacity, metalness, roughness, elevation)
+      # Values are keyed by column name so a nullable column inserted mid-schema
+      # (bundle-spec CHANGELOG: emissive/ior before elevation) cannot shift the
+      # ordinals of the columns after it.
+      def add_node(id, kind, **values)
+        unknown = values.keys - NODE_VALUE_COLUMNS
+        raise ArgumentError, "unknown node columns: #{unknown.join(', ')}" unless unknown.empty?
+
+        @nodes.add_row(id, kind, *values.values_at(*NODE_VALUE_COLUMNS))
       end
-      # rubocop:enable Metrics/ParameterLists
 
       def add_scene_view(view)
         @scene_views << view
