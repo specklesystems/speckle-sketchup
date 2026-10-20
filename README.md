@@ -156,14 +156,16 @@ on SketchUp toolbar.
 
 ### User Interface
 
-If it is your first time you cloned the project and willing to see Speckle UI, you
-should make sure that you compiled the `vue.js` project in the `ui` folder.
+The connector loads the hosted Desktop UI from `https://dui.speckle.systems`. To run
+against a local checkout of [speckle-connectors-dui](https://github.com/specklesystems/speckle-connectors-dui)
+instead, set `SPECKLE_DUI_URL` in the environment SketchUp is launched from:
 
-To run the `ui`, create a `.env` based on `.env-example` and paste in your 
-Speckle token. Then:
+    SPECKLE_DUI_URL=http://localhost:8082
 
-    cd ui
-    npm run serve
+The same key, along with `SPECKLE_DEFAULT_SPECKLE_SERVER_URL` and
+`SPECKLE_IS_UPDATE_NOTIFICATION_DISABLED`, can also be set as a `REG_SZ` value under
+`HKEY_LOCAL_MACHINE\Software\Speckle\Connector Config\Global` or the same path under
+`HKEY_CURRENT_USER` on Windows. Precedence is environment variable, then HKLM, then HKCU.
 
 ### Debugging 
 
