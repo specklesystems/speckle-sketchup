@@ -2,64 +2,38 @@
 
 require_relative '../../test_helper'
 require 'socket'
-require 'tmpdir'
 require_relative '../../support/account_builder'
-require_relative '../../support/fake_speckle_server'
 require_relative '../../support/sign_in_host'
-require_relative '../../../speckle_connector_3/src/accounts/accounts'
-require_relative '../../../speckle_connector_3/src/auth/account_authenticator'
 
 module SpeckleConnector3
   module Auth
     # ENG-11167: browser sign-in from SketchUp, driven through the native authentication entry point that the
-    # accountsBinding's authenticateAccount calls (the bridge itself needs a running SketchUp), against a real
-    # temporary Accounts.db, a real loopback callback port and an in-process Speckle server.
+    # accountsBinding's authenticateAccount calls, against a real temporary Accounts.db, a real loopback callback
+    # port and an in-process Speckle server.
     class AccountAuthenticatorTest < Minitest::Test
+      include TestSupport::SignInFixtures
+
       BUILD = TestSupport::AccountBuilder
       TOKENS = TestSupport::FakeSpeckleServer::DEFAULT_TOKENS
       SECOND_TOKENS = {
         'token' => '0d2e4f6a8c1b3d5f7e9a0c2e4b6d8f1a3c5e7b9d2f',
         'refreshToken' => '6b4d2f0e8c6a4b2d0f9e7c5a3b1d9f7e5c3a1b0d8e'
       }.freeze
-      SEAN = 'sean.obrien@example.com'
+      USER = TestSupport::FakeSpeckleServer::DEFAULT_USER
 
       def setup
-        @dir = Dir.mktmpdir('speckle-native-auth')
-        @db_path = File.join(@dir, 'Speckle', 'Accounts.db')
-        @callback_port = TestSupport.free_local_port
-        @scheduler = TestSupport::ManualScheduler.new
+        super
         @clock = TestSupport::FakeClock.new
-        @servers = []
-        @browsers = []
         @holders = []
       end
 
       def teardown
-        @authenticator&.cancel
-        @browsers.each(&:close)
-        @servers.each(&:stop)
         @holders.each { |holder| holder.close unless holder.closed? }
-        FileUtils.remove_entry(@dir)
-      end
-
-      def start_server(**options)
-        server = TestSupport::FakeSpeckleServer.new(callback_url: "http://localhost:#{@callback_port}", **options)
-        @servers << server
-        server
-      end
-
-      def browser_for(server, user_action: :approve)
-        browser = TestSupport::FakeBrowser.new(server, user_action: user_action)
-        @browsers << browser
-        browser
+        super
       end
 
       def authenticator_with(browser)
-        @authenticator = AccountAuthenticator.new(
-          browser: browser, scheduler: @scheduler, clock: @clock,
-          http: HttpClient.new(open_timeout: 2, read_timeout: 2),
-          accounts_db_path: @db_path, callback_port: @callback_port
-        )
+        super(browser, clock: @clock)
       end
 
       # @return [Array<AuthenticationOutcome>] filled when the attempt completes
@@ -74,8 +48,17 @@ module SpeckleConnector3
         outcomes.first
       end
 
-      def saved_accounts
-        Accounts.load_accounts(db_path: @db_path)
+      # Ticks, stopped timers included, until the server has answered the abandoned attempt's account query.
+      def settle_after_late_answer(server)
+        @scheduler.tick_until do
+          @scheduler.fire_stopped_timers
+          server.served_requests.count(%w[POST /graphql]) >= 2
+        end
+        5.times do
+          @scheduler.tick
+          @scheduler.fire_stopped_timers
+          sleep(0.01)
+        end
       end
 
       def existing_accounts(server)
@@ -94,22 +77,11 @@ module SpeckleConnector3
       end
 
       def expected_account(server, tokens: TOKENS, is_default: true)
-        {
-          'id' => BUILD.sdk_id(SEAN, server.url),
-          'token' => tokens['token'],
-          'refreshToken' => tokens['refreshToken'],
-          'isDefault' => is_default,
-          'isOnline' => true,
-          'serverInfo' => {
-            'name' => 'Speckle', 'company' => 'Speckle Systems', 'version' => server.version,
-            'description' => 'The Speckle server', 'frontend2' => true, 'url' => server.url,
-            'migration' => { 'movedFrom' => nil, 'movedTo' => nil }
-          },
-          'userInfo' => {
-            'id' => '7c1e5a9b3d', 'name' => "Seán O'Brien", 'email' => SEAN,
-            'company' => "O'Brien & Partners", 'avatar' => nil
-          }
-        }
+        BUILD.sdk_account(
+          id: BUILD.sdk_id(USER['email'], server.url), token: tokens['token'], refresh_token: tokens['refreshToken'],
+          is_default: is_default, user_id: USER['id'], user_name: USER['name'], email: USER['email'],
+          company: USER['company'], server_url: server.url, server_version: server.version
+        )
       end
 
       def test_first_sign_in_on_a_current_server_saves_the_account_as_the_default
@@ -128,15 +100,79 @@ module SpeckleConnector3
         browser = browser_for(server, user_action: :none)
 
         outcomes = sign_in(server.url, authenticator_with(browser))
+        page = opened_page(browser)
 
         assert_empty outcomes
         assert_equal 1, @scheduler.running_timers
-        assert_match(%r{\A#{server.url}/authn/verify/connectrV3/[A-Za-z0-9_-]{43}\?code_challenge_method=S256\z},
-                     browser.opened_urls.first)
-        browser.approve(browser.opened_urls.first)
+        assert_match(%r{\A#{server.url}/authn/verify/connectrV3/[A-Za-z0-9_-]{43}\?code_challenge_method=S256\z}, page)
+        browser.approve(page)
         assert_equal expected_account(server), complete(outcomes).account
         assert_equal 0, @scheduler.running_timers
         assert_match(/Authentication complete/, browser.callback_page)
+      end
+
+      def test_a_slow_server_before_the_browser_opens_leaves_the_host_ticking_until_it_answers
+        server = start_server(version: :current)
+        server.fail_request('GET', '/oauth/token', :hold)
+        browser = browser_for(server)
+
+        outcomes = sign_in(server.url, authenticator_with(browser))
+        @scheduler.tick_until { server.holding_request? }
+        5.times { @scheduler.tick }
+        waited = outcomes.empty? && browser.opened_urls.empty?
+        server.release_held_request
+
+        assert waited, 'the attempt went on before the server answered'
+        assert_equal expected_account(server), complete(outcomes).account
+        assert_equal [:oauth_token], server.exchanges.map(&:endpoint)
+      end
+
+      def test_a_slow_token_exchange_leaves_the_host_ticking_and_saves_once_the_server_answers
+        server = start_server(version: :current)
+        server.fail_request('POST', '/oauth/token', :hold)
+
+        outcomes = sign_in(server.url, authenticator_with(browser_for(server)))
+        @scheduler.tick_until { server.holding_request? }
+        5.times { @scheduler.tick }
+        waited = outcomes.empty? && saved_accounts.empty?
+        server.release_held_request
+
+        assert waited, 'the attempt ended before the server answered'
+        assert_equal expected_account(server), complete(outcomes).account
+        assert_equal [expected_account(server)], saved_accounts
+      end
+
+      def test_an_attempt_replaced_while_its_exchange_is_in_flight_never_saves_the_late_answer
+        server = start_server(version: :current)
+        server.fail_request('POST', '/oauth/token', :hold)
+        authenticator = authenticator_with(browser_for(server))
+        replaced = sign_in(server.url, authenticator)
+        @scheduler.tick_until { server.holding_request? }
+
+        invalid = sign_in('speckle.example.com', authenticator)
+        server.release_held_request
+        settle_after_late_answer(server)
+
+        assert_kind_of AuthenticationCancelledError, replaced.first.error
+        assert_equal 1, replaced.size
+        assert_kind_of InvalidServerUrlError, invalid.first.error
+        assert_empty saved_accounts
+      end
+
+      def test_an_attempt_timing_out_while_its_exchange_is_in_flight_never_saves_the_late_answer
+        server = start_server(version: :current)
+        server.fail_request('POST', '/oauth/token', :hold)
+        timed_out = sign_in(server.url, authenticator_with(browser_for(server)))
+        @scheduler.tick_until { server.holding_request? }
+
+        @clock.advance(300)
+        @scheduler.tick
+        server.release_held_request
+        settle_after_late_answer(server)
+
+        assert_kind_of AuthenticationTimeoutError, timed_out.first.error
+        assert_equal 1, timed_out.size
+        assert_empty saved_accounts
       end
 
       def test_adding_an_account_on_a_2_31_server_uses_the_legacy_exchange_and_keeps_the_other_accounts
@@ -156,8 +192,8 @@ module SpeckleConnector3
 
       def test_signing_in_again_refreshes_the_saved_account_and_keeps_its_identity_and_default
         server = start_server(version: :current, tokens: [SECOND_TOKENS])
-        previous = BUILD.dui_account(id: BUILD.sdk_id(SEAN, server.url), token: 'expired-token',
-                                     refresh_token: 'expired-refresh', is_default: true, email: SEAN,
+        previous = BUILD.dui_account(id: BUILD.sdk_id(USER['email'], server.url), token: 'expired-token',
+                                     refresh_token: 'expired-refresh', is_default: true, email: USER['email'],
                                      server_url: server.url)
         other = BUILD.sdk_account(is_default: false)
         BUILD.seed_accounts_db(@db_path, previous, other)
@@ -221,6 +257,7 @@ module SpeckleConnector3
         browser = browser_for(server, user_action: :none)
         authenticator = authenticator_with(browser)
         cancelled = sign_in(server.url, authenticator)
+        opened_page(browser)
 
         authenticator.cancel
 
@@ -230,7 +267,7 @@ module SpeckleConnector3
         assert_predicate self, :callback_port_free?
         assert_empty saved_accounts
         retry_outcomes = sign_in(server.url, authenticator)
-        browser.approve(browser.opened_urls.last)
+        browser.approve(opened_page(browser, 2))
         assert_equal expected_account(server), complete(retry_outcomes).account
         assert_equal 1, cancelled.size
       end
@@ -240,6 +277,7 @@ module SpeckleConnector3
         browser = browser_for(server, user_action: :none)
         authenticator = authenticator_with(browser)
         timed_out = sign_in(server.url, authenticator)
+        opened_page(browser)
 
         @clock.advance(299)
         @scheduler.tick
@@ -253,7 +291,7 @@ module SpeckleConnector3
         assert_predicate self, :callback_port_free?
         assert_empty saved_accounts
         retry_outcomes = sign_in(server.url, authenticator)
-        browser.approve(browser.opened_urls.last)
+        browser.approve(opened_page(browser, 2))
         assert_equal expected_account(server), complete(retry_outcomes).account
       end
 
@@ -262,9 +300,10 @@ module SpeckleConnector3
         browser = browser_for(server, user_action: :none)
         authenticator = authenticator_with(browser)
         replaced = sign_in(server.url, authenticator)
+        opened_page(browser)
         current = sign_in(server.url, authenticator)
 
-        browser.approve(browser.opened_urls.last)
+        browser.approve(opened_page(browser, 2))
         @scheduler.fire_stopped_timers
 
         assert_equal expected_account(server), complete(current).account
@@ -280,9 +319,11 @@ module SpeckleConnector3
         browser = browser_for(server, user_action: :none)
         authenticator = authenticator_with(browser)
         sign_in(server.url, authenticator)
+        replaced_page = opened_page(browser)
         current = sign_in(server.url, authenticator)
+        opened_page(browser, 2)
 
-        browser.approve(browser.opened_urls.first)
+        browser.approve(replaced_page)
         outcome = complete(current)
 
         assert_kind_of TokenExchangeRejectedError, outcome.error
@@ -305,6 +346,39 @@ module SpeckleConnector3
         assert_predicate self, :callback_port_free?
         retried = complete(sign_in(server.url, authenticator))
         assert_equal expected_account(server, is_default: false), retried.account
+      end
+
+      def test_a_2_31_server_rejecting_the_code_fails_with_its_reason_and_saves_nothing
+        server = start_server(version: :minimum)
+        existing = existing_accounts(server)
+        BUILD.seed_accounts_db(@db_path, *existing)
+        browser = browser_for(server, user_action: :none)
+        authenticator = authenticator_with(browser)
+        sign_in(server.url, authenticator)
+        replaced_page = opened_page(browser)
+        current = sign_in(server.url, authenticator)
+        opened_page(browser, 2)
+
+        browser.approve(replaced_page)
+        outcome = complete(current)
+
+        assert_kind_of TokenExchangeRejectedError, outcome.error
+        assert_match(/Code challenge mismatch/, outcome.error.message)
+        assert_equal [TestSupport::FakeSpeckleServer::Exchange.new(:auth_token, 401)], server.exchanges
+        assert_equal existing, saved_accounts
+      end
+
+      def test_a_server_error_from_the_token_exchange_fails_as_a_server_problem_and_saves_nothing
+        server = start_server(version: :current)
+        existing = existing_accounts(server)
+        BUILD.seed_accounts_db(@db_path, *existing)
+        server.fail_request('POST', '/oauth/token', 503)
+
+        outcome = complete(sign_in(server.url, authenticator_with(browser_for(server))))
+
+        assert_instance_of ServerRequestError, outcome.error
+        assert_match(/HTTP 503/, outcome.error.message)
+        assert_equal existing, saved_accounts
       end
 
       def test_a_server_error_while_reading_the_signed_in_user_saves_nothing

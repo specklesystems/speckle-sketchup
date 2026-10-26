@@ -11,8 +11,9 @@ module SpeckleConnector3
     module AccountBuilder
       # Shape written by the .NET SDK (Manager, Revit, Rhino, ...).
       def self.sdk_account(id: '4A1B7E0C2D3F4E5A6B7C8D9E0F1A2B3C', token: 'sdk-token', refresh_token: 'sdk-refresh',
-                           is_default: false, user_name: 'Ada Lovelace', email: 'ada@example.com',
-                           company: 'Analytical Engines', server_url: 'https://app.speckle.systems')
+                           is_default: false, user_id: 'f00dfeed01', user_name: 'Ada Lovelace',
+                           email: 'ada@example.com', company: 'Analytical Engines',
+                           server_url: 'https://app.speckle.systems', server_version: '2.25.4')
         {
           'id' => id,
           'token' => token,
@@ -22,14 +23,14 @@ module SpeckleConnector3
           'serverInfo' => {
             'name' => 'Speckle',
             'company' => 'Speckle Systems',
-            'version' => '2.25.4',
+            'version' => server_version,
             'description' => 'The Speckle server',
             'frontend2' => true,
             'url' => server_url,
             'migration' => { 'movedFrom' => nil, 'movedTo' => nil }
           },
           'userInfo' => {
-            'id' => 'f00dfeed01',
+            'id' => user_id,
             'name' => user_name,
             'email' => email,
             'company' => company,

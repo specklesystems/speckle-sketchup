@@ -15,8 +15,6 @@ module SpeckleConnector3
     class FakeSpeckleServer
       APP_ID = 'connectrV3'
 
-      # current: OAuth token endpoint + connectrV3. minimum: public 2.31.0, connectrV3 but only /auth/token.
-      # before_minimum: a public server older than 2.31.0, without connectrV3.
       VERSIONS = {
         current: { version: '2026.9.7', oauth_token_endpoint: true, connector_app: true },
         minimum: { version: '2.31.0', oauth_token_endpoint: false, connector_app: true },
@@ -36,6 +34,8 @@ module SpeckleConnector3
         'refreshToken' => '9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c'
       }.freeze
 
+      INTERNAL_ERROR = { 'errors' => [{ 'message' => 'Internal server error' }] }.freeze
+
       Exchange = Struct.new(:endpoint, :status)
 
       attr_reader :url, :exchanges, :version
@@ -52,7 +52,9 @@ module SpeckleConnector3
         @issued_tokens = []
         @codes = {}
         @exchanges = []
+        @served = []
         @failures = {}
+        @held = Queue.new
         @lock = Mutex.new
         @server = TCPServer.new('127.0.0.1', 0)
         @url = "http://127.0.0.1:#{@server.addr[1]}"
@@ -66,11 +68,8 @@ module SpeckleConnector3
 
       def server_info
         {
-          'name' => 'Speckle',
-          'company' => 'Speckle Systems',
-          'description' => 'The Speckle server',
-          'version' => @version,
-          'migration' => { 'movedFrom' => nil, 'movedTo' => nil }
+          'name' => 'Speckle', 'company' => 'Speckle Systems', 'description' => 'The Speckle server',
+          'version' => @version, 'migration' => { 'movedFrom' => nil, 'movedTo' => nil }
         }
       end
 
@@ -93,9 +92,23 @@ module SpeckleConnector3
       end
 
       # After `skip` matching requests, the next `method path` request gets `status` instead of its normal answer;
-      # status :drop closes the connection without answering, like a network failure mid-request.
+      # status :drop closes the connection without answering, like a network failure mid-request, and :hold answers
+      # normally once the test calls `release_held_request`, like a slow server.
       def fail_request(method, path, status, skip: 0)
         @lock.synchronize { @failures[[method, path]] = { status: status, skip: skip } }
+      end
+
+      # @return [Array<Array(String, String)>] `[method, path]` of every request answered so far
+      def served_requests
+        @lock.synchronize { @served.dup }
+      end
+
+      def holding_request?
+        !@held.empty?
+      end
+
+      def release_held_request
+        @held.pop << true
       end
 
       private
@@ -114,12 +127,19 @@ module SpeckleConnector3
         failure = take_failure(method, path)
         return if failure == :drop
 
-        status, content = failure ? [failure, { 'errors' => [{ 'message' => 'Internal server error' }] }] : route(method, path, headers, body)
+        failure = wait_for_release if failure == :hold
+        status, content = failure ? [failure, INTERNAL_ERROR] : route(method, path, headers, body)
         write_response(socket, status, content)
+        @lock.synchronize { @served << [method, path] }
       rescue IOError, SystemCallError
         nil
       ensure
         socket.close unless socket.closed?
+      end
+
+      def wait_for_release
+        Queue.new.tap { |release| @held << release }.pop
+        nil
       end
 
       def take_failure(method, path)
@@ -138,7 +158,7 @@ module SpeckleConnector3
 
       def read_request(socket)
         request_line = socket.gets("\r\n").to_s.chomp
-        method, target = request_line.split(' ')
+        method, target = request_line.split
         headers = {}
         while (line = socket.gets("\r\n")) && line != "\r\n"
           name, value = line.chomp.split(':', 2)

@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
+require 'fileutils'
 require 'io/wait'
 require 'socket'
+require 'tmpdir'
 require 'uri'
+require_relative 'fake_speckle_server'
+require_relative '../../speckle_connector_3/src/accounts/accounts'
+require_relative '../../speckle_connector_3/src/auth/account_authenticator'
 
 module SpeckleConnector3
   module TestSupport
@@ -107,6 +112,56 @@ module SpeckleConnector3
 
       def advance(seconds)
         @now += seconds
+      end
+    end
+
+    # A sign-in world per test: a temporary Accounts.db, a free callback port, test-driven host timers, and the
+    # fake servers, browsers and authenticator the test starts, all torn down after it.
+    module SignInFixtures
+      def setup
+        @dir = Dir.mktmpdir('speckle-sign-in')
+        @db_path = File.join(@dir, 'Speckle', 'Accounts.db')
+        @callback_port = TestSupport.free_local_port
+        @scheduler = ManualScheduler.new
+        @servers = []
+        @browsers = []
+      end
+
+      def teardown
+        @authenticator&.cancel
+        @browsers.each(&:close)
+        @servers.each(&:stop)
+        FileUtils.remove_entry(@dir)
+      end
+
+      def start_server(**options)
+        server = FakeSpeckleServer.new(callback_url: "http://localhost:#{@callback_port}", **options)
+        @servers << server
+        server
+      end
+
+      def browser_for(server, user_action: :approve)
+        browser = FakeBrowser.new(server, user_action: user_action)
+        @browsers << browser
+        browser
+      end
+
+      def authenticator_with(browser, clock: FakeClock.new)
+        @authenticator = Auth::AccountAuthenticator.new(
+          browser: browser, scheduler: @scheduler, clock: clock,
+          http: Auth::HttpClient.new(open_timeout: 2, read_timeout: 2),
+          accounts_db_path: @db_path, callback_port: @callback_port
+        )
+      end
+
+      def saved_accounts
+        Accounts.load_accounts(db_path: @db_path)
+      end
+
+      # @return [String] the `nth` authorization page the browser was sent to, once the server checks before it ran
+      def opened_page(browser, nth = 1)
+        @scheduler.tick_until { browser.opened_urls.size >= nth }
+        browser.opened_urls[nth - 1]
       end
     end
 
