@@ -102,6 +102,14 @@ module SpeckleConnector3
       File.chmod(0o644, @db_path)
     end
 
+    def test_saving_where_the_database_folder_cannot_be_created_raises_a_store_error
+      File.write(File.join(@dir, 'Speckle'), 'a file where the Speckle folder belongs')
+
+      assert_raises(Accounts::StoreError) do
+        Accounts.save_account(BUILD.sdk_account, db_path: @db_path)
+      end
+    end
+
     def test_adding_an_account_stores_it_as_given_and_replaces_the_same_id
       existing = BUILD.dui_account(is_default: true)
       replaced = BUILD.sdk_account(is_default: true, token: 'old-token')

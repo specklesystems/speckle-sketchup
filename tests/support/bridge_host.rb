@@ -20,9 +20,17 @@ module SpeckleConnector3
 
       def initialize
         @scripts = []
+        @failures = []
+      end
+
+      # The next script the app executes raises `error` instead of reaching the page.
+      def fail_next_script(error)
+        @failures << error
       end
 
       def execute_script(script)
+        raise @failures.shift unless @failures.empty?
+
         @scripts << script
       end
 

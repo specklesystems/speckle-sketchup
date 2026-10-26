@@ -9,7 +9,8 @@ require_relative 'errors'
 
 module SpeckleConnector3
   module Auth
-    # Short JSON requests to a Speckle server, bounded by explicit timeouts because they run on SketchUp's UI thread.
+    # Short JSON requests to a Speckle server, bounded by explicit timeouts so a request thread that outlives its
+    # sign-in attempt still ends.
     class HttpClient
       Response = Struct.new(:status, :body) do
         def ok?

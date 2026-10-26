@@ -25,41 +25,47 @@ module SpeckleConnector3
     end
 
     def self.add_account(account_id, account, db_path: SPECKLE_ACCOUNTS_DB_PATH)
-      create_database(db_path) unless File.exist?(db_path)
-      db = Sqlite3::Database.new(db_path)
-      begin
-        db.exec("INSERT OR REPLACE INTO objects (hash, content) VALUES (#{sql_text(account_id)}, " \
-                "#{sql_text(JSON.generate(account))})")
+      with_database(db_path) do |db|
+        write_account(db, account_id, account)
         puts "Account with hash #{account_id} has been added/updated."
       rescue StandardError => e
         puts "An error occurred while adding the account: #{e}"
-      ensure
-        db.close
       end
     end
 
     # Saves an account under its 'id'. The first account in the store becomes the default.
     # @param account [Hash] account in the shared Accounts.db shape, including 'id'.
     # @return [Hash] the account as stored, with string keys and the resolved 'isDefault'.
-    # @raise [StoreError] when the database cannot be read or written; nothing is saved then.
+    # @raise [StoreError] when the database cannot be created, read or written; nothing is saved then.
     def self.save_account(account, db_path: SPECKLE_ACCOUNTS_DB_PATH)
       stored = JSON.parse(JSON.generate(account))
       id = stored.fetch('id')
-      create_database(db_path) unless File.exist?(db_path)
-      db = Sqlite3::Database.new(db_path)
-      begin
+      with_database(db_path) do |db|
         rows = db.exec('SELECT hash, content FROM objects')
         previous = rows.find { |hash, _content| hash == id }
         # ENG-11162: re-authenticating keeps the stored default, so the user's default account does not move.
         stored['isDefault'] = previous ? JSON.parse(previous[1])['isDefault'] == true : rows.empty?
-        db.exec("INSERT OR REPLACE INTO objects (hash, content) VALUES (#{sql_text(id)}, " \
-                "#{sql_text(JSON.generate(stored))})")
+        write_account(db, id, stored)
         stored
-      rescue RuntimeError, JSON::ParserError => e
-        raise StoreError, "Could not save account #{id}: #{e.message}"
+      end
+    rescue RuntimeError, SystemCallError, JSON::ParserError => e
+      raise StoreError, "Could not save account #{id}: #{e.message}"
+    end
+
+    # Yields the database at `db_path`, created with its table when missing, and closes it afterwards.
+    def self.with_database(db_path)
+      create_database(db_path) unless File.exist?(db_path)
+      db = Sqlite3::Database.new(db_path)
+      begin
+        yield db
       ensure
         db.close
       end
+    end
+
+    def self.write_account(database, account_id, account)
+      database.exec("INSERT OR REPLACE INTO objects (hash, content) VALUES (#{sql_text(account_id)}, " \
+                    "#{sql_text(JSON.generate(account))})")
     end
 
     def self.sql_text(value)
@@ -75,7 +81,7 @@ module SpeckleConnector3
       db.close
     end
 
-    private_class_method :sql_text, :create_database
+    private_class_method :sql_text, :create_database, :with_database, :write_account
 
     # Creates the 'objects' table in the database if it doesn't already exist.
     # @param db [Sqlite3::Database] the SQLite3 database instance.
