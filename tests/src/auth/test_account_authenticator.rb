@@ -16,8 +16,8 @@ module SpeckleConnector3
       BUILD = TestSupport::AccountBuilder
       TOKENS = TestSupport::FakeSpeckleServer::DEFAULT_TOKENS
       SECOND_TOKENS = {
-        'token' => '0d2e4f6a8c1b3d5f7e9a0c2e4b6d8f1a3c5e7b9d2f',
-        'refreshToken' => '6b4d2f0e8c6a4b2d0f9e7c5a3b1d9f7e5c3a1b0d8e'
+        'token' => 'fake-second-token',
+        'refreshToken' => 'fake-second-refresh-token'
       }.freeze
       USER = TestSupport::FakeSpeckleServer::DEFAULT_USER
 

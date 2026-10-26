@@ -30,8 +30,8 @@ module SpeckleConnector3
       }.freeze
 
       DEFAULT_TOKENS = {
-        'token' => '3f1c9a7e5b2d4c6e8a0b1d3f5e7a9c1b2d4f6a8c0e',
-        'refreshToken' => '9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c'
+        'token' => 'fake-token',
+        'refreshToken' => 'fake-refresh-token'
       }.freeze
 
       INTERNAL_ERROR = { 'errors' => [{ 'message' => 'Internal server error' }] }.freeze
