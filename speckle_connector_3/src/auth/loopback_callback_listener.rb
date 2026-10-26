@@ -2,6 +2,7 @@
 
 require 'socket'
 require 'uri'
+require_relative 'errors'
 
 module SpeckleConnector3
   module Auth
@@ -21,7 +22,7 @@ module SpeckleConnector3
     end
 
     # The browser-login callback port is held by another socket (another connector's login, or any other app).
-    class CallbackPortBusyError < StandardError
+    class CallbackPortBusyError < AuthenticationError
       attr_reader :host, :port
 
       def initialize(host, port, cause_error)

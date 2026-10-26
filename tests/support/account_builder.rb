@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'digest'
 require 'json'
 require 'fileutils'
 require_relative '../../speckle_connector_3/src/ext/sqlite3'
@@ -61,6 +62,11 @@ module SpeckleConnector3
             'avatar' => 'https://speckle.example.com/avatar.png'
           }
         }
+      end
+
+      # Account id as the .NET SDK and the hosted DUI derive it: MD5 of email + server URL, upper-case hex.
+      def self.sdk_id(email, server_url)
+        Digest::MD5.hexdigest(email + server_url).upcase
       end
 
       # Writes rows the way the SDK does, independently of the code under test.
