@@ -68,6 +68,11 @@ module SpeckleConnector3
       # collects the result from its timer ticks and continues with `continuation`. An attempt that ends first
       # never reads the result, and HttpClient's timeouts bound how long the thread outlives it.
       ServerCall = Struct.new(:thread, :continuation) do
+        # SketchUp keeps the GVL while idle, so a thread polled only by short timer ticks never runs: measured in
+        # SketchUp 2027, a threaded HTTPS request was still pending after 40 s of 0.2 s ticks, but finished in
+        # 0.6 s once each tick joined it for 50 ms (ENG-11169).
+        RUN_SLICE_SECONDS = 0.05
+
         def self.start(continuation, &request)
           thread = Thread.new do
             Thread.current.report_on_exception = false
@@ -77,7 +82,7 @@ module SpeckleConnector3
         end
 
         def done?
-          !thread.alive?
+          !thread.join(RUN_SLICE_SECONDS).nil?
         end
 
         # @raise whatever the request raised
