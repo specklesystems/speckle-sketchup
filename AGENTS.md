@@ -13,6 +13,13 @@ start, `mise run agents-sync` at the atlas root) — edit the source, never the
 output. Layout, opt-in shared MCP servers and collision rules:
 `../atlas/agents/README.md`.
 
+## Decisions
+
+`docs/adr/` holds this repo's ADRs and its pointers to the atlas ADRs that
+govern it (index: `docs/adr/README.md`). Native sign-in (`authenticateAccount`
+on the accounts binding, `speckle_connector_3/src/auth/`) is governed by
+pointer ADR-0001.
+
 <!-- atlas:shared:begin -->
 
 <!-- Duplicated from the atlas checkout root AGENTS.md by atlas/scripts/sync-agents.py for clients that stop at this repo's git root (Codex, Grok). Edit the atlas copy. -->

@@ -31,7 +31,7 @@ module SpeckleConnector3
         }
         
         js_error_script = "#{@view_name}.receiveResponse('#{@args.first}', #{host_app_error.to_json})"
-        state.with_add_queue_js_command("error_#{@view_name}", js_error_script)
+        state.with_add_queue_js_command("error_#{@view_name}_#{@args.first}", js_error_script)
       end
     end
   end
