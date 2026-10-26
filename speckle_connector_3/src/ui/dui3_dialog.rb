@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'command_data'
+require_relative '../settings/global_config'
 
 module SpeckleConnector3
   module Ui
@@ -83,9 +84,7 @@ module SpeckleConnector3
         dialog.set_can_close do
           true
         end
-        # File.exist?(@htm_file) ? dialog.set_file(@htm_file) : dialog.set_url('http://localhost:9091')
-        # dialog.set_url('http://localhost:8082') # uncomment this line if you want to use your local version of ui
-        dialog.set_url('https://dui.speckle.systems/') # uncomment this line if you want to use deployed ui on netlify
+        dialog.set_url(Settings::GlobalConfig.new.dui_url)
         add_exec_callback(dialog)
         dialog
       end
