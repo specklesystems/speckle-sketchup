@@ -1,24 +1,20 @@
 # frozen_string_literal: true
 
-require 'JSON'
+require 'json'
 require 'fileutils'
 require_relative '../ext/sqlite3'
 require_relative '../constants/path_constants'
-require_relative '../preferences/preferences'
 
 module SpeckleConnector3
   # Accounts to communicate with models on user's account.
   module Accounts
+    # Raised when the accounts database rejects a read or write.
+    class StoreError < StandardError; end
+
     # Load accounts from user's app data.
-    def self.load_accounts
-      db_path = SPECKLE_ACCOUNTS_DB_PATH
+    def self.load_accounts(db_path: SPECKLE_ACCOUNTS_DB_PATH)
       unless File.exist?(db_path)
-        # Ensure parent directory exists before creating the database file
-        FileUtils.mkdir_p(File.dirname(db_path))
-        File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
-        db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
-        Preferences.create_objects_table(db)
-        db.close
+        create_database(db_path)
         return []
       end
 
@@ -28,28 +24,64 @@ module SpeckleConnector3
       rows.map { |row| JSON.parse(row[1]) }
     end
 
-    def self.add_account(account_id, account)
-      unless File.exist?(SPECKLE_ACCOUNTS_DB_PATH)
-        # Ensure parent directory exists before creating the database file
-        FileUtils.mkdir_p(File.dirname(SPECKLE_ACCOUNTS_DB_PATH))
-        File.new(SPECKLE_ACCOUNTS_DB_PATH, "w")
-        db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
-        create_objects_table(db)
-        db.close
-      end
-      db = Sqlite3::Database.new(SPECKLE_ACCOUNTS_DB_PATH)
-      account_json = JSON.generate(account)
-      sql_query = "INSERT OR REPLACE INTO objects (hash, content) VALUES ('#{account_id}', '#{account_json}')"
-
-      begin
-        db.exec(sql_query)
+    def self.add_account(account_id, account, db_path: SPECKLE_ACCOUNTS_DB_PATH)
+      with_database(db_path) do |db|
+        write_account(db, account_id, account)
         puts "Account with hash #{account_id} has been added/updated."
       rescue StandardError => e
         puts "An error occurred while adding the account: #{e}"
+      end
+    end
+
+    # Saves an account under its 'id'. The first account in the store becomes the default.
+    # @param account [Hash] account in the shared Accounts.db shape, including 'id'.
+    # @return [Hash] the account as stored, with string keys and the resolved 'isDefault'.
+    # @raise [StoreError] when the database cannot be created, read or written; nothing is saved then.
+    def self.save_account(account, db_path: SPECKLE_ACCOUNTS_DB_PATH)
+      stored = JSON.parse(JSON.generate(account))
+      id = stored.fetch('id')
+      with_database(db_path) do |db|
+        rows = db.exec('SELECT hash, content FROM objects')
+        previous = rows.find { |hash, _content| hash == id }
+        # ENG-11162: re-authenticating keeps the stored default, so the user's default account does not move.
+        stored['isDefault'] = previous ? JSON.parse(previous[1])['isDefault'] == true : rows.empty?
+        write_account(db, id, stored)
+        stored
+      end
+    rescue RuntimeError, SystemCallError, JSON::ParserError => e
+      raise StoreError, "Could not save account #{id}: #{e.message}"
+    end
+
+    # Yields the database at `db_path`, created with its table when missing, and closes it afterwards.
+    def self.with_database(db_path)
+      create_database(db_path) unless File.exist?(db_path)
+      db = Sqlite3::Database.new(db_path)
+      begin
+        yield db
       ensure
         db.close
       end
     end
+
+    def self.write_account(database, account_id, account)
+      database.exec("INSERT OR REPLACE INTO objects (hash, content) VALUES (#{sql_text(account_id)}, " \
+                    "#{sql_text(JSON.generate(account))})")
+    end
+
+    def self.sql_text(value)
+      "'#{value.to_s.gsub("'", "''")}'"
+    end
+
+    def self.create_database(db_path)
+      FileUtils.mkdir_p(File.dirname(db_path))
+      # The sqlite ext crashes the process when opening a path that does not exist yet.
+      File.new(db_path, 'w').close
+      db = Sqlite3::Database.new(db_path)
+      create_objects_table(db)
+      db.close
+    end
+
+    private_class_method :sql_text, :create_database, :with_database, :write_account
 
     # Creates the 'objects' table in the database if it doesn't already exist.
     # @param db [Sqlite3::Database] the SQLite3 database instance.
@@ -62,8 +94,7 @@ module SpeckleConnector3
   SQL
     end
 
-    def self.remove_account(account_id)
-      db_path = SPECKLE_ACCOUNTS_DB_PATH
+    def self.remove_account(account_id, db_path: SPECKLE_ACCOUNTS_DB_PATH)
       unless File.exist?(db_path)
         raise(
           IOError,
@@ -74,7 +105,7 @@ module SpeckleConnector3
       db = Sqlite3::Database.new(db_path)
 
       begin
-        db.exec("DELETE FROM objects WHERE hash = '#{account_id}'")
+        db.exec("DELETE FROM objects WHERE hash = #{sql_text(account_id)}")
         puts "Account with hash #{account_id} has been removed."
       rescue StandardError => e
         puts "An error occurred: #{e}"

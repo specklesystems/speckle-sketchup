@@ -1,0 +1,37 @@
+name: Windows tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # The bundled sqlite ext ships Windows and macOS binaries only, so tests that load it cannot run on Linux.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      # Ruby 3.4 is the SketchUp 2027 ABI that sqlite3_34.so is built for. The locked minitest does not load on
+      # 3.4, so bundler is skipped and the test gems come from Ruby's bundled minitest plus simplecov.
+      - uses: ruby/setup-ruby@a0102e0972be65f351c307e2d64b9314a57c8073 # v1.324.0
+        with:
+          ruby-version: '3.4'
+          bundler: none
+      - name: Install test gems
+        run: gem install simplecov:0.21.2 --no-document
+      - name: Run tests
+        shell: bash
+        run: |
+          shopt -s nullglob globstar
+          files=(tests/src/accounts/**/test_*.rb tests/src/auth/**/test_*.rb tests/src/ui/**/test_*.rb)
+          if [ ${#files[@]} -eq 0 ]; then echo "No test files found"; exit 1; fi
+          for f in "${files[@]}"; do
+            echo "::group::$f"
+            ruby "$f"
+            echo "::endgroup::"
+          done

@@ -192,6 +192,22 @@ Make sure you run the `ui` before starting the SketchUp Connector
     cd ui
     npm run serve
 
+### Running Tests
+
+Tests are Minitest files, run one file at a time from the repo root:
+
+    bundle exec ruby tests/src/<area>/test_<thing>.rb
+
+Tests that load the bundled SQLite extension (such as `tests/src/accounts`) need Windows or macOS
+Ruby with an ABI that has a binary in `speckle_connector_3/src/ext/sqlite3`. CI runs them on Windows
+with Ruby 3.4 (`.github/workflows/windows-tests.yml`). On Ruby 3.4 the locked minitest fails to
+load (it needs `mutex_m`), so use Ruby's bundled minitest plus simplecov instead of bundler:
+
+    gem install simplecov:0.21.2 --no-document
+    ruby tests/src/accounts/test_accounts_store.rb
+
+The accounts tests work on temporary databases and never touch your real `Accounts.db`.
+
 ### Code Quality
 
 Tracking your code quality before merging any code to `main` branch might not seem at the
