@@ -25,12 +25,12 @@ jobs:
       file_version: ${{ steps.set-version.outputs.file-version }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python 3.14
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.14"
 
@@ -38,29 +38,34 @@ jobs:
         name: Set version to output
         shell: bash
         run: |
-          TAG=${{ github.ref_name }}
-          if [[ "${{ github.ref }}" != refs/tags/* ]]; then
-            TAG="0.0.99.${{ github.run_number }}"
+          TAG=${REF_NAME}
+          if [[ "${REF}" != refs/tags/* ]]; then
+            TAG="0.0.99.${RUN_NUMBER}"
           fi
           SEMVER="$TAG"
           FILE_VERSION=$(echo "$TAG" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          FILE_VERSION="$FILE_VERSION.${{ github.run_number }}"
+          FILE_VERSION="$FILE_VERSION.${RUN_NUMBER}"
 
           echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
           echo "file-version=$FILE_VERSION" >> "$GITHUB_OUTPUT"
 
           echo $SEMVER
           echo $FILE_VERSION
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          RUN_NUMBER: ${{ github.run_number }}
 
       - name: Set connector version
-        run: |
-          python patch_version.py ${{steps.set-version.outputs.semver}}
+        run: python patch_version.py "$SEMVER"
+        env:
+          SEMVER: ${{ steps.set-version.outputs.semver }}
 
       - name: Create SketchUp package
         run: zip -q -r sketchup.zip vendor speckle_connector_3/ speckle_connector_3.rb
 
       - name: ⬆️ Upload artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: output-${{steps.set-version.outputs.semver}}
           path: sketchup.zip
