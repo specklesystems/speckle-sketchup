@@ -17,6 +17,8 @@ jobs:
           persist-credentials: false
       - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
+          # .ruby-version pins 3.2.6, which ruby-builder does not publish for ubuntu-26.04.
+          ruby-version: '3.2'
           bundler-cache: true
       - name: Test artifact serialization
         run: bundle exec ruby tests/src/artifacts/test_artifacts_pipeline.rb
