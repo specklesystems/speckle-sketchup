@@ -1,8 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.8.4)
-      public_suffix (>= 2.0.2, < 6.0)
+    addressable (2.9.2)
+      public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.2)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
@@ -58,7 +58,7 @@ GEM
       parser (~> 3.1.0)
       rainbow (>= 2.0, < 4.0)
     regexp_parser (2.6.0)
-    rexml (3.2.5)
+    rexml (3.3.9)
     rubocop (1.7.0)
       parallel (~> 1.10)
       parser (>= 2.7.1.5)
