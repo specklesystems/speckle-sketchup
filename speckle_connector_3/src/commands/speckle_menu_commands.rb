@@ -2,7 +2,6 @@
 
 require_relative 'menu_command_handler'
 require_relative 'action_command'
-require_relative 'initialize_speckle'
 require_relative 'reset_window_location'
 require_relative 'initialize_dui3_speckle'
 
@@ -10,7 +9,6 @@ module SpeckleConnector3
   module Commands
     # Speckle menu commands that adds them to Sketchup menu and toolbar.
     class SpeckleMenuCommands
-      CMD_INITIALIZE_SPECKLE = :initialize_speckle
       CMD_RESET_WINDOW_LOCATION_SPECKLE = :reset_window_location_speckle
       CMD_INITIALIZE_DUI3_SPECKLE = :initialize_dui3_speckle
       CMD_SEND_TO_SPECKLE = :send_to_speckle
@@ -25,10 +23,6 @@ module SpeckleConnector3
         speckle_menu = sketchup_ui.speckle_menu
         speckle_toolbar = sketchup_ui.speckle_toolbar
 
-        # commands[CMD_INITIALIZE_SPECKLE] = initialize_speckle_command(app)
-        # commands.add_to_menu!(CMD_INITIALIZE_SPECKLE, speckle_menu)
-        # commands.add_to_toolbar!(CMD_INITIALIZE_SPECKLE, speckle_toolbar)
-
         commands[CMD_RESET_WINDOW_LOCATION_SPECKLE] = reset_window_location_command(app)
         commands.add_to_menu!(CMD_RESET_WINDOW_LOCATION_SPECKLE, speckle_menu)
 
@@ -39,17 +33,6 @@ module SpeckleConnector3
         # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
         # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
         # commands.add_to_toolbar!(CMD_SEND_TO_SPECKLE, speckle_toolbar)
-      end
-
-      def self.initialize_speckle_command(app)
-        cmd = MenuCommandHandler.sketchup_command(
-          InitializeSpeckle.new(app, nil), 'Initialize Speckle'
-        )
-        cmd.tooltip = 'Launch Connector'
-        cmd.status_bar_text = 'Opens the Speckle Connector window'
-        cmd.small_icon  = '../../img/s2logo.png'
-        cmd.large_icon  = '../../img/s2logo.png'
-        cmd
       end
 
       def self.reset_window_location_command(app)

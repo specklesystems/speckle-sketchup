@@ -44,7 +44,7 @@ Give Speckle a try in no time by:
 #  Repo structure
 
 This is the beginning of the Speckle SketchUp Connector. It is still in very early development and is not ready for general use.
-This repo is split into three parts:
+This repo is split into two parts:
 
 ### 1. **Speckle Connector extension** 
    
@@ -53,11 +53,7 @@ This repo is split into three parts:
    that responsible to register Speckle Connector extension to SketchUp and also it shows address to where extension
    will start to read extension. Source folder is `speckle_connector_3`.
 
-### 2. **User Interface**
-
-   Includes the `Vue` frontend lives in the `ui` folder.
-
-### 3. **SketchUp Sqlite3 extension** [submodule](https://github.com/specklesystems/sketchup-sqlite3)
+### 2. **SketchUp Sqlite3 extension** [submodule](https://github.com/specklesystems/sketchup-sqlite3)
 
    Includes source codes of base `SQLite3` C/C++ library and `ruby` compiler files to be able to run SQLite3
    functionality on SketchUp in the same ruby module like `SpeckleConnector::Sqlite3::Database`. By this way
@@ -186,11 +182,6 @@ Then choose the `Debug Sketchup 2021` task to run it:
 
 Once Sketchup has launched, start the `Listen for rdebug-ide` debug configuration. 
 Once the debugger has connected, you'll be able to debug the connector normally.
-
-Make sure you run the `ui` before starting the SketchUp Connector
-
-    cd ui
-    npm run serve
 
 ### Running Tests
 

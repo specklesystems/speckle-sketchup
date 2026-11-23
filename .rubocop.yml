@@ -17,7 +17,6 @@ AllCops:
     - '_tools/su_attributes/**/*.rb'
     - '_tools/su_attributes/**/*.rb'
     - '_sqlite3/**/*.rb'
-    - 'ui/**/*'
     - 'speckle_connector_3/src/ext/**/*.rb'
     - 'vendor/bundle/**/*'
     - 'tests/**/*.rb'
