@@ -174,9 +174,7 @@ module SpeckleConnector3
         end
       end
 
-      # ReceiveObjects action call this method by giving everything that comes from server.
       # Upcoming object is a referencedObject of selected commit to receive.
-      # UI is responsible currently to fetch objects from ObjectLoader module by calling getAndConstruct method.
       # @param obj [Object] speckle commit object.
       def receive_commit_object(obj)
         # TODO

@@ -15,14 +15,6 @@ module SpeckleConnector3
         end
       end
 
-      # Validate if the user has started the Speckle and return a status code that can be used by
-      # {UI::Command#set_validation_proc} to disable menu entries and toolbar entries before Speckle is loaded.
-      def self.speckle_started(app)
-        return MF_ENABLED if app.speckle_loaded?
-
-        MF_GRAYED
-      end
-
       def initialize
         @menu_commands = {}
         @added_to_menu = []

@@ -24,10 +24,6 @@ module SpeckleConnector3
         @ui_controller = ui_controller
       end
 
-      def speckle_loaded?
-        state.speckle_state?
-      end
-
       # Attach observers to application when speckle initialized via menu commands.
       def add_observer_handler!(observer_handler)
         @observer_handler = observer_handler

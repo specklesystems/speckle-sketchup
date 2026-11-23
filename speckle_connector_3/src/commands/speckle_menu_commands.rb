@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'menu_command_handler'
-require_relative 'action_command'
 require_relative 'reset_window_location'
 require_relative 'initialize_dui3_speckle'
 
@@ -11,7 +10,6 @@ module SpeckleConnector3
     class SpeckleMenuCommands
       CMD_RESET_WINDOW_LOCATION_SPECKLE = :reset_window_location_speckle
       CMD_INITIALIZE_DUI3_SPECKLE = :initialize_dui3_speckle
-      CMD_SEND_TO_SPECKLE = :send_to_speckle
       CMD_RECEIVE_FROM_SPECKLE = :receive_from_speckle
 
       # Add initial set of commands to Speckle application object and to Sketchup menu and toolbar
@@ -29,10 +27,6 @@ module SpeckleConnector3
         commands[CMD_INITIALIZE_DUI3_SPECKLE] = initialize_dui3_speckle_command(app)
         commands.add_to_menu!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_menu)
         commands.add_to_toolbar!(CMD_INITIALIZE_DUI3_SPECKLE, speckle_toolbar)
-
-        # commands[CMD_SEND_TO_SPECKLE] = send_command(app)
-        # commands.add_to_menu!(CMD_SEND_TO_SPECKLE, speckle_menu)
-        # commands.add_to_toolbar!(CMD_SEND_TO_SPECKLE, speckle_toolbar)
       end
 
       def self.reset_window_location_command(app)
@@ -54,18 +48,6 @@ module SpeckleConnector3
         cmd.status_bar_text = 'Opens the Speckle Connector'
         cmd.small_icon  = '../../img/s2logo_dui3.png'
         cmd.large_icon  = '../../img/s2logo_dui3.png'
-        cmd
-      end
-
-      def self.send_command(app)
-        cmd = MenuCommandHandler.sketchup_command(
-          ActionCommand.new(app, nil, Actions::OneClickSend), 'Send to Speckle'
-        )
-        cmd.tooltip = 'Send to Speckle'
-        cmd.status_bar_text = 'Send to Speckle'
-        cmd.small_icon = '../../img/Sender.png'
-        cmd.large_icon = '../../img/Sender.png'
-        cmd.set_validation_proc { MenuCommandHandler.speckle_started(app) }
         cmd
       end
     end
