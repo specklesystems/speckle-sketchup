@@ -56,7 +56,7 @@ module SpeckleConnector3
         state.with_add_queue_js_command('receive', "receiveBinding.receiveResponse('#{resolve_id}')")
       end
 
-      # Post-receive coplanar merge (v2 parity: {Actions::ReceiveObjects}) — undoes the
+      # Post-receive coplanar merge (parity with the v2 receive) — undoes the
       # SGEO triangulation by removing edges between coplanar same-material faces.
       # Gated on the same model preference as v2; runs inside the receive operation.
       def self.merge_coplanar(state, converter)
