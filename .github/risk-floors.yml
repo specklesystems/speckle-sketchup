@@ -23,6 +23,8 @@ yellow:
   - '**/.betterleaks.toml'
   - '**/.betterleaksignore'
   - '**/.gitleaksignore'
+  # Release: the script that writes the version into the package that ships
+  - patch_version.py
 red:
   - .github/**
 # Machine accounts with write access: their color reviews and approvals never count.
